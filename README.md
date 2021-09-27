@@ -24,6 +24,11 @@ for mac and linux: ``make``
 **How to install TRXASprefitpack package**
 * Easy way
   * ``pip install TRXASprefitpack``
+* Advanced way (from release tar archive)
+  * Downloads release tar archive
+  * unpack it
+  * go to TRXASprefitpack-* directory
+  * Now type ``pip install .``
 * Advanced way (from repository)
   * ``git clone https://github.com/pistack/TRXASprefitpack``
   * ``cd TRXASprefitpack``
@@ -32,3 +37,5 @@ for mac and linux: ``make``
   * unpack tar gzip file
   * go to TRXASprefitpack-* directory
   * ``pip install .``
+
+Currently, only the third method is available.
