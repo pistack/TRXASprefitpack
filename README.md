@@ -13,7 +13,7 @@ type ``python3 ./bin/TRXASprefitpack_info.py``
 if you already install TRXASprefitpack then just type
 ``TRXASprefitpack_info``
 
-*How to get documents for TRXASprefitpack source
+**How to get documents for TRXASprefitpack source**
 
 go to docs directory and type
 
@@ -21,7 +21,7 @@ for windows: ``./make.bat``
 
 for mac and linux: ``make``
 
-*How to install TRXASprefitpack package
+**How to install TRXASprefitpack package**
 * Easy way
   * ``pip install TRXASprefitpack``
 * Advanced way (from repository)
