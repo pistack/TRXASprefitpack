@@ -1,0 +1,16 @@
+Metadata-Version: 2.1
+Name: TRXASprefitpack
+Version: 0.4
+Summary: package for TRXAS pre-fitting process
+Home-page: UNKNOWN
+Author: Junho Lee (pistack)
+Author-email: pistatex@yonsei.ac.kr
+License: GPL3
+Platform: any
+Classifier: Development Status :: 3 - Alpha
+Classifier: License :: OSI Approved :: GPL3 License
+Classifier: Programming Language :: Python :: 3
+License-File: licence.txt
+
+UNKNOWN
+

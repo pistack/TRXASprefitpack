@@ -1,0 +1,56 @@
+'''
+Due to inconsistent of laser overlap during experiment
+We may need to correct ``A-method`` scaled escan data 
+corr_a_method correct this data using reference tscan
+corr_a_method(e_ref_index, e, t,
+                     escan_time, ref_tscan_energy, ref_time_zeros,
+                     escan_data=None, escan_data_eps=None,
+                     ref_tscan_data=None, ref_tscan_data_eps=None,
+                     warn=False):
+
+    corr_a_method:
+    Corrects the scaling of escan scaled with tscan 
+
+    Parameter defintion
+
+    input:
+
+    e_ref: index for reference escan used for ``A-method``
+           float
+
+    e: energy range in which we measured escan
+       numpy 1d array (escan_data.shape[0], )
+
+    t: time range in which we measured tscan (except exotic tscan)
+       numpy 1d array (tscan_data.shape[0], )
+
+    escan_time: array of time delay at which we measure escan
+                numpy 1d array (num_escan, )
+
+    ref_tscan_energy: reference energy for fixing scaling of escan 
+                      float
+
+
+    time_zeros: time zero for reference tscan
+                float
+
+    escan_data: data for escan
+                (Note. escan data does not contains energy range)
+                numpy 2d array (num_pts_for_energy, num_escan)
+
+    escan_data_eps: error for escan data
+                    numpy 2d array escan_data_eps.shape == escan_data.shape
+
+    tscan_data: data for reference tscan 
+                numpy 1d array (num_pts_for_time,)
+
+    tscan_data_eps: error for reference tscan
+                    numpy 1d array
+                    tscan_data_eps.shape == tscan_data_eps.shape
+
+    output:
+
+    corrected_data : dictionary
+                  corrected_data['escan'] : corrected data for escan
+                  corrected_data['escan_eps'] : corrected error for escan
+'''

@@ -1,0 +1,35 @@
+'''
+model_n_comp_conv(t, fwhm, tau, c, base=True, irf='g', eta=None):
+
+    model for n component fitting
+    n exponential function convolved with irf
+    irf
+    'g': normalized gaussian distribution
+    'c': normalized cauchy distribution
+    'pv': pseudo voigt profile (1-eta)*g + eta*c
+
+    input
+    t: time numpy 1d array (n,)
+    fwhm: fwhm of X-ray temporal pulse 
+          numpy 1d array
+          if irf == 'g' or 'c' then
+          fwhm = [fwhm]
+          if irf == 'pv' then
+          fwhm = [fwhm_G, fwhm_L]
+    tau: life time for each component numpy 1d array (num_comp)
+    c: coefficient numpy 1d array
+        (num_comp+1,) if base=True
+        (num_comp,)   if base=False
+    base: include baseline feature or not (bool)
+    irf: shape of instrumental response function (string)
+         'g': normalized gaussian distribution
+         'c': normalized cauchy distribution
+         'pv': pseudo voigt profile (1-eta)*g + eta*c
+    eta: mixing parameter for pseudo voigt profile float
+         (only needed for pseudo voigt profile)
+         (Default value is guessed according to
+         Journal of Applied Crystallography. 33 (6): 1311–1316.)
+    output
+    y: fit numpy 1d array
+
+'''

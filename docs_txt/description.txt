@@ -1,0 +1,10 @@
+'''
+TRXASprefitpack: package for TRXAS pre-fitting process which aims for the
+first order dynamics
+version: {}
+
+{}
+
+If you want know any information about function defined in TRXASprefitpack
+type TRXASprefitpack_info func_name
+'''

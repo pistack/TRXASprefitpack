@@ -1,0 +1,20 @@
+'''
+gen_theory_data(e, peaks, A, fwhm_G, fwhm_L, peak_shift, out=None)
+    
+    
+    voigt broadening tddft calc peaks
+    input
+    e: energy numpy 1d array (n,) (unit: eV)
+    A: fit scale thy to expt  float (unit: eV)
+    fwhm_G: full width at half maximum of gaussian shape (unit: eV) float
+    fwhm_L: full width at half maximum of lorenzian shape (unit: eV) float
+    peak_shift: peak difference of expt data and thy spectrum float (unit: eV)
+    out [optional]: prefix for output txt file
+
+    ouput
+    broadened_theory voigt broadened tddft calc peaks: numpy 1d array (n,)
+    if out is not set to none:
+    out_thy.txt: txt file for rescaled and boroadend tddft spectrum
+    out_thy_stk.txt: txt file for rescaled and shifted tddft peaks
+
+''' 

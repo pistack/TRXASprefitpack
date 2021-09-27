@@ -1,0 +1,17 @@
+'''
+compute_model(t, eigval, V, c):
+
+    Compute solution of the system of rate equations solved by solve_model
+
+    input
+    t: time numpy 1d array (n,)
+    eigval: eigenvalue for equation
+    V: eigenvectors for equation
+    c: coefficient
+    Note: eigval, V, c should be obtained from solve_model
+
+    output
+    y: solution of rate equation derived by our model
+    numpy 2d array shape: (num_species,n)
+
+'''

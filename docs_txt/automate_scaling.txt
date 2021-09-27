@@ -1,0 +1,150 @@
+'''    
+    automate_scaling(A, e_ref_index, e, t,
+                     escan_time, tscan_energy, time_zeros=None,
+                     exotic_t=None, exotic_tscan_energy=None,
+                     exotic_e_ref_index=None,
+                     escan_data=None, escan_data_eps=None,
+                     tscan_data=None, tscan_data_eps=None,
+                     exotic_tscan_data=None, exotic_tscan_data_eps=None)
+                     
+    Automate scale escan, tscan and some exotic tscan
+    If you scale tscan with fast time delay ( < 10 ps)
+    time zero will change scaling factor. So, beware of the
+    change of time zero.
+    However, scaling parameter for tscan w.r.t. escan (r_t_i)
+    may recover such effect. So, I think that for not so early time delay
+    (1 ps ~ 10 ps) region time_zero shifted about +/- IRF ~ 300 fs
+    neglectable.
+    If escan_time[e_ref_index] < 10 ps
+    I will print warning message for you.
+
+    How automate_scaling works?
+
+    When we measure each escan, we measure static spectrum (flu_off) to
+    get difference spectrum (flu_on - flu_off)
+    Since we have theortical static spectrum, we can fit theortical
+    spectrum with measured static spectrum using following model.
+
+    y = A * convolution(thy_static_spec,
+                        voigt_profile(fwhm_G,fwhm_L,peak_shift))
+      + base_line
+
+    Also, using fit_static.py script, you can simultaneous fitting each
+    escan. During fitting process, I assume fwhm_G, fwhm_L, peak_shift
+    are same in each escan, only scaling factor A and base_line are
+    different. Parameter base_line reflects environmental effects,
+    so prue static signal(w/o environmental effects) is
+    A * convolution(thy_static_spec,
+                        voigt_profile(fwhm_G,fwhm_L,peak_shift))
+    Each escan has same fwhm_G, fwhm_L and peak_shift value, so
+    Parameter A could tell relative scaling of each escan.
+    In other words, we can fit scaling of escan data just multipling
+    A_ref/A to each escan.
+    Indeed S/N of static signal is more better then S/N of
+    difference signal, so using static signal for scaling you can
+    get more accurate scaling factor then using difference signal. 
+    However if laser overlap does not consist with the set of escan,
+    we needed to correct the scaling.
+    Of course, such method (I call A-method) only vaild when
+    our model almost explain measured static spectrum
+    near peak.
+    Therefore before using automate_scaling function, use
+    fit_static.py and watch graph to confirm that
+    our model reproduce measured static spectrum near peak.
+
+   *Note:
+    If you set Parameter A to A_ref during calculation of
+    the difference spectrum then scaling_factor for escan
+    to theory would have a physical meaning: quantum yield.
+
+    Automate scaling procedure
+
+    0. Fit static spectrum with fit_static.py
+       Carefully watch graphs.
+
+    1. Scaling escan_data using A-method
+
+    2-1. If escan_time[e_ref_index] := e_ref > 10 ps,
+         then take difference flu spectrum at tscan energy
+         in e_ref delay escan.
+         Next take difference flu spectrum at e_ref delay in tscan.
+         Now fit diff flu spec at e_ref delay in tscan to
+         diff flu spec at tscan_energy in e_ref delay escan.
+
+    2-2. If e_ref < 10 ps, you must set time_zeros for all tscan.
+         Then do procedure simuliar to 2-2.
+
+    3. Watch changes in timezero during fitting.
+       If timezero changes a lot in fitting, consider simultaneous
+       scaling (i.e. fitting and scaling at once.)
+
+    4. After do automate_scaling, you need to correct scaling
+       due to the prossiblity of inconsistent laser overlap.
+   
+    5. Correct and do automate_scaling again with corrected escan and
+       A = A_ref*np.ones(A.shape).
+
+
+    Warning and Error case
+
+    Warning (no harm, just for warn)
+    
+    1. early delay (e_ref < 10)
+
+    Error (it aborts procedure)
+
+    1. early delay without time zero : e_ref < 10 but time zero is not set.
+
+    Parameter defintion
+
+    input:
+
+    A: array of parameter A for each escan
+       numpy 1d array (num_escan, )
+
+    e_ref: index for reference escan for scaling of escan and
+           tscan
+           float
+
+    e: energy range in which we measured escan
+       numpy 1d array (escan_data.shape[0], )
+
+    t: time range in which we measured tscan (except exotic tscan)
+       numpy 1d array (tscan_data.shape[1], )
+
+    escan_time: array of time delay at which we measure escan
+                numpy 1d array (num_escan, )
+
+    tscan_energy: array of energy at which we measure tscan
+                  numpy 1d array (num_tscan, )
+
+
+    time_zeros: array of time zero for every tscan 
+                numpy 1d array (num_tscan, )
+
+    escan_data: data for escan
+                (Note. escan data does not contains energy range)
+                numpy 2d array (num_pts_for_energy, num_escan)
+
+    escan_data_eps: error for escan data
+                    numpy 2d array escan_data_eps.shape == escan_data.shape
+
+    tscan_data: data for tscan except exotic ones
+                numpy 2d array (num_pts_for_time, num_tscan)
+
+    tscan_data_eps: error for tscan except exotic ones
+                    numpy 2d array
+                    tscan_data_eps.shape == tscan_data_eps.shape
+
+    warn: whether or not print warning message [default: False]
+          bool
+
+    output:
+
+    scaled_data : dictionary
+                  scaled_data['escan'] : scaled data for escan
+                  scaled_data['escan_eps'] : scaled error for escan
+                  scaled_data['tscan'] : scaled data for tscan
+                  scaled_data['tscan_eps'] : scaled error for tscan
+
+'''

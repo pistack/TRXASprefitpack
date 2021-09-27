@@ -1,0 +1,23 @@
+'''
+compute_signal_gau(t, fwhm, eigval, V, c):
+
+    Compute solution of the system of 1st order rate equation convolved with 
+    normalized gaussian distribution
+
+    input
+    t: time numpy 1d array (n,)
+    fwhm: fwhm of x-ray temporal pulse
+    eigval: eigenvalue for equation
+    V: eigenvectors for equation
+    c: coefficient
+    Note: eigval, V, c should be obtained from solve_model
+
+    output
+    y_signal : convolution of y and IRF
+    numpy 2d array shape: (num_species,n)
+
+    We assume temporal pulse of x-ray is normalized gaussian distribution
+    sigma = fwhm/(2*sqrt(2*ln(2)))
+    IRF(t) = 1/(sigma*sqrt(2*pi))*exp(-t**2/2*sigma**2)
+
+'''
