@@ -1,6 +1,14 @@
 TRXASprefitpack.doc package
 ===========================
 
+Submodules
+----------
+
+.. toctree::
+   :maxdepth: 4
+
+   TRXASprefitpack.doc.info
+
 Module contents
 ---------------
 

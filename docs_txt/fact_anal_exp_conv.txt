@@ -2,39 +2,49 @@
 fact_anal_exp_conv(t, fwhm, tau, irf='g', eta=None, 
                    data=None, eps=None, base=True):
 
-    Estimate the best coefficiets when fwhm and tau are given
+   Estimate the best coefficiets when fwhm and tau are given
 
-    Before fitting with Escan data, you want fit your model to tscan data
-    to know how many component needed for well description of tscan data
-    To do this you have good initial guess for not only life time of
-    each component but also coefficients.
-    For this, It will solve linear least square problem
+   Before fitting with Escan data, you want fit your model to tscan
+   data to know how many component needed for well description of
+   tscan data To do this you have good initial guess for not only life
+   time of each component but also coefficients. For this, It will
+   solve linear least square problem
 
-    input
-    t: time numpy 1d array (n,)
-    fwhm: fwhm of X-ray temporal pulse 
-          numpy 1d array
-          if irf == 'g' or 'c' then
-          fwhm = [fwhm]
-          if irf == 'pv' then
-          fwhm = [fwhm_G, fwhm_L]
-    tau: life time for each component numpy 1d array (num_comp,)
-    irf: shape of instrumental response function (string)
-         'g': normalized gaussian distribution
-         'c': normalized cauchy distribution
-         'pv': pseudo voigt profile (1-eta)*g + eta*c
-    eta: mixing parameter for pseudo voigt profile float
-         (only needed for pseudo voigt profile)
-         (Default value is guessed according to
-         Journal of Applied Crystallography. 33 (6): 1311–1316.)
-    data: tscan data numpy 1d array (n,)
-    eps: eps for tscan data numpy 1d array (n,)
-    base: bool whether use base for fitting or not
+   Parameters:
+      * **t** (*numpy_1d_array*) -- time
 
-    output
-    c: best coefficient for given fwhm, tau
-       numpy 1d array
-       (num_comp+1,) , if base=True
-       (num_comp,)   , otherwise
+      * **fwhm** (*numpy_1d_array*) --
 
+        fwhm of X-ray temporal pulse  if irf == 'g' or 'c' then
+
+           fwhm = [fwhm]
+
+        if irf == 'pv' then
+           fwhm = [fwhm_G, fwhm_L]
+
+      * **tau** (*numpy_1d_array*) -- life time for each component
+
+      * **irf** (*string**, **optional*) -- shape of instrumental
+        response function [default: g] 'g': normalized gaussian
+        distribution 'c': normalized cauchy distribution 'pv': pseudo
+        voigt profile (1-\eta)g + \eta c
+
+      * **eta** (*float**, **optional*) -- mixing parameter for pseudo
+        voigt profile  (only needed for pseudo voigt profile, Default
+        value is guessed according to Journal of Applied
+        Crystallography. 33 (6): 1311–1316.)
+
+      * **data** (*numpy_1d_array*) -- tscan data
+
+      * **eps** (*numpy_1d_array*) -- error for tscan data
+
+      * **base** (*bool**, **optional*) -- whether or not include
+        baseline [default: True]
+
+   Returns:
+      best coefficient for given fwhm, tau (num_comp+1,) , if
+      base=True (num_comp,)   , otherwise
+
+   Return type:
+      numpy_1d_array
 '''

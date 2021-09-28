@@ -1,23 +1,26 @@
 '''
 compute_signal_cauchy(t, fwhm, eigval, V, c):
 
-    Compute solution of the system of 1st order rate equation convolved with
-    normalized cauchy distribution
+   Compute solution of the system of rate equations solved by
+   solve_model convolved with normalized cauchy distribution Note:
+   eigval, V, c should be obtained from solve_model
 
-    input    
-    t: time numpy 1d array (n,)
-    fwhm: fwhm of x-ray temporal pulse
-    eigval: eigenvalue for equation
-    V: eigenvectors for equation
-    c: coefficient
-    Note: eigval, V, c should be obtained from solve_model
+   Parameters:
+      * **t** (*numpy_1d_array*) -- time
 
-    output
-    y_signal : convolution of y and IRF
-    numpy 2d array shape: (num_species,n)
+      * **fwhm** (*float*) -- full width at half maximum of x-ray
+        temporal pulse
 
-    We assume temporal pulse of x-ray is normalized cauchy distribution
-    gamma = fwhm/2
-    IRF(t) = gamma/pi*1/((x-t)**2+gamma**2)
-    
+      * **eigval** (*numpy_1d_array*) -- eigenvalue for equation
+
+      * **V** (*numpy_nd_array*) -- eigenvectors for equation
+
+      * **c** (*numpy_1d_array*) -- coefficient
+
+   Returns:
+      solution of rate equation convolved with normalized cachy
+      distribution
+
+   Return type:
+      numpy_nd_array
 '''

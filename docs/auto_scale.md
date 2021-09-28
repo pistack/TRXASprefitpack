@@ -181,4 +181,4 @@ same.
     Parameter A (scaling parameter) could tell relative scaling of each escan.
     In other words, we can fit scaling of escan data just multipling
     A_ref/A to each escan.
-	However, due to consistence of laser overlap between energy scans, one good time delay scan is needed to correct the scaling of energy scans.
+	However, due to inconsistence of laser overlap between energy scans, one good time delay scan is needed to correct the scaling of energy scans.

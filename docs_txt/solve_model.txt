@@ -1,23 +1,30 @@
 '''
  solve_model(equation, y0):
 
-    Solve system of first order rate equation
+   Solve system of first order rate equation
 
-    input
-    equation: matrix corresponding to model
-    numpy 2d array (num_species,num_species)
-    y0: initial condition numpy 1d array shape: (num_species,)
+   Parameters:
+      * **equation** (*numpy_nd_array*) -- matrix corresponding to
+        model
 
-    output
-    eigval:
-    eigenvalue for equation
-    numpy 1d array
-    V:
-    eigenvectors for equation
-    numpy 2d array
-    c:
-    coefficient where y_0 = Vc
-    numpy 2d array (num_species, 1)
-    
+      * **y0** (*numpy_1d_array*) -- initial condition
+
+   Returns:
+      eigenvalue of equation
+
+   Return type:
+      numpy_1d_array
+
+   Returns:
+      eigenvectors for equation
+
+   Return type:
+      numpy_nd_array
+
+   Returns:
+      coefficient where y_0 = Vc
+
+   Return type:
+      numpy_1d_array
  '''
     

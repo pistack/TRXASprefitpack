@@ -1,20 +1,30 @@
 '''
 exp_conv_cauchy(t, fwhm, k):
 
-    Compute exponential function convolved with normalized cauchy
-    distribution
-    
-    input
-    t: time numpy 1d array (n)
-    fwhm: fwhm of x-ray temporal pulse
-    k: rate constant (inverse of life time) float
+   Compute exponential function convolved with normalized cauchy
+   distribution
 
-    output
-    y: convolution of IRF and exp(-kt)
+   Note. We assume temporal pulse of x-ray is normalized cauchy
+   distribution
 
-    Note.
-    We assume temporal pulse of x-ray is normalized cauchy distribution
-    gamma = fwhm/2
-    IRF(t) = gamma/pi*1/((x-t)**2+gamma**2)
+      \gamma = \frac{fwhm}{2}
 
+      IRF(t) = \frac{\gamma}{\pi}\frac{1}{(x-t)^2+\gamma^2}
+
+   Parameters:
+      * **t** (*numpy_1d_array*) -- time
+
+      * **fwhm** (*float*) -- full width at half maximum of x-ray
+        temporal pulse
+
+      * **k** (*float*) -- rate constant (inverse of life time)
+
+   Returns:
+      convolution of normalized cauchy distribution and exp(-kt)
+
+      \frac{\exp(-kt)}{\pi}\Im\left(\exp(-ik\gamma)\cdot\left(i\pi -
+      {Ei}\left(kt+ik\gamma\right)\right)\right)
+
+   Return type:
+      numpy_1d_array
 '''

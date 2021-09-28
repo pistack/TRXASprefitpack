@@ -1,29 +1,37 @@
 '''
 compute_signal_pvoigt(t, fwhm_G, fwhm_L, eta, eigval, V, c):
 
-    Compute solution of the system of 1st order rate equation convolved with
-    normalized pseudo voigt profile
+   Compute solution of the system of rate equations solved by
+   solve_model convolved with normalized pseudo voigt profile (pvoigt
+   = (1-\eta) G(t) + \eta L(t), G(t): stands for normalized gaussian
+   L(t): stands for normalized cauchy(lorenzian) distribution)
 
-    input
-    t: time numpy 1d array (n,)
-    fwhm_G: fwhm of x-ray temporal pulse (gaussian part)
-            float
-    fwhm_L: fwhm of x-ray temporal pulse (lorenzian part)
-            float
-    eta: mixing parameter
-         float
-    eigval: eigenvalue for equation
-    V: eigenvectors for equation
-    c: coefficient
-    Note: eigval, V, c should be obtained from solve_model
+   Note: eigval, V, c should be obtained from solve_model
 
-    output
-    y_signal : convolution of y and IRF
-    numpy 2d array shape: (num_species,n)
+   Parameters:
+      * **t** (*numpy_1d_array*) -- time
 
-    We assume temporal pulse of x-ray is pseudo voigt profile
-    sigma = fwhm_G/(2*sqrt(2*ln(2)))
-    gamma = fwhm_L/2
-    IRF(t) = (1-eta)*gaussian(t)+eta*cauchy(t)
+      * **fwhm_G** (*float*) -- full width at half maximum of x-ray
+        temporal pulse (gaussian part)
 
+      * **fwhm_L** (*float*) -- full width at half maximum of x-ray
+        temporal pulse (lorenzian part)
+
+      * **eta** (*float*) -- mixing parameter
+
+   (0 < \eta < 1)
+
+   Parameters:
+      * **eigval** (*numpy_1d_array*) -- eigenvalue for equation
+
+      * **V** (*numpy_nd_array*) -- eigenvectors for equation
+
+      * **c** (*numpy_1d_array*) -- coefficient
+
+   Returns:
+      solution of rate equation convolved with normalized pseudo voigt
+      profile
+
+   Return type:
+      numpy_nd_array
 '''
