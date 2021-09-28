@@ -1,0 +1,5 @@
+numpy>="1.13.0"
+scipy>="1.4.0"
+matplotlib
+lmfit>="1.0.0"
+python_version>="3.6"
