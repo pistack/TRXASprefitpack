@@ -1,6 +1,18 @@
 TRXASprefitpack package
 =======================
 
+Utilites
+--------
+
+.. toctree::
+
+   auto_scale
+   broadening
+   fit_static
+   fit_tscan
+   TRXASprefitpack_info
+   
+
 Subpackages
 -----------
 

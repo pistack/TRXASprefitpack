@@ -40,7 +40,8 @@ def fit_static():
         peak_shift = params['peak_shift']
         chi = np.zeros(data.shape)
         for i in range(data.shape[1]):
-            c = magick(e, fwhm_G, fwhm_L, peak_shift, data=data[:, i], eps=eps[:, i])
+            c = magick(e, fwhm_G, fwhm_L, peak_shift,
+                       data=data[:, i], eps=eps[:, i])
             chi[:, i] = data[:, i] - peak_fit(e, fwhm_G, fwhm_L, peak_shift, c)
         chi = chi.flatten()/eps.flatten()
         return chi
@@ -145,14 +146,15 @@ and calc static spectrum must be eV
     fit[:, 0] = e
     A = np.zeros(num_scan)
     for i in range(num_scan):
-        c = magick(e, fwhm_G, fwhm_L, peak_shift, data=data[:, i], eps=eps[:, i])
+        c = magick(e, fwhm_G, fwhm_L, peak_shift, data=data[:, i],
+                   eps=eps[:, i])
         base[:, i+1] = c[1]*e+c[2]
         fit[:, i+1] = peak_fit(e, fwhm_G, fwhm_L, peak_shift, c)
         A[i] = c[0]
 
     for i in range(num_scan):
         plt.figure(i+1)
-        plt.title(f'Chi squared: {chi2_ind[i]}')
+        plt.title(f'Chi squared: {chi2_ind[i]:.2f}')
         plt.errorbar(e, data[:, i]-base[:, i+1],
                      eps[:, i], marker='o', mfc='none',
                      label=f'expt-base static {i+1}',

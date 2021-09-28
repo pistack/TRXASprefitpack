@@ -1,5 +1,5 @@
 include *.txt
-recursive-include docs *.py *.rst Makefile *.bat
+recursive-include docs *.py *.rst Makefile *.bat *.md
 recursive-include bin *.py
 prune */__pycache__
 global-exclude *.pyc *.pyo *.pyd *.swp *.bak *~

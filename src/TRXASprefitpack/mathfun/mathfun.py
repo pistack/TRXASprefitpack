@@ -18,8 +18,16 @@ def exp_conv_gau(t, fwhm, k):
 
     Note.
     We assume temporal pulse of x-ray is normalized gaussian distribution
-    :math:`\\sigma = \\frac{fwhm}{2\\sqrt{2\\log{2}}},`
-    :math:`IRF(t) = \\frac{1}{\\sigma \\sqrt{2\\pi}}\\exp{-\\frac{t^2}{2\\sigma^2}}`
+    
+    .. math::
+
+       \sigma = \\frac{fwhm}{2\sqrt{2\log{2}}}
+
+
+    .. math::
+
+       IRF(t) = \\frac{1}{\sigma \sqrt{2\pi}}\exp\\left(-\\frac{t^2}{2\sigma^2}\\right)
+
 
     :param t: time
     :type t: numpy_1d_array
@@ -30,6 +38,12 @@ def exp_conv_gau(t, fwhm, k):
 
     
     :return: convolution of normalized gaussian distribution and exp(-kt)
+
+    .. math::
+
+       \\frac{1}{2}\exp\\left(\\frac{k^2}{2\sigma^2}-kt\\right)\\left(1+{erf}\\left(\\frac{1}{\sqrt{2}}\\left(\\frac{t}{\sigma}-k\sigma\\right)\\right)\\right)
+
+
     :rtype: numpy_1d_array
     '''
 
@@ -46,8 +60,12 @@ def exp_conv_cauchy(t, fwhm, k):
 
     Note.
     We assume temporal pulse of x-ray is normalized cauchy distribution
-    :math:`\\gamma = \\frac{fwhm}{2},`
-    :math:`IRF(t) = \\frac{\\gamma}{\\pi}\\frac{1}{(x-t)^2+\\gamma^2}`
+
+    .. math::
+       \\gamma = \\frac{fwhm}{2}
+
+    .. math::
+       IRF(t) = \\frac{\\gamma}{\\pi}\\frac{1}{(x-t)^2+\\gamma^2}
     
 
     :param t: time
@@ -59,6 +77,11 @@ def exp_conv_cauchy(t, fwhm, k):
 
    
     :return: convolution of normalized cauchy distribution and exp(-kt)
+
+    .. math::
+       \\frac{\\exp(-kt)}{\\pi}\\Im\\left(\\exp(-ik\\gamma)\cdot\\left(i\\pi - {Ei}\\left(kt+ik\gamma\\right)\\right)\\right)
+
+
     :rtype: numpy_1d_array 
     '''
 
@@ -227,11 +250,11 @@ def compute_signal_pvoigt(t, fwhm_G, fwhm_L, eta, eigval, V, c):
     Compute solution of the system of rate equations solved by solve_model
     convolved with normalized pseudo voigt profile
     (:math:`pvoigt = (1-\\eta) G(t) + \\eta L(t)`,
-     G(t): stands for normalized gaussian
-     L(t): stands for normalized cauchy(lorenzian) distribution)
+    G(t): stands for normalized gaussian
+    L(t): stands for normalized cauchy(lorenzian) distribution)
+
     Note: eigval, V, c should be obtained from solve_model
 
-    
     :param t: time
     :type t: numpy_1d_array
     :param fwhm_G: 
@@ -240,7 +263,10 @@ def compute_signal_pvoigt(t, fwhm_G, fwhm_L, eta, eigval, V, c):
     :param fwhm_L:
      full width at half maximum of x-ray temporal pulse (lorenzian part)
     :type fwhm_L: float
-    :param float eta: mixing parameter :math:`(0 < \\eta < 1)`
+    :param float eta: mixing parameter
+
+    :math:`(0 < \\eta < 1)`
+
     :type eta: float
     :param eigval: eigenvalue for equation
     :type eigval: numpy_1d_array
@@ -249,7 +275,6 @@ def compute_signal_pvoigt(t, fwhm_G, fwhm_L, eta, eigval, V, c):
     :param c: coefficient
     :type c: numpy_1d_array
 
-    
     :return: 
      solution of rate equation convolved with normalized pseudo voigt profile
     :rtype: numpy_nd_array
@@ -289,14 +314,12 @@ def model_n_comp_conv(t, fwhm, tau, c, base=True, irf='g', eta=None):
      'g': normalized gaussian distribution
      'c': normalized cauchy distribution
      'pv': pseudo voigt profile :math:`(1-\\eta)g + \\eta c`
+
     :type irf: string, optional
     :param eta: mixing parameter for pseudo voigt profile 
-     (only needed for pseudo voigt profile, 
-      Default value is guessed according to
-      Journal of Applied Crystallography. 33 (6): 1311–1316.)
+     (only needed for pseudo voigt profile, Default value is guessed according to Journal of Applied Crystallography. 33 (6): 1311–1316.)
     :type eta: float, optional
     
-
     :return: fit
     :rtype: numpy_1d_array
     '''
@@ -349,12 +372,10 @@ def fact_anal_exp_conv(t, fwhm, tau, irf='g', eta=None,
     :param irf: shape of instrumental response function [default: g]
      'g': normalized gaussian distribution
      'c': normalized cauchy distribution
-     'pv': pseudo voigt profile :math:`(1-\\eta)*g + \\eta*c`
+     'pv': pseudo voigt profile :math:`(1-\\eta)g + \\eta c`
     :type irf: string, optional
     :param eta: mixing parameter for pseudo voigt profile 
-     (only needed for pseudo voigt profile, 
-      Default value is guessed according to
-      Journal of Applied Crystallography. 33 (6): 1311–1316.)
+     (only needed for pseudo voigt profile, Default value is guessed according to Journal of Applied Crystallography. 33 (6): 1311–1316.)
     :type eta: float, optional
     :param numpy_1d_array data: tscan data
     :param numpy_1d_array eps: error for tscan data 

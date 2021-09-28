@@ -259,10 +259,10 @@ upper bound: np.inf
                                 
     for i in range(num_scan):
         plt.figure(i+1)
-        title = f'Chi squared: {chi2_ind[i]}'
+        title = f'Chi squared: {chi2_ind[i]:.2f}'
         if find_zero:
             t0 = out.params[f't_0_{i+1}']
-            title = f'time_zero: {t0.value}\n' + title
+            title = f'time_zero: {t0.value:.4e}\n' + title
         plt.title(title)
         plt.errorbar(t, data[:, i],
                      eps[:, i], marker='o', mfc='none',
