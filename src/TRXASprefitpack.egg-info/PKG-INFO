@@ -8,7 +8,7 @@ Author-email: pistatex@yonsei.ac.kr
 License: GPL3
 Platform: any
 Classifier: Development Status :: 3 - Alpha
-Classifier: License :: OSI Approved :: LGPL3 License
+Classifier: License :: OSI Approved :: LGPLv3
 Classifier: Programming Language :: Python :: 3
 
 ## TRXASprefitpack: package for TRXAS pre-fitting process which aims for the first order dynamics
@@ -60,7 +60,5 @@ Licence: LGPL3
   * unpack tar gzip file
   * go to TRXASprefitpack-* directory
   * ``pip install .``
-
-Currently, only the third method is available.
 
 
