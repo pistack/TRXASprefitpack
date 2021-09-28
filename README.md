@@ -47,5 +47,3 @@ Licence: LGPL3
   * unpack tar gzip file
   * go to TRXASprefitpack-* directory
   * ``pip install .``
-
-Currently, only the third method is available.
