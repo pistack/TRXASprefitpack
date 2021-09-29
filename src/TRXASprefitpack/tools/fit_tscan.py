@@ -17,16 +17,14 @@ import matplotlib.pyplot as plt
 def fit_tscan():
 
     def set_bound_tau(tau):
-        bound = []
-        if tau <= 0.1:
-            bound = [tau/2, 1]
-        elif 0.1 < tau <= 10:
+        bound = [tau/2, 1]
+        if 0.1 < tau <= 10:
             bound = [0.05, 100]
         elif 10 < tau <= 100:
             bound = [5, 500]
         elif 100 < tau <= 1000:
             bound = [50, 2000]
-        else:
+        elif 1000 < tau:
             bound = [tau/2, np.inf]
         return bound
             
