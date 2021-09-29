@@ -24,7 +24,7 @@ def fit_tscan():
             bound = [5, 500]
         elif 100 < tau <= 1000:
             bound = [50, 2000]
-        else:
+        elif 1000 < tau:
             bound = [tau/2, np.inf]
         return bound
             
