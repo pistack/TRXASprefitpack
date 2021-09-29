@@ -10,4 +10,4 @@ TRXAS stands for Time Resolved X-ray Absorption Spectroscopy
 from .thy import *
 from .data_process import *
 from .mathfun import *
-from .doc import __info__
+from .doc import *

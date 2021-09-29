@@ -8,3 +8,5 @@ submodule of TRXASprefitpack for data processing
 '''
 
 from .data_process import automate_scaling, corr_a_method
+
+__all__ = ['automate_scaling', 'corr_a_method']

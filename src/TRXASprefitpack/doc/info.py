@@ -19,13 +19,11 @@ __info__ = docs()
 
 doc = dict()
 
-doc['version'] =  0.4.1
- 
+doc['version'] = ' 0.4.1' 
 doc['description'] = '''
 TRXASprefitpack: package for TRXAS pre-fitting process which aims for the
 first order dynamics
 version:  0.4.1
-
 
                            numpy, scipy
                                 |
@@ -63,38 +61,6 @@ version:  0.4.1
 If you want know any information about function defined in TRXASprefitpack
 type TRXASprefitpack_info func_name
 '''
- 
-doc['structure'] =                            numpy, scipy
-                                |
-                                |
-                                V
-             ***************TRXASprefitpack***************
-             | thy             -- gen_theory_data        |
-             | data_process    -- automate_scaling       |
-             |                 -- corr_a_method          |
-             | mathfun         -- exp_conv_gau           |
-             |                 -- exp_conv_cauchy        |
-             |                 -- solve_model            |
-	     |                 -- compute_model          |
-	     |                 -- compute_signal_gau     |
-             |                 -- compute_signal_cauchy  |
-             |                 -- compute_signal_pvoigt  |_________
-             |                 -- model_n_comp_conv      |         |
-             |                 -- fact_anal_exp_conv     |         |
-             | doc             -- info                   |         |
-             *********************************************         |
-                                |                                  |
-                                |                                  |
-                                |                                  | lmfit
-				V                                  | matplotlib
-             ****************script*******************             |
-             | TRXASprefitpack_info  (exe)           |             |
-             ****************script*******************             |         
-             | broadening           (exe)            |             |
-             | auto_scale           (exe)            |             |
-             | fit_static           (exe)            |             |
-	     | fit_tscan            (exe)            | <------------
-             *****************************************
  
 doc['licence'] = '''
 TRXASprefitpack: package for TRXAS pre fitting process
@@ -1144,7 +1110,6 @@ voigt broaden theoritical calculated lineshape spectrum
  
 __info__.appnd('version', doc['version']) 
 __info__.appnd('description', doc['description']) 
-__info__.appnd('structure', doc['structure']) 
 __info__.appnd('licence', doc['licence']) 
 __info__.appnd('lgpl-3.0', doc['lgpl-3.0']) 
 __info__.appnd('gen_theory_data', doc['gen_theory_data']) 
