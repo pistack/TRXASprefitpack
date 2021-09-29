@@ -106,7 +106,6 @@ and calc static spectrum must be eV
     dmax = np.amax(data_corr)
     dmax_e = e[data_corr == dmax][0]
     peak_shift = (pmax_e - dmax_e)*1000
-    A = dmax/pmax
 
     fit_params = Parameters()
     if option == 'v':
@@ -128,7 +127,7 @@ and calc static spectrum must be eV
                    args=(e,),
                    kws={'data': data, 'eps': eps})
     # Then do Levenberg-Marquardt
-    out = minimize(residual, fit_params,
+    out = minimize(residual, out.params,
                    args=(e,),
                    kws={'data': data, 'eps': eps})
 

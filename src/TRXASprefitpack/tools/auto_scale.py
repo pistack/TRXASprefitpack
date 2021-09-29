@@ -206,8 +206,9 @@ def auto_scale():
             if args_dict[i] is None:
                 print(f"{i} is required for stage {stage}!")
             return
-        else:
-            ref_escan_index = args.ref_escan_index - 1
+        
+        ref_escan_index = args.ref_escan_index - 1
+        
         # select tscan for scaling
         tscan_ind_for_scaling = np.array(args.tscan_index_to_scale)
         tscan_energy_for_scale = tscan_energy[tscan_ind_for_scaling-1]

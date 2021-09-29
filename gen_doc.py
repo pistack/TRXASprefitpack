@@ -53,9 +53,9 @@ doc = dict()
 
 info_script = info_script.format(date.today().year)
 
-for d in doc_lst:
+for d in doc.keys():
     info_script = info_script + f'doc[\'{d}\'] = {doc[d]} \n'
-for d in doc_lst:
+for d in doc.keys():
     info_script = info_script + f'__info__.appnd(\'{d}\', doc[\'{d}\']) \n'
 
 info_script = info_script + '__info__ = __info__.info' + '\n' + 'del doc'

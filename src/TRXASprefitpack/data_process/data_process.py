@@ -176,7 +176,7 @@ def corr_a_method(e_ref_index, e, t,
 
     ref_tscan_inv_SN = ref_tscan_data_eps/ref_tscan_data 
     ref_tscan_inv_SN = interp1d(t-ref_time_zeros, 
-                                ref_tscan_data, kind='nearest')(escan_time)
+                                ref_tscan_inv_SN, kind='nearest')(escan_time)
     flu_ref = interp1d(t-ref_time_zeros, ref_tscan_data)(escan_time)
     flu_ref = flu_ref/flu_ref[e_ref_index]
     flu_e = interp1d(e, escan_data, axis=0)(ref_tscan_energy)

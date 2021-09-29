@@ -19,6 +19,8 @@ __info__ = docs()
 
 doc = dict()
 
+doc['version'] =  0.4
+ 
 doc['description'] = '''
 TRXASprefitpack: package for TRXAS pre-fitting process which aims for the
 first order dynamics
@@ -61,6 +63,38 @@ version:  0.4
 If you want know any information about function defined in TRXASprefitpack
 type TRXASprefitpack_info func_name
 '''
+ 
+doc['structure'] =                            numpy, scipy
+                                |
+                                |
+                                V
+             ***************TRXASprefitpack***************
+             | thy             -- gen_theory_data        |
+             | data_process    -- automate_scaling       |
+             |                 -- corr_a_method          |
+             | mathfun         -- exp_conv_gau           |
+             |                 -- exp_conv_cauchy        |
+             |                 -- solve_model            |
+	     |                 -- compute_model          |
+	     |                 -- compute_signal_gau     |
+             |                 -- compute_signal_cauchy  |
+             |                 -- compute_signal_pvoigt  |_________
+             |                 -- model_n_comp_conv      |         |
+             |                 -- fact_anal_exp_conv     |         |
+             | doc             -- info                   |         |
+             *********************************************         |
+                                |                                  |
+                                |                                  |
+                                |                                  | lmfit
+				V                                  | matplotlib
+             ****************script*******************             |
+             | TRXASprefitpack_info  (exe)           |             |
+             ****************script*******************             |         
+             | broadening           (exe)            |             |
+             | auto_scale           (exe)            |             |
+             | fit_static           (exe)            |             |
+	     | fit_tscan            (exe)            | <------------
+             *****************************************
  
 doc['licence'] = '''
 TRXASprefitpack: package for TRXAS pre fitting process
@@ -1070,7 +1104,7 @@ Note:
   Each escan has same fwhm_G, fwhm_L and peak_shift value, so
   Parameter A (scaling parameter) could tell relative scaling of each
   escan. In other words, we can fit scaling of escan data just
-  multipling A_ref/A to each escan. However, due to consistence of
+  multipling A_ref/A to each escan. However, due to inconsistence of
   laser overlap between energy scans, one good time delay scan is
   needed to correct the scaling of energy scans.
 '''
@@ -1108,7 +1142,9 @@ voigt broaden theoritical calculated lineshape spectrum
   * -o OUT, --out OUT  prefix for output files
 '''
  
+__info__.appnd('version', doc['version']) 
 __info__.appnd('description', doc['description']) 
+__info__.appnd('structure', doc['structure']) 
 __info__.appnd('licence', doc['licence']) 
 __info__.appnd('lgpl-3.0', doc['lgpl-3.0']) 
 __info__.appnd('gen_theory_data', doc['gen_theory_data']) 
