@@ -1,0 +1,45 @@
+0.1 : initial release
+0.2:
+1. implement correction function for A-method (corr_a_method)
+2. Auto_scale: implement correction stage (stage 1)
+               implement scaling another tscan data set with
+	           already scaled scan stage (stage 4)
+3. exp_convolve:
+   Handling of NAN is user side problem
+   Recommandation
+   Set NAN to zero
+4. fit_static: Make initial guess more reliable
+5. fit_static: provide 
+               v: voigt
+               g: gaussian
+               l: lorenzian
+               options for static spectrum fitting
+6. fit_tscan: re implement good limit scheme for time constant
+7. fit_static, fit_tscan: change marker filling 
+7. API change: solve_model does not get time zero parameter
+               anymore.
+0.3:
+API change: solve_model splits to solve_model, compute_model
+	       and compute_signal for computation efficiency
+	       Let y' = Ay be n dim first order linear ODE with
+	       y[0] = y_0.
+	       First, solve_model finds eigenvalue, eigenvector and
+	       coefficients c for such Initial Value Problem.
+	       2-a, compute_model uses eigenvalue,
+	       eigenvector and coefficients c obtained from
+	       solve_model to compute y
+	       2-b, compute_signal evaluates
+	       y_signal = convolve(irf, y)
+
+0.3.1:
+exp_convolve: bug fix 
+
+0.4:
+fit_tscan: Now you can use gaussian, cauchy(lorenzian),
+           pseudo voigt profile for irf function
+fit_static: improve fitting process
+API change: mathfun
+Change licence to GPL3 to LGPL3
+exe: improve parsing and document
+
+	       

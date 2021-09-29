@@ -1,0 +1,7 @@
+[console_scripts]
+TRXASprefitpack_info = TRXASprefitpack.tools:TRXASprefitpack_info
+auto_scale = TRXASprefitpack.tools:auto_scale
+broadening = TRXASprefitpack.tools:broadening
+fit_static = TRXASprefitpack.tools:fit_static
+fit_tscan = TRXASprefitpack.tools:fit_tscan
+

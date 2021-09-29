@@ -1,17 +1,3 @@
-Metadata-Version: 2.1
-Name: TRXASprefitpack
-Version: 0.4.1
-Summary: package for TRXAS pre-fitting process
-Home-page: https://github.com/pistack/TRXASprefitpack
-Author: Junho Lee (pistack)
-Author-email: pistatex@yonsei.ac.kr
-License: LGPLv3
-Platform: any
-Classifier: Development Status :: 3 - Alpha
-Classifier: License :: OSI Approved :: GNU Lesser General Public License v3 (LGPLv3)
-Classifier: Programming Language :: Python :: 3
-Description-Content-Type: text/markdown
-
 ## TRXASprefitpack: package for TRXAS pre-fitting process which aims for the first order dynamics
 
 [![License: LGPL v3](https://img.shields.io/badge/License-LGPL%20v3-blue.svg)](https://www.gnu.org/licenses/lgpl-3.0)
@@ -69,5 +55,3 @@ Licence: LGPL3
   * unpack tar gzip file
   * go to TRXASprefitpack-* directory
   * ``pip install .``
-
-

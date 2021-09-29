@@ -17,8 +17,9 @@ import matplotlib.pyplot as plt
 def fit_tscan():
 
     def set_bound_tau(tau):
-        bound = [tau/2, 1]
-        if 0.1 < tau <= 10:
+        if tau <= 0.1:
+            bound = [tau/2, 1]
+        elif 0.1 < tau <= 10:
             bound = [0.05, 100]
         elif 10 < tau <= 100:
             bound = [5, 500]
@@ -26,6 +27,7 @@ def fit_tscan():
             bound = [50, 2000]
         else:
             bound = [tau/2, np.inf]
+        print(bound)
         return bound
             
     def residual(params, t, num_comp, base, irf, data=None, eps=None):
