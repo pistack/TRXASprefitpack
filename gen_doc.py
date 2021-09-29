@@ -15,7 +15,7 @@ f.close()
 
 doc = dict()
 f = open('./version.txt', 'r')
-doc['version'] = f.read()
+doc['version'] = f.read().replace('\n', '')
 f.close()
 
 for d in doc_lst:
@@ -25,8 +25,6 @@ for d in doc_lst:
 
 doc['description'] = doc['description'].format(doc['version'],
                                                doc['structure'])
-
-doc_lst.remove('structure')
 
 info_script = '''# info.py:
 # copyright: {} by pistatex (Junho Lee).
@@ -53,10 +51,21 @@ doc = dict()
 
 info_script = info_script.format(date.today().year)
 
+lst = doc.keys()
+
 for d in doc.keys():
-    info_script = info_script + f'doc[\'{d}\'] = {doc[d]} \n'
+    if d == 'version':
+        info_script = info_script + f'doc[\'{d}\'] = \'{doc[d]}\' \n'
+    elif d == 'structure':
+        continue
+    else:
+        info_script = info_script + f'doc[\'{d}\'] = {doc[d]} \n'
 for d in doc.keys():
-    info_script = info_script + f'__info__.appnd(\'{d}\', doc[\'{d}\']) \n'
+    if d != 'structure':
+        info_script = info_script + \
+            f'__info__.appnd(\'{d}\', doc[\'{d}\']) \n'
+    else:
+        continue
 
 info_script = info_script + '__info__ = __info__.info' + '\n' + 'del doc'
 

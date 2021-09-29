@@ -7,3 +7,5 @@ submodule for calculating broaded theoritical spectrum
 '''
 
 from .thy import gen_theory_data
+
+__all__ = ['gen_theory_data']

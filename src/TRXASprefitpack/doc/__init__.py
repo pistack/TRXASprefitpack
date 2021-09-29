@@ -7,3 +7,5 @@ Submodule for the TRXASprefitpack documentation
 '''
 
 from .info import __info__
+
+__all__ = ['__info__']
