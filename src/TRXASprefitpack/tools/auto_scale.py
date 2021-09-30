@@ -193,7 +193,7 @@ def auto_scale():
         num_of_tscan = args.num_of_tscan
         tscan_energy = np.genfromtxt(args.tscan_energy)
         time_zeros = np.genfromtxt(args.time_zeros)
-    
+
     if stage not in ['3', '4']:
         e = np.genfromtxt(f'{prefix}_escan_1.txt')[:, 0]
         e = 1000*e  # KeV to eV
@@ -205,7 +205,7 @@ def auto_scale():
         for i in tmp:
             if args_dict[i] is None:
                 print(f"{i} is required for stage {stage}!")
-            return
+                return
         
         ref_escan_index = args.ref_escan_index - 1
         
