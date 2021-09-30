@@ -87,12 +87,14 @@ def exp_conv_cauchy(t, fwhm, k):
 
     gamma = fwhm/2
     if k == 0:
-        ans = complex(0, 1)*(0.5+1/np.pi*np.arctan(t/gamma))
+        ans = 0.5+1/np.pi*np.arctan(t/gamma)
     else:
-        ans = 1/np.pi*np.exp(-k*t)*np.exp(complex(0, -k*gamma)) * \
-            (complex(0, np.pi)-expi(k*t+complex(0, k*gamma)))
+        ans = np.exp(complex(0, -k*gamma)) * \
+            (complex(0, 1)-expi(k*t+complex(0, k*gamma))/np.pi)
+        ans = ans.imag
+        ans = np.exp(-k*t)*ans
     
-    return ans.imag
+    return ans
 
 
 def make_A_matrix(t, k):
