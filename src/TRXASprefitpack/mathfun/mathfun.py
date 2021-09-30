@@ -89,11 +89,18 @@ def exp_conv_cauchy(t, fwhm, k):
     if k == 0:
         ans = 0.5+1/np.pi*np.arctan(t/gamma)
     else:
-        ans = np.exp(complex(0, -k*gamma)) * \
-            (complex(0, 1)-expi(k*t+complex(0, k*gamma))/np.pi)
-        ans = ans.imag
-        ans = np.exp(-k*t)*ans
-    
+        kgamma = k*gamma
+        kt = k*t
+        ans = complex(0, 1)-expi(kt+complex(0, kgamma))/np.pi
+        if len(ans.shape) == 0:
+            if np.abs(ans.imag) < 1e-12:
+                ans = 0
+            else:
+                pass
+        else:
+            ans[np.abs(ans.imag) < 1e-12] = 0
+        ans = -np.sin(kgamma)*ans.real + np.cos(kgamma)*ans.imag
+        ans = np.exp(-kt)*ans
     return ans
 
 
