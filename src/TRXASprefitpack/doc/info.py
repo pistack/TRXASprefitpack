@@ -19,11 +19,11 @@ __info__ = docs()
 
 doc = dict()
 
-doc['version'] = ' 0.4.3' 
+doc['version'] = ' main' 
 doc['description'] = '''
 TRXASprefitpack: package for TRXAS pre-fitting process which aims for the
 first order dynamics
-version:  0.4.3
+version:  main
 
                            numpy, scipy
                                 |
