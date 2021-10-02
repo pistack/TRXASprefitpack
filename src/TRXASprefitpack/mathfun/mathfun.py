@@ -7,7 +7,7 @@
 
 import numpy as np
 import scipy.linalg as LA
-from scipy.special import erf, exp1
+from scipy.special import erfc, exp1
 
 
 def exp_conv_gau(t, fwhm, k):
@@ -41,15 +41,16 @@ def exp_conv_gau(t, fwhm, k):
 
     .. math::
 
-       \\frac{1}{2}\exp\\left(\\frac{k^2}{2\sigma^2}-kt\\right)\\left(1+{erf}\\left(\\frac{1}{\sqrt{2}}\\left(\\frac{t}{\sigma}-k\sigma\\right)\\right)\\right)
+       \\frac{1}{2}\exp\\left(\\frac{k^2}{2\sigma^2}-kt\\right){erfc}\\left(\\frac{1}{\sqrt{2}}\\left(k\sigma-\\frac{t}{\sigma}\\right)\\right)
 
 
     :rtype: numpy_1d_array
     '''
 
     sigma = fwhm/(2*np.sqrt(2*np.log(2)))
+
     return 1/2*np.exp((k*sigma)**2/2.0-k*t) * \
-        (1+erf((t/sigma-k*sigma)/np.sqrt(2.0)))
+        erfc((k*sigma-t/sigma)/np.sqrt(2.0))
 
 
 def exp_conv_cauchy(t, fwhm, k):
