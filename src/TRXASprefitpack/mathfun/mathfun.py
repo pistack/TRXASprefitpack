@@ -7,7 +7,7 @@
 
 import numpy as np
 import scipy.linalg as LA
-from scipy.special import erf, exp1
+from scipy.special import erf, exp1, expi
 
 
 def exp_conv_gau(t, fwhm, k):
@@ -92,7 +92,7 @@ def exp_conv_cauchy(t, fwhm, k):
         ikgamma = complex(0, k*gamma)
         kt = k*t
         ans = np.exp(-ikgamma)*exp1(-kt-ikgamma)
-        ans = np.exp(-kt)*ans.imag
+        ans = np.exp(-kt)*ans.imag/np.pi
     return ans
 
 
