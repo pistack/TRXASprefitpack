@@ -19,11 +19,11 @@ __info__ = docs()
 
 doc = dict()
 
-doc['version'] = ' 0.4.1' 
+doc['version'] = ' 0.4.3' 
 doc['description'] = '''
 TRXASprefitpack: package for TRXAS pre-fitting process which aims for the
 first order dynamics
-version:  0.4.1
+version:  0.4.3
 
                            numpy, scipy
                                 |
@@ -491,8 +491,7 @@ exp_conv_cauchy(t, fwhm, k):
    Returns:
       convolution of normalized cauchy distribution and exp(-kt)
 
-      \frac{\exp(-kt)}{\pi}\Im\left(\exp(-ik\gamma)\cdot\left(i\pi -
-      {Ei}\left(kt+ik\gamma\right)\right)\right)
+      \frac{\exp(-kt)}{\pi}\Im\left(\exp(-ik\gamma)\cdot\{E1}(-kt-ik\gamma)\right)
 
    Return type:
       numpy_1d_array

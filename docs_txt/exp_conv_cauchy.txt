@@ -22,8 +22,7 @@ exp_conv_cauchy(t, fwhm, k):
    Returns:
       convolution of normalized cauchy distribution and exp(-kt)
 
-      \frac{\exp(-kt)}{\pi}\Im\left(\exp(-ik\gamma)\cdot\left(i\pi -
-      {Ei}\left(kt+ik\gamma\right)\right)\right)
+      \frac{\exp(-kt)}{\pi}\Im\left(\exp(-ik\gamma)\cdot\{E1}(-kt-ik\gamma)\right)
 
    Return type:
       numpy_1d_array
