@@ -138,6 +138,11 @@ dmypy.json
 cython_debug/
 
 # Any other useless file
-*.pyc *.pyo *.pyd *.swp *.bak *~
+*.pyc
+*.pyo
+*.pyd
+*.swp
+*.bak
+*~
 */_build
 */build
