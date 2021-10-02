@@ -47,11 +47,11 @@ def fit_static():
         return chi
 
     description = '''
-fit static: fitting static spectrum with tddft calc peaks convolved by 
-line_shape
-v: voigt profile
-g: gaussian
-l: lorenzian
+fit static: fitting static spectrum with theoretically calculated line spectrum
+broadened by spectral line shape
+v: voigt profile,
+g: gaussian,
+l: lorenzian,
 to correct baseline, it uses linear line
 '''
 

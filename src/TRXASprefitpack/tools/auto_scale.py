@@ -10,13 +10,11 @@ def auto_scale():
     description = '''
     auto_scale: Automatic scaling escan and tscan data using
     ``A-method''
-    Type ``TRXASprefitpack_info automate_scaling'' to see further
-    information
     '''
     epilog = '''
     *Note:
     auto_scale assume each escan have same energy range and
-    and each tscan have same time range. 
+    each tscan have same time range. 
     Also it assumes energy unit of
     escan data is KeV but assumes energy unit of tscan_energy_file
     is eV. Moreover energy unit of scaled_escan is eV.

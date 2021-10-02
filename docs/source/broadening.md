@@ -1,6 +1,6 @@
 # broadening
 
-voigt broaden theoritical calculated lineshape spectrum
+generates voigt broadened theoritical calculated lineshape spectrum
 
 * usage: broadening [-h] [-o OUT] peak e_min e_max A fwhm_G fwhm_L peak_shift
 

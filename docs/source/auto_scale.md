@@ -3,9 +3,9 @@
 Automatic scaling escan and tscan data using ``A-method``
 
 ```{note} 
-auto_scale assume each escan have same energy range and and each tscan
+auto_scale assume each escan have same energy range and each tscan
 have same time range. Also it assumes energy unit of escan data is KeV but
-assumes energy unit of tscan_energy_file is eV. Moreover energy unit of
+energy unit of tscan_energy_file is eV. Moreover energy unit of
 scaled_escan is eV. However time unit for tscan data and escan time must be
 same.
 ```
@@ -45,7 +45,7 @@ same.
                          filename for the parameter A obtained from fit_static
 
 
-* Stage discription
+## Stage discription
 
 * stage -1: description
   It prints the description about each stages and aborts.
@@ -152,7 +152,7 @@ same.
     Next, it scales tscan datas just like stage 1.
     After stage4 finished you should go to stage 2 and stage 3.
 	
-* A-method
+## A-method
 
     When we measure each escan, we measure static spectrum (flu_off) to
     get difference spectrum (flu_on - flu_off)
