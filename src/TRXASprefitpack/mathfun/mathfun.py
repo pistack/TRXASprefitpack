@@ -7,7 +7,7 @@
 
 import numpy as np
 import scipy.linalg as LA
-from scipy.special import erf, expi
+from scipy.special import erf, exp1
 
 
 def exp_conv_gau(t, fwhm, k):
@@ -79,7 +79,7 @@ def exp_conv_cauchy(t, fwhm, k):
     :return: convolution of normalized cauchy distribution and exp(-kt)
 
     .. math::
-       \\frac{\\exp(-kt)}{\\pi}\\Im\\left(\\exp(-ik\\gamma)\cdot\\left(i\\pi - {Ei}\\left(kt+ik\gamma\\right)\\right)\\right)
+       \\frac{\\exp(-kt)}{\\pi}\\Im\\left(\\exp(-ik\\gamma)\cdot{E1}(-kt-ik\\gamma)\\right)
 
 
     :rtype: numpy_1d_array 
@@ -89,18 +89,10 @@ def exp_conv_cauchy(t, fwhm, k):
     if k == 0:
         ans = 0.5+1/np.pi*np.arctan(t/gamma)
     else:
-        kgamma = k*gamma
+        ikgamma = complex(0, k*gamma)
         kt = k*t
-        ans = complex(0, 1)-expi(kt+complex(0, kgamma))/np.pi
-        if len(ans.shape) == 0:
-            if np.abs(ans.imag) < 1e-12:
-                ans = 0
-            else:
-                pass
-        else:
-            ans[np.abs(ans.imag) < 1e-12] = 0
-        ans = -np.sin(kgamma)*ans.real + np.cos(kgamma)*ans.imag
-        ans = np.exp(-kt)*ans
+        ans = np.exp(-ikgamma)*exp1(-kt-ikgamma)
+        ans = np.exp(-kt)*ans.imag/np.pi
     return ans
 
 
