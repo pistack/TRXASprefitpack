@@ -136,5 +136,8 @@ dmypy.json
 
 # Cython debug symbols
 cython_debug/
+
+# Any other useless file
 *.pyc *.pyo *.pyd *.swp *.bak *~
 */_build
+*/build

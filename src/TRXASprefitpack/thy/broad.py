@@ -1,9 +1,10 @@
-# thy.py
-# Author: Pistack
-# Date: 2021. 08. 29.
-# Email: pistatex@yonsei.ac.kr
-# Part of XAS-pre-fit-pack package
-# Useful function for broeadening spectrum
+'''
+broad:
+submodule for broading theoritical spectrum
+
+:copyright: 2021 by pistack (Junho Lee).
+:license: LGPL3
+'''
 
 import numpy as np
 from scipy.special import voigt_profile 

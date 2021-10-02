@@ -1,5 +1,5 @@
 myst_parser
-sphinx-book-theme
+sphinx_book_theme
 numpy
 scipy
 matplotlib

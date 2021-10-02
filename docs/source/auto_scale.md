@@ -160,9 +160,6 @@ same.
     spectrum with measured static spectrum using following model.
 
     ```{math} y = A \cdot {conv}({spec}_{thy}, {voigt}({fwhm}_G, {fwhm}_L, {peakshift})) + {baseline}
-	---
-	label: model
-	---
 	```
 
     Also, using ``fit_static``, you can simultaneous fitting each
@@ -172,9 +169,6 @@ same.
     so pure static signal(w/o environmental effects) is
 	
     ```{math} A \cdot {conv}({spec}_{thy}, {voigt}({fwhm}_G, {fwhm}_L, {peakshift}))
-	---
-	label: model2
-	---
 	```
 	
     Each escan has same fwhm_G, fwhm_L and peak_shift value, so

@@ -4,10 +4,13 @@ TRXASprefitpack.doc package
 Submodules
 ----------
 
-.. toctree::
-   :maxdepth: 4
+TRXASprefitpack.doc.info module
+-------------------------------
 
-   TRXASprefitpack.doc.info
+.. automodule:: TRXASprefitpack.doc.info
+   :members:
+   :undoc-members:
+   :show-inheritance:
 
 Module contents
 ---------------
