@@ -12,5 +12,5 @@ from .data_process import *
 from .mathfun import *
 from .doc import *
 
-__version__ = __info__['version']
+__version__ = '0.4.4'
 

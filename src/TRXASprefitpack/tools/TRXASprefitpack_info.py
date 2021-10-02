@@ -15,5 +15,6 @@ def TRXASprefitpack_info():
         print(__info__['description'])
         print(__info__['licence'])
         print("Type TRXASprefitpack lgpl-3.0 to see full description of the licence")
+        print("Deprecated Warning: This script will be removed in version 0.5!")
     return
         
