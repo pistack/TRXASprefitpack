@@ -5,9 +5,7 @@ from ..thy import gen_theory_data
 
 def broadening():
     description = '''
-    broadening: voigt broaden theoritical calc spectrum
-    type ``TRXASprefitpack_info gen_theory_data'' to see
-    detailed information
+    broadening: generates voigt broadened theoritical calc spectrum
     '''
 
     parser = argparse.ArgumentParser(description=description)

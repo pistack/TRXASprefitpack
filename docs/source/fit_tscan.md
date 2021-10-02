@@ -67,6 +67,26 @@ timezero of this scan. So, --no_base option is discouraged.
   * if 100 < tau < 1000
     * lower bound: 50
     * upper bound: 2000
+	
+  * if 1000 < tau < 5000 then
+    * lower bound: 500
+    * upper bound: 10000
+
+  * if 5000 < tau < 50000 then
+    * lower bound: 2500
+    * upper bound: 100000
+
+  * if 50000 < tau < 500000 then
+    * lower bound: 25000
+    * upper bound: 1000000
+
+  * if 500000 < tau < 1000000 then
+    * lower bound: 250000
+    * upper bound: 2000000
+
+  * if 1000000 < tau then
+    * lower bound: tau/2
+    * upper bound: np.inf
 
   * if 1000 < tau then
     * lower bound: tau/2

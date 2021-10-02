@@ -24,7 +24,15 @@ def fit_tscan():
             bound = [5, 500]
         elif 100 < tau <= 1000:
             bound = [50, 2000]
-        elif 1000 < tau:
+        elif 1000 < tau <= 5000:
+            bound = [500, 10000]
+        elif 5000 < tau <= 50000:
+            bound = [2500, 100000]
+        elif 50000 < tau <= 500000:
+            bound = [25000, 1000000]
+        elif 500000 < tau <= 1000000:
+            bound = [250000, 2000000]
+        else:
             bound = [tau/2, np.inf]
         return bound
             
@@ -85,7 +93,23 @@ if 100 < tau < 1000
 lower bound: 50
 upper bound: 2000
 
-if 1000 < tau then
+if 1000 < tau < 5000 then
+lower bound: 500
+upper bound: 10000
+
+if 5000 < tau < 50000 then
+lower bound: 2500
+upper bound: 100000
+
+if 50000 < tau < 500000 then
+lower bound: 25000
+upper bound: 1000000
+
+if 500000 < tau < 1000000 then
+lower bound: 250000
+upper bound: 2000000
+
+if 1000000 < tau then
 lower bound: tau/2
 upper bound: np.inf
 '''

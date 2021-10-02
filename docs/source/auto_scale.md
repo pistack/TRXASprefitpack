@@ -3,9 +3,9 @@
 Automatic scaling escan and tscan data using ``A-method``
 
 ```{note} 
-auto_scale assume each escan have same energy range and and each tscan
+auto_scale assume each escan have same energy range and each tscan
 have same time range. Also it assumes energy unit of escan data is KeV but
-assumes energy unit of tscan_energy_file is eV. Moreover energy unit of
+energy unit of tscan_energy_file is eV. Moreover energy unit of
 scaled_escan is eV. However time unit for tscan data and escan time must be
 same.
 ```
