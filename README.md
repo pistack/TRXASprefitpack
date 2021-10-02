@@ -10,7 +10,7 @@
 
 [![Documentation Status](https://readthedocs.org/projects/trxasprefitpack/badge/?version=latest)](https://trxasprefitpack.readthedocs.io/en/latest/?badge=latest)
 
-version:  0.4.2
+version:  0.4.3
 
 Copyright: (C) 2021  Junho Lee (@pistack) (Email: pistatex@yonsei.ac.kr)
 
