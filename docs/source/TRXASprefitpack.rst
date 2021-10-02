@@ -11,7 +11,6 @@ Utilites
    fit_static
    fit_tscan
    TRXASprefitpack_info
-   
 
 Subpackages
 -----------
