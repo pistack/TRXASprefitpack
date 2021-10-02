@@ -41,7 +41,7 @@ timezero of this scan. So, --no_base option is discouraged.
   * -o OUT, --out OUT     prefix for output files
 
 
-**Parameter bound scheme**
+## Parameter bound scheme
 
 * fwhm: temporal width of x-ray pulse
   * lower bound: 0.5*fwhm_init
@@ -92,7 +92,7 @@ timezero of this scan. So, --no_base option is discouraged.
     * lower bound: tau/2
     * upper bound: np.inf
 	 
-**Mixing parameter eta**
+## Mixing parameter eta
 
 For pseudo voigt IRF function, mixing parameter eta is guessed to
 ```{math} \eta = 1.36603({fwhm}_L/f)-0.47719({fwhm}_L/f)^2+0.11116({fwhm}_L/f)^3

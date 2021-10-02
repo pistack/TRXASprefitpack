@@ -45,7 +45,7 @@ same.
                          filename for the parameter A obtained from fit_static
 
 
-* Stage discription
+## Stage discription
 
 * stage -1: description
   It prints the description about each stages and aborts.
@@ -152,7 +152,7 @@ same.
     Next, it scales tscan datas just like stage 1.
     After stage4 finished you should go to stage 2 and stage 3.
 	
-* A-method
+## A-method
 
     When we measure each escan, we measure static spectrum (flu_off) to
     get difference spectrum (flu_on - flu_off)
