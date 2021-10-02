@@ -7,7 +7,7 @@
 
 import numpy as np
 import scipy.linalg as LA
-from scipy.special import erf, exp1, expi
+from scipy.special import erf, exp1
 
 
 def exp_conv_gau(t, fwhm, k):
