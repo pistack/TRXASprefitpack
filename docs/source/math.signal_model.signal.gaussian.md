@@ -14,13 +14,25 @@ Let $u=(x-t)/(\sigma\sqrt{2})$ then
 Let $v=u+(k\sigma)/\sqrt{2}$ then
 \begin{align*}
 {Signal}_g(t) &= \frac{\exp((k\sigma)^2/2-kt)}{\sqrt{\pi}} \int_{(k\sigma)/\sqrt{2}-t/(\sigma\sqrt{2})}^{\infty} \exp(-v^2) \mathrm{d} v \\
-&= \frac{1}{2}\exp\left(\frac{(k\sigma)^2}{2}-kt\right){erfc}\left(\frac{1}{\sqrt{2}}\left(k\sigma - \frac{t}{\sigma}\right)\right)
+&= \frac{1}{2}\exp\left(\frac{(k\sigma)^2}{2}-kt\right)\mathrm{erfc}\left(\frac{1}{\sqrt{2}}\left(k\sigma - \frac{t}{\sigma}\right)\right)
 \end{align*}
 
 So, experimental signal is modeled to
 
 \begin{equation*}
-{Signal}_g(t) = \frac{1}{2}\exp\left(\frac{(k\sigma)^2}{2}-kt\right){erfc}\left(\frac{1}{\sqrt{2}}\left(k\sigma - \frac{t}{\sigma}\right)\right)
+{Signal}_g(t) = \frac{1}{2}\exp\left(\frac{(k\sigma)^2}{2}-kt\right)\mathrm{erfc}\left(\frac{1}{\sqrt{2}}\left(k\sigma - \frac{t}{\sigma}\right)\right)
 \end{equation*}
 
-${erfc}(x)$ is complementary error function, see [dlmf section 7.2](https://dlmf.nist.gov/7.2).
+$\mathrm{erfc}(x)$ is complementary error function, see [dlmf section 7.2](https://dlmf.nist.gov/7.2).
+
+This is also equivalent to
+
+\begin{equation*}
+{Signal}_g(t) = \frac{1}{2}\exp\left(-\frac{t^2}{2\sigma^2}\right)\mathrm{erfcx}\left(\frac{1}{\sqrt{2}}\left(k\sigma - \frac{t}{\sigma}\right)\right)
+\end{equation*}
+
+$\mathrm{erfcx}(x)$ is scaled complementary error function, see [dlmf section 7.2](https://dlmf.nist.gov/7.2).
+
+
+
+
