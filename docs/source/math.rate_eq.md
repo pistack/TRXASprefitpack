@@ -5,10 +5,11 @@ In pump prove time resolved spectroscopy, we assume reaction occurs just after p
 \begin{equation*}
 y'(t) = \begin{cases}
 0& \text{if $t < 0$}, \\
-y_0& \text{if $t=0$}, \\
 Ay(t)& \text{if $t>0$}.
 \end{cases}
 \end{equation*}
+
+with, $y(0)=y_0$.
 
 Ususally, y is modeled to sum of the exponential decays, so we can assume the matrix A could be diagonalizable.
 

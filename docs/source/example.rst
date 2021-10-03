@@ -7,3 +7,4 @@ Examples
    basic
    IRF
    broad
+   Rate_eq

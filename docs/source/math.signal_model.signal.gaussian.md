@@ -22,3 +22,5 @@ So, experimental signal is modeled to
 \begin{equation*}
 {Signal}_g(t) = \frac{1}{2}\exp\left(\frac{(k\sigma)^2}{2}-kt\right){erfc}\left(\frac{1}{\sqrt{2}}\left(k\sigma - \frac{t}{\sigma}\right)\right)
 \end{equation*}
+
+${erfc}(x)$ is complementary error function, see [dlmf section 7.2](https://dlmf.nist.gov/7.2).

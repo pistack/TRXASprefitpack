@@ -23,3 +23,5 @@ So, experimental signal is modeled to
 \end{cases}
 \end{equation*}
 
+${E1}(z)$ is exponential integral, see [dlmf section 6.2](https://dlmf.nist.gov/6.2). 
+
