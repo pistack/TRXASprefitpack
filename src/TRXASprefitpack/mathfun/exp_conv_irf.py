@@ -8,7 +8,7 @@ exponential decay convolved with irf
 '''
 
 import numpy as np
-from scipy.special import erfc, exp1
+from scipy.special import erfc, erfcx, exp1
 
 
 def exp_conv_gau(t, fwhm, k):
@@ -48,9 +48,27 @@ def exp_conv_gau(t, fwhm, k):
     '''
 
     sigma = fwhm/(2*np.sqrt(2*np.log(2)))
+    ksigma = k*sigma
+    ksigma2 = ksigma*sigma
+    tinvsigma = t/sigma
 
-    return 1/2*np.exp((k*sigma)**2/2.0-k*t) * \
-        erfc((k*sigma-t/sigma)/np.sqrt(2.0))
+    if len(t.shape) == 0:
+        if ksigma2 > t:
+            ans = 1/2*np.exp(-0.5*tinvsigma**2) * \
+                erfcx(1/np.sqrt(2)*(ksigma-tinvsigma))
+        else:
+            ans = 1/2*np.exp(k*(0.5*ksigma2-t)) * \
+                erfc(1/np.sqrt(2)*(ksigma - tinvsigma))
+    else:
+        mask = t < ksigma2
+        inv_mask = np.invert(mask)
+        ans = np.zeros(t.shape[0])
+        ans[mask] = 1/2*np.exp(-0.5*tinvsigma[mask]**2) * \
+            erfcx(1/np.sqrt(2)*(ksigma-tinvsigma[mask]))
+        ans[inv_mask] = 1/2*np.exp(k*(0.5*ksigma2-t[inv_mask])) * \
+            erfc(1/np.sqrt(2)*(ksigma - tinvsigma[inv_mask]))
+
+    return ans
 
 
 def exp_conv_cauchy(t, fwhm, k):
