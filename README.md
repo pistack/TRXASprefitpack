@@ -1,4 +1,4 @@
-## TRXASprefitpack: package for TRXAS pre-fitting process which aims for the first order dynamics
+# TRXASprefitpack: package for TRXAS pre-fitting process which aims for the first order dynamics
 
 [![License: LGPL v3](https://img.shields.io/badge/License-LGPL%20v3-blue.svg)](https://www.gnu.org/licenses/lgpl-3.0)
 
@@ -16,7 +16,7 @@ Copyright: (C) 2021  Junho Lee (@pistack) (Email: pistatex@yonsei.ac.kr)
 
 Licence: LGPL3
 
-# Features
+## Features
 * Utilites
   * **auto_scale**: match the scaling of energy scan and time scan data
   * **broadenig**: voigt broadening your theoritical calculated line spectrum
@@ -27,7 +27,7 @@ Licence: LGPL3
   * See source documents [Docs](https://trxasprefitpack.readthedocs.io/)
   
 
-# How to get documents for TRXASprefitpack package
+## How to get documents for TRXASprefitpack package
 
 * From www web
   * [Docs](https://trxasprefitpack.readthedocs.io/) are hosted in readthedocs
@@ -41,7 +41,7 @@ Licence: LGPL3
     * for windows: ``./make.bat``
     * for mac and linux: ``make``
 
-# How to install TRXASprefitpack package
+## How to install TRXASprefitpack package
 * Easy way
   * ``pip install TRXASprefitpack``
 * Advanced way (from release tar archive)
@@ -57,3 +57,7 @@ Licence: LGPL3
   * unpack tar gzip file
   * go to TRXASprefitpack-* directory
   * ``pip install .``
+
+## Examples
+Jupyter notebook examples for ``TRXASprefitpack`` are located in
+[example](https://github.com/pistack/TRXASprefitpack-example)
