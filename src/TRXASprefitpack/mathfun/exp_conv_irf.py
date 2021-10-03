@@ -30,7 +30,7 @@ def exp_conv_gau(t, fwhm, k):
        IRF(t) = \\frac{1}{\\sigma \\sqrt{2\pi}}\\exp\\left(-\\frac{t^2}{2\\sigma^2}\\right)
 
     :param t: time
-    :type t: float or numpy_1d_array
+    :type t: float, numpy_1d_array
     :param fwhm: full width at half maximum of x-ray temporal pulse
     :type fwhm: float
     :param k: rate constant (inverse of life time)
@@ -88,7 +88,7 @@ def exp_conv_cauchy(t, fwhm, k):
     
 
     :param t: time
-    :type t: float or numpy_1d_array
+    :type t: float, numpy_1d_array
     :param fwhm: full width at half maximum of x-ray temporal pulse
     :type fwhm: float
     :param k: rate constant (inverse of life time)
