@@ -286,7 +286,7 @@ plt.show()
 
 
     
-![png](Rate_eq_files/Rate_eq_12_0.png)
+![png](../TRXAS-pre-fit-pack/docs/source/Rate_eq_files/../TRXAS-pre-fit-pack/docs/source/Rate_eq_12_0.png)
     
 
 
@@ -303,7 +303,7 @@ plt.show()
 
 
     
-![png](Rate_eq_files/Rate_eq_14_0.png)
+![png](../TRXAS-pre-fit-pack/docs/source/Rate_eq_files/../TRXAS-pre-fit-pack/docs/source/Rate_eq_14_0.png)
     
 
 
@@ -321,7 +321,7 @@ plt.show()
 
 
     
-![png](Rate_eq_files/Rate_eq_16_0.png)
+![png](../TRXAS-pre-fit-pack/docs/source/Rate_eq_files/../TRXAS-pre-fit-pack/docs/source/Rate_eq_16_0.png)
     
 
 
@@ -338,7 +338,7 @@ plt.show()
 
 
     
-![png](Rate_eq_files/Rate_eq_18_0.png)
+![png](../TRXAS-pre-fit-pack/docs/source/Rate_eq_files/../TRXAS-pre-fit-pack/docs/source/Rate_eq_18_0.png)
     
 
 
@@ -356,7 +356,7 @@ plt.show()
 
 
     
-![png](Rate_eq_files/Rate_eq_20_0.png)
+![png](../TRXAS-pre-fit-pack/docs/source/Rate_eq_files/../TRXAS-pre-fit-pack/docs/source/Rate_eq_20_0.png)
     
 
 
@@ -373,7 +373,7 @@ plt.show()
 
 
     
-![png](Rate_eq_files/Rate_eq_22_0.png)
+![png](../TRXAS-pre-fit-pack/docs/source/Rate_eq_files/../TRXAS-pre-fit-pack/docs/source/Rate_eq_22_0.png)
     
 
 

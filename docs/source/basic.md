@@ -38,7 +38,7 @@ help(TRXASprefitpack)
         __info__ = {'TRXASprefitpack_info': '\nTRXASprefitpack_info\n*********...
     
     VERSION
-        0.4.5
+        0.4.6
     
     FILE
         /home/lis1331/anaconda3/lib/python3.8/site-packages/TRXASprefitpack/__init__.py
@@ -56,7 +56,7 @@ TRXASprefitpack.__version__
 
 
 
-    '0.4.5'
+    '0.4.6'
 
 
 

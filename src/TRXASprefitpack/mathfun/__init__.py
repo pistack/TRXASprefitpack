@@ -16,4 +16,3 @@ __all__ = ['exp_conv_gau', 'exp_conv_cauchy', 'exp_conv_pvoigt',
            'solve_model', 'compute_model',
            'compute_signal_gau', 'compute_signal_cauchy',
            'compute_signal_pvoigt', 'model_n_comp_conv', 'fact_anal_exp_conv']
-

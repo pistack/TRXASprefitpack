@@ -83,7 +83,7 @@ plt.show()
 
 
     
-![png](IRF_files/IRF_6_0.png)
+![png](../TRXAS-pre-fit-pack/docs/source/IRF_files/../TRXAS-pre-fit-pack/docs/source/IRF_6_0.png)
     
 
 
@@ -108,7 +108,7 @@ plt.show()
 
 
     
-![png](IRF_files/IRF_9_0.png)
+![png](../TRXAS-pre-fit-pack/docs/source/IRF_files/../TRXAS-pre-fit-pack/docs/source/IRF_9_0.png)
     
 
 
@@ -129,7 +129,7 @@ plt.show()
 
 
     
-![png](IRF_files/IRF_11_0.png)
+![png](../TRXAS-pre-fit-pack/docs/source/IRF_files/../TRXAS-pre-fit-pack/docs/source/IRF_11_0.png)
     
 
 
@@ -159,7 +159,7 @@ plt.show()
 
 
     
-![png](IRF_files/IRF_14_0.png)
+![png](../TRXAS-pre-fit-pack/docs/source/IRF_files/../TRXAS-pre-fit-pack/docs/source/IRF_14_0.png)
     
 
 
@@ -182,7 +182,7 @@ plt.show()
 
 
     
-![png](IRF_files/IRF_17_0.png)
+![png](../TRXAS-pre-fit-pack/docs/source/IRF_files/../TRXAS-pre-fit-pack/docs/source/IRF_17_0.png)
     
 
 
@@ -205,7 +205,7 @@ plt.show()
 
 
     
-![png](IRF_files/IRF_20_0.png)
+![png](../TRXAS-pre-fit-pack/docs/source/IRF_files/../TRXAS-pre-fit-pack/docs/source/IRF_20_0.png)
     
 
 
@@ -226,7 +226,7 @@ plt.show()
 
 
     
-![png](IRF_files/IRF_22_0.png)
+![png](../TRXAS-pre-fit-pack/docs/source/IRF_files/../TRXAS-pre-fit-pack/docs/source/IRF_22_0.png)
     
 
 
@@ -247,7 +247,7 @@ plt.show()
 
 
     
-![png](IRF_files/IRF_24_0.png)
+![png](../TRXAS-pre-fit-pack/docs/source/IRF_files/../TRXAS-pre-fit-pack/docs/source/IRF_24_0.png)
     
 
 
@@ -268,7 +268,7 @@ plt.show()
 
 
     
-![png](IRF_files/IRF_26_0.png)
+![png](../TRXAS-pre-fit-pack/docs/source/IRF_files/../TRXAS-pre-fit-pack/docs/source/IRF_26_0.png)
     
 
 
@@ -295,7 +295,7 @@ plt.show()
 
 
     
-![png](IRF_files/IRF_29_0.png)
+![png](../TRXAS-pre-fit-pack/docs/source/IRF_files/../TRXAS-pre-fit-pack/docs/source/IRF_29_0.png)
     
 
 
@@ -312,15 +312,9 @@ plt.legend()
 plt.show()
 ```
 
-    /home/lis1331/anaconda3/lib/python3.8/site-packages/TRXASprefitpack/mathfun/exp_conv_irf.py:114: RuntimeWarning: overflow encountered in exp
-      ans = np.exp(-kt)*ans.imag/np.pi
-    /home/lis1331/anaconda3/lib/python3.8/site-packages/TRXASprefitpack/mathfun/exp_conv_irf.py:114: RuntimeWarning: invalid value encountered in multiply
-      ans = np.exp(-kt)*ans.imag/np.pi
-
-
 
     
-![png](IRF_files/IRF_30_1.png)
+![png](../TRXAS-pre-fit-pack/docs/source/IRF_files/../TRXAS-pre-fit-pack/docs/source/IRF_30_0.png)
     
 
 
@@ -338,7 +332,7 @@ plt.show()
 
 
     
-![png](IRF_files/IRF_31_0.png)
+![png](../TRXAS-pre-fit-pack/docs/source/IRF_files/../TRXAS-pre-fit-pack/docs/source/IRF_31_0.png)
     
 
 
@@ -356,7 +350,7 @@ plt.show()
 
 
     
-![png](IRF_files/IRF_32_0.png)
+![png](../TRXAS-pre-fit-pack/docs/source/IRF_files/../TRXAS-pre-fit-pack/docs/source/IRF_32_0.png)
     
 
 

@@ -83,7 +83,7 @@ plt.show()
 
 
     
-![png](broad_files/broad_9_0.png)
+![png](../TRXAS-pre-fit-pack/docs/source/broad_files/../TRXAS-pre-fit-pack/docs/source/broad_9_0.png)
     
 
 
@@ -111,7 +111,7 @@ plt.show()
 
 
     
-![png](broad_files/broad_12_0.png)
+![png](../TRXAS-pre-fit-pack/docs/source/broad_files/../TRXAS-pre-fit-pack/docs/source/broad_12_0.png)
     
 
 
@@ -139,7 +139,7 @@ plt.show()
 
 
     
-![png](broad_files/broad_15_0.png)
+![png](../TRXAS-pre-fit-pack/docs/source/broad_files/../TRXAS-pre-fit-pack/docs/source/broad_15_0.png)
     
 
 
@@ -166,7 +166,7 @@ plt.show()
 
 
     
-![png](broad_files/broad_18_0.png)
+![png](../TRXAS-pre-fit-pack/docs/source/broad_files/../TRXAS-pre-fit-pack/docs/source/broad_18_0.png)
     
 
 
@@ -196,6 +196,6 @@ plt.show()
 
 
     
-![png](broad_files/broad_22_0.png)
+![png](../TRXAS-pre-fit-pack/docs/source/broad_files/../TRXAS-pre-fit-pack/docs/source/broad_22_0.png)
     
 

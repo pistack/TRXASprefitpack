@@ -10,7 +10,7 @@
 
 [![Documentation Status](https://readthedocs.org/projects/trxasprefitpack/badge/?version=latest)](https://trxasprefitpack.readthedocs.io/en/latest/?badge=latest)
 
-version:  0.4.5
+version:  0.4.6
 
 Copyright: (C) 2021  Junho Lee (@pistack) (Email: pistatex@yonsei.ac.kr)
 
@@ -51,7 +51,7 @@ Licence: LGPL3
   * Now type ``pip install .``
 * Advanced way (from repository)
   * ``git clone https://github.com/pistack/TRXASprefitpack.git``
-  * ``git checkout v0.4.5``
+  * ``git checkout v0.4.6``
   * ``cd TRXASprefitpack``
   * ``python3 -m build``
   * ``cd dist``
@@ -61,4 +61,4 @@ Licence: LGPL3
 
 ## Examples
 Jupyter notebook examples for ``TRXASprefitpack`` are located in
-[example](https://github.com/pistack/TRXASprefitpack-example)
+[example](https://github.com/pistack/TRXASprefitpack-example/tree/v0.4.6)
