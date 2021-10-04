@@ -1,6 +1,6 @@
 # Gaussian
 
-Usually, instrument response function modeled to the normalized gaussian distribution.
+Usually, instrument response function is modeled as the normalized gaussian distribution.
 
 \begin{equation*}
 {IRF}(t) = \frac{1}{\sigma \sqrt{2\pi}}\exp\left(-\frac{t^2}{2\sigma^2}\right)

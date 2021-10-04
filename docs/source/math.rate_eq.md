@@ -11,7 +11,7 @@ Ay(t)& \text{if $t>0$}.
 
 with, $y(0)=y_0$.
 
-Ususally, y is modeled to sum of the exponential decays, so we can assume the matrix A could be diagonalizable.
+Ususally, y is modeled as sum of the exponential decays, so we can assume the matrix A could be diagonalizable.
 
 Then, 
 \begin{equation*}

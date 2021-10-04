@@ -152,27 +152,29 @@ same.
     Next, it scales tscan datas just like stage 1.
     After stage4 finished you should go to stage 2 and stage 3.
 	
-## A-method
+## A_method
+    
+When we measure each escan, we measure static spectrum (${flu}_{off}$) to
+get difference spectrum (${flu}_{on} - {flu}_{off}$)
+Since we have theortical static spectrum, we can fit theortical
+spectrum with measured static spectrum using following model.
 
-    When we measure each escan, we measure static spectrum (flu_off) to
-    get difference spectrum (flu_on - flu_off)
-    Since we have theortical static spectrum, we can fit theortical
-    spectrum with measured static spectrum using following model.
+\begin{equation*} 
+	y = A \cdot {conv}({spec}_{thy}, {voigt}({fwhm}_G, {fwhm}_L, {peakshift})) + {baseline}
+\end{equation*}
 
-    ```{math} y = A \cdot {conv}({spec}_{thy}, {voigt}({fwhm}_G, {fwhm}_L, {peakshift})) + {baseline}
-	```
-
-    Also, using ``fit_static``, you can simultaneous fitting each
-    escan. During fitting process, it assume fwhm_G, fwhm_L, peak_shift
-    are same in each escan, only scaling factor A and base_line are
-    different. Parameter base_line reflects environmental effects,
-    so pure static signal(w/o environmental effects) is
+Also, using ``fit_static``, you can simultaneous fitting each
+escan. During fitting process, it assume fwhm_G, fwhm_L, peak_shift
+are same in each escan, only scaling factor A and base_line are
+different. Parameter base_line reflects environmental effects,
+so pure static signal(w/o environmental effects) is
 	
-    ```{math} A \cdot {conv}({spec}_{thy}, {voigt}({fwhm}_G, {fwhm}_L, {peakshift}))
-	```
+\begin{equation*}
+A \cdot {conv}({spec}_{thy}, {voigt}({fwhm}_G, {fwhm}_L, {peakshift}))
+\end{equation*}
 	
-    Each escan has same fwhm_G, fwhm_L and peak_shift value, so
-    Parameter A (scaling parameter) could tell relative scaling of each escan.
-    In other words, we can fit scaling of escan data just multipling
-    A_ref/A to each escan.
-	However, due to inconsistence of laser overlap between energy scans, one good time delay scan is needed to correct the scaling of energy scans.
+Each escan has same fwhm_G, fwhm_L and peak_shift value, so
+Parameter A (scaling parameter) could tell relative scaling of each escan.
+In other words, we can fit scaling of escan data just multipling
+A_ref/A to each escan.
+However, due to inconsistence of laser overlap between energy scans, one good time delay scan is needed to correct the scaling of energy scans.

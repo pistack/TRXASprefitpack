@@ -87,16 +87,15 @@ timezero of this scan. So, --no_base option is discouraged.
   * if 1000000 < tau then
     * lower bound: tau/2
     * upper bound: np.inf
-
-  * if 1000 < tau then
-    * lower bound: tau/2
-    * upper bound: np.inf
 	 
 ## Mixing parameter eta
 
 For pseudo voigt IRF function, mixing parameter eta is guessed to
-```{math} \eta = 1.36603({fwhm}_L/f)-0.47719({fwhm}_L/f)^2+0.11116({fwhm}_L/f)^3
-```
+
+\begin{equation*}
+\eta = 1.36603({fwhm}_L/f)-0.47719({fwhm}_L/f)^2+0.11116({fwhm}_L/f)^3
+\end{equation*}
+
 where
 \begin{align*}
 f &= ({fwhm}_G^5+2.69269{fwhm}_G^4{fwhm}_L+2.42843{fwhm}_G^3{fwhm}_L^2 \\
