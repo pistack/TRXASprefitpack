@@ -153,3 +153,36 @@ def exp_conv_cauchy(t, fwhm, k):
             ans2 = -inv_z*ans2
             ans[inv_mask] = ans2.imag/np.pi
     return ans
+
+
+def exp_conv_pvoigt(t, fwhm_G, fwhm_L, eta, k):
+
+    '''
+    Compute exponential function convolved with normalized pseudo
+    voigt profile
+
+    Note.
+    We assume temporal pulse of x-ray is pseudo voigt profile
+
+    .. math::
+       \mathrm{pvoigt}(t) = (1-\\eta)G({fwhm}_G, t)+\\eta C({fwhm}_L, t)
+    
+
+    :param t: time
+    :type t: float, numpy_1d_array
+    :param fwhm_G: full width at half maximum of x-ray temporal pulse gaussian part
+    :type fwhm_G: float
+    :param fwhm_L: full width at half maximum of x-ray temporal pulse cauchy part
+    :type fwhm_L: float
+    :param eta: mixing parameter
+    :type eta: float
+    :param k: rate constant (inverse of life time)
+    :type k: float
+
+   
+    :return: convolution of normalized pseudo voigt profile and exp(-kt)
+    :rtype: numpy_1d_array 
+    '''
+
+    return eta*exp_conv_cauchy(t, fwhm_L, k) + \
+        (1-eta)*exp_conv_gau(t, fwhm_G, k)
