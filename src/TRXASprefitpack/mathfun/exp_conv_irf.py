@@ -110,7 +110,7 @@ def exp_conv_cauchy(t, fwhm, k):
     else:
         ikgamma = complex(0, k*gamma)
         kt = k*t
-        if not np.isinstance(t, np.ndarray):
+        if not isinstance(t, np.ndarray):
             if np.abs(kt) < 700:
                 ans = np.exp(-ikgamma)*exp1(-kt-ikgamma)
                 ans = np.exp(-kt)*ans.imag/np.pi
@@ -133,8 +133,6 @@ def exp_conv_cauchy(t, fwhm, k):
             inv_mask = np.invert(mask)
          
             ans = np.zeros(t.shape[0], dtype='float')
-            ans1 = np.zeros(mask.shape[0], dtype='complex')
-            ans2 = np.zeros(inv_mask.shape[0], dtype='complex')
             inv_z = 1/(kt[inv_mask]+ikgamma)
 
             # abs(kt) < 700
