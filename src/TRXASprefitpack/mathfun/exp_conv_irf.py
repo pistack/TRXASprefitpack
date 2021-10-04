@@ -110,6 +110,48 @@ def exp_conv_cauchy(t, fwhm, k):
     else:
         ikgamma = complex(0, k*gamma)
         kt = k*t
-        ans = np.exp(-ikgamma)*exp1(-kt-ikgamma)
-        ans = np.exp(-kt)*ans.imag/np.pi
+        if not np.isinstance(t, np.ndarray):
+            if np.abs(kt) < 700:
+                ans = np.exp(-ikgamma)*exp1(-kt-ikgamma)
+                ans = np.exp(-kt)*ans.imag/np.pi
+            else:
+                inv_z = 1/(kt+ikgamma)
+                ans = 1+10*inv_z
+                ans = 1+9*inv_z*ans
+                ans = 1+8*inv_z*ans
+                ans = 1+7*inv_z*ans
+                ans = 1+6*inv_z*ans
+                ans = 1+5*inv_z*ans
+                ans = 1+4*inv_z*ans
+                ans = 1+3*inv_z*ans
+                ans = 1+2*inv_z*ans
+                ans = 1+inv_z*ans
+                ans = -inv_z*ans
+                ans = ans.imag/np.pi
+        else:
+            mask = np.abs(kt) < 700
+            inv_mask = np.invert(mask)
+         
+            ans = np.zeros(t.shape[0], dtype='float')
+            ans1 = np.zeros(mask.shape[0], dtype='complex')
+            ans2 = np.zeros(inv_mask.shape[0], dtype='complex')
+            inv_z = 1/(kt[inv_mask]+ikgamma)
+
+            # abs(kt) < 700
+            ans1 = np.exp(-ikgamma)*exp1(-kt[mask]-ikgamma)
+            ans[mask] = np.exp(-kt[mask])*ans1.imag/np.pi
+
+            # abs(kt) > 700, use asymptotic series
+            ans2 = 1+10*inv_z
+            ans2 = 1+9*inv_z*ans2
+            ans2 = 1+8*inv_z*ans2
+            ans2 = 1+7*inv_z*ans2
+            ans2 = 1+6*inv_z*ans2
+            ans2 = 1+5*inv_z*ans2
+            ans2 = 1+4*inv_z*ans2
+            ans2 = 1+3*inv_z*ans2
+            ans2 = 1+2*inv_z*ans2
+            ans2 = 1+1*inv_z*ans2
+            ans2 = -inv_z*ans2
+            ans[inv_mask] = ans2.imag/np.pi
     return ans

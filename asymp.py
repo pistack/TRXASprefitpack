@@ -32,6 +32,7 @@ D = np.allclose(exp_conv_cauchy(t, 100, 1), asymp(t, 100, 1, 10), rtol=1e-8,
 E = np.allclose(exp_conv_cauchy(t, 1000, 1), asymp(t, 1000, 1, 10), rtol=1e-8,
                 atol=1e-16)
 
+print('asymptotic implementation test')
 print('fwhm: 0.01', np.all(Z))
 print('fwhm: 0.1', np.all(A))
 print('fwhm: 1', np.all(B))
