@@ -25,7 +25,6 @@ def make_A_matrix_gau(t, fwhm, k):
     A = np.zeros((k.shape[0], t.shape[0]))
     for i in range(k.shape[0]):
         A[i, :] = exp_conv_gau(t, fwhm, k[i])
-    A[np.isnan(A)] = 0
     
     return A
 
@@ -35,9 +34,7 @@ def make_A_matrix_cauchy(t, fwhm, k):
     A = np.zeros((k.shape[0], t.shape[0]))
     for i in range(k.shape[0]):
         A[i, :] = exp_conv_cauchy(t, fwhm, k[i])
-    A[np.isnan(A)] = 0
-    A[np.isinf(A)] = 0
-    
+
     return A
 
 
