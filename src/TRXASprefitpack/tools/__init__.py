@@ -6,11 +6,10 @@ subpackage for TRXASprefitpack utilities
 :license: LGPL3
 '''
 
-from .TRXASprefitpack_info import TRXASprefitpack_info
 from .fit_static import fit_static
 from .fit_tscan import fit_tscan
 from .auto_scale import auto_scale
 from .broadening import broadening
 
-__all__ = ['TRXASprefitpack_info', 'fit_static', 'fit_tscan',
+__all__ = ['fit_static', 'fit_tscan',
            'auto_scale', 'broadening']
