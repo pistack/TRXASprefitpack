@@ -1,6 +1,6 @@
 # Signal, Gaussian IRF
 
-When instrument response function is modeled to normalized gaussian distribution, experimental signal is modeled to exponentical decay convolved with normalized gaussian distribution.
+When instrument response function is modeled as normalized gaussian distribution, experimental signal is modeled as exponentical decay convolved with normalized gaussian distribution.
 
 \begin{align*}
 {Signal}_g(t) &= ({model} * {irf})(t) \\
@@ -17,7 +17,7 @@ Let $v=u+(k\sigma)/\sqrt{2}$ then
 &= \frac{1}{2}\exp\left(\frac{(k\sigma)^2}{2}-kt\right)\mathrm{erfc}\left(\frac{1}{\sqrt{2}}\left(k\sigma - \frac{t}{\sigma}\right)\right)
 \end{align*}
 
-So, experimental signal is modeled to
+So, experimental signal could be modeled as
 
 \begin{equation*}
 {Signal}_g(t) = \frac{1}{2}\exp\left(\frac{(k\sigma)^2}{2}-kt\right)\mathrm{erfc}\left(\frac{1}{\sqrt{2}}\left(k\sigma - \frac{t}{\sigma}\right)\right)

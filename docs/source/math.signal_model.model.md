@@ -1,6 +1,6 @@
 # Model
 
-In pump-probe time resolved spectroscopy, we usually model the dynamics as sum of the exponential decay. For simplicity, I will use one exponential decay model.
+In pump-probe time resolved spectroscopy, we usually model the dynamics as sum of the exponential decay. For simplicity, I will consider one exponential decay model.
 
 \begin{equation*}
 {Model}(t) = \begin{cases}
