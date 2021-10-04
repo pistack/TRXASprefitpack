@@ -38,7 +38,7 @@ help(TRXASprefitpack)
         __info__ = {'TRXASprefitpack_info': '\nTRXASprefitpack_info\n*********...
     
     VERSION
-        0.4.4
+        0.4.5
     
     FILE
         /home/lis1331/anaconda3/lib/python3.8/site-packages/TRXASprefitpack/__init__.py
@@ -56,7 +56,7 @@ TRXASprefitpack.__version__
 
 
 
-    '0.4.4'
+    '0.4.5'
 
 
 
@@ -123,7 +123,7 @@ help(TRXASprefitpack.exp_conv_gau)
            IRF(t) = \frac{1}{\sigma \sqrt{2\pi}}\exp\left(-\frac{t^2}{2\sigma^2}\right)
         
         :param t: time
-        :type t: numpy_1d_array
+        :type t: float, numpy_1d_array
         :param fwhm: full width at half maximum of x-ray temporal pulse
         :type fwhm: float
         :param k: rate constant (inverse of life time)
@@ -140,8 +140,3 @@ help(TRXASprefitpack.exp_conv_gau)
         :rtype: numpy_1d_array
     
 
-
-
-```python
-
-```

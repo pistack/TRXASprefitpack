@@ -273,3 +273,92 @@ plt.show()
 
 
 signal is very small and we can only see irf feature.
+
+## 3rd generation x-ray source with fs dynamics
+
+* fwhm = 80 ps
+* tau1 = 300 fs
+* tau2 = 3 ps
+* tau3 = 30 ps
+
+
+```python
+fwhm = 80 # 80 ps
+t = np.arange(-1000, 1000, 10)
+cauchy = irf_cauchy(t,fwhm)
+gau = irf_gau(t,fwhm)
+plt.plot(t, cauchy, label='cauchy irf')
+plt.plot(t, gau, label='gaussian irf')
+plt.legend()
+plt.show()
+```
+
+
+    
+![png](IRF_files/IRF_29_0.png)
+    
+
+
+
+```python
+fwhm = np.array([fwhm])
+tau = np.array([0.3])
+c = np.ones(1)
+cauchy_expdecay = model_n_comp_conv(t, fwhm, tau, c, base=False, irf='c')
+gauss_expdecay = model_n_comp_conv(t, fwhm, tau, c, base=False, irf='g')
+plt.plot(t, cauchy_expdecay, label='cauchy exponential decay with tau= 300 fs')
+plt.plot(t, gauss_expdecay, label='gaussian expoential decay with tau= 300 fs')
+plt.legend()
+plt.show()
+```
+
+    /home/lis1331/anaconda3/lib/python3.8/site-packages/TRXASprefitpack/mathfun/exp_conv_irf.py:114: RuntimeWarning: overflow encountered in exp
+      ans = np.exp(-kt)*ans.imag/np.pi
+    /home/lis1331/anaconda3/lib/python3.8/site-packages/TRXASprefitpack/mathfun/exp_conv_irf.py:114: RuntimeWarning: invalid value encountered in multiply
+      ans = np.exp(-kt)*ans.imag/np.pi
+
+
+
+    
+![png](IRF_files/IRF_30_1.png)
+    
+
+
+
+```python
+tau = np.array([3])
+c = np.ones(1)
+cauchy_expdecay = model_n_comp_conv(t, fwhm, tau, c, base=False, irf='c')
+gauss_expdecay = model_n_comp_conv(t, fwhm, tau, c, base=False, irf='g')
+plt.plot(t, cauchy_expdecay, label='cauchy exponential decay with tau= 3 ps')
+plt.plot(t, gauss_expdecay, label='gaussian expoential decay with tau= 3 ps')
+plt.legend()
+plt.show()
+```
+
+
+    
+![png](IRF_files/IRF_31_0.png)
+    
+
+
+
+```python
+tau = np.array([30])
+c = np.ones(1)
+cauchy_expdecay = model_n_comp_conv(t, fwhm, tau, c, base=False, irf='c')
+gauss_expdecay = model_n_comp_conv(t, fwhm, tau, c, base=False, irf='g')
+plt.plot(t, cauchy_expdecay, label='cauchy exponential decay with tau= 30 ps')
+plt.plot(t, gauss_expdecay, label='gaussian expoential decay with tau= 30 ps')
+plt.legend()
+plt.show()
+```
+
+
+    
+![png](IRF_files/IRF_32_0.png)
+    
+
+
+## Conclusion
+3rd gen X-ray source with 80 ps fwhm could not see fs dynamics. 
