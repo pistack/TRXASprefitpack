@@ -1,6 +1,6 @@
 # Signal, Gaussian IRF
 
-When instrument response function is modeled as normalized gaussian distribution, experimental signal is modeled as exponentical decay convolved with normalized gaussian distribution.
+When instrument response function is modeled as normalized gaussian distribution, experimental signal is modeled as convolution of exponentical decay and normalized gaussian distribution.
 
 \begin{align*}
 {Signal}_g(t) &= ({model} * {irf})(t) \\
@@ -32,6 +32,18 @@ This is also equivalent to
 \end{equation*}
 
 $\mathrm{erfcx}(x)$ is scaled complementary error function, see [dlmf section 7.2](https://dlmf.nist.gov/7.2).
+
+## Implementation Note
+When $x>0$, $\mathrm{erfcx}(x)$ deverges and when $x<0$, $\exp(-x)$ deverges.
+To tame such divergency, I use following implementation.
+
+\begin{equation*}
+{Signal}_g(t) = \begin{cases}
+\frac{1}{2}\exp\left(-t^2/(2\sigma^2)\right)\mathrm{erfcx}\left(\frac{1}{\sqrt{2}}\left(k\sigma - t/\sigma\right)\right) & \text{if $t<k\sigma^2$}, \\
+\frac{1}{2}\exp\left((k\sigma)^2/2-kt\right)\mathrm{erfc}\left(\frac{1}{\sqrt{2}}\left(k\sigma - t/\sigma\right)\right) & \text{otherwise}.
+\end{cases}
+\end{equation*}
+
 
 
 

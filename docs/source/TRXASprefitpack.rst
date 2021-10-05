@@ -20,7 +20,6 @@ Subpackages
    TRXASprefitpack.data_process
    TRXASprefitpack.mathfun
    TRXASprefitpack.thy
-   TRXASprefitpack.tools
 
 Module contents
 ---------------

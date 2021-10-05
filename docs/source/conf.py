@@ -14,9 +14,7 @@ import sys
 import os
 sys.path.append(os.path.abspath(('../../src/')))
 sys.path.append(os.path.abspath(('/../src/')))
-f = open('../../version.txt', 'r')
-VERSION = f.read()
-f.close()
+from TRXASprefitpack import __version__ as VERSION
 
 
 # -- Project information -----------------------------------------------------
@@ -39,6 +37,7 @@ extensions = [
     'sphinx.ext.viewcode',
     'sphinx.ext.todo',
     'sphinx.ext.mathjax',
+    'sphinx.ext.napoleon',
     'myst_parser',
 ]
 

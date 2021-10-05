@@ -6,46 +6,50 @@ submodule for broading theoritical spectrum
 :license: LGPL3
 '''
 
+from typing import Optional
 import numpy as np
-from scipy.special import voigt_profile 
+from scipy.special import voigt_profile
 
 
-def gen_theory_data(e, peaks, A, fwhm_G, fwhm_L, peak_shift, out=None):
+def gen_theory_data(e: np.ndarray,
+                    peaks: np.ndarray,
+                    A: float,
+                    fwhm_G: float,
+                    fwhm_L: float,
+                    peak_shift: float,
+                    out: Optional[str] = None) -> np.ndarray:
 
     '''
     voigt broadening theoretically calculated lineshape spectrum
-    if out is not none:
-    It will make
-    out_thy.txt: txt file for rescaled and boroadend calc spectrum
-    out_thy_stk.txt: txt file for rescaled and shifted calc peaks
 
+    Args:
+        e: energy (unit: eV)
+        A: scaling parameter
+        fwhm_G: full width at half maximum of gaussian shape (unit: eV)
+        fwhm_L: full width at half maximum of lorenzian shape (unit: eV)
+        peak_shift: discrepency of peak position 
+                    between expt data and theoretically broadened spectrum
+        out: prefix for output txt file [optional]
 
-    :param numpy_1d_array e: energy (unit: eV)
-    :param float A: scaling parameter
-    :param float fwhm_G: 
-     full width at half maximum of gaussian shape (unit: eV)
-    :param float fwhm_L: 
-     full width at half maximum of lorenzian shape (unit: eV)
-    :param float peak_shift: 
-     discrepency of peak position between expt data and theoretically 
-     broadened spectrum
-    :param string out: prefix for output txt file [optional]
+    Returns:
+      numpy ndarray of voigt broadened theoritical lineshape spectrum
 
-    
-    :return: voigt broadened calc spectrum
-    :rtype: numpy_1d_array
+    Note:
+      If out is not none, It will makes
+       1. out_thy.txt: txt file for rescaled and boroadend calc spectrum
+       2. out_thy_stk.txt: txt file for rescaled and shifted calc peaks
     '''
 
     num_e = e.shape[0]
     num_peaks = peaks.shape[0]
-    V_matrix = np.zeros((num_e, num_peaks))
+    v_matrix = np.zeros((num_e, num_peaks))
 
     for i in range(num_peaks):
-        V_matrix[:, i] = voigt_profile(e-(peaks[i, 0]-peak_shift),
+        v_matrix[:, i] = voigt_profile(e-(peaks[i, 0]-peak_shift),
                                        fwhm_G/(2*np.sqrt(2*np.log(2))),
                                        fwhm_L/2)
 
-    broadened_theory = A * V_matrix @ peaks[:, 1].reshape((num_peaks, 1))
+    broadened_theory = A * v_matrix @ peaks[:, 1].reshape((num_peaks, 1))
     broadened_theory = broadened_theory.flatten()
 
     if out is not None:

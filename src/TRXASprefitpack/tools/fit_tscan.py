@@ -1,6 +1,6 @@
 # fit tscan
 # fitting tscan data
-# Using sum of exponential decay convolved with 
+# Using sum of exponential decay convolved with
 # normalized gaussian distribution
 # normalized cauchy distribution
 # normalized pseudo voigt profile
@@ -35,10 +35,10 @@ def fit_tscan():
         elif 1000000 < tau:
             bound = [tau/2, np.inf]
         return bound
-            
+
     def residual(params, t, num_comp, base, irf, data=None, eps=None):
         if irf in ['g', 'c']:
-            fwhm = np.array([params['fwhm']])
+            fwhm = params['fwhm']
         else:
             fwhm = np.array([params['fwhm_G'], params['fwhm_L']])
         tau = np.zeros(num_comp)
@@ -159,31 +159,32 @@ upper bound: np.inf
     parser.add_argument('-o', '--out', default='out',
                         help='prefix for output files')
     args = parser.parse_args()
-    
+
     prefix = args.prefix
     out_prefix = args.out
-    
+
     irf = args.irf
     if irf == 'g':
         if args.fwhm_G is None:
             print('You are using gaussian irf, so you should set fwhm_G!\n')
             return
         else:
-            fwhm = np.array([args.fwhm_G])
+            fwhm = args.fwhm_G
     elif irf == 'c':
         if args.fwhm_L is None:
             print('You are using cauchy/lorenzian irf,' +
                   'so you should set fwhm_L!\n')
             return
         else:
-            fwhm = np.array([args.fwhm_L])
+            fwhm = args.fwhm_L
     else:
         if (args.fwhm_G is None) or (args.fwhm_L is None):
             print('You are using pseudo voigt irf,' +
                   'so you should set both fwhm_G and fwhm_L!\n')
             return
         else:
-            fwhm = np.array([args.fwhm_G, args.fwhm_L])
+            fwhm = 0.5346*args.fwhm_L + \
+                np.sqrt(0.2166*args.fwhm_L**2+args.fwhm_G**2)
 
     if args.tau is None:
         find_zero = True  # time zero mode
@@ -216,17 +217,17 @@ upper bound: np.inf
     print(f'fitting with {data.shape[1]} data set!\n')
     fit_params = Parameters()
     if irf in ['g', 'c']:
-        fit_params.add('fwhm', value=fwhm[0],
-                       min=0.5*fwhm[0], max=2*fwhm[0])
+        fit_params.add('fwhm', value=fwhm,
+                       min=0.5*fwhm, max=2*fwhm)
     elif irf == 'pv':
-        fit_params.add('fwhm_G', value=fwhm[0],
-                       min=0.5*fwhm[0], max=2*fwhm[0])
-        fit_params.add('fwhm_L', value=fwhm[1],
-                       min=0.5*fwhm[1], max=2*fwhm[1])
+        fit_params.add('fwhm_G', value=args.fwhm_G,
+                       min=0.5*args.fwhm_G, max=2*args.fwhm_G)
+        fit_params.add('fwhm_L', value=args.fwhm_L,
+                       min=0.5*args.fwhm_L, max=2*args.fwhm_L)
     for i in range(num_scan):
         fit_params.add(f't_0_{i+1}', value=time_zeros[i],
-                       min=time_zeros[i]-2*np.sum(fwhm),
-                       max=time_zeros[i]+2*np.sum(fwhm))
+                       min=time_zeros[i]-2*fwhm,
+                       max=time_zeros[i]+2*fwhm)
 
     if not find_zero:
         for i in range(num_comp):
@@ -234,7 +235,7 @@ upper bound: np.inf
             fit_params.add(f'tau_{i+1}', value=tau[i], min=bd[0],
                            max=bd[1])
 
-    # Second initial guess using Nelder-Mead Method 
+    # Second initial guess using Nelder-Mead Method
     out = minimize(residual, fit_params, method='nelder',
                    args=(t, num_comp, base, irf),
                    kws={'data': data, 'eps': eps})
@@ -243,13 +244,13 @@ upper bound: np.inf
     out = minimize(residual, out.params,
                    args=(t, num_comp, base),
                    kws={'data': data, 'eps': eps, 'irf': irf})
-    
+
     print(fit_report(out))
     chi2_ind = residual(out.params, t, num_comp, base,
                         irf, data=data, eps=eps)
     chi2_ind = chi2_ind.reshape(data.shape)
     chi2_ind = np.sum(chi2_ind**2, axis=0)/(data.shape[0]-len(out.params))
-    
+
     fit = np.zeros((data.shape[0], data.shape[1]+1))
     fit[:, 0] = t
     tau_opt = np.zeros(num_comp)
@@ -261,9 +262,8 @@ upper bound: np.inf
         c = np.zeros((num_comp, num_scan))
     for i in range(num_scan):
         if irf in ['g', 'c']:
-            tmp = out.params['fwhm']
-            fwhm_out = np.array([tmp])
-        elif irf == 'pv':
+            fwhm_out = out.params['fwhm']
+        else:
             tmp_G = out.params['fwhm_G']
             tmp_L = out.params['fwhm_L']
             fwhm_out = np.array([tmp_G, tmp_L])
@@ -272,13 +272,15 @@ upper bound: np.inf
                                      tau_opt,
                                      data=data[:, i],
                                      eps=eps[:, i],
-                                     base=base).flatten()
+                                     base=base,
+                                     irf=irf).flatten()
         fit[:, i+1] = model_n_comp_conv(t-out.params[f't_0_{i+1}'],
                                         fwhm_out,
                                         tau_opt,
-                                        c[:, i], 
-                                        base=base)
-                                
+                                        c[:, i],
+                                        base=base,
+                                        irf=irf)
+
     for i in range(num_scan):
         plt.figure(i+1)
         title = f'Chi squared: {chi2_ind[i]:.2f}'

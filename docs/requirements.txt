@@ -2,5 +2,3 @@ myst_parser
 sphinx_book_theme
 numpy
 scipy
-matplotlib
-lmfit
