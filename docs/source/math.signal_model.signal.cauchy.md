@@ -1,6 +1,6 @@
 # Signal, Cauchy IRF
 
-When instrument response function is modeled as normalized cauchy distribution, experimental signal is modeled as exponentical decay convolved with normalized cauchy distribution.
+When instrument response function is modeled as normalized cauchy distribution, experimental signal is modeled as convolution of exponentical decay and normalized cauchy distribution.
 
 \begin{align*}
 {Signal}_c(t) &= ({model} * {irf})(t) \\
@@ -24,4 +24,12 @@ So, experimental signal could be modeled as
 \end{equation*}
 
 $E_1(z)$ is exponential integral, see [dlmf section 6.2](https://dlmf.nist.gov/6.2). 
+
+## Implementation Note
+At $|kt| > 700$, $E_1$ or $\exp$ term overflows, so, in this region,
+the following asymptotic expression is used.
+
+\begin{equation*}
+{Signal_c}(t) = -\frac{1}{\pi}\Im\left(\frac{1}{kt+i\gamma}\sum_{i=0}^{10} \frac{i!}{(kt+i\gamma)^i}\right)
+\end{equation*}
 

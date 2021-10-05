@@ -27,7 +27,7 @@ def broadening():
     parser.add_argument('-o', '--out', default='out',
                         help='prefix for output files')
     args = parser.parse_args()
-    
+
     peak = np.genfromtxt(args.peak)
     out = args.out
     e_min = args.e_min
@@ -36,9 +36,8 @@ def broadening():
     fwhm_G = args.fwhm_G
     fwhm_L = args.fwhm_L
     peak_shift = args.peak_shift
-    
     e = np.linspace(e_min, e_max, int((e_max-e_min)*100)+1)
-    
+
     gen_theory_data(e, peak, A, fwhm_G, fwhm_L, peak_shift,
                     out=out)
 

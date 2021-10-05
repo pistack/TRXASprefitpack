@@ -1,50 +1,32 @@
 '''
 exp_conv_irf:
-submodule for the mathematical functions for 
+submodule for the mathematical functions for
 exponential decay convolved with irf
 
 :copyright: 2021 by pistack (Junho Lee).
 :license: LGPL3.
 '''
 
+from typing import Union
 import numpy as np
 from scipy.special import erfc, erfcx, exp1
 
 
-def exp_conv_gau(t, fwhm, k):
+def exp_conv_gau(t: Union[float, np.ndarray], fwhm: float,
+                 k: float) -> Union[float, np.ndarray]:
 
     '''
-    Compute exponential function convolved with normalized gaussian 
+    Compute exponential function convolved with normalized gaussian
     distribution
 
-    Note.
-    We assume temporal pulse of x-ray is normalized gaussian distribution
-    
-    .. math::
+    Args:
+      t: time
+      fwhm: full width at half maximum of gaussian distribution
+      k: rate constant (inverse of life time)
 
-       \sigma = \\frac{fwhm}{2\sqrt{2\log{2}}}
-
-
-    .. math::
-
-       IRF(t) = \\frac{1}{\\sigma \\sqrt{2\pi}}\\exp\\left(-\\frac{t^2}{2\\sigma^2}\\right)
-
-    :param t: time
-    :type t: float, numpy_1d_array
-    :param fwhm: full width at half maximum of x-ray temporal pulse
-    :type fwhm: float
-    :param k: rate constant (inverse of life time)
-    :type k: float
-
-    
-    :return: convolution of normalized gaussian distribution and exp(-kt)
-
-    .. math::
-
-       \\frac{1}{2}\exp\\left(\\frac{k^2}{2\sigma^2}-kt\\right){erfc}\\left(\\frac{1}{\sqrt{2}}\\left(k\sigma-\\frac{t}{\sigma}\\right)\\right)
-
-
-    :rtype: numpy_1d_array
+    Returns:
+     Convolution of normalized gaussian distribution and exponential
+     decay :math:`(\\exp(-kt))`.
     '''
 
     sigma = fwhm/(2*np.sqrt(2*np.log(2)))
@@ -71,37 +53,22 @@ def exp_conv_gau(t, fwhm, k):
     return ans
 
 
-def exp_conv_cauchy(t, fwhm, k):
+def exp_conv_cauchy(t: Union[float, np.ndarray],
+                    fwhm: float,
+                    k: float) -> Union[float, np.ndarray]:
 
     '''
-    Compute exponential function convolved with normalized cauchy 
+    Compute exponential function convolved with normalized cauchy
     distribution
 
-    Note.
-    We assume temporal pulse of x-ray is normalized cauchy distribution
+    Args:
+       t: time
+       fwhm: full width at half maximum of cauchy distribution
+       k: rate constant (inverse of life time)
 
-    .. math::
-       \\gamma = \\frac{fwhm}{2}
-
-    .. math::
-       IRF(t) = \\frac{\\gamma}{\\pi}\\frac{1}{(x-t)^2+\\gamma^2}
-    
-
-    :param t: time
-    :type t: float, numpy_1d_array
-    :param fwhm: full width at half maximum of x-ray temporal pulse
-    :type fwhm: float
-    :param k: rate constant (inverse of life time)
-    :type k: float
-
-   
-    :return: convolution of normalized cauchy distribution and exp(-kt)
-
-    .. math::
-       \\frac{\\exp(-kt)}{\\pi}\\Im\\left(\\exp(-ik\\gamma)\cdot{E1}(-kt-ik\\gamma)\\right)
-
-
-    :rtype: numpy_1d_array 
+    Returns:
+      Convolution of normalized cauchy distribution and
+      exponential decay :math:`(\\exp(-kt))`.
     '''
 
     gamma = fwhm/2
@@ -131,7 +98,7 @@ def exp_conv_cauchy(t, fwhm, k):
         else:
             mask = np.abs(kt) < 700
             inv_mask = np.invert(mask)
-         
+
             ans = np.zeros(t.shape[0], dtype='float')
             inv_z = 1/(kt[inv_mask]+ikgamma)
 
@@ -155,33 +122,31 @@ def exp_conv_cauchy(t, fwhm, k):
     return ans
 
 
-def exp_conv_pvoigt(t, fwhm_G, fwhm_L, eta, k):
+def exp_conv_pvoigt(t: Union[float, np.ndarray],
+                    fwhm_G: float,
+                    fwhm_L: float,
+                    eta: float,
+                    k: float) -> Union[float, np.ndarray]:
 
     '''
     Compute exponential function convolved with normalized pseudo
-    voigt profile
+    voigt profile (i.e. linear combination of normalized gaussian and
+    cauchy distribution)
 
-    Note.
-    We assume temporal pulse of x-ray is pseudo voigt profile
+    :math: `\\eta C(\\mathrm{fwhm}_L, t) + (1-\\eta)G(\\mathrm{fwhm}_G, t)`
 
-    .. math::
-       \mathrm{pvoigt}(t) = (1-\\eta)G({fwhm}_G, t)+\\eta C({fwhm}_L, t)
-    
+    Args:
+       t: time
+       fwhm_G: full width at half maximum of gaussian part of
+               pseudo voigt profile
+       fwhm_L: full width at half maximum of cauchy part of
+               pseudo voigt profile
+       eta: mixing parameter
+       k: rate constant (inverse of life time)
 
-    :param t: time
-    :type t: float, numpy_1d_array
-    :param fwhm_G: full width at half maximum of x-ray temporal pulse gaussian part
-    :type fwhm_G: float
-    :param fwhm_L: full width at half maximum of x-ray temporal pulse cauchy part
-    :type fwhm_L: float
-    :param eta: mixing parameter
-    :type eta: float
-    :param k: rate constant (inverse of life time)
-    :type k: float
-
-   
-    :return: convolution of normalized pseudo voigt profile and exp(-kt)
-    :rtype: numpy_1d_array 
+    Returns:
+       Convolution of normalized pseudo voigt profile and
+       exponential decay :math:`(\\exp(-kt))`.
     '''
 
     return eta*exp_conv_cauchy(t, fwhm_L, k) + \

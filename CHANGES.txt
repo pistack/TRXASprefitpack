@@ -42,4 +42,12 @@ API change: mathfun
 Change licence to GPL3 to LGPL3
 exe: improve parsing and document
 
+0.5dev:
+API change:
+corr_a_method: remove unused warn dummy parameter
+automate_scaling: Now it requires time_zeros in any case.
+docs subpackage is compeletly removed
+fact_anal_exp_conv, model_n_comp_conv:
+assume fwhm float when irf is 'g' or 'c', otherwise they assume fwhm to be numpy ndarray with size 2.
+
 	       

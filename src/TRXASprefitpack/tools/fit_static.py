@@ -1,7 +1,7 @@
-# fit static 
+# fit static
 # fitting static spectrum
-# with tddft calc peaks convolved by 
-# option 
+# with tddft calc peaks convolved by
+# option
 # v: voigt profile
 # g: gaussian
 # l: lorenzian
@@ -33,7 +33,7 @@ def fit_static():
     def peak_fit(e, fwhm_G, fwhm_L, peak_shift, c):
         return gen_theory_data(e, peaks, c[0]/1000, fwhm_G/1000, fwhm_L/1000,
                                peak_shift/1000) + c[1]*e+c[2]
-    
+
     def residual(params, e, data=None, eps=None):
         fwhm_G = params['fwhm_G']
         fwhm_L = params['fwhm_L']
@@ -57,7 +57,7 @@ to correct baseline, it uses linear line
 
     epilog = ''' 
 *Note
-energy unit for measured static spectrum must be KeV 
+energy unit for measured static spectrum must be KeV
 and calc static spectrum must be eV
 '''
     tmp = argparse.RawDescriptionHelpFormatter
@@ -79,7 +79,7 @@ and calc static spectrum must be eV
                        help='filename for theoretical line shape spectrum')
     parse.add_argument('-o', '--out', default='out',
                        help='prefix for output files')
-    
+
     args = parse.parse_args()
 
     prefix = args.prefix
@@ -118,7 +118,7 @@ and calc static spectrum must be eV
         fit_params.add('fwhm_G', value=0, vary=False)
         fit_params.add('fwhm_L', value=1, min=0.1, max=10)
 
-    fit_params.add('peak_shift', value=peak_shift, 
+    fit_params.add('peak_shift', value=peak_shift,
                    min=-1.2*np.abs(peak_shift),
                    max=1.2*np.abs(peak_shift))
 
