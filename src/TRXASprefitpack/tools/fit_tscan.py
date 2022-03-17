@@ -203,7 +203,7 @@ upper bound: np.inf
         time_zeros = np.genfromtxt(args.time_zeros_file)
         num_scan = time_zeros.shape[0]
     else:
-        time_zeros = np.genfromtxt(args.time_zeros)
+        time_zeros = np.array(args.time_zeros)
         num_scan = time_zeros.shape[0]
 
     t = np.genfromtxt(f'{prefix}_1.txt')[:, 0]
