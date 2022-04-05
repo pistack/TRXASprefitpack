@@ -66,7 +66,6 @@ def model_n_comp_conv(t: np.ndarray,
         num_comp+1 when base is set to true.
         Otherwise, it is assumed to be num_comp.
     '''
-
     k = 1/tau
     if base:
         k = np.concatenate((k, np.array([0])))
