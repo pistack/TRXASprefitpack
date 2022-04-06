@@ -201,10 +201,10 @@ upper bound: np.inf
         return
     elif args.time_zeros is None:
         time_zeros = np.genfromtxt(args.time_zeros_file)
-        num_scan = time_zeros.shape[0]
+        num_scan = time_zeros.size
     else:
         time_zeros = np.array(args.time_zeros)
-        num_scan = time_zeros.shape[0]
+        num_scan = time_zeros.size
 
     t = np.genfromtxt(f'{prefix}_1.txt')[:, 0]
     data = np.zeros((t.shape[0], num_scan))
@@ -280,6 +280,13 @@ upper bound: np.inf
                                         c[:, i],
                                         base=base,
                                         irf=irf)
+    
+    f = open(out_prefix+'_fit_report.txt', 'w')
+    f.write(fit_report(out))
+    f.close()
+
+    np.savetxt(out_prefix+'_fit.txt', fit)
+    np.savetxt(out_prefix+'_c.txt', c)
 
     for i in range(num_scan):
         plt.figure(i+1)
@@ -295,13 +302,17 @@ upper bound: np.inf
         plt.plot(t, fit[:, i+1],
                  label=f'fit tscan {i+1}')
         plt.legend()
+        plt.figure(num_scan+i+1)
+        title = f'Componant Plot for figure {i+1}'
+        plt.title(title)
+        if base:
+            plt.plot(t, model_n_comp_conv(t-out.params[f't_0_{i+1}'],
+            fwhm_out, np.array([1]), np.array([0, c[-1, i]]), base=True, irf=irf), label='base')
+        for j in range(num_comp):
+            plt.plot(t, model_n_comp_conv(t-out.params[f't_0_{i+1}'],
+            fwhm_out, np.array([tau_opt[j]]), 
+            np.array([c[j, i]]), base=False, irf=irf), label=f'{j+1} th component')
+        plt.legend()
     plt.show()
-
-    f = open(out_prefix+'_fit_report.txt', 'w')
-    f.write(fit_report(out))
-    f.close()
-
-    np.savetxt(out_prefix+'_fit.txt', fit)
-    np.savetxt(out_prefix+'_c.txt', c)
 
     return
