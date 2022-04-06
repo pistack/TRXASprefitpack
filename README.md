@@ -51,7 +51,7 @@ Licence: LGPL3
   * Now type ``pip install .``
 * Advanced way (from repository)
   * ``git clone https://github.com/pistack/TRXASprefitpack.git``
-  * ``git checkout v0.4.6``
+  * ``git checkout v0.4.7``
   * ``cd TRXASprefitpack``
   * ``python3 -m build``
   * ``cd dist``
