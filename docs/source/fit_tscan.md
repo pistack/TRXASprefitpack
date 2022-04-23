@@ -12,7 +12,7 @@ timezero of this scan. So, --no_base option is discouraged.
 
 * usage: fit_tscan    [-h] [--irf {g,c,pv}] [--fwhm_G FWHM_G] [--fwhm_L FWHM_L]
                      [-t0 TIME_ZEROS [TIME_ZEROS ...]] [-t0f TIME_ZEROS_FILE]
-                     [--tau [TAU [TAU ...]]] [--no_base] [-o OUT]
+                     [--tau [TAU [TAU ...]]] [--no_base] [--slow] [-o OUT]
                      prefix
 
 * positional arguments:
@@ -38,6 +38,7 @@ timezero of this scan. So, --no_base option is discouraged.
   * --tau [TAU [TAU ...]]
                          lifetime of each component
   * --no_base             exclude baseline for fitting
+  * --slow                use slower but robust global optimization algorithm
   * -o OUT, --out OUT     prefix for output files
 
 

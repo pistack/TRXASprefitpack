@@ -10,7 +10,7 @@
 
 [![Documentation Status](https://readthedocs.org/projects/trxasprefitpack/badge/?version=latest)](https://trxasprefitpack.readthedocs.io/en/latest/?badge=latest)
 
-version:  0.5dev
+version:  0.4.9
 
 Copyright: (C) 2021  Junho Lee (@pistack) (Email: pistatex@yonsei.ac.kr)
 
@@ -32,10 +32,6 @@ Licence: LGPL3
 * From www web
   * [Docs](https://trxasprefitpack.readthedocs.io/) are hosted in readthedocs
 
-* From TRXASprefitpack_info utility [depecated, will be removed in version 0.5]
-  * If you already installed TRXASprefitpack then just type ``TRXASprefitpack_info``
-  * Otherwise, type ``python3 ./bin/TRXASprefitpack_info.py``
-
 * From source
   * go to docs directory and type
     * for windows: ``./make.bat``
@@ -51,7 +47,7 @@ Licence: LGPL3
   * Now type ``pip install .``
 * Advanced way (from repository)
   * ``git clone https://github.com/pistack/TRXASprefitpack.git``
-  * ``git checkout v0.4.7``
+  * ``git checkout v0.4.9``
   * ``cd TRXASprefitpack``
   * ``python3 -m build``
   * ``cd dist``

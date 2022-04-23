@@ -156,6 +156,8 @@ upper bound: np.inf
                         help='lifetime of each component')
     parser.add_argument('--no_base', action='store_false',
                         help='exclude baseline for fitting')
+    parser.add_argument('--slow', action='store_true',
+    help='use slower but robust global optimization algorithm')
     parser.add_argument('-o', '--out', default='out',
                         help='prefix for output files')
     args = parser.parse_args()
@@ -235,10 +237,15 @@ upper bound: np.inf
             fit_params.add(f'tau_{i+1}', value=tau[i], min=bd[0],
                            max=bd[1])
 
-    # Second initial guess using Nelder-Mead Method
-    out = minimize(residual, fit_params, method='nelder',
-                   args=(t, num_comp, base, irf),
-                   kws={'data': data, 'eps': eps})
+    # Second initial guess using global optimization algorithm
+    if args.slow: 
+        out = minimize(residual, fit_params, method='ampgo',
+        args=(t, num_comp, base, irf),
+        kws={'data': data, 'eps': eps})
+    else:
+        out = minimize(residual, fit_params, method='nelder',
+        args=(t, num_comp, base, irf),
+        kws={'data': data, 'eps': eps})
 
     # Then do Levenberg-Marquardt
     out = minimize(residual, out.params,
