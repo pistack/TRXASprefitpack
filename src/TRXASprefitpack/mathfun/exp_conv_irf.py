@@ -151,3 +151,47 @@ def exp_conv_pvoigt(t: Union[float, np.ndarray],
 
     return eta*exp_conv_cauchy(t, fwhm_L, k) + \
         (1-eta)*exp_conv_gau(t, fwhm_G, k)
+
+def dmp_osc_conv_gau(t: Union[float, np.ndarray], fwhm: float,
+k: float, T: float, phase: float) -> Union[float, np.ndarray]:
+
+    '''
+    Compute demped oscillation convolved with normalized gaussian
+    distribution
+
+    Args:
+      t: time
+      fwhm: full width at half maximum of gaussian distribution
+      k: rate constant (inverse of life time)
+      T: period of vibration 
+      phase: phase factor
+
+    Returns:
+     Convolution of normalized gaussian distribution and 
+     demped oscillation :math:`(\\exp(-kt)sin(2\\pi*t/T+phase))`.
+    '''
+    k = complex(k, -2*np.pi/T)
+    sigma = fwhm/(2*np.sqrt(2*np.log(2)))
+    ksigma = k*sigma
+    ksigma2 = ksigma*sigma
+    tinvsigma = t/sigma
+
+    if not isinstance(t, np.ndarray):
+        if ksigma2.real > t.real:
+            ans = 1/2*np.exp(-0.5*tinvsigma**2) * \
+                erfcx(1/np.sqrt(2)*(ksigma-tinvsigma))
+        else:
+            ans = 1/2*np.exp(k*(0.5*ksigma2-t)) * \
+                erfc(1/np.sqrt(2)*(ksigma - tinvsigma))
+    else:
+        mask = t.real < ksigma2.real
+        inv_mask = np.invert(mask)
+        ans = np.zeros(t.shape[0], dtype=np.complex128)
+        ans[mask] = 1/2*np.exp(-0.5*tinvsigma[mask]**2) * \
+            erfcx(1/np.sqrt(2)*(ksigma-tinvsigma[mask]))
+        ans[inv_mask] = 1/2*np.exp(k*(0.5*ksigma2-t[inv_mask])) * \
+            erfc(1/np.sqrt(2)*(ksigma - tinvsigma[inv_mask]))
+    
+    ans = np.exp(complex(0, phase))*ans
+
+    return ans.imag
