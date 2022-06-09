@@ -38,7 +38,14 @@ def broadening():
     peak_shift = args.peak_shift
     e = np.linspace(e_min, e_max, int((e_max-e_min)*100)+1)
 
-    gen_theory_data(e, peak, A, fwhm_G, fwhm_L, peak_shift,
-                    out=out)
+    broadened_thy = gen_theory_data(e, peak, A, fwhm_G, fwhm_L, peak_shift)
+
+    rescaled_stk = peak
+    rescaled_stk[:, 0] = rescaled_stk[:,0]-peak_shift
+    rescaled_stk[:, 1] = A*rescaled_stk[:, 1]
+    spec_thy = np.vstack((e, broadened_thy))
+
+    np.savetxt(f'{out}_thy_stk.txt', rescaled_stk, fmt=['%.5e', '%.8e'], header='e \t abs')
+    np.savetxt(f'{out}_thy.txt', spec_thy.T, fmt=['%.5e', '%.8e'], header='e \t abs')
 
     return
