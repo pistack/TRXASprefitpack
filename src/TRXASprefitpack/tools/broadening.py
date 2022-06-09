@@ -15,6 +15,8 @@ def broadening():
                         help='minimum energy')
     parser.add_argument('e_max', type=float,
                         help='maximum energy')
+    parser.add_argument('e_step', type=float,
+    help='energy step')
     parser.add_argument('A', type=float,
                         help='scale factor')
     parser.add_argument('fwhm_G', type=float,
@@ -32,11 +34,12 @@ def broadening():
     out = args.out
     e_min = args.e_min
     e_max = args.e_max
+    e_step = args.e_step
     A = args.A
     fwhm_G = args.fwhm_G
     fwhm_L = args.fwhm_L
     peak_shift = args.peak_shift
-    e = np.linspace(e_min, e_max, int((e_max-e_min)*100)+1)
+    e = np.linspace(e_min, e_max, int((e_max-e_min)/e_step)+1)
 
     broadened_thy = gen_theory_data(e, peak, A, fwhm_G, fwhm_L, peak_shift)
 
