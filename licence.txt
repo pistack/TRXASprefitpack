@@ -1,6 +1,6 @@
 TRXASprefitpack: package for TRXAS pre fitting process
 
-Copyright (C) 2021-2022 pistack (Junho Lee, email: pistatex@yonsei.ac.kr)
+Copyright (C) 2021-2022 pistack (Junho Lee, email: pistack@yonsei.ac.kr)
  
 This program is free software: you can redistribute it and/or modify
 it under the terms of the GNU Lesser General Public License as
