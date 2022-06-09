@@ -16,7 +16,8 @@ def gen_theory_data(e: np.ndarray,
                     A: float,
                     fwhm_G: float,
                     fwhm_L: float,
-                    peak_shift: float) -> np.ndarray:
+                    peak_factor: float,
+                    policy: Optional[str] = 'shift') -> np.ndarray:
 
     '''
     voigt broadening theoretically calculated lineshape spectrum
@@ -26,8 +27,11 @@ def gen_theory_data(e: np.ndarray,
         A: scaling parameter
         fwhm_G: full width at half maximum of gaussian shape (unit: same as energy)
         fwhm_L: full width at half maximum of lorenzian shape (unit: same as energy)
-        peak_shift: discrepency of peak position 
-                    between expt data and theoretically broadened spectrum
+        peak_factor: Peak factor, its behavior depends on policy.
+        policy: Policy to match discrepency between experimental data and theoretical
+                spectrum.
+                1. 'shift' : Default option, shift peak position by peak_factor
+                2. 'scale' : scale peak position by peak_factor
 
     Returns:
       numpy ndarray of voigt broadened theoritical lineshape spectrum
@@ -39,10 +43,13 @@ def gen_theory_data(e: np.ndarray,
     num_e = e.shape[0]
     num_peaks = peaks.shape[0]
     v_matrix = np.zeros((num_e, num_peaks))
-
+    if policy == 'shift':
+      peaks[i, 0] = peaks[i, 0] - peak_factor
+    else:
+      peaks[i, 0] = peak_factor*peaks[i, 0] 
+    
     for i in range(num_peaks):
-        v_matrix[:, i] = voigt_profile(e-(peaks[i, 0]-peak_shift),
-                                       sigma, gamma)
+        v_matrix[:, i] = voigt_profile(e-peaks[i, 0], sigma, gamma)
 
     broadened_theory = A * v_matrix @ peaks[:, 1].reshape((num_peaks, 1))
     broadened_theory = broadened_theory.flatten()

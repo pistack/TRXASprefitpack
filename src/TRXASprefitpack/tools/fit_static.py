@@ -17,10 +17,9 @@ import matplotlib.pyplot as plt
 
 def fit_static():
 
-    def magick(e, fwhm_G, fwhm_L, peak_shift, data=None, eps=None):
+    def magick(e, fwhm_G, fwhm_L, peak_factor, policy, data=None, eps=None):
         A = np.ones((e.shape[0], 3))
-        A[:, 0] = gen_theory_data(e, peaks, 1/1000, fwhm_G/1000, fwhm_L/1000,
-                                  peak_shift/1000)
+        A[:, 0] = gen_theory_data(e, peaks, 1, fwhm_G, fwhm_L, peak_factor, policy)
         A[:, 1] = e
 
         A[:, 0] = A[:, 0]/eps
@@ -30,19 +29,19 @@ def fit_static():
         c, _, _, _ = LA.lstsq(A, y)
         return c
 
-    def peak_fit(e, fwhm_G, fwhm_L, peak_shift, c):
-        return gen_theory_data(e, peaks, c[0]/1000, fwhm_G/1000, fwhm_L/1000,
-                               peak_shift/1000) + c[1]*e+c[2]
+    def peak_fit(e, fwhm_G, fwhm_L, peak_factor, policy, c):
+        return gen_theory_data(e, peaks, c[0], fwhm_G, fwhm_L,
+                               peak_factor, policy) + c[1]*e+c[2]
 
-    def residual(params, e, data=None, eps=None):
+    def residual(params, e, policy, data=None, eps=None):
         fwhm_G = params['fwhm_G']
         fwhm_L = params['fwhm_L']
-        peak_shift = params['peak_shift']
+        peak_factor = params['peak_factor']
         chi = np.zeros(data.shape)
         for i in range(data.shape[1]):
-            c = magick(e, fwhm_G, fwhm_L, peak_shift,
+            c = magick(e, fwhm_G, fwhm_L, peak_factor, policy,
                        data=data[:, i], eps=eps[:, i])
-            chi[:, i] = data[:, i] - peak_fit(e, fwhm_G, fwhm_L, peak_shift, c)
+            chi[:, i] = data[:, i] - peak_fit(e, fwhm_G, fwhm_L, peak_factor, policy, c)
         chi = chi.flatten()/eps.flatten()
         return chi
 
@@ -57,8 +56,8 @@ to correct baseline, it uses linear line
 
     epilog = ''' 
 *Note
-energy unit for measured static spectrum must be KeV
-and calc static spectrum must be eV
+energy unit for measured static spectrum and
+calc spectrum should be same
 '''
     tmp = argparse.RawDescriptionHelpFormatter
     parse = argparse.ArgumentParser(formatter_class=tmp,
@@ -70,12 +69,22 @@ and calc static spectrum must be eV
                        "v: voigt profile" + '\n' +
                        "g: gaussian shape" + '\n' +
                        "l: lorenzian shape")
+    parse.add_argument('--fwhm_G', type=float,
+                        help='full width at half maximum for gaussian shape ' +
+                        'It would be not used when you set lorenzian line shape')
+    parse.add_argument('--fwhm_L', type=float,
+                        help='full width at half maximum for lorenzian shape ' +
+                        'It would be not used when you use gaussian line shape')
+    parse.add_argument('--no_base', action='store_true',
+    help ='Do not include linear base line during fitting process')
+    parse.add_argument('--scale_energy', action='store_true',
+    help='Scaling the energy of peak instead of shifting to match experimental spectrum')
     parse.add_argument('prefix',
-                       help='prefix for experimental static peak files' +
+                       help='prefix for experimental spectrum files' +
                        '\n' + 'It will read prefix_i.txt files')
     parse.add_argument('num_scan', type=int,
                        help='the number of static peak scan files')
-    parse.add_argument('peak_name',
+    parse.add_argument('peak_file',
                        help='filename for theoretical line shape spectrum')
     parse.add_argument('-o', '--out', default='out',
                        help='prefix for output files')
