@@ -150,11 +150,11 @@ calc spectrum should be same
         fit_params.add('fwhm_G', value=fwhm_lst[0], min=fwhm_lst[0]/2, max=2*fwhm_lst[0])
         fit_params.add('fwhm_L', value=fwhm[1], min=fwhm[1]/2, max=2*fwhm[1])
     elif option == 'g':
-        fit_params.add('fwhm_G', value=1, min=fwhm_G/2, max=2*fwhm_G)
+        fit_params.add('fwhm_G', value=1, min=fwhm/2, max=2*fwhm)
         fit_params.add('fwhm_L', value=0, vary=False)
     else:
         fit_params.add('fwhm_G', value=0, vary=False)
-        fit_params.add('fwhm_L', value=1, min=fwhm_L/2, max=2*fwhm_L)
+        fit_params.add('fwhm_L', value=1, min=fwhm/2, max=2*fwhm)
 
     fit_params.add('peak_factor', value=peak_factor,
                    min=peak_factor/2,
