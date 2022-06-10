@@ -10,9 +10,9 @@
 
 [![Documentation Status](https://readthedocs.org/projects/trxasprefitpack/badge/?version=latest)](https://trxasprefitpack.readthedocs.io/en/latest/?badge=latest)
 
-version:  0.4.9
+stable version:  0.4.10
 
-Copyright: (C) 2021  Junho Lee (@pistack) (Email: pistatex@yonsei.ac.kr)
+Copyright: (C) 2021-2022  Junho Lee (@pistack) (Email: pistatex@yonsei.ac.kr)
 
 Licence: LGPL3
 
@@ -47,7 +47,7 @@ Licence: LGPL3
   * Now type ``pip install .``
 * Advanced way (from repository)
   * ``git clone https://github.com/pistack/TRXASprefitpack.git``
-  * ``git checkout v0.4.9``
+  * ``git checkout v0.4.10``
   * ``cd TRXASprefitpack``
   * ``python3 -m build``
   * ``cd dist``
