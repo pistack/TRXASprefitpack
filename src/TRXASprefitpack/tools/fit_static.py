@@ -101,7 +101,7 @@ calc spectrum should be same
     prefix = args.prefix
     option = args.line_shape
     num_scan = args.num_scan
-    peak_name = args.peak_name
+    peak_file = args.peak_file
     peak_factor = args.peak_factor
 
     if args.out is None:
@@ -143,7 +143,7 @@ calc spectrum should be same
         data[:, i] = np.genfromtxt(f'{prefix}_{i+1}.txt')[:, 1]
         eps[:, i] = np.genfromtxt(f'{prefix}_{i+1}.txt')[:, 2]
 
-    peaks = np.genfromtxt(peak_name)
+    peaks = np.genfromtxt(peak_file)
 
     fit_params = Parameters()
     if option == 'v':
