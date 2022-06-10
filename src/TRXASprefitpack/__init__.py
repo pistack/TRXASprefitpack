@@ -11,5 +11,5 @@ from .thy import *
 from .data_process import *
 from .mathfun import *
 
-__version__ = '0.4.11b5'
+__version__ = '0.4.12'
 
