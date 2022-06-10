@@ -43,13 +43,13 @@ def gen_theory_data(e: np.ndarray,
     num_e = e.shape[0]
     num_peaks = peaks.shape[0]
     v_matrix = np.zeros((num_e, num_peaks))
+    peak_copy = np.copy(peaks[:, 0])
     if policy == 'shift':
-      peaks[:, 0] = peaks[:, 0] - peak_factor
+      peak_copy = peak_copy - peak_factor
     else:
-      peaks[:, 0] = peak_factor*peaks[:, 0] 
-    
+      peak_copy = peak_factor*peak_copy 
     for i in range(num_peaks):
-        v_matrix[:, i] = voigt_profile(e-peaks[i, 0], sigma, gamma)
+        v_matrix[:, i] = voigt_profile(e-peak_copy[i], sigma, gamma)
 
     broadened_theory = A * v_matrix @ peaks[:, 1].reshape((num_peaks, 1))
     broadened_theory = broadened_theory.flatten()

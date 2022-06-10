@@ -17,13 +17,13 @@ import matplotlib.pyplot as plt
 
 def fit_static():
 
-    def magick(e, fwhm_G, fwhm_L, peak_factor, policy, no_base, data=None, eps=None):
+    def magick(e, peaks, fwhm_G, fwhm_L, peak_factor, policy, no_base, data=None, eps=None):
         if no_base:
             A = gen_theory_data(e, peaks, 1, fwhm_G, fwhm_L, peak_factor, policy)
             A = A/eps
             y = data/eps
             c, _, _, _ = LA.lstsq(A.reshape(A.size, 1), y)
-            c = np.vstack((c,np.zeros(2)))
+            c = np.hstack((c,np.zeros(2)))
         else:
             A = np.ones((e.shape[0], 3))
             A[:, 0] = gen_theory_data(e, peaks, 1, fwhm_G, fwhm_L, peak_factor, policy)
@@ -35,19 +35,19 @@ def fit_static():
             c, _, _, _ = LA.lstsq(A, y)
         return c
 
-    def peak_fit(e, fwhm_G, fwhm_L, peak_factor, policy, c):
+    def peak_fit(e, peaks, fwhm_G, fwhm_L, peak_factor, policy, c):
         return gen_theory_data(e, peaks, c[0], fwhm_G, fwhm_L,
                                peak_factor, policy) + c[1]*e+c[2]
 
-    def residual(params, e, policy, no_base, data=None, eps=None):
+    def residual(params, e, peaks, policy, no_base, data=None, eps=None):
         fwhm_G = params['fwhm_G']
         fwhm_L = params['fwhm_L']
         peak_factor = params['peak_factor']
         chi = np.zeros(data.shape)
         for i in range(data.shape[1]):
-            c = magick(e, fwhm_G, fwhm_L, peak_factor, policy, no_base,
+            c = magick(e, peaks, fwhm_G, fwhm_L, peak_factor, policy, no_base,
                        data=data[:, i], eps=eps[:, i])
-            chi[:, i] = data[:, i] - peak_fit(e, fwhm_G, fwhm_L, peak_factor, policy, c)
+            chi[:, i] = data[:, i] - peak_fit(e, peaks, fwhm_G, fwhm_L, peak_factor, policy, c)
         chi = chi.flatten()/eps.flatten()
         return chi
 
@@ -95,6 +95,10 @@ calc spectrum should be same
     parse.add_argument('peak_factor', type=float,
     help='parameter to match descrepency between thoretical spectrum and experimental spectrum')
     parse.add_argument('-o', '--out', help='prefix for output files')
+    parse.add_argument('--fix_fwhm_G', action='store_true',
+    help='fix gaussian fwhm value')
+    parse.add_argument('--fix_fwhm_L', action='store_true',
+    help='fix lorenzian fwhm value')
 
     args = parse.parse_args()
 
@@ -147,30 +151,32 @@ calc spectrum should be same
 
     fit_params = Parameters()
     if option == 'v':
-        fit_params.add('fwhm_G', value=fwhm_lst[0], min=fwhm_lst[0]/2, max=2*fwhm_lst[0])
-        fit_params.add('fwhm_L', value=fwhm[1], min=fwhm[1]/2, max=2*fwhm[1])
+        fit_params.add('fwhm_G', value=fwhm_lst[0], min=fwhm_lst[0]/2, max=2*fwhm_lst[0],
+        vary=(not args.fix_fwhm_G))
+        fit_params.add('fwhm_L', value=fwhm_lst[1], min=fwhm_lst[1]/2, max=2*fwhm_lst[1],
+        vary=(not args.fix_fwhm_L))
     elif option == 'g':
-        fit_params.add('fwhm_G', value=1, min=fwhm/2, max=2*fwhm)
+        fit_params.add('fwhm_G', value=fwhm, min=fwhm/2, max=2*fwhm, vary=(not args.fix_fwhm_G))
         fit_params.add('fwhm_L', value=0, vary=False)
     else:
         fit_params.add('fwhm_G', value=0, vary=False)
-        fit_params.add('fwhm_L', value=1, min=fwhm/2, max=2*fwhm)
+        fit_params.add('fwhm_L', value=fwhm, min=fwhm/2, max=2*fwhm, vary=(not args.fix_fwhm_L))
 
     fit_params.add('peak_factor', value=peak_factor,
                    min=peak_factor/2,
                    max=2*peak_factor)
 
     # First, Nelder-Mead
-    out = minimize(residual, fit_params, method='nelder',
-                   args=(e, policy, no_base),
+    out = minimize(residual, fit_params, method='Nelder',
+                   args=(e, peaks, policy, no_base),
                    kws={'data': data, 'eps': eps})
     # Then do Levenberg-Marquardt
     out = minimize(residual, out.params,
-                   args=(e, policy, no_base),
+                   args=(e, peaks, policy, no_base),
                    kws={'data': data, 'eps': eps})
 
     print(fit_report(out))
-    chi2_ind = residual(out.params, e, data=data, eps=eps)
+    chi2_ind = residual(out.params, e, peaks, policy, no_base, data=data, eps=eps)
     chi2_ind = chi2_ind.reshape(data.shape)
     chi2_ind = np.sum(chi2_ind**2, axis=0)/(data.shape[0]-6)
 
@@ -183,10 +189,10 @@ calc spectrum should be same
     fit[:, 0] = e
     A = np.zeros(num_scan)
     for i in range(num_scan):
-        c = magick(e, fwhm_G, fwhm_L, peak_factor, policy, no_base, data=data[:, i],
+        c = magick(e, peaks, fwhm_G, fwhm_L, peak_factor, policy, no_base, data=data[:, i],
                    eps=eps[:, i])
         base[:, i+1] = c[1]*e+c[2]
-        fit[:, i+1] = peak_fit(e, fwhm_G, fwhm_L, peak_factor, policy, c)
+        fit[:, i+1] = peak_fit(e, peaks, fwhm_G, fwhm_L, peak_factor, policy, c)
         A[i] = c[0]
 
     for i in range(num_scan):

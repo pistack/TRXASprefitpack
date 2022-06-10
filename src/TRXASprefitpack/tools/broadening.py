@@ -58,7 +58,7 @@ def broadening():
     rescaled_stk[:, 1] = A*rescaled_stk[:, 1]
     spec_thy = np.vstack((e, broadened_thy))
 
-    np.savetxt(f'{out}_thy_stk.txt', rescaled_stk, fmt=['%.5e', '%.8e'], header='e \t abs')
-    np.savetxt(f'{out}_thy.txt', spec_thy.T, fmt=['%.5e', '%.8e'], header='e \t abs')
+    np.savetxt(f'{out}_thy_stk.txt', rescaled_stk, fmt=['%.5e', '%.8e'])
+    np.savetxt(f'{out}_thy.txt', spec_thy.T, fmt=['%.5e', '%.8e'])
 
     return
