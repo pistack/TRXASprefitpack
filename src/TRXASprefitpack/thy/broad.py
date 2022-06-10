@@ -44,9 +44,9 @@ def gen_theory_data(e: np.ndarray,
     num_peaks = peaks.shape[0]
     v_matrix = np.zeros((num_e, num_peaks))
     if policy == 'shift':
-      peaks[i, 0] = peaks[i, 0] - peak_factor
+      peaks[:, 0] = peaks[:, 0] - peak_factor
     else:
-      peaks[i, 0] = peak_factor*peaks[i, 0] 
+      peaks[:, 0] = peak_factor*peaks[:, 0] 
     
     for i in range(num_peaks):
         v_matrix[:, i] = voigt_profile(e-peaks[i, 0], sigma, gamma)
