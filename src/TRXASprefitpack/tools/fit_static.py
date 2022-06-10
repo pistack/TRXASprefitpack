@@ -17,29 +17,35 @@ import matplotlib.pyplot as plt
 
 def fit_static():
 
-    def magick(e, fwhm_G, fwhm_L, peak_factor, policy, data=None, eps=None):
-        A = np.ones((e.shape[0], 3))
-        A[:, 0] = gen_theory_data(e, peaks, 1, fwhm_G, fwhm_L, peak_factor, policy)
-        A[:, 1] = e
-
-        A[:, 0] = A[:, 0]/eps
-        A[:, 1] = A[:, 1]/eps
-        A[:, 2] = A[:, 2]/eps
-        y = data/eps
-        c, _, _, _ = LA.lstsq(A, y)
+    def magick(e, fwhm_G, fwhm_L, peak_factor, policy, no_base, data=None, eps=None):
+        if no_base:
+            A = gen_theory_data(e, peaks, 1, fwhm_G, fwhm_L, peak_factor, policy)
+            A = A/eps
+            y = data/eps
+            c, _, _, _ = LA.lstsq(A.reshape(A.size, 1), y)
+            c = np.vstack((c,np.zeros(2)))
+        else:
+            A = np.ones((e.shape[0], 3))
+            A[:, 0] = gen_theory_data(e, peaks, 1, fwhm_G, fwhm_L, peak_factor, policy)
+            A[:, 1] = e
+            A[:, 0] = A[:, 0]/eps
+            A[:, 1] = A[:, 1]/eps
+            A[:, 2] = A[:, 2]/eps
+            y = data/eps
+            c, _, _, _ = LA.lstsq(A, y)
         return c
 
     def peak_fit(e, fwhm_G, fwhm_L, peak_factor, policy, c):
         return gen_theory_data(e, peaks, c[0], fwhm_G, fwhm_L,
                                peak_factor, policy) + c[1]*e+c[2]
 
-    def residual(params, e, policy, data=None, eps=None):
+    def residual(params, e, policy, no_base, data=None, eps=None):
         fwhm_G = params['fwhm_G']
         fwhm_L = params['fwhm_L']
         peak_factor = params['peak_factor']
         chi = np.zeros(data.shape)
         for i in range(data.shape[1]):
-            c = magick(e, fwhm_G, fwhm_L, peak_factor, policy,
+            c = magick(e, fwhm_G, fwhm_L, peak_factor, policy, no_base,
                        data=data[:, i], eps=eps[:, i])
             chi[:, i] = data[:, i] - peak_fit(e, fwhm_G, fwhm_L, peak_factor, policy, c)
         chi = chi.flatten()/eps.flatten()
@@ -86,8 +92,9 @@ calc spectrum should be same
                        help='the number of static peak scan files')
     parse.add_argument('peak_file',
                        help='filename for theoretical line shape spectrum')
-    parse.add_argument('-o', '--out', default='out',
-                       help='prefix for output files')
+    parse.add_argument('peak_factor', type=float,
+    help='parameter to match descrepency between thoretical spectrum and experimental spectrum')
+    parse.add_argument('-o', '--out', help='prefix for output files')
 
     args = parse.parse_args()
 
@@ -95,7 +102,38 @@ calc spectrum should be same
     option = args.line_shape
     num_scan = args.num_scan
     peak_name = args.peak_name
-    out_prefix = args.out
+    peak_factor = args.peak_factor
+
+    if args.out is None:
+        out_prefix = prefix
+    else:
+        out_prefix = args.out
+
+    if option == 'g':
+        if args.fwhm_G is None:
+            print("Please set fwhm_G of gaussian line shape")
+            return
+        else:
+            fwhm = args.fwhm_G
+    elif option == 'l':
+        if args.fwhm_L is None:
+            print("Please set fwhm_L of lorenzian line shape")
+            return
+        else:
+            fwhm = args.fwhm_L
+    else:
+        if (args.fwhm_G is None) or (args.fwhm_L is None):
+            print("Please set both fwhm_G and fwhm_L for Voigt line shape")
+            return
+        else:
+            fwhm_lst = [args.fwhm_G, args.fwhm_L] 
+    
+    if args.scale_energy:
+        policy = 'scale'
+    else:
+        policy = 'shift'
+
+    no_base = args.no_base 
 
     e = np.genfromtxt(f'{prefix}_1.txt')[:, 0]
     data = np.zeros((e.shape[0], num_scan))
@@ -106,38 +144,29 @@ calc spectrum should be same
         eps[:, i] = np.genfromtxt(f'{prefix}_{i+1}.txt')[:, 2]
 
     peaks = np.genfromtxt(peak_name)
-    peaks[:, 0] = 1/1000*peaks[:, 0]
-    pmax = np.amax(peaks[:, 1])
-    pmax_e = peaks[(peaks[:, 1] == pmax), 0][0]
-    a = (data[0, 0]-data[-1, 0])/(e[0]-e[-1])
-    b = (-e[-1]*data[0, 0]+e[0]*data[-1, 0])/(e[0]-e[-1])
-    data_corr = data[:, 0] - (a*e+b)
-    dmax = np.amax(data_corr)
-    dmax_e = e[data_corr == dmax][0]
-    peak_shift = (pmax_e - dmax_e)*1000
 
     fit_params = Parameters()
     if option == 'v':
-        fit_params.add('fwhm_G', value=1, min=0.1, max=10)
-        fit_params.add('fwhm_L', value=1, min=0.1, max=10)
+        fit_params.add('fwhm_G', value=fwhm_lst[0], min=fwhm_lst[0]/2, max=2*fwhm_lst[0])
+        fit_params.add('fwhm_L', value=fwhm[1], min=fwhm[1]/2, max=2*fwhm[1])
     elif option == 'g':
-        fit_params.add('fwhm_G', value=1, min=0.1, max=10)
+        fit_params.add('fwhm_G', value=1, min=fwhm_G/2, max=2*fwhm_G)
         fit_params.add('fwhm_L', value=0, vary=False)
     else:
         fit_params.add('fwhm_G', value=0, vary=False)
-        fit_params.add('fwhm_L', value=1, min=0.1, max=10)
+        fit_params.add('fwhm_L', value=1, min=fwhm_L/2, max=2*fwhm_L)
 
-    fit_params.add('peak_shift', value=peak_shift,
-                   min=-1.2*np.abs(peak_shift),
-                   max=1.2*np.abs(peak_shift))
+    fit_params.add('peak_factor', value=peak_factor,
+                   min=peak_factor/2,
+                   max=2*peak_factor)
 
     # First, Nelder-Mead
     out = minimize(residual, fit_params, method='nelder',
-                   args=(e,),
+                   args=(e, policy),
                    kws={'data': data, 'eps': eps})
     # Then do Levenberg-Marquardt
     out = minimize(residual, out.params,
-                   args=(e,),
+                   args=(e, policy),
                    kws={'data': data, 'eps': eps})
 
     print(fit_report(out))
@@ -147,17 +176,17 @@ calc spectrum should be same
 
     fwhm_G = out.params['fwhm_G']
     fwhm_L = out.params['fwhm_L']
-    peak_shift = out.params['peak_shift']
+    peak_factor = out.params['peak_factor']
     base = np.zeros((data.shape[0], data.shape[1]+1))
     fit = np.zeros((data.shape[0], data.shape[1]+1))
     base[:, 0] = e
     fit[:, 0] = e
     A = np.zeros(num_scan)
     for i in range(num_scan):
-        c = magick(e, fwhm_G, fwhm_L, peak_shift, data=data[:, i],
+        c = magick(e, fwhm_G, fwhm_L, peak_factor, policy, no_base, data=data[:, i],
                    eps=eps[:, i])
         base[:, i+1] = c[1]*e+c[2]
-        fit[:, i+1] = peak_fit(e, fwhm_G, fwhm_L, peak_shift, c)
+        fit[:, i+1] = peak_fit(e, fwhm_G, fwhm_L, peak_factor, policy, c)
         A[i] = c[0]
 
     for i in range(num_scan):

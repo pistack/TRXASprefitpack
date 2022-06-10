@@ -17,7 +17,6 @@ from .exp_decay_fit import model_n_comp_conv, fact_anal_exp_conv
 
 __all__ = ['gau_irf', 'cauchy_irf', 'pvoigt_irf',
            'exp_conv_gau', 'exp_conv_cauchy', 'exp_conv_pvoigt',
-           'dmp_osc_conv_gau',
            'solve_model', 'compute_model',
            'compute_signal_gau', 'compute_signal_cauchy',
            'compute_signal_pvoigt', 'model_n_comp_conv', 'fact_anal_exp_conv']
