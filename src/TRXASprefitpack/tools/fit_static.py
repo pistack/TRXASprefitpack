@@ -162,11 +162,11 @@ calc spectrum should be same
 
     # First, Nelder-Mead
     out = minimize(residual, fit_params, method='nelder',
-                   args=(e, policy),
+                   args=(e, policy, no_base),
                    kws={'data': data, 'eps': eps})
     # Then do Levenberg-Marquardt
     out = minimize(residual, out.params,
-                   args=(e, policy),
+                   args=(e, policy, no_base),
                    kws={'data': data, 'eps': eps})
 
     print(fit_report(out))
