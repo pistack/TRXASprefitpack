@@ -238,7 +238,7 @@ Default option is type 0 both raising and decay
         else:
             num_ex = num_tau+1
             exclude = None
-
+    
     if (args.time_zeros is None) and (args.time_zeros_file is None):
         print('You should set either time_zeros or time_zeros_file!\n')
         return
@@ -288,10 +288,10 @@ Default option is type 0 both raising and decay
 
     # Then do Levenberg-Marquardt
     out = minimize(residual, out.params,
-                   args=(t, num_ex, seq_decay_type),
+                   args=(t, num_tau, exclude),
                    kws={'data': data, 'eps': eps, 'irf': irf})
 
-    chi2_ind = residual(out.params, t, num_ex, seq_decay_type,
+    chi2_ind = residual(out.params, t, num_tau, exclude,
                         irf, data=data, eps=eps)
     chi2_ind = chi2_ind.reshape(data.shape)
     chi2_ind = np.sum(chi2_ind**2, axis=0)/(data.shape[0]-len(out.params))
@@ -335,7 +335,7 @@ Default option is type 0 both raising and decay
     for i in range(num_ex):
         table_print = table_print + '    '
         for j in range(num_scan):
-            table_print = table_print + f'{abs[i, j]:.4e} % |'
+            table_print = table_print + f'{abs[i, j]:.4e} a.u. |'
         table_print = table_print + '\n'
     
     table_print = '[[Excited State Coefficient]]' + '\n' + table_print
