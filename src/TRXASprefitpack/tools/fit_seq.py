@@ -1,6 +1,6 @@
-# fit tscan
+# fit seq
 # fitting tscan data
-# Using sum of exponential decay convolved with
+# Using sequential decay model convolved with
 # normalized gaussian distribution
 # normalized cauchy distribution
 # normalized pseudo voigt profile
@@ -9,12 +9,14 @@
 
 import argparse
 import numpy as np
-from ..mathfun import model_n_comp_conv, fact_anal_exp_conv
+from ..mathfun import solve_model 
+from ..mathfun import compute_signal_gau, compute_signal_cauchy, compute_signal_pvoigt
+from ..mathfun import rate_eq_conv, fact_anal_rate_eq_conv
 from lmfit import Parameters, fit_report, minimize
 import matplotlib.pyplot as plt
 
 
-def fit_tscan():
+def fit_seq():
 
     def set_bound_tau(tau):
         bound = [tau/2, 1]
@@ -35,32 +37,59 @@ def fit_tscan():
         elif 1000000 < tau:
             bound = [tau/4, 4*tau]
         return bound
+    
+    def gen_seq_model(tau):
+        eigval = np.zeros(tau.size+1)
+        c = np.zeros(eigval.size)
+        V = np.eye(eigval.size)
+        eigval[:-1] = -1/tau
+        for i in range(1, eigval.size):
+            V[i, :i] = V[i-1,:i]*eigval[i-1]/(eigval[i]-eigval[:i])
+        
+        c[0] = 1
+        for i in range(1, eigval.size):
+            c[i] = - np.dot(c[:i], V[i,:i])
+        return eigval, V, c
 
-    def residual(params, t, num_comp, base, irf, data=None, eps=None):
+
+    def residual(params, t, num_ex, type, irf, data=None, eps=None):
         if irf in ['g', 'c']:
             fwhm = params['fwhm']
         else:
             fwhm = np.array([params['fwhm_G'], params['fwhm_L']])
+        if type == 0:
+            num_comp = num_ex+1
+            exclude = 'first_and_last'
+        elif type == 1:
+            num_comp = num_ex
+            exclude = 'last'
+        elif type == 2:
+            num_comp = num_ex
+            exclude = 'first'
+        else:
+            num_comp = num_ex-1
+            exclude = None
         tau = np.zeros(num_comp)
         for i in range(num_comp):
             tau[i] = params[f'tau_{i+1}']
+        eigval, V, c = gen_seq_model(tau)
+
         chi = np.zeros((data.shape[0], data.shape[1]))
         for i in range(data.shape[1]):
             t0 = params[f't_0_{i+1}']
-            c = fact_anal_exp_conv(t-t0, fwhm, tau, irf=irf,
-                                   data=data[:, i], eps=eps[:, i], base=base)
+            abs = fact_anal_rate_eq_conv(t-t0, fwhm, eigval, V, c, exclude, irf=irf,
+                                   data=data[:, i], eps=eps[:, i])
 
             chi[:, i] = data[:, i] - \
-                model_n_comp_conv(t-t0, fwhm, tau, c, base=base,
-                                  irf=irf)
+                rate_eq_conv(t-t0, fwhm, abs, eigval, V, c, irf=irf)
         chi = chi.flatten()/eps.flatten()
 
         return chi
 
-    description = 'fit tscan: fitting tscan data ' + \
-        'using sum of exponential decay covolved with ' + \
+    description = 'fit seq: fitting tscan data ' + \
+        'using the solution of sequtial decay equation covolved with ' + \
         'gaussian/cauchy(lorenzian)/pseudo voigt irf function ' + \
-        'it uses fact_anal_exp_conv to determine best ' + \
+        'it uses fact_anal_rate_eq_conv to determine best ' + \
         'c_i\'s when timezero, fwhm, ' + \
         'and time constants are given. ' + \
         'So, to use this script what you need to ' + \
@@ -120,9 +149,6 @@ upper bound: 4*tau
 1. if you set shape of irf to pseudo voigt (pv), then
    you should provide two full width at half maximum
    value for gaussian and cauchy parts, respectively.
-
-2. If you did not set tau then it assume you finds the
-   timezero of this scan. So, --no_base option is discouraged.
 '''
     tmp = argparse.RawDescriptionHelpFormatter
     parser = argparse.ArgumentParser(formatter_class=tmp,
