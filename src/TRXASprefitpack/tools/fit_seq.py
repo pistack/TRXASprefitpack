@@ -9,8 +9,6 @@
 
 import argparse
 import numpy as np
-from ..mathfun import solve_model 
-from ..mathfun import compute_signal_gau, compute_signal_cauchy, compute_signal_pvoigt
 from ..mathfun import rate_eq_conv, fact_anal_rate_eq_conv
 from lmfit import Parameters, fit_report, minimize
 import matplotlib.pyplot as plt
