@@ -263,29 +263,32 @@ upper bound: 4*tau
 
     fit = np.zeros((data.shape[0], data.shape[1]+1))
     fit[:, 0] = t
+
+    if irf in ['g', 'c']:
+        fwhm_opt = out.params['fwhm']
+    else:
+        tmp_G = out.params['fwhm_G']
+        tmp_L = out.params['fwhm_L']
+        fwhm_opt = np.array([tmp_G, tmp_L])
+
     tau_opt = np.zeros(num_comp)
     for j in range(num_comp):
         tau_opt[j] = out.params[f'tau_{j+1}']
+
     if base:
         c = np.zeros((num_comp+1, num_scan))
     else:
         c = np.zeros((num_comp, num_scan))
     for i in range(num_scan):
-        if irf in ['g', 'c']:
-            fwhm_out = out.params['fwhm']
-        else:
-            tmp_G = out.params['fwhm_G']
-            tmp_L = out.params['fwhm_L']
-            fwhm_out = np.array([tmp_G, tmp_L])
         c[:, i] = fact_anal_exp_conv(t-out.params[f't_0_{i+1}'],
-                                     fwhm_out,
+                                     fwhm_opt,
                                      tau_opt,
                                      data=data[:, i],
                                      eps=eps[:, i],
                                      base=base,
-                                     irf=irf).flatten()
+                                     irf=irf)
         fit[:, i+1] = model_n_comp_conv(t-out.params[f't_0_{i+1}'],
-                                        fwhm_out,
+                                        fwhm_opt,
                                         tau_opt,
                                         c[:, i],
                                         base=base,

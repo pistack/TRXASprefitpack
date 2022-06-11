@@ -1,30 +1,51 @@
 # fit_static
 
-fitting static spectrum with theoretically calculated line spectrum broadened by spectral line shape
+fit static: fitting static spectrum with theoretically calculated line spectrum
+broadened by spectral line shape
+1. v: voigt profile,
+2. g: gaussian,
+3. l: lorenzian
 
 ```{Note}
-Currently, it uses linear baseline.
+1. Currently it uses linear line to correct baseline of experimental spectrum.
+2. The unit between calculated line shape spectrum and experimental spectrum should be same.
 ```
 
-```{Note}
-energy unit of measured static spectrum must be KeV 
-and energy unit of calc static spectrum must be eV
-```
 
-* usage: fit_static [-h] [-ls {v,g,l}] [-o OUT] prefix num_scan peak_name
+* usage: fit_static.py 
+                       [-h] [-ls {v,g,l}] [--fwhm_G FWHM_G] [--fwhm_L FWHM_L]
+                       [--no_base] [--scale_energy] [-o OUT] [--fix_fwhm_G]
+                       [--fix_fwhm_L]
+                       prefix num_scan peak_file peak_factor
+
+
 
 * positional arguments:
-  * prefix                prefix for experimental static peak files It will read
-                         prefix_i.txt files
+  * prefix                prefix for experimental spectrum files It will read
+    prefix_i.txt files
   * num_scan              the number of static peak scan files
-  * peak_name             filename for theoretical line shape spectrum
+  * peak_file             filename for theoretical line shape spectrum
+  * peak_factor           parameter to match descrepency between thoretical
+    spectrum and experimental spectrum
 
 * optional arguments:
   * -h, --help            show this help message and exit
-  * -ls {v,g,l}, --line_shape {v,g,l}
-                         line shape of spectrum v: voigt profile g: gaussian
-                         shape l: lorenzian shape
+  * -ls {v,g,l}, --line_shape {v,g,l} line shape of spectrum 
+    1. v: voigt profile 
+    2. g: gaussian shape 
+    3. l: lorenzian shape
+  * --fwhm_G FWHM_G       full width at half maximum for gaussian shape It would
+    be not used when you set lorenzian line shape
+  * --fwhm_L FWHM_L       full width at half maximum for lorenzian shape It
+    would be not used when you use gaussian line shape
+  * --no_base             Do not include linear base line during fitting process
+  * --scale_energy        Scaling the energy of peak instead of shifting peak position to
+    match experimental spectrum
   * -o OUT, --out OUT     prefix for output files
+  * --fix_fwhm_G          fix gaussian fwhm value
+  * --fix_fwhm_L          fix lorenzian fwhm value
+
+
 
  
 
