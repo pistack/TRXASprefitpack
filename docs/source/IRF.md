@@ -40,30 +40,49 @@ help(model_n_comp_conv)
 
     Help on function model_n_comp_conv in module TRXASprefitpack.mathfun.exp_decay_fit:
     
-    model_n_comp_conv(t, fwhm, tau, c, base=True, irf='g', eta=None)
-        model for n component fitting
-        n exponential function convolved with irf; 'g': normalized gaussian distribution, 'c': normalized cauchy distribution, 'pv': pseudo voigt profile :math:`(1-\eta)g + \eta c`
+    model_n_comp_conv(t: numpy.ndarray, fwhm: Union[float, numpy.ndarray], tau: numpy.ndarray, c: numpy.ndarray, base: Union[bool, NoneType] = True, irf: Union[str, NoneType] = 'g', eta: Union[float, NoneType] = None) -> numpy.ndarray
+        Constructs the model for the convolution of n exponential and
+        instrumental response function
+        Supported instrumental response function are
         
-        :param numpy_1d_array t: time
-        :param numpy_1d_array fwhm: fwhm of X-ray temporal pulse, if irf == 'g' or 'c' then fwhm = [fwhm], if irf == 'pv' then fwhm = [fwhm_G, fwhm_L]
-        :param numpy_1d_array tau: life time for each component
-        :param numpy_1d_array c: coefficient
-         (num_comp+1,) if base=True
-         (num_comp,)   if base=False
-        :param base: whether or not include baseline [default: True]
-        :type base: bool, optional
-        :param irf: shape of instrumental response function [default: g], 
-         'g': normalized gaussian distribution, 
-         'c': normalized cauchy distribution, 
-         'pv': pseudo voigt profile :math:`(1-\eta)g + \eta c`
+        irf
+          * g: gaussian distribution
+          * c: cauchy distribution
+          * pv: pseudo voigt profile
         
-        :type irf: string, optional
-        :param eta: mixing parameter for pseudo voigt profile
-         (only needed for pseudo voigt profile, Default value is guessed according to Journal of Applied Crystallography. 33 (6): 1311–1316.)
-        :type eta: float, optional
+        Args:
+           t: time
+           fwhm: full width at half maximum of instrumental response function
+           tau: life time for each component
+           c: coefficient for each component
+           base: whether or not include baseline [default: True]
+           irf: shape of instrumental
+                response function [default: g]
         
-        :return: fit
-        :rtype: numpy_1d_array
+                  * 'g': normalized gaussian distribution,
+                  * 'c': normalized cauchy distribution,
+                  * 'pv': pseudo voigt profile :math:`(1-\eta)g + \eta c`
+           eta: mixing parameter for pseudo voigt profile
+                (only needed for pseudo voigt profile,
+                default value is guessed according to
+                Journal of Applied Crystallography. 33 (6): 1311–1316.)
+        
+        Returns:
+          Convolution of the sum of n exponential decays and instrumental
+          response function.
+        
+        Note:
+         1. *fwhm* For gaussian and cauchy distribution,
+            only one value of fwhm is needed,
+            so fwhm is assumed to be float
+            However, for pseudo voigt profile,
+            it needs two value of fwhm, one for gaussian part and
+            the other for cauchy part.
+            So, in this case,
+            fwhm is assumed to be numpy.ndarray with size 2.
+         2. *c* size of c is assumed to be
+            num_comp+1 when base is set to true.
+            Otherwise, it is assumed to be num_comp.
     
 
 
