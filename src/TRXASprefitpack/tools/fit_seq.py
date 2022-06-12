@@ -262,7 +262,7 @@ Default option is type 0 both raising and decay
         else:
             eps[:, i] = A[:, 2]
 
-    print(f'fitting with {data.shape[1]} data set!\n')
+    print(f'fitting with {num_scan} data set!\n')
     fit_params = Parameters()
     if irf in ['g', 'c']:
         fit_params.add('fwhm', value=fwhm,
