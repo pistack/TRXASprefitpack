@@ -78,7 +78,7 @@ def exp_conv_cauchy(t: Union[float, np.ndarray],
         ikgamma = complex(0, k*gamma)
         kt = k*t
         if not isinstance(t, np.ndarray):
-            if np.abs(kt) < 700:
+            if np.abs(kt) < 200:
                 ans = np.exp(-ikgamma)*exp1(-kt-ikgamma)
                 ans = np.exp(-kt)*ans.imag/np.pi
             else:
@@ -96,17 +96,17 @@ def exp_conv_cauchy(t: Union[float, np.ndarray],
                 ans = -inv_z*ans
                 ans = ans.imag/np.pi
         else:
-            mask = np.abs(kt) < 700
+            mask = np.abs(kt) < 200
             inv_mask = np.invert(mask)
 
             ans = np.zeros(t.shape[0], dtype='float')
             inv_z = 1/(kt[inv_mask]+ikgamma)
 
-            # abs(kt) < 700
+            # abs(kt) < 200
             ans1 = np.exp(-ikgamma)*exp1(-kt[mask]-ikgamma)
             ans[mask] = np.exp(-kt[mask])*ans1.imag/np.pi
 
-            # abs(kt) > 700, use asymptotic series
+            # abs(kt) > 200, use asymptotic series
             ans2 = 1+10*inv_z
             ans2 = 1+9*inv_z*ans2
             ans2 = 1+8*inv_z*ans2
