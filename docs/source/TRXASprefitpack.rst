@@ -8,7 +8,6 @@ Subpackages
    :maxdepth: 4
 
    TRXASprefitpack.mathfun
-   TRXASprefitpack.thy
 
 Module contents
 ---------------

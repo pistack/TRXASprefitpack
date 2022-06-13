@@ -1,6 +1,6 @@
 import argparse
 import numpy as np
-from ..thy import gen_theory_data
+from ..mathfun import gen_theory_data
 
 
 def broadening():
