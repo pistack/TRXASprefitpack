@@ -8,11 +8,9 @@ subpackage for TRXASprefitpack utilities
 
 from .fit_static import fit_static
 from .fit_tscan import fit_tscan
-from .auto_scale import auto_scale
 from .broadening import broadening
 from .fit_irf import fit_irf
 from .fit_seq import fit_seq
 
-__all__ = ['fit_static', 'fit_tscan',
-           'auto_scale', 'broadening',
+__all__ = ['broadening','fit_static', 'fit_tscan',
            'fit_irf', 'fit_seq']
