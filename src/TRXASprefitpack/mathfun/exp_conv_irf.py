@@ -3,7 +3,7 @@ exp_conv_irf:
 submodule for the mathematical functions for
 exponential decay convolved with irf
 
-:copyright: 2021 by pistack (Junho Lee).
+:copyright: 2021-2022 by pistack (Junho Lee).
 :license: LGPL3.
 '''
 

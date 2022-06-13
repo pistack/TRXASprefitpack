@@ -9,7 +9,7 @@
 
 import argparse
 import numpy as np
-from ..mathfun import rate_eq_conv, fact_anal_rate_eq_conv
+from ..mathfun import solve_seq_model, rate_eq_conv, fact_anal_rate_eq_conv
 from lmfit import Parameters, fit_report, minimize
 import matplotlib.pyplot as plt
 
@@ -35,20 +35,6 @@ def fit_seq():
         elif 1000000 < tau:
             bound = [tau/4, 4*tau]
         return bound
-    
-    def gen_seq_model(tau):
-        eigval = np.zeros(tau.size+1)
-        c = np.zeros(eigval.size)
-        V = np.eye(eigval.size)
-        eigval[:-1] = -1/tau
-        for i in range(1, eigval.size):
-            V[i, :i] = V[i-1,:i]*eigval[i-1]/(eigval[i]-eigval[:i])
-        
-        c[0] = 1
-        for i in range(1, eigval.size):
-            c[i] = - np.dot(c[:i], V[i,:i])
-        return eigval, V, c
-
 
     def residual(params, t, num_tau, exclude, irf, data=None, eps=None):
         if irf in ['g', 'c']:
@@ -58,7 +44,7 @@ def fit_seq():
         tau = np.zeros(num_tau)
         for i in range(num_tau):
             tau[i] = params[f'tau_{i+1}']
-        eigval, V, c = gen_seq_model(tau)
+        eigval, V, c = solve_seq_model(tau)
 
         chi = np.zeros((data.shape[0], data.shape[1]))
         for i in range(data.shape[1]):
@@ -315,7 +301,7 @@ Default option is type 0 both raising and decay
     for j in range(num_tau):
         tau_opt[j] = out.params[f'tau_{j+1}']
     
-    eigval_opt, V_opt, c_opt = gen_seq_model(tau_opt)
+    eigval_opt, V_opt, c_opt = solve_seq_model(tau_opt)
 
     abs = np.zeros((num_ex, num_scan))
     for i in range(num_scan):
