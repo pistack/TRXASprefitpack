@@ -11,6 +11,7 @@ Welcome to TRXASprefitpack's documentation!
    :caption: Contents:
 
    math
+   utility
    example
    TRXASprefitpack
 
