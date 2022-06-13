@@ -3,7 +3,7 @@ rate_eq:
 submodule which solves 1st order rate equation and computes
 the solution and signal
 
-:copyright: 2021 by pistack (Junho Lee).
+:copyright: 2021-2022 by pistack (Junho Lee).
 :license: LGPL3.
 '''
 
@@ -35,6 +35,34 @@ def solve_model(equation: np.ndarray,
 
     return eigval.real, V, c
 
+def solve_seq_model(tau):
+    '''
+    Solve sequential decay model with the initial
+    condition [1, 0, 0, ..., 0]
+    0 -> 1 -> 2 -> 3 -> ... -> n 
+
+    Args:
+      tau: liftime constants for each decay
+      y0: initial condition
+
+    Returns:
+       1. eigenvalues of equation
+       2. eigenvectors for equation
+       3. coefficient to match initial condition
+    '''
+    eigval = np.zeros(tau.size+1)
+    c = np.zeros(eigval.size)
+    V = np.eye(eigval.size)
+    
+    eigval[:-1] = -1/tau
+
+    for i in range(1, eigval.size):
+      V[i, :i] = V[i-1,:i]*eigval[i-1]/(eigval[i]-eigval[:i])
+    
+    c[0] = 1
+    for i in range(1, eigval.size):
+      c[i] = -np.dot(c[:i], V[i,:i])
+    return eigval, V, c
 
 def compute_model(t: np.ndarray,
                   eigval: np.ndarray,
