@@ -57,7 +57,7 @@ def solve_l_model(equation: np.ndarray,
     c = np.zeros(eigval.size)
 
     for i in range(1, eigval.size):
-      V[i, :i] = equation[i,:i] @ V[:i,:i]/(eigval[i]-eigval[:i])
+      V[i, :i] = equation[i,:i] @ V[:i,:i]/(eigval[:i]-eigval[i])
 
     c[0] = y0[0]
     for i in range(1, eigval.size):
