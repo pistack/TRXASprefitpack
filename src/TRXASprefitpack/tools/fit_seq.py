@@ -248,14 +248,21 @@ Default option is type 0 both raising and decay
         num_scan = time_zeros.size
 
     t = np.genfromtxt(f'{prefix}_1.txt')[:, 0]
-    data = np.zeros((t.shape[0], num_scan))
-    eps = np.zeros((t.shape[0], num_scan))
+    num_data_pts = t.shape[0]
+    data = np.zeros((num_data_pts, num_scan))
+    eps = np.zeros((num_data_pts, num_scan))
 
     for i in range(num_scan):
-        data[:, i] = np.genfromtxt(f'{prefix}_{i+1}.txt')[:, 1]
-        eps[:, i] = np.genfromtxt(f'{prefix}_{i+1}.txt')[:, 2]
+        A = np.genfromtxt(f'{prefix}_{i+1}.txt')
+        num_col = A.shape[1]
+        data[:, i] = A[:, 1]
+        if num_col == 2:
+            # default S/N = 10
+            eps[:, i] = np.max(np.abs(data[:, i]))*np.ones(num_data_pts)/10
+        else:
+            eps[:, i] = A[:, 2]
 
-    print(f'fitting with {data.shape[1]} data set!\n')
+    print(f'fitting with {num_scan} data set!\n')
     fit_params = Parameters()
     if irf in ['g', 'c']:
         fit_params.add('fwhm', value=fwhm,

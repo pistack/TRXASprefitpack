@@ -140,12 +140,18 @@ calc spectrum should be same
     no_base = args.no_base 
 
     e = np.genfromtxt(f'{prefix}_1.txt')[:, 0]
-    data = np.zeros((e.shape[0], num_scan))
-    eps = np.zeros((e.shape[0], num_scan))
+    num_escan_pts = e.shape[0]
+    data = np.zeros((num_escan_pts, num_scan))
+    eps = np.zeros((num_escan_pts, num_scan))
 
     for i in range(num_scan):
-        data[:, i] = np.genfromtxt(f'{prefix}_{i+1}.txt')[:, 1]
-        eps[:, i] = np.genfromtxt(f'{prefix}_{i+1}.txt')[:, 2]
+        A = np.genfromtxt(f'{prefix}_{i+1}.txt')
+        data[:, i] = A[:, 1]
+        if A.shape[1] == 2:
+            # Default S/N : 100
+            eps[:, i] = np.max(np.abs(data[:, i]))*np.ones(num_escan_pts)/100
+        else:
+            eps[:, i] = A[:, 2]
 
     peaks = np.genfromtxt(peak_file)
 
