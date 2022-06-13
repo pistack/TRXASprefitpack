@@ -34,6 +34,36 @@ def solve_model(equation: np.ndarray,
     c = LA.solve(V, y0)
 
     return eigval.real, V, c
+  
+def solve_l_model(equation: np.ndarray,
+                y0: np.ndarray) -> Tuple[np.ndarray, np.ndarray, np.ndarray]:
+
+    '''
+    Solve system of first order rate equation where the rate equation matrix is
+    lower triangle
+
+    Args:
+      equation: matrix corresponding to model
+      y0: initial condition
+
+    Returns:
+       1. eigenvalues of equation
+       2. eigenvectors for equation
+       3. coefficient where y0 = Vc
+    '''
+
+    eigval = np.diagonal(equation)
+    V = np.eye(eigval.size)
+    c = np.zeros(eigval.size)
+
+    for i in range(1, eigval.size):
+      V[i, :i] = equation[i,:i] @ V[:i,:i]/(eigval[i]-eigval[:i])
+
+    c[0] = y0[0]
+    for i in range(1, eigval.size):
+      c[i] = y0[i] - np.dot(c[:i], V[i,:i])
+
+    return eigval.real, V, c
 
 def solve_seq_model(tau):
     '''
