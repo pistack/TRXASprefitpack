@@ -20,7 +20,7 @@ from TRXASprefitpack import __version__ as VERSION
 # -- Project information -----------------------------------------------------
 
 project = 'TRXASprefitpack'
-copyright = '2021, pistack (Junho Lee)'
+copyright = '2021-2022, pistack (Junho Lee)'
 author = 'pistack (Junho Lee)'
 
 # The full version, including alpha/beta/rc tags
