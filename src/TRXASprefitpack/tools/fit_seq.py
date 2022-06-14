@@ -12,7 +12,6 @@ import numpy as np
 from ..mathfun import solve_seq_model, rate_eq_conv, fact_anal_rate_eq_conv
 from .misc import set_bound_tau, read_data, contribution_table, plot_result
 from lmfit import Parameters, fit_report, minimize
-import matplotlib.pyplot as plt
 
 
 def fit_seq():

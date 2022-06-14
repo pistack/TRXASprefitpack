@@ -12,7 +12,6 @@ import numpy as np
 from ..mathfun import gau_irf, cauchy_irf, pvoigt_irf
 from .misc import read_data, plot_result
 from lmfit import Parameters, fit_report, minimize
-import matplotlib.pyplot as plt
 
 
 def fit_irf():

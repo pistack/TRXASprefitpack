@@ -10,11 +10,9 @@
 import argparse
 import numpy as np
 import scipy.linalg as LA
-from sympy import plot
 from ..mathfun import gen_theory_data
 from .misc import read_data, plot_result
 from lmfit import Parameters, fit_report, minimize
-import matplotlib.pyplot as plt
 
 
 def fit_static():

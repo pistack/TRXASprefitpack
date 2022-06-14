@@ -3,6 +3,8 @@
 fit tscan: fitting tscan data using sum of exponential decay covolved with gaussian/cauchy(lorenzian)/pseudo voigt irf function it uses ``fact_anal_exp_conv`` to determine best c_i's when timezero, fwhm, and time constants are given. So, to use this script what you need to give are only timezero, fwhm, and time constants.
 
 ```{Note}
+* The number of time zero parameter should be same as the
+  number of scan to fit.
 * If you set shape of irf to pseudo voigt (pv), then
 you should provide two full width at half maximum
 value for gaussian and cauchy parts, respectively.

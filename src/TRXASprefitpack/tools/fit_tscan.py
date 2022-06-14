@@ -12,7 +12,6 @@ import numpy as np
 from ..mathfun import model_n_comp_conv, fact_anal_exp_conv
 from .misc import set_bound_tau, read_data, contribution_table, plot_result
 from lmfit import Parameters, fit_report, minimize
-import matplotlib.pyplot as plt
 
 
 def fit_tscan():
