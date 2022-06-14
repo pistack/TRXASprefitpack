@@ -11,8 +11,8 @@ import argparse
 import numpy as np
 import scipy.linalg as LA
 from ..mathfun import gen_theory_data
+from .misc import read_data, plot_result
 from lmfit import Parameters, fit_report, minimize
-import matplotlib.pyplot as plt
 
 
 def fit_static():
@@ -141,17 +141,7 @@ calc spectrum should be same
 
     e = np.genfromtxt(f'{prefix}_1.txt')[:, 0]
     num_escan_pts = e.shape[0]
-    data = np.zeros((num_escan_pts, num_scan))
-    eps = np.zeros((num_escan_pts, num_scan))
-
-    for i in range(num_scan):
-        A = np.genfromtxt(f'{prefix}_{i+1}.txt')
-        data[:, i] = A[:, 1]
-        if A.shape[1] == 2:
-            # Default S/N : 100
-            eps[:, i] = np.max(np.abs(data[:, i]))*np.ones(num_escan_pts)/100
-        else:
-            eps[:, i] = A[:, 2]
+    data, eps = read_data(prefix, num_scan, num_escan_pts, 1000)
 
     peaks = np.genfromtxt(peak_file)
 
@@ -173,7 +163,7 @@ calc spectrum should be same
                    max=2*peak_factor)
 
     # First, Nelder-Mead
-    out = minimize(residual, fit_params, method='Nelder',
+    out = minimize(residual, fit_params, method='Nelder', calc_covar=False,
                    args=(e, peaks, policy, no_base),
                    kws={'data': data, 'eps': eps})
     # Then do Levenberg-Marquardt
@@ -201,18 +191,6 @@ calc spectrum should be same
         fit[:, i+1] = peak_fit(e, peaks, fwhm_G, fwhm_L, peak_factor, policy, c)
         A[i] = c[0]
 
-    for i in range(num_scan):
-        plt.figure(i+1)
-        plt.title(f'Chi squared: {chi2_ind[i]:.2f}')
-        plt.errorbar(e, data[:, i]-base[:, i+1],
-                     eps[:, i], marker='o', mfc='none',
-                     label=f'expt-base static {i+1}',
-                     linestyle='none')
-        plt.plot(e, fit[:, i+1]-base[:, i+1],
-                 label=f'fit-base static {i+1}')
-        plt.legend()
-    plt.show()
-
     f = open(out_prefix+'_fit_report.txt', 'w')
     f.write(fit_report(out))
     f.close()
@@ -220,5 +198,7 @@ calc spectrum should be same
     np.savetxt(out_prefix+'_base.txt', base)
     np.savetxt(out_prefix+'_fit.txt', fit)
     np.savetxt(out_prefix+'_A.txt', A)
+
+    plot_result('static', num_scan, chi2_ind, data-base[:, 1:], eps, fit-base)
 
     return

@@ -6,10 +6,12 @@ fit_irf: fitting instrumental response function There are three irf shapes are a
 3. pseudo voigt shape
 
 ```{Note}
-1. if you set shape of irf to pseudo voigt (pv), then
+* The number of time zero parameter should be same as the
+  number of scan to fit.
+* If you set shape of irf to pseudo voigt (pv), then
    you should provide two full width at half maximum
    value for gaussian and cauchy parts, respectively.
-2. This script is only useful when one can directly measure
+* This script is only useful when one can directly measure
    instrumental response function.
 ```
 

@@ -10,31 +10,11 @@
 import argparse
 import numpy as np
 from ..mathfun import solve_seq_model, rate_eq_conv, fact_anal_rate_eq_conv
+from .misc import set_bound_tau, read_data, contribution_table, plot_result
 from lmfit import Parameters, fit_report, minimize
-import matplotlib.pyplot as plt
 
 
 def fit_seq():
-
-    def set_bound_tau(tau):
-        bound = [tau/2, 1]
-        if 0.1 < tau <= 10:
-            bound = [0.05, 100]
-        elif 10 < tau <= 100:
-            bound = [5, 500]
-        elif 100 < tau <= 1000:
-            bound = [50, 2000]
-        elif 1000 < tau <= 5000:
-            bound = [500, 10000]
-        elif 5000 < tau <= 50000:
-            bound = [2500, 100000]
-        elif 50000 < tau <= 500000:
-            bound = [25000, 1000000]
-        elif 500000 < tau <= 1000000:
-            bound = [250000, 2000000]
-        elif 1000000 < tau:
-            bound = [tau/4, 4*tau]
-        return bound
 
     def residual(params, t, num_tau, exclude, irf, data=None, eps=None):
         if irf in ['g', 'c']:
@@ -117,8 +97,10 @@ upper bound: 4*tau
 
     epilog = '''
 *Note
+1. The number of time zero parameter should be same as the
+   number of scan to fit.
 
-1. if you set shape of irf to pseudo voigt (pv), then
+2. if you set shape of irf to pseudo voigt (pv), then
    you should provide two full width at half maximum
    value for gaussian and cauchy parts, respectively.
 '''
@@ -235,18 +217,7 @@ Default option is type 0 both raising and decay
 
     t = np.genfromtxt(f'{prefix}_1.txt')[:, 0]
     num_data_pts = t.shape[0]
-    data = np.zeros((num_data_pts, num_scan))
-    eps = np.zeros((num_data_pts, num_scan))
-
-    for i in range(num_scan):
-        A = np.genfromtxt(f'{prefix}_{i+1}.txt')
-        num_col = A.shape[1]
-        data[:, i] = A[:, 1]
-        if num_col == 2:
-            # default S/N = 10
-            eps[:, i] = np.max(np.abs(data[:, i]))*np.ones(num_data_pts)/10
-        else:
-            eps[:, i] = A[:, 2]
+    data, eps = read_data(prefix, num_scan, num_data_pts, 10)
 
     print(f'fitting with {num_scan} data set!\n')
     fit_params = Parameters()
@@ -269,11 +240,11 @@ Default option is type 0 both raising and decay
 
     # Second initial guess using global optimization algorithm
     if args.slow: 
-        out = minimize(residual, fit_params, method='ampgo',
+        out = minimize(residual, fit_params, method='ampgo', calc_covar=False,
         args=(t, num_tau, exclude, irf),
         kws={'data': data, 'eps': eps})
     else:
-        out = minimize(residual, fit_params, method='nelder',
+        out = minimize(residual, fit_params, method='nelder', calc_covar=False,
         args=(t, num_tau, exclude, irf),
         kws={'data': data, 'eps': eps})
 
@@ -318,19 +289,10 @@ Default option is type 0 both raising and decay
             abs[:, i] = abs_tmp[1:]
         else:
             abs[:, i] = abs_tmp
-
-    table_print = '    '
-    for i in range(num_scan):
-        table_print = table_print + f'tscan {i+1} |'
-    table_print = table_print + '\n'
-    for i in range(num_ex):
-        table_print = table_print + '    '
-        for j in range(num_scan):
-            table_print = table_print + f'{abs[i, j]:.4e} a.u. |'
-        table_print = table_print + '\n'
     
-    table_print = '[[Excited State Coefficient]]' + '\n' + table_print
-    fit_content = fit_report(out) + '\n' + table_print
+    contrib_table = contribution_table('tscan', 'Excited State Contribution', num_scan,
+    num_ex, abs)
+    fit_content = fit_report(out) + '\n' + contrib_table
 
     print(fit_content)
 
@@ -341,17 +303,6 @@ Default option is type 0 both raising and decay
     np.savetxt(out_prefix+'_fit.txt', fit)
     np.savetxt(out_prefix+'_abs.txt', abs)
 
-    for i in range(num_scan):
-        plt.figure(i+1)
-        title = f'Chi squared: {chi2_ind[i]:.2f}'
-        plt.title(title)
-        plt.errorbar(t, data[:, i],
-                     eps[:, i], marker='o', mfc='none',
-                     label=f'tscan expt {i+1}',
-                     linestyle='none')
-        plt.plot(t, fit[:, i+1],
-                 label=f'fit tscan {i+1}')
-        plt.legend()
-    plt.show()
+    plot_result('tscan', num_scan, chi2_ind, data, eps, fit)
 
     return

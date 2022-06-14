@@ -10,8 +10,8 @@
 import argparse
 import numpy as np
 from ..mathfun import gau_irf, cauchy_irf, pvoigt_irf
+from .misc import read_data, plot_result
 from lmfit import Parameters, fit_report, minimize
-import matplotlib.pyplot as plt
 
 
 def fit_irf():
@@ -56,10 +56,14 @@ upper bound: t_0 + 2*fwhm_init
     epilog = '''
 *Note
 
-1. if you set shape of irf to pseudo voigt (pv), then
+1. The number of time zero parameter should be same as the
+   number of scan to fit.
+
+2. if you set shape of irf to pseudo voigt (pv), then
    you should provide two full width at half maximum
    value for gaussian and cauchy parts, respectively.
-2. This script is only useful when one can directly measure
+
+3. This script is only useful when one can directly measure
    instrumental response function.
 '''
     tmp = argparse.RawDescriptionHelpFormatter
@@ -136,18 +140,7 @@ upper bound: t_0 + 2*fwhm_init
 
     t = np.genfromtxt(f'{prefix}_1.txt')[:, 0]
     num_data_pts = t.shape[0]
-    data = np.zeros((num_data_pts, num_scan))
-    eps = np.zeros((num_data_pts, num_scan))
-
-    for i in range(num_scan):
-        A = np.genfromtxt(f'{prefix}_{i+1}.txt')
-        num_col = A.shape[1]
-        data[:, i] = A[:, 1]
-        if num_col == 2:
-            # default S/N = 10
-            eps[:, i] = np.max(np.abs(data[:, i]))*np.ones(num_data_pts)/10
-        else:
-            eps[:, i] = A[:, 2]
+    data, eps = read_data(prefix, num_scan, num_data_pts, 10)
 
     print(f'fitting with {num_scan} data set!\n')
     fit_params = Parameters()
@@ -166,11 +159,11 @@ upper bound: t_0 + 2*fwhm_init
 
     # Second initial guess using global optimization algorithm
     if args.slow: 
-        out = minimize(residual, fit_params, method='ampgo',
+        out = minimize(residual, fit_params, method='ampgo', calc_covar=False,
         args=(t, irf),
         kws={'data': data, 'eps': eps})
     else:
-        out = minimize(residual, fit_params, method='nelder',
+        out = minimize(residual, fit_params, method='nelder', calc_covar=False,
         args=(t, irf),
         kws={'data': data, 'eps': eps})
 
@@ -215,18 +208,6 @@ upper bound: t_0 + 2*fwhm_init
 
     print(fit_report(out))
 
-
-    for i in range(num_scan):
-        plt.figure(i+1)
-        title = f'Chi squared: {chi2_ind[i]:.2f}'
-        plt.title(title)
-        plt.errorbar(t, data[:, i],
-                     eps[:, i], marker='o', mfc='none',
-                     label=f'tscan expt {i+1}',
-                     linestyle='none')
-        plt.plot(t, fit[:, i+1],
-                 label=f'fit tscan {i+1}')
-        plt.legend()
-    plt.show()
+    plot_result('irf_scan', num_scan, chi2_ind, data, eps, fit)
 
     return
