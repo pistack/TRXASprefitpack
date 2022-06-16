@@ -31,24 +31,23 @@ def exp_conv_gau(t: Union[float, np.ndarray], fwhm: float,
 
     sigma = fwhm/(2*np.sqrt(2*np.log(2)))
     ksigma = k*sigma
-    ksigma2 = ksigma*sigma
-    tinvsigma = t/sigma
+    z = ksigma - t/sigma
 
     if not isinstance(t, np.ndarray):
-        if ksigma2 > t:
-            ans = 1/2*np.exp(-0.5*tinvsigma**2) * \
-                erfcx(1/np.sqrt(2)*(ksigma-tinvsigma))
+        if z < 0:
+            ans = 1/2*np.exp(-t/(2*sigma**2)) * \
+                erfcx(z/np.sqrt(2))
         else:
-            ans = 1/2*np.exp(k*(0.5*ksigma2-t)) * \
-                erfc(1/np.sqrt(2)*(ksigma - tinvsigma))
+            ans = 1/2*np.exp(ksigma*z-ksigma/2) * \
+                erfc(z/np.sqrt(2))
     else:
-        mask = t < ksigma2
+        mask = z < 0
         inv_mask = np.invert(mask)
         ans = np.zeros(t.shape[0])
-        ans[mask] = 1/2*np.exp(-0.5*tinvsigma[mask]**2) * \
-            erfcx(1/np.sqrt(2)*(ksigma-tinvsigma[mask]))
-        ans[inv_mask] = 1/2*np.exp(k*(0.5*ksigma2-t[inv_mask])) * \
-            erfc(1/np.sqrt(2)*(ksigma - tinvsigma[inv_mask]))
+        ans[mask] = 1/2*np.exp(-t[mask]/(2*sigma**2)) * \
+            erfcx(z[mask]/np.sqrt(2))
+        ans[inv_mask] = 1/2*np.exp(ksigma*z[inv_mask]-ksigma/2) * \
+            erfc(z[inv_mask]/np.sqrt(2))
 
     return ans
 
