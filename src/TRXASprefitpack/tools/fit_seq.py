@@ -31,7 +31,6 @@ def fit_seq():
             t0 = params[f't_0_{i+1}']
             abs = fact_anal_rate_eq_conv(t-t0, fwhm, eigval, V, c, exclude, irf=irf,
                                    data=data[:, i], eps=eps[:, i])
-
             chi[:, i] = data[:, i] - \
                 rate_eq_conv(t-t0, fwhm, abs, eigval, V, c, irf=irf)
         chi = chi.flatten()/eps.flatten()
@@ -197,10 +196,10 @@ Default option is type 0 both raising and decay
             exclude = 'first_and_last'
         elif seq_decay_type == 1:
             num_ex = num_tau
-            exclude = 'first'
+            exclude = 'last'
         elif seq_decay_type == 2:
             num_ex = num_tau
-            exclude = 'last'
+            exclude = 'first'
         else:
             num_ex = num_tau+1
             exclude = None
