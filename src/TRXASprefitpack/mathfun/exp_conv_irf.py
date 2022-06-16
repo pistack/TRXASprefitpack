@@ -9,7 +9,7 @@ exponential decay convolved with irf
 
 from typing import Union
 import numpy as np
-from scipy.special import erfc, erfcx, exp1
+from scipy.special import erfc, erfcx, wofz, exp1
 
 
 def exp_conv_gau(t: Union[float, np.ndarray], fwhm: float,
@@ -155,7 +155,7 @@ def dmp_osc_conv_gau(t: Union[float, np.ndarray], fwhm: float,
 k: float, T: float, phase: float) -> Union[float, np.ndarray]:
 
     '''
-    Compute demped oscillation convolved with normalized gaussian
+    Compute damped oscillation convolved with normalized gaussian
     distribution
 
     Args:
@@ -167,29 +167,28 @@ k: float, T: float, phase: float) -> Union[float, np.ndarray]:
 
     Returns:
      Convolution of normalized gaussian distribution and 
-     demped oscillation :math:`(\\exp(-kt)sin(2\\pi*t/T+phase))`.
+     damped oscillation :math:`(\\exp(-kt)sin(2\\pi*t/T+phase))`.
     '''
-    k = complex(k, -2*np.pi/T)
+    k_cplx = complex(k,-2*np.pi/T)
     sigma = fwhm/(2*np.sqrt(2*np.log(2)))
-    ksigma = k*sigma
-    ksigma2 = ksigma*sigma
-    tinvsigma = t/sigma
+    sigmak_cplx = sigma*k_cplx
+    z = sigmak_cplx - t/sigma
 
     if not isinstance(t, np.ndarray):
-        if ksigma2.real > t.real:
-            ans = 1/2*np.exp(-0.5*tinvsigma**2) * \
-                erfcx(1/np.sqrt(2)*(ksigma-tinvsigma))
+        if z.real > 0:
+            ans = 1/2*np.exp(-(t/sigma)**2/2) * \
+                wofz(z/complex(0, -np.sqrt(2)))
         else:
-            ans = 1/2*np.exp(k*(0.5*ksigma2-t)) * \
-                erfc(1/np.sqrt(2)*(ksigma - tinvsigma))
+            ans = np.exp(sigmak_cplx*z-sigmak_cplx**2/2) - \
+                1/2*np.exp(-(t/sigma)**2/2)*wofz(z/complex(0, np.sqrt(2))) 
     else:
-        mask = t.real < ksigma2.real
+        mask = z.real > 0
         inv_mask = np.invert(mask)
         ans = np.zeros(t.shape[0], dtype=np.complex128)
-        ans[mask] = 1/2*np.exp(-0.5*tinvsigma[mask]**2) * \
-            erfcx(1/np.sqrt(2)*(ksigma-tinvsigma[mask]))
-        ans[inv_mask] = 1/2*np.exp(k*(0.5*ksigma2-t[inv_mask])) * \
-            erfc(1/np.sqrt(2)*(ksigma - tinvsigma[inv_mask]))
+        ans[mask] = 1/2*np.exp(-(t[mask]/sigma)**2/2) * \
+            wofz(z[mask]/complex(0,-np.sqrt(2)))
+        ans[inv_mask] = np.exp(sigmak_cplx*z[inv_mask]-sigmak_cplx**2/2) - \
+            1/2*np.exp(-(t[inv_mask]/sigma)**2/2)*wofz(z[inv_mask]/complex(0, np.sqrt(2)))
     
     ans = np.exp(complex(0, phase))*ans
 

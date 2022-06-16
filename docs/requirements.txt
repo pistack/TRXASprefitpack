@@ -1,4 +1,4 @@
 myst_parser
-sphinx_book_theme
+sphinx_readable_theme
 numpy
 scipy
