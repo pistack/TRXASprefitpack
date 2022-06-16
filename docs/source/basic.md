@@ -62,12 +62,6 @@ help(TRXASprefitpack.docs)
 
     ---------------------------------------------------------------------------
 
-    AttributeError                            Traceback (most recent call last)
-
-    c:\Users\Reddy\Desktop\TRXASprefitpack-example\basic.ipynb Cell 10' in <cell line: 1>()
-    ----> <a href='vscode-notebook-cell:/c%3A/Users/Reddy/Desktop/TRXASprefitpack-example/basic.ipynb#ch0000008?line=0'>1</a> help(TRXASprefitpack.docs)
-    
-
     AttributeError: module 'TRXASprefitpack' has no attribute 'docs'
 
 
@@ -484,9 +478,6 @@ help(TRXASprefitpack.mathfun)
     
     DATA
         __all__ = ['gen_theory_data', 'gau_irf', 'cauchy_irf', 'pvoigt_irf', '...
-    
-    FILE
-        c:\users\reddy\desktop\trxasprefitpack\src\trxasprefitpack\mathfun\__init__.py
     
     
     
