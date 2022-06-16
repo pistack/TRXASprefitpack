@@ -34,14 +34,14 @@ def exp_conv_gau(t: Union[float, np.ndarray], fwhm: float,
     z = ksigma - t/sigma
 
     if not isinstance(t, np.ndarray):
-        if z < 0:
+        if z > 0:
             ans = 1/2*np.exp(-t/(2*sigma**2)) * \
                 erfcx(z/np.sqrt(2))
         else:
             ans = 1/2*np.exp(ksigma*z-ksigma**2/2) * \
                 erfc(z/np.sqrt(2))
     else:
-        mask = z < 0
+        mask = z > 0
         inv_mask = np.invert(mask)
         ans = np.zeros(t.shape[0])
         ans[mask] = 1/2*np.exp(-t[mask]/(2*sigma**2)) * \
