@@ -24,23 +24,18 @@ help(TRXASprefitpack)
         package for TRXAS pre fitting process which aims for the first order dynamics
         TRXAS stands for Time Resolved X-ray Absorption Spectroscopy
         
-        :copyright: 2021 by pistack (Junho Lee)
+        :copyright: 2021-2022 by pistack (Junho Lee)
         :license: LGPL3.
     
     PACKAGE CONTENTS
-        data_process (package)
         mathfun (package)
-        thy (package)
         tools (package)
     
     VERSION
         0.5.0
     
-    FILE
-        /home/lis1331/Documents/lecture/chem/TRXAS-pre-fit-pack/src/TRXASprefitpack/__init__.py
     
     
-
 
 ## get version information
 
@@ -69,8 +64,8 @@ help(TRXASprefitpack.docs)
 
     AttributeError                            Traceback (most recent call last)
 
-    /tmp/ipykernel_27429/1695297168.py in <module>
-    ----> 1 help(TRXASprefitpack.docs)
+    c:\Users\Reddy\Desktop\TRXASprefitpack-example\basic.ipynb Cell 10' in <cell line: 1>()
+    ----> <a href='vscode-notebook-cell:/c%3A/Users/Reddy/Desktop/TRXASprefitpack-example/basic.ipynb#ch0000008?line=0'>1</a> help(TRXASprefitpack.docs)
     
 
     AttributeError: module 'TRXASprefitpack' has no attribute 'docs'
@@ -95,6 +90,7 @@ help(TRXASprefitpack.mathfun)
     
     PACKAGE CONTENTS
         A_matrix
+        broad
         exp_conv_irf
         exp_decay_fit
         irf
@@ -236,7 +232,7 @@ help(TRXASprefitpack.mathfun)
                Convolution of normalized pseudo voigt profile and
                exponential decay :math:`(\exp(-kt))`.
         
-        fact_anal_exp_conv(t: numpy.ndarray, fwhm: Union[float, numpy.ndarray], tau: numpy.ndarray, base: Union[bool, NoneType] = True, irf: Union[str, NoneType] = 'g', eta: Union[float, NoneType] = None, data: Union[numpy.ndarray, NoneType] = None, eps: Union[numpy.ndarray, NoneType] = None) -> numpy.ndarray
+        fact_anal_exp_conv(t: numpy.ndarray, fwhm: Union[float, numpy.ndarray], tau: numpy.ndarray, base: Optional[bool] = True, irf: Optional[str] = 'g', eta: Optional[float] = None, data: Optional[numpy.ndarray] = None, eps: Optional[numpy.ndarray] = None) -> numpy.ndarray
             Estimate the best coefficiets when full width at half maximum fwhm
             and life constant tau are given
             
@@ -279,7 +275,7 @@ help(TRXASprefitpack.mathfun)
              data should not contain time range and
              the dimension of the data must be one.
         
-        fact_anal_rate_eq_conv(t: numpy.ndarray, fwhm: Union[float, numpy.ndarray], eigval: numpy.ndarray, V: numpy.ndarray, c: numpy.ndarray, exclude: Union[str, NoneType] = None, irf: Union[str, NoneType] = 'g', eta: Union[float, NoneType] = None, data: Union[numpy.ndarray, NoneType] = None, eps: Union[numpy.ndarray, NoneType] = None) -> numpy.ndarray
+        fact_anal_rate_eq_conv(t: numpy.ndarray, fwhm: Union[float, numpy.ndarray], eigval: numpy.ndarray, V: numpy.ndarray, c: numpy.ndarray, exclude: Optional[str] = None, irf: Optional[str] = 'g', eta: Optional[float] = None, data: Optional[numpy.ndarray] = None, eps: Optional[numpy.ndarray] = None) -> numpy.ndarray
             Estimate the best coefficiets when full width at half maximum fwhm
             and eigenvector and eigenvalue of rate equation matrix are given
             
@@ -332,7 +328,24 @@ help(TRXASprefitpack.mathfun)
             Returns:
              normalized gaussian function.
         
-        model_n_comp_conv(t: numpy.ndarray, fwhm: Union[float, numpy.ndarray], tau: numpy.ndarray, c: numpy.ndarray, base: Union[bool, NoneType] = True, irf: Union[str, NoneType] = 'g', eta: Union[float, NoneType] = None) -> numpy.ndarray
+        gen_theory_data(e: numpy.ndarray, peaks: numpy.ndarray, A: float, fwhm_G: float, fwhm_L: float, peak_factor: float, policy: Optional[str] = 'shift') -> numpy.ndarray
+            voigt broadening theoretically calculated lineshape spectrum
+            
+            Args:
+                e: energy 
+                A: scaling parameter
+                fwhm_G: full width at half maximum of gaussian shape (unit: same as energy)
+                fwhm_L: full width at half maximum of lorenzian shape (unit: same as energy)
+                peak_factor: Peak factor, its behavior depends on policy.
+                policy: Policy to match discrepency between experimental data and theoretical
+                        spectrum.
+                        1. 'shift' : Default option, shift peak position by peak_factor
+                        2. 'scale' : scale peak position by peak_factor
+            
+            Returns:
+              numpy ndarray of voigt broadened theoritical lineshape spectrum
+        
+        model_n_comp_conv(t: numpy.ndarray, fwhm: Union[float, numpy.ndarray], tau: numpy.ndarray, c: numpy.ndarray, base: Optional[bool] = True, irf: Optional[str] = 'g', eta: Optional[float] = None) -> numpy.ndarray
             Constructs the model for the convolution of n exponential and
             instrumental response function
             Supported instrumental response function are
@@ -388,7 +401,7 @@ help(TRXASprefitpack.mathfun)
             Returns:
              linear combination of gaussian and lorenzian function with mixing parameter eta.
         
-        rate_eq_conv(t: numpy.ndarray, fwhm: Union[float, numpy.ndarray], abs: numpy.ndarray, eigval: numpy.ndarray, V: numpy.ndarray, c: numpy.ndarray, irf: Union[str, NoneType] = 'g', eta: Union[float, NoneType] = None) -> numpy.ndarray
+        rate_eq_conv(t: numpy.ndarray, fwhm: Union[float, numpy.ndarray], abs: numpy.ndarray, eigval: numpy.ndarray, V: numpy.ndarray, c: numpy.ndarray, irf: Optional[str] = 'g', eta: Optional[float] = None) -> numpy.ndarray
             Constructs signal model rate equation with
             instrumental response function
             Supported instrumental response function are
@@ -430,6 +443,19 @@ help(TRXASprefitpack.mathfun)
                 So, in this case,
                 fwhm is assumed to be numpy.ndarray with size 2.
         
+        solve_l_model(equation: numpy.ndarray, y0: numpy.ndarray) -> Tuple[numpy.ndarray, numpy.ndarray, numpy.ndarray]
+            Solve system of first order rate equation where the rate equation matrix is
+            lower triangle
+            
+            Args:
+              equation: matrix corresponding to model
+              y0: initial condition
+            
+            Returns:
+               1. eigenvalues of equation
+               2. eigenvectors for equation
+               3. coefficient where y0 = Vc
+        
         solve_model(equation: numpy.ndarray, y0: numpy.ndarray) -> Tuple[numpy.ndarray, numpy.ndarray, numpy.ndarray]
             Solve system of first order rate equation
             
@@ -441,15 +467,29 @@ help(TRXASprefitpack.mathfun)
                1. eigenvalues of equation
                2. eigenvectors for equation
                3. coefficient where y0 = Vc
+        
+        solve_seq_model(tau)
+            Solve sequential decay model with the initial
+            condition [1, 0, 0, ..., 0]
+            0 -> 1 -> 2 -> 3 -> ... -> n 
+            
+            Args:
+              tau: liftime constants for each decay
+              y0: initial condition
+            
+            Returns:
+               1. eigenvalues of equation
+               2. eigenvectors for equation
+               3. coefficient to match initial condition
     
     DATA
-        __all__ = ['gau_irf', 'cauchy_irf', 'pvoigt_irf', 'exp_conv_gau', 'exp...
+        __all__ = ['gen_theory_data', 'gau_irf', 'cauchy_irf', 'pvoigt_irf', '...
     
     FILE
-        /home/lis1331/Documents/lecture/chem/TRXAS-pre-fit-pack/src/TRXASprefitpack/mathfun/__init__.py
+        c:\users\reddy\desktop\trxasprefitpack\src\trxasprefitpack\mathfun\__init__.py
     
     
-
+    
 
 ## Get general information of function defined in TRXASprefitpack
 
@@ -473,4 +513,4 @@ help(TRXASprefitpack.exp_conv_gau)
          Convolution of normalized gaussian distribution and exponential
          decay :math:`(\exp(-kt))`.
     
-
+    

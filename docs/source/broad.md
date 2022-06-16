@@ -17,32 +17,26 @@ plt.rcParams["figure.figsize"] = (14,10)
 help(gen_theory_data)
 ```
 
-    Help on function gen_theory_data in module TRXASprefitpack.thy.broad:
+    Help on function gen_theory_data in module TRXASprefitpack.mathfun.broad:
     
-    gen_theory_data(e, peaks, A, fwhm_G, fwhm_L, peak_shift, out=None)
+    gen_theory_data(e: numpy.ndarray, peaks: numpy.ndarray, A: float, fwhm_G: float, fwhm_L: float, peak_factor: float, policy: Optional[str] = 'shift') -> numpy.ndarray
         voigt broadening theoretically calculated lineshape spectrum
-        if out is not none:
-        It will make
-        out_thy.txt: txt file for rescaled and boroadend calc spectrum
-        out_thy_stk.txt: txt file for rescaled and shifted calc peaks
         
+        Args:
+            e: energy 
+            A: scaling parameter
+            fwhm_G: full width at half maximum of gaussian shape (unit: same as energy)
+            fwhm_L: full width at half maximum of lorenzian shape (unit: same as energy)
+            peak_factor: Peak factor, its behavior depends on policy.
+            policy: Policy to match discrepency between experimental data and theoretical
+                    spectrum.
+                    1. 'shift' : Default option, shift peak position by peak_factor
+                    2. 'scale' : scale peak position by peak_factor
         
-        :param numpy_1d_array e: energy (unit: eV)
-        :param float A: scaling parameter
-        :param float fwhm_G: 
-         full width at half maximum of gaussian shape (unit: eV)
-        :param float fwhm_L: 
-         full width at half maximum of lorenzian shape (unit: eV)
-        :param float peak_shift: 
-         discrepency of peak position between expt data and theoretically 
-         broadened spectrum
-        :param string out: prefix for output txt file [optional]
-        
-        
-        :return: voigt broadened calc spectrum
-        :rtype: numpy_1d_array
+        Returns:
+          numpy ndarray of voigt broadened theoritical lineshape spectrum
     
-
+    
 
 ## Define line spectrum
 Which has three peaks at 2833, 2835, 2838 eV with ratio 2:4:1
@@ -172,8 +166,8 @@ plt.show()
 
 peak_shift moves spectrum to -peak_shift.
 
-## Scaling
-To see how scaling afftects spectrum fix fwhm_G=fwhm_L=1.0 eV and peak_shift=0
+## Intensity scaling
+To see how intensity scaling afftects spectrum fix fwhm_G=fwhm_L=1.0 eV and peak_shift=0
 1. A: 0.5
 2. A: 1.0
 3. A: 2.0
@@ -197,5 +191,64 @@ plt.show()
 
     
 ![png](broad_files/broad_22_0.png)
+    
+
+
+## Peak position scaling 
+
+Different from electron-excited spectrum, one can match theoretically calculated vibrational spectrum (IR, Raman) to experimental one by uniformly scaling peak position of theoretically calculated peaks
+``gen_thoery_data`` scales peak position instead of shifting by setting ``policy`` argument to ``scale``
+
+
+```python
+thy_ir_peak = np.array([[235, 661, 917, 1181, 1298, 1348, 1501, 1688, 3172, 3178, 3195
+, 618, 826, 1036, 1175, 1200, 1394, 1433, 1501, 1597, 3181, 3208
+, 92, 388, 484, 746, 892, 962]
+, 
+[1.284, 0.803, 1.7269, 4.6578, 8.2517, 4.191, 1.2156, 6.8394, 10.9014, 16.4984, 73.323
+, 8.1709, 0.0041, 3.9287, 1.2982, 1.6477, 4.005, 0.5812, 1.8711, 4.4402, 3.00e-04, 77.3937
+, 0.8536, 0.0804, 12.81, 59.6901, 55.4987, 6.1347]])
+thy_ir_peak = thy_ir_peak.T 
+
+nu = np.arange(200, 3500, 1)
+
+fwhm_G = 15 # cm-1
+
+pos_scale_1 = gen_theory_data(nu, thy_ir_peak, 1, fwhm_G, 0, 0.95, policy='scale')
+pos_scale_2 = gen_theory_data(nu, thy_ir_peak, 1, fwhm_G, 0, 1, policy='scale')
+pos_scale_3 = gen_theory_data(nu, thy_ir_peak, 1, fwhm_G, 0, 1.05, policy='scale')
+```
+
+
+```python
+plt.plot(nu, pos_scale_1, label='peak scale: 0.95')
+plt.plot(nu, pos_scale_2, label='peak scale: 1')
+plt.plot(nu, pos_scale_3, label='peak scale: 1.05')
+plt.legend()
+plt.xlim(300, 2000)
+plt.ylim(0, 4.0)
+plt.show()
+```
+
+
+    
+![png](broad_files/broad_25_0.png)
+    
+
+
+
+```python
+plt.plot(nu, pos_scale_1, label='peak scale: 0.95')
+plt.plot(nu, pos_scale_2, label='peak scale: 1')
+plt.plot(nu, pos_scale_3, label='peak scale: 1.05')
+plt.legend()
+plt.xlim(2950, 3500)
+plt.ylim(0, 6)
+plt.show()
+```
+
+
+    
+![png](broad_files/broad_26_0.png)
     
 
