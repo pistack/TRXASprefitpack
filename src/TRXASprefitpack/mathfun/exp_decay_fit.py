@@ -29,7 +29,6 @@ def model_n_comp_conv(t: np.ndarray,
     instrumental response function
     Supported instrumental response function are
 
-    irf
       * g: gaussian distribution
       * c: cauchy distribution
       * pv: pseudo voigt profile
@@ -116,7 +115,6 @@ def fact_anal_exp_conv(t: np.ndarray,
 
     Supported instrumental response functions are 
 
-    irf
        1. 'g': gaussian distribution
        2. 'c': cauchy distribution
        3. 'pv': pseudo voigt profile
@@ -191,7 +189,6 @@ def rate_eq_conv(t: np.ndarray,
     instrumental response function
     Supported instrumental response function are
 
-    irf
       * g: gaussian distribution
       * c: cauchy distribution
       * pv: pseudo voigt profile
@@ -261,7 +258,6 @@ eps: Optional[np.ndarray] = None) -> np.ndarray:
 
     Supported instrumental response functions are 
 
-    irf
        1. 'g': gaussian distribution
        2. 'c': cauchy distribution
        3. 'pv': pseudo voigt profile
@@ -273,11 +269,11 @@ eps: Optional[np.ndarray] = None) -> np.ndarray:
        V: eigenvector of rate equation matrix 
        c: coefficient to match initial condition of rate equation
        exclude: exclude either 'first' or 'last' element or both 'first' and 'last' element.
-
-       1. 'first' : exclude first element
-       2. 'last' : exclude last element
-       3. 'first_and_last' : exclude both first and last element  
-       4. Do not specify: Do not exclude any element [default]
+                
+                * 'first' : exclude first element
+                * 'last' : exclude last element
+                * 'first_and_last' : exclude both first and last element  
+                * None : Do not exclude any element [default]
        irf: shape of instrumental
             response function [default: g]
 

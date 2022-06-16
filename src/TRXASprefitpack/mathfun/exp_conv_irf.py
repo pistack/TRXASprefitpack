@@ -132,7 +132,7 @@ def exp_conv_pvoigt(t: Union[float, np.ndarray],
     voigt profile (i.e. linear combination of normalized gaussian and
     cauchy distribution)
 
-    :math: `\\eta C(\\mathrm{fwhm}_L, t) + (1-\\eta)G(\\mathrm{fwhm}_G, t)`
+    :math:`\\eta C(\\mathrm{fwhm}_L, t) + (1-\\eta)G(\\mathrm{fwhm}_G, t)`
 
     Args:
        t: time

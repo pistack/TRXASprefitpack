@@ -30,8 +30,9 @@ def gen_theory_data(e: np.ndarray,
         peak_factor: Peak factor, its behavior depends on policy.
         policy: Policy to match discrepency between experimental data and theoretical
                 spectrum.
-                1. 'shift' : Default option, shift peak position by peak_factor
-                2. 'scale' : scale peak position by peak_factor
+
+                * 'shift' : Default option, shift peak position by peak_factor
+                * 'scale' : scale peak position by peak_factor
 
     Returns:
       numpy ndarray of voigt broadened theoritical lineshape spectrum

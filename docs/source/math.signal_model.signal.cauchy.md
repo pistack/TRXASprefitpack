@@ -26,8 +26,8 @@ So, experimental signal could be modeled as
 $E_1(z)$ is exponential integral, see [dlmf section 6.2](https://dlmf.nist.gov/6.2). 
 
 ## Implementation Note
-At $|kt| > 700$, $E_1$ or $\exp$ term overflows, so, in this region,
-the following asymptotic expression is used.
+
+At $|kt| > 200$, the following asymptotic expression is used.
 
 \begin{equation*}
 {Signal_c}(t) = -\frac{1}{\pi}\Im\left(\frac{1}{kt+i\gamma}\sum_{i=0}^{10} \frac{i!}{(kt+i\gamma)^i}\right)
