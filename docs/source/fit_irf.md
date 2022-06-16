@@ -1,9 +1,9 @@
 # fit_irf
 
-fit_irf: fitting instrumental response function There are three irf shapes are avaliable. 
-1. gaussian 
-2. cauchy(lorenzian) 
-3. pseudo voigt shape
+fit irf: fitting shape of instrumental response function
+There are three irf shapes are avaliable.
+1. gaussian 2. cauchy(lorenzian) 3. pseudo voigt shape
+It uses lmfit python package to fit experimentally measured instrumental response function to three model irf shape.
 
 ```{Note}
 * The number of time zero parameter should be same as the

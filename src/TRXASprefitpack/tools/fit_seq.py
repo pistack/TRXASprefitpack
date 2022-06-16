@@ -13,6 +13,66 @@ from ..mathfun import solve_seq_model, rate_eq_conv, fact_anal_rate_eq_conv
 from .misc import set_bound_tau, read_data, contribution_table, plot_result
 from lmfit import Parameters, fit_report, minimize
 
+description = '''
+fit seq: fitting tscan data using the solution of sequtial decay equation covolved with gaussian/cauchy(lorenzian)/pseudo voigt irf function.
+It uses lmfit python module to fitting experimental time trace data to sequential decay module.
+To find contribution of each excited state species, it solves linear least square problem via scipy lstsq module.
+
+
+It supports 4 types of sequential decay
+Type 0: both raising and decay
+    GS -> 1 -> 2 -> ... -> n -> GS
+Type 1: no raising
+    1 -> 2 -> ... -> n -> GS
+Type 2: no decay
+    GS -> 1 -> 2 -> ... -> n
+Type 3: Neither raising nor decay
+    1 -> 2 -> ... -> n 
+'''
+
+epilog = '''
+*Note
+1. The number of time zero parameter should be same as the number of scan to fit.
+2. Type 0 sequential decay needs n+1 lifetime constants for n excited state species
+3. Type 1, 2 sequential decay needs n lifetime constants for n excited state species
+4. Type 3 sequential decay needs n-1 lifetime constants for n excited state species
+5. if you set shape of irf to pseudo voigt (pv), then you should provide two full width at half maximum value for gaussian and cauchy parts, respectively.
+'''
+
+seq_decay_help = '''
+type of sequential decay
+0. GS -> 1 -> 2 -> ... -> n -> GS (both raising and decay)
+1. 1 -> 2 -> ... -> n -> GS (No raising)
+2. GS -> 1 -> 2 -> ... -> n (No decay)
+3. 1 -> 2 -> ... -> n (Neither raising nor decay)
+Default option is type 0 both raising and decay
+
+*Note
+1. type 0 needs n+1 lifetime value
+2. type 1 and 2 need n lifetime value
+3. type 3 needs n-1 lifetime value
+'''
+
+irf_help = '''
+shape of instrument response functon
+g: gaussian distribution
+c: cauchy distribution
+pv: pseudo voigt profile, linear combination of gaussian distribution and cauchy distribution 
+    pv = eta*c+(1-eta)*g 
+    the mixing parameter is fixed according to Journal of Applied Crystallography. 33 (6): 1311–1316. 
+'''
+
+fwhm_G_help = '''
+full width at half maximum for gaussian shape
+It would not be used when you set cauchy irf function
+'''
+
+fwhm_L_help = '''
+full width at half maximum for cauchy shape
+It would not be used when you did not set irf or use gaussian irf function
+'''
+
+
 
 def fit_seq():
 
@@ -37,107 +97,18 @@ def fit_seq():
 
         return chi
 
-    description = 'fit seq: fitting tscan data ' + \
-        'using the solution of sequtial decay equation covolved with ' + \
-        'gaussian/cauchy(lorenzian)/pseudo voigt irf function ' + \
-        'it uses fact_anal_rate_eq_conv to determine best ' + \
-        'c_i\'s when timezero, fwhm, ' + \
-        'and time constants are given. ' + \
-        'So, to use this script what you need to ' + \
-        'give are only timezero, fwhm, and time constants ' + \
-        'To set boundary of each parameter for fitting, ' + \
-        'I use following scheme.' + '\n'*2 + \
-        '''
-*fwhm: temporal width of x-ray pulse
-lower bound: 0.5*fwhm_init
-upper bound: 2*fwhm_init
-
-*t_0: timezero for each scan
-lower bound: t_0 - 2*fwhm_init
-upper bound: t_0 + 2*fwhm_init
-
-*tau: life_time of each component
-if tau < 0.1
-lower bound: tau/2
-upper bound: 1
-
-if 0.1 < tau < 10
-lower bound: 0.05
-upper bound: 100
-
-if 10 < tau < 100
-lower bound: 5
-upper bound: 500
-
-if 100 < tau < 1000
-lower bound: 50
-upper bound: 2000
-
-if 1000 < tau < 5000 then
-lower bound: 500
-upper bound: 10000
-
-if 5000 < tau < 50000 then
-lower bound: 2500
-upper bound: 100000
-
-if 50000 < tau < 500000 then
-lower bound: 25000
-upper bound: 1000000
-
-if 500000 < tau < 1000000 then
-lower bound: 250000
-upper bound: 2000000
-
-if 1000000 < tau then
-lower bound: tau/4
-upper bound: 4*tau
-'''
-
-    epilog = '''
-*Note
-1. The number of time zero parameter should be same as the
-   number of scan to fit.
-
-2. if you set shape of irf to pseudo voigt (pv), then
-   you should provide two full width at half maximum
-   value for gaussian and cauchy parts, respectively.
-'''
-    seq_decay_description = '''type of sequential decay
-0. GS -> 1 -> 2 -> ... -> n -> GS (both raising and decay)
-1. 1 -> 2 -> ... -> n -> GS (No raising)
-2. GS -> 1 -> 2 -> ... -> n (No decay)
-3. 1 -> 2 -> ... -> n (Neither raising nor decay)
-Default option is type 0 both raising and decay
-
-*Note
-1. type 0 needs n+1 lifetime value
-2. type 1 and 2 need n lifetime value
-3. type 3 needs n-1 lifetime value
-'''
-    tmp = argparse.RawDescriptionHelpFormatter
+    tmp = argparse.RawTextHelpFormatter
     parser = argparse.ArgumentParser(formatter_class=tmp,
                                      description=description,
                                      epilog=epilog)
     parser.add_argument('-sdt', '--seq_decay_type', type=int, default=0,
-                        help=seq_decay_description)
+                        help=seq_decay_help)
     parser.add_argument('--irf', default='g', choices=['g', 'c', 'pv'],
-                        help='shape of instrument response function\n' +
-                        'g: gaussian distribution\n' +
-                        'c: cauchy distribution\n' +
-                        'pv: pseudo voigt profile, ' +
-                        'linear combination of gaussian distribution and ' +
-                        'cauchy distribution ' + 'pv = eta*c+(1-eta)*g ' +
-                        'the mixing parameter is fixed according to ' +
-                        'Journal of Applied Crystallography. ' +
-                        '33 (6): 1311–1316. ')
+                        help=irf_help)
     parser.add_argument('--fwhm_G', type=float,
-                        help='full width at half maximum for gaussian shape ' +
-                        'It should not used when you set cauchy irf function')
+                        help=fwhm_G_help)
     parser.add_argument('--fwhm_L', type=float,
-                        help='full width at half maximum for cauchy shape ' +
-                        'It should not used when you did not set irf or ' +
-                        'use gaussian irf function')
+                        help=fwhm_L_help)
     parser.add_argument('prefix',
                         help='prefix for tscan files ' +
                         'It will read prefix_i.txt')

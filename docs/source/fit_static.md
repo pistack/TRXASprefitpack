@@ -2,9 +2,11 @@
 
 fit static: fitting static spectrum with theoretically calculated line spectrum
 broadened by spectral line shape
-1. v: voigt profile,
-2. g: gaussian,
-3. l: lorenzian
+v: voigt profile,
+g: gaussian,
+l: lorenzian,
+It uses lmfit python package to fit experimental spectrum and estimates the error bound of
+broadening and peak parameter
 
 ```{Note}
 1. Currently it uses linear line to correct baseline of experimental spectrum.

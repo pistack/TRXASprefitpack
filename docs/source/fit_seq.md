@@ -1,6 +1,18 @@
 # fit_seq
 
-fit seq: fitting tscan data using the solution of sequential decay equation covolved with gaussian/cauchy(lorenzian)/pseudo voigt irf function it uses ``fact_anal_rate_eq_conv`` to determine best c_i's when timezero, fwhm, and time constants are given. So, to use this script what you need to give are only timezero, fwhm, and time constants.
+fit seq: fitting tscan data using the solution of sequtial decay equation covolved with gaussian/cauchy(lorenzian)/pseudo voigt irf function.
+It uses lmfit python module to fitting experimental time trace data to sequential decay module.
+To find contribution of each excited state species, it solves linear least square problem via scipy lstsq module.
+
+It supports 4 types of sequential decay
+* Type 0: both raising and decay
+    ``GS -> 1 -> 2 -> ... -> n -> GS``
+* Type 1: no raising
+    ``1 -> 2 -> ... -> n -> GS``
+* Type 2: no decay
+    ``GS -> 1 -> 2 -> ... -> n``
+* Type 3: Neither raising nor decay
+    ``1 -> 2 -> ... -> n``
 
 ```{Note}
 * The number of time zero parameter should be same as the
