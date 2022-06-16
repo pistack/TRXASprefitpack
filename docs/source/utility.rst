@@ -14,7 +14,11 @@ Utilites of ``TRXASprefitpack`` package
 
 ```{Note}
 * The utilites starting from ``fit`` use [lmfit](https://dx.doi.org/10.5281/zenodo.11813) package to
-fit data and estimate parameter error bound.
+  fit data and estimate parameter error bound.
+* During optimization process it uses ``Nelder-Mead Algorithm`` to find least chi square solution
+  and then ``Levenberg-Marquardt Algorithm`` to refine such solution and estimate parameter error bound
+* With ``--slow`` option is turned, it uses global optimization algorithm ``Adaptive Memory Programming for Global Optimization``
+  to find least chi square solution.
 ```
 
 .. toctree::

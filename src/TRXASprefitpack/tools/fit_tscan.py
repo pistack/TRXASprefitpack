@@ -13,6 +13,46 @@ from ..mathfun import model_n_comp_conv, fact_anal_exp_conv
 from .misc import set_bound_tau, read_data, contribution_table, plot_result
 from lmfit import Parameters, fit_report, minimize
 
+description = '''
+fit tscan: fitting experimental time trace spectrum data with the convolution of the sum of exponential decay and irf function
+There are three types of irf function (gaussian, cauchy, pseudo voigt)
+It uses lmfit python package to fitting time trace data and estimates error bound of irf parameter and lifetime constants. 
+To calculate the contribution of each life time component, it solve least linear square problem via scipy linalg lstsq module.
+'''
+
+epilog = '''
+*Note
+
+1. The number of time zero parameter should be same as the
+   number of scan to fit.
+
+2. if you set shape of irf to pseudo voigt (pv), then
+   you should provide two full width at half maximum
+   value for gaussian and cauchy parts, respectively.
+
+3. If you did not set tau then it assume you finds the
+   timezero of this scan. So, --no_base option is discouraged.
+'''
+
+irf_help = '''
+shape of instrument response functon
+g: gaussian distribution
+c: cauchy distribution
+pv: pseudo voigt profile, linear combination of gaussian distribution and cauchy distribution 
+    pv = eta*c+(1-eta)*g 
+    the mixing parameter is fixed according to Journal of Applied Crystallography. 33 (6): 1311–1316. 
+'''
+
+fwhm_G_help = '''
+full width at half maximum for gaussian shape
+It would not be used when you set cauchy irf function
+'''
+
+fwhm_L_help = '''
+full width at half maximum for cauchy shape
+It would not be used when you did not set irf or use gaussian irf function
+'''
+
 
 def fit_tscan():
 
@@ -37,97 +77,16 @@ def fit_tscan():
 
         return chi
 
-    description = 'fit tscan: fitting tscan data ' + \
-        'using sum of exponential decay covolved with ' + \
-        'gaussian/cauchy(lorenzian)/pseudo voigt irf function ' + \
-        'it uses fact_anal_exp_conv to determine best ' + \
-        'c_i\'s when timezero, fwhm, ' + \
-        'and time constants are given. ' + \
-        'So, to use this script what you need to ' + \
-        'give are only timezero, fwhm, and time constants ' + \
-        'To set boundary of each parameter for fitting, ' + \
-        'I use following scheme.' + '\n'*2 + \
-        '''
-*fwhm: temporal width of x-ray pulse
-lower bound: 0.5*fwhm_init
-upper bound: 2*fwhm_init
-
-*t_0: timezero for each scan
-lower bound: t_0 - 2*fwhm_init
-upper bound: t_0 + 2*fwhm_init
-
-*tau: life_time of each component
-if tau < 0.1
-lower bound: tau/2
-upper bound: 1
-
-if 0.1 < tau < 10
-lower bound: 0.05
-upper bound: 100
-
-if 10 < tau < 100
-lower bound: 5
-upper bound: 500
-
-if 100 < tau < 1000
-lower bound: 50
-upper bound: 2000
-
-if 1000 < tau < 5000 then
-lower bound: 500
-upper bound: 10000
-
-if 5000 < tau < 50000 then
-lower bound: 2500
-upper bound: 100000
-
-if 50000 < tau < 500000 then
-lower bound: 25000
-upper bound: 1000000
-
-if 500000 < tau < 1000000 then
-lower bound: 250000
-upper bound: 2000000
-
-if 1000000 < tau then
-lower bound: tau/4
-upper bound: 4*tau
-'''
-
-    epilog = '''
-*Note
-
-1. The number of time zero parameter should be same as the
-   number of scan to fit.
-
-2. if you set shape of irf to pseudo voigt (pv), then
-   you should provide two full width at half maximum
-   value for gaussian and cauchy parts, respectively.
-
-3. If you did not set tau then it assume you finds the
-   timezero of this scan. So, --no_base option is discouraged.
-'''
-    tmp = argparse.RawDescriptionHelpFormatter
+    tmp = argparse.RawTextHelpFormatter
     parser = argparse.ArgumentParser(formatter_class=tmp,
                                      description=description,
                                      epilog=epilog)
     parser.add_argument('--irf', default='g', choices=['g', 'c', 'pv'],
-                        help='shape of instrument response function\n' +
-                        'g: gaussian distribution\n' +
-                        'c: cauchy distribution\n' +
-                        'pv: pseudo voigt profile, ' +
-                        'linear combination of gaussian distribution and ' +
-                        'cauchy distribution ' + 'pv = eta*c+(1-eta)*g ' +
-                        'the mixing parameter is fixed according to ' +
-                        'Journal of Applied Crystallography. ' +
-                        '33 (6): 1311–1316. ')
+                        help=irf_help)
     parser.add_argument('--fwhm_G', type=float,
-                        help='full width at half maximum for gaussian shape ' +
-                        'It should not used when you set cauchy irf function')
+                        help=fwhm_G_help)
     parser.add_argument('--fwhm_L', type=float,
-                        help='full width at half maximum for cauchy shape ' +
-                        'It should not used when you did not set irf or ' +
-                        'use gaussian irf function')
+                        help=fwhm_L_help)
     parser.add_argument('prefix',
                         help='prefix for tscan files ' +
                         'It will read prefix_i.txt')

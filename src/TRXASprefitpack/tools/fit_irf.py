@@ -13,6 +13,46 @@ from ..mathfun import gau_irf, cauchy_irf, pvoigt_irf
 from .misc import read_data, plot_result
 from lmfit import Parameters, fit_report, minimize
 
+description = '''
+fit irf: fitting shape of instrumental response function
+There are three irf shapes are avaliable.
+1. gaussian 2. cauchy(lorenzian) 3. pseudo voigt shape
+It uses lmfit python package to fit experimentally measured instrumental response function to three model irf shape.
+'''
+
+irf_help = '''
+shape of instrument response functon
+g: gaussian distribution
+c: cauchy distribution
+pv: pseudo voigt profile, linear combination of gaussian distribution and cauchy distribution 
+    pv = eta*c+(1-eta)*g 
+    the mixing parameter is fixed according to Journal of Applied Crystallography. 33 (6): 1311–1316. 
+'''
+
+fwhm_G_help = '''
+full width at half maximum for gaussian shape
+It would not be used when you set cauchy irf function
+'''
+
+fwhm_L_help = '''
+full width at half maximum for cauchy shape
+It would not be used when you did not set irf or use gaussian irf function
+'''
+
+epilog = '''
+*Note
+
+1. The number of time zero parameter should be same as the
+   number of scan to fit.
+
+2. if you set shape of irf to pseudo voigt (pv), then
+   you should provide two full width at half maximum
+   value for gaussian and cauchy parts, respectively.
+
+3. This script is only useful when one can directly measure
+   instrumental response function.
+'''
+
 
 def fit_irf():
 
@@ -38,55 +78,16 @@ def fit_irf():
 
         return chi
 
-    description = 'fit irf: fitting instrumental response function ' + \
-        'There are three irf shapes are avaliable. ' + \
-        '1. gaussian 2. cauchy(lorenzian) 3. pseudo voigt shape' + \
-        'To set boundary of each parameter for fitting, ' + \
-        'I use following scheme.' + '\n'*2 + \
-        '''
-*fwhm: temporal width of pulse
-lower bound: 0.5*fwhm_init
-upper bound: 2*fwhm_init
-
-*t_0: timezero or center of irf function for each scan
-lower bound: t_0 - 2*fwhm_init
-upper bound: t_0 + 2*fwhm_init
-'''
-
-    epilog = '''
-*Note
-
-1. The number of time zero parameter should be same as the
-   number of scan to fit.
-
-2. if you set shape of irf to pseudo voigt (pv), then
-   you should provide two full width at half maximum
-   value for gaussian and cauchy parts, respectively.
-
-3. This script is only useful when one can directly measure
-   instrumental response function.
-'''
-    tmp = argparse.RawDescriptionHelpFormatter
+    tmp = argparse.RawTextHelpFormatter
     parser = argparse.ArgumentParser(formatter_class=tmp,
                                      description=description,
                                      epilog=epilog)
     parser.add_argument('--irf', default='g', choices=['g', 'c', 'pv'],
-                        help='shape of instrument response function\n' +
-                        'g: gaussian distribution\n' +
-                        'c: cauchy distribution\n' +
-                        'pv: pseudo voigt profile, ' +
-                        'linear combination of gaussian distribution and ' +
-                        'cauchy distribution ' + 'pv = eta*c+(1-eta)*g ' +
-                        'the mixing parameter is fixed according to ' +
-                        'Journal of Applied Crystallography. ' +
-                        '33 (6): 1311–1316. ')
+                        help=irf_help)
     parser.add_argument('--fwhm_G', type=float,
-                        help='full width at half maximum for gaussian shape ' +
-                        'It should not used when you set cauchy irf function')
+                        help=fwhm_G_help)
     parser.add_argument('--fwhm_L', type=float,
-                        help='full width at half maximum for cauchy shape ' +
-                        'It should not used when you did not set irf or ' +
-                        'use gaussian irf function')
+                        help=fwhm_L_help)
     parser.add_argument('prefix',
                         help='prefix for tscan files ' +
                         'It will read prefix_i.txt')

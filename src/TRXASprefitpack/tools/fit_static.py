@@ -57,13 +57,14 @@ broadened by spectral line shape
 v: voigt profile,
 g: gaussian,
 l: lorenzian,
-to correct baseline, it uses linear line
+It uses lmfit python package to fit experimental spectrum and estimates the error bound of
+broadening and peak parameter
+Moreover, it uses linear baseline to correct baseline feature of experimental spectrum
 '''
 
     epilog = ''' 
 *Note
-energy unit for measured static spectrum and
-calc spectrum should be same
+energy unit for measured static spectrum and theoretically calculated spectrum should be same
 '''
     tmp = argparse.RawDescriptionHelpFormatter
     parse = argparse.ArgumentParser(formatter_class=tmp,

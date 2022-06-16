@@ -1,6 +1,9 @@
 # fit_tscan
 
-fit tscan: fitting tscan data using sum of exponential decay covolved with gaussian/cauchy(lorenzian)/pseudo voigt irf function it uses ``fact_anal_exp_conv`` to determine best c_i's when timezero, fwhm, and time constants are given. So, to use this script what you need to give are only timezero, fwhm, and time constants.
+fit tscan: fitting experimental time trace spectrum data with the convolution of the sum of exponential decay and irf function
+There are three types of irf function (gaussian, cauchy, pseudo voigt)
+It uses lmfit python package to fitting time trace data and estimates error bound of irf parameter and lifetime constants.
+To calculate the contribution of each life time component, it solve least linear square problem via scipy linalg lstsq module.
 
 ```{Note}
 * The number of time zero parameter should be same as the
