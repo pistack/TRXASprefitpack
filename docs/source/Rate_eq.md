@@ -8,6 +8,7 @@
 In this example, we only deal with gaussian irf 
 ```
 
+
 ```python
 # import needed module
 import numpy as np
@@ -25,7 +26,7 @@ print(TRXASprefitpack.__version__)
 ```
 
     0.5.0
-    
+
 
 ## basic information of functions
 
@@ -48,7 +49,7 @@ help(solve_model)
            2. eigenvectors for equation
            3. coefficient where y0 = Vc
     
-    
+
 
 
 ```python
@@ -70,7 +71,7 @@ help(solve_l_model)
            2. eigenvectors for equation
            3. coefficient where y0 = Vc
     
-    
+
 
 
 ```python
@@ -80,9 +81,12 @@ help(solve_seq_model)
     Help on function solve_seq_model in module TRXASprefitpack.mathfun.rate_eq:
     
     solve_seq_model(tau)
-        Solve sequential decay model with the initial
-        condition [1, 0, 0, ..., 0]
-        0 -> 1 -> 2 -> 3 -> ... -> n 
+        Solve sequential decay model
+        
+        sequential decay model: 
+          0 -> 1 -> 2 -> 3 -> ... -> n 
+        initial condition:
+         y0 = [1, 0, 0, ..., 0] 
         
         Args:
           tau: liftime constants for each decay
@@ -93,7 +97,7 @@ help(solve_seq_model)
            2. eigenvectors for equation
            3. coefficient to match initial condition
     
-    
+
 
 
 ```python
@@ -118,7 +122,7 @@ help(compute_model)
         Note:
           eigval, V, c should be obtained from solve_model.
     
-    
+
 
 
 ```python
@@ -127,12 +131,11 @@ help(rate_eq_conv)
 
     Help on function rate_eq_conv in module TRXASprefitpack.mathfun.exp_decay_fit:
     
-    rate_eq_conv(t: numpy.ndarray, fwhm: Union[float, numpy.ndarray], abs: numpy.ndarray, eigval: numpy.ndarray, V: numpy.ndarray, c: numpy.ndarray, irf: Optional[str] = 'g', eta: Optional[float] = None) -> numpy.ndarray
+    rate_eq_conv(t: numpy.ndarray, fwhm: Union[float, numpy.ndarray], abs: numpy.ndarray, eigval: numpy.ndarray, V: numpy.ndarray, c: numpy.ndarray, irf: Union[str, NoneType] = 'g', eta: Union[float, NoneType] = None) -> numpy.ndarray
         Constructs signal model rate equation with
         instrumental response function
         Supported instrumental response function are
         
-        irf
           * g: gaussian distribution
           * c: cauchy distribution
           * pv: pseudo voigt profile
@@ -169,7 +172,7 @@ help(rate_eq_conv)
             So, in this case,
             fwhm is assumed to be numpy.ndarray with size 2.
     
-    
+
 
 ## Define equation -sequential decay-
 
@@ -271,7 +274,7 @@ plt.show()
 
 
     
-![png](Rate_eq_files/Rate_eq_15_0.png)
+![png](Rate_eq_files/Rate_eq_14_0.png)
     
 
 
@@ -286,7 +289,7 @@ plt.show()
 
 
     
-![png](Rate_eq_files/Rate_eq_16_0.png)
+![png](Rate_eq_files/Rate_eq_15_0.png)
     
 
 
@@ -332,7 +335,7 @@ plt.show()
 
 
     
-![png](Rate_eq_files/Rate_eq_20_0.png)
+![png](Rate_eq_files/Rate_eq_19_0.png)
     
 
 
@@ -348,7 +351,7 @@ plt.show()
 
 
     
-![png](Rate_eq_files/Rate_eq_21_0.png)
+![png](Rate_eq_files/Rate_eq_20_0.png)
     
 
 
@@ -475,7 +478,7 @@ plt.show()
 
 
     
-![png](Rate_eq_files/Rate_eq_26_0.png)
+![png](Rate_eq_files/Rate_eq_25_0.png)
     
 
 
@@ -491,7 +494,7 @@ plt.show()
 
 
     
-![png](Rate_eq_files/Rate_eq_27_0.png)
+![png](Rate_eq_files/Rate_eq_26_0.png)
     
 
 
@@ -537,7 +540,7 @@ plt.show()
 
 
     
-![png](Rate_eq_files/Rate_eq_31_0.png)
+![png](Rate_eq_files/Rate_eq_30_0.png)
     
 
 
@@ -553,7 +556,7 @@ plt.show()
 
 
     
-![png](Rate_eq_files/Rate_eq_32_0.png)
+![png](Rate_eq_files/Rate_eq_31_0.png)
     
 
 

@@ -1,11 +1,11 @@
-# Damped Oscillation
+# Dampled Oscillation
 
 ## Objective
 Demonstrates ``dmp_osc_conv_gau``routine
 
 ``dmp_osc_conv_gau``: Computes the convolution of damped oscillation and gaussian function
 
-Damped oscillation is modeled to $\exp(-kt)\cos(2\pi t/T+\phi)$.
+Dampled oscillation is modeled to $\exp(-kt)\cos(2\pi t/T+\phi)$
 
 
 
@@ -25,6 +25,8 @@ plt.rcParams["figure.figsize"] = (14,10)
 3. ``period``: 0.15 ps 0.3 ps 3 ps
 
 4. ``phase``: 0
+    
+5. ``eta``: 0.7
 
 
 ```python
@@ -67,9 +69,9 @@ help(dmp_osc_conv_gau)
         
         Returns:
          Convolution of normalized gaussian distribution and 
-         damped oscillation :math:`(\exp(-kt)cos(2\pi*t/T+phase))`.
+         damped oscillation :math:`(\exp(-kt)cos(2\pi t/T+phase))`.
     
-    
+
 
 
 ```python
@@ -100,7 +102,7 @@ plt.plot(t, gau_osc_1, label=f'period: {period[0]} ps')
 plt.plot(t, gau_osc_2, label=f'period: {period[1]} ps')
 plt.plot(t, gau_osc_3, label=f'period: {period[2]} ps')
 plt.legend()
-plt.xlim(-1,30)
+plt.xlim(-1,50)
 plt.show()
 ```
 

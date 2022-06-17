@@ -17,6 +17,7 @@ Copyright: (C) 2021-2022  Junho Lee (@pistack) (Email: pistack@yonsei.ac.kr)
 Licence: LGPL3
 
 ## Features
+
 * Utilites
   1. broadening: broad theoretically calculated line shape spectrum with voigt profile 
   2. fit_static: fitting theoretically calculated line shape spectrum with experimental spectrum
@@ -25,13 +26,13 @@ Licence: LGPL3
   5. fit_seq: fitting experimental time trace spectrum with 1st order sequential decay dynamics 
 
 * libraries
-  * See source documents [Docs](https://trxasprefitpack.readthedocs.io/)
+  * See source documents [Docs](https://trxasprefitpack.readthedocs.io/en/stable/)
   
 
 ## How to get documents for TRXASprefitpack package
 
 * From www web
-  * [Docs](https://trxasprefitpack.readthedocs.io/) are hosted in readthedocs
+  * [Docs](https://trxasprefitpack.readthedocs.io/en/stable/) are hosted in readthedocs
 
 * From source
   * go to docs directory and type
@@ -39,6 +40,7 @@ Licence: LGPL3
     * for mac and linux: ``make``
 
 ## How to install TRXASprefitpack package
+
 * Easy way
   * ``pip install TRXASprefitpack``
 * Advanced way (from release tar archive)
@@ -57,5 +59,6 @@ Licence: LGPL3
   * ``pip install .``
 
 ## Examples
+
 Jupyter notebook examples for ``TRXASprefitpack`` are located in
 [example](https://github.com/pistack/TRXASprefitpack-example/tree/v0.5.0)

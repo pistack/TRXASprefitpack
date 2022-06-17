@@ -19,7 +19,7 @@ help(gen_theory_data)
 
     Help on function gen_theory_data in module TRXASprefitpack.mathfun.broad:
     
-    gen_theory_data(e: numpy.ndarray, peaks: numpy.ndarray, A: float, fwhm_G: float, fwhm_L: float, peak_factor: float, policy: Optional[str] = 'shift') -> numpy.ndarray
+    gen_theory_data(e: numpy.ndarray, peaks: numpy.ndarray, A: float, fwhm_G: float, fwhm_L: float, peak_factor: float, policy: Union[str, NoneType] = 'shift') -> numpy.ndarray
         voigt broadening theoretically calculated lineshape spectrum
         
         Args:
@@ -30,13 +30,14 @@ help(gen_theory_data)
             peak_factor: Peak factor, its behavior depends on policy.
             policy: Policy to match discrepency between experimental data and theoretical
                     spectrum.
-                    1. 'shift' : Default option, shift peak position by peak_factor
-                    2. 'scale' : scale peak position by peak_factor
+        
+                    * 'shift' : Default option, shift peak position by peak_factor
+                    * 'scale' : scale peak position by peak_factor
         
         Returns:
           numpy ndarray of voigt broadened theoritical lineshape spectrum
     
-    
+
 
 ## Define line spectrum
 Which has three peaks at 2833, 2835, 2838 eV with ratio 2:4:1
@@ -137,7 +138,7 @@ plt.show()
     
 
 
-## peak shift
+# peak shift
 
 To see how peak shift afftects broadened spectrum, 
 set fwhm_G = fwhm_L = 1.0 eV

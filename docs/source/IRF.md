@@ -20,7 +20,7 @@ print(TRXASprefitpack.__version__)
 ```
 
     0.5.0
-    
+
 
 ## Define function for IRF
 for pseudo voigt profile eta is chosen according to
@@ -53,7 +53,7 @@ help(gau_irf)
         Returns:
          normalized gaussian function.
     
-    
+
 
 
 ```python
@@ -72,7 +72,7 @@ help(cauchy_irf)
         Returns:
          normalized lorenzian function.
     
-    
+
 
 
 ```python
@@ -93,7 +93,7 @@ help(pvoigt_irf)
         Returns:
          linear combination of gaussian and lorenzian function with mixing parameter eta.
     
-    
+
 
 
 ```python
@@ -108,7 +108,6 @@ help(model_n_comp_conv)
         instrumental response function
         Supported instrumental response function are
         
-        irf
           * g: gaussian distribution
           * c: cauchy distribution
           * pv: pseudo voigt profile
@@ -147,7 +146,7 @@ help(model_n_comp_conv)
             num_comp+1 when base is set to true.
             Otherwise, it is assumed to be num_comp.
     
-    
+
 
 ## Compare cauchy and gaussian IRF with same fwhm
 

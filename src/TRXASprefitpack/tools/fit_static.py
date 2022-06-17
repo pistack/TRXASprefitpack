@@ -34,10 +34,6 @@ def fit_static():
             c, _, _, _ = LA.lstsq(A, y)
         return c
 
-    def peak_fit(e, peaks, fwhm_G, fwhm_L, peak_factor, policy, c):
-        return gen_theory_data(e, peaks, c[0], fwhm_G, fwhm_L,
-                               peak_factor, policy) + c[1]*e+c[2]
-
     def residual(params, e, peaks, policy, no_base, data=None, eps=None):
         fwhm_G = params['fwhm_G']
         fwhm_L = params['fwhm_L']

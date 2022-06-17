@@ -43,7 +43,7 @@ def exp_conv_gau(t: Union[float, np.ndarray], fwhm: float,
     else:
         mask = z > 0
         inv_mask = np.invert(mask)
-        ans = np.zeros(t.shape[0])
+        ans = np.zeros(t.shape[0], dtype=np.float64)
         ans[mask] = 1/2*np.exp(-(t[mask]/sigma)**2/2) * \
             erfcx(z[mask]/np.sqrt(2))
         ans[inv_mask] = 1/2*np.exp(ksigma*z[inv_mask]-ksigma**2/2) * \
@@ -70,15 +70,15 @@ def exp_conv_cauchy(t: Union[float, np.ndarray],
       exponential decay :math:`(\\exp(-kt))`.
     '''
 
-    gamma = fwhm/2
     if k == 0:
-        ans = 0.5+1/np.pi*np.arctan(t/gamma)
+        ans = 0.5+1/np.pi*np.arctan(2*t/fwhm)
     else:
-        ikgamma = complex(0, k*gamma)
+        kgamma = k*fwhm/2
+        ikgamma = complex(0, kgamma)
         kt = k*t
         if not isinstance(t, np.ndarray):
             if np.abs(kt) < 200:
-                ans = np.exp(-ikgamma)*exp1(-kt-ikgamma)
+                ans = complex(np.cos(kgamma), -np.sin(kgamma))*exp1(-kt-ikgamma)
                 ans = np.exp(-kt)*ans.imag/np.pi
             else:
                 inv_z = 1/(kt+ikgamma)
@@ -93,11 +93,11 @@ def exp_conv_cauchy(t: Union[float, np.ndarray],
             mask = np.abs(kt) < 200
             inv_mask = np.invert(mask)
 
-            ans = np.zeros(t.shape[0], dtype='float')
+            ans = np.zeros(t.shape[0], dtype=np.float64)
             inv_z = 1/(kt[inv_mask]+ikgamma)
 
             # abs(kt) < 200
-            ans1 = np.exp(-ikgamma)*exp1(-kt[mask]-ikgamma)
+            ans1 = complex(np.cos(kgamma), -np.sin(kgamma))*exp1(-kt[mask]-ikgamma)
             ans[mask] = np.exp(-kt[mask])*ans1.imag/np.pi
 
             # abs(kt) > 200, use asymptotic series
@@ -159,9 +159,9 @@ k: float, T: float, phase: float) -> Union[float, np.ndarray]:
      Convolution of normalized gaussian distribution and 
      damped oscillation :math:`(\\exp(-kt)cos(2\\pi t/T+phase))`.
     '''
-    k_cplx = complex(k,-2*np.pi/T)
+
     sigma = fwhm/(2*np.sqrt(2*np.log(2)))
-    sigmak_cplx = sigma*k_cplx
+    sigmak_cplx = complex(k*sigma, -2*np.pi*sigma/T)
     z = sigmak_cplx - t/sigma
 
     if not isinstance(t, np.ndarray):
@@ -176,11 +176,11 @@ k: float, T: float, phase: float) -> Union[float, np.ndarray]:
         inv_mask = np.invert(mask)
         ans = np.zeros(t.shape[0], dtype=np.complex128)
         ans[mask] = 1/2*np.exp(-(t[mask]/sigma)**2/2) * \
-            wofz(z[mask]/complex(0,-np.sqrt(2)))
+            wofz(z[mask]/complex(0, -np.sqrt(2)))
         ans[inv_mask] = np.exp(sigmak_cplx*z[inv_mask]-sigmak_cplx**2/2) - \
             1/2*np.exp(-(t[inv_mask]/sigma)**2/2)*wofz(z[inv_mask]/complex(0, np.sqrt(2)))
     
-    ans = np.exp(complex(0, phase))*ans
+    ans = (complex(np.cos(phase), np.sin(phase)))*ans
 
     return ans.real
 
