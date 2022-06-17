@@ -1,7 +1,7 @@
 # Broadening Basic Example
 
 Basic usage example for broadening utility.
-Yon can find example file from [TRXASprefitpack-example](https://github.com/pistack/TRXASprefitpack-example) broadening subdirectory.
+Yon can find example file from [TRXASprefitpack-example](https://github.com/pistack/TRXASprefitpack-example/tree/v0.5.0) broadening subdirectory.
 
 ## Peak position shifting
 

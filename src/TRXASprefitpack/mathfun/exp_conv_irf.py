@@ -82,16 +82,11 @@ def exp_conv_cauchy(t: Union[float, np.ndarray],
                 ans = np.exp(-kt)*ans.imag/np.pi
             else:
                 inv_z = 1/(kt+ikgamma)
-                ans = 1+10*inv_z
-                ans = 1+9*inv_z*ans
-                ans = 1+8*inv_z*ans
-                ans = 1+7*inv_z*ans
-                ans = 1+6*inv_z*ans
-                ans = 1+5*inv_z*ans
-                ans = 1+4*inv_z*ans
-                ans = 1+3*inv_z*ans
-                ans = 1+2*inv_z*ans
-                ans = 1+inv_z*ans
+                ans = 1+10*inv_z; ans = 1+9*inv_z*ans
+                ans = 1+8*inv_z*ans; ans = 1+7*inv_z*ans
+                ans = 1+6*inv_z*ans; ans = 1+5*inv_z*ans
+                ans = 1+4*inv_z*ans; ans = 1+3*inv_z*ans
+                ans = 1+2*inv_z*ans; ans = 1+inv_z*ans
                 ans = -inv_z*ans
                 ans = ans.imag/np.pi
         else:
@@ -106,16 +101,11 @@ def exp_conv_cauchy(t: Union[float, np.ndarray],
             ans[mask] = np.exp(-kt[mask])*ans1.imag/np.pi
 
             # abs(kt) > 200, use asymptotic series
-            ans2 = 1+10*inv_z
-            ans2 = 1+9*inv_z*ans2
-            ans2 = 1+8*inv_z*ans2
-            ans2 = 1+7*inv_z*ans2
-            ans2 = 1+6*inv_z*ans2
-            ans2 = 1+5*inv_z*ans2
-            ans2 = 1+4*inv_z*ans2
-            ans2 = 1+3*inv_z*ans2
-            ans2 = 1+2*inv_z*ans2
-            ans2 = 1+1*inv_z*ans2
+            ans2 = 1+10*inv_z; ans2 = 1+9*inv_z*ans2
+            ans2 = 1+8*inv_z*ans2; ans2 = 1+7*inv_z*ans2
+            ans2 = 1+6*inv_z*ans2; ans2 = 1+5*inv_z*ans2
+            ans2 = 1+4*inv_z*ans2; ans2 = 1+3*inv_z*ans2
+            ans2 = 1+2*inv_z*ans2; ans2 = 1+inv_z*ans2
             ans2 = -inv_z*ans2
             ans[inv_mask] = ans2.imag/np.pi
     return ans
@@ -161,13 +151,13 @@ k: float, T: float, phase: float) -> Union[float, np.ndarray]:
     Args:
       t: time
       fwhm: full width at half maximum of gaussian distribution
-      k: rate constant (inverse of life time)
+      k: damping constant (inverse of life time)
       T: period of vibration 
       phase: phase factor
 
     Returns:
      Convolution of normalized gaussian distribution and 
-     damped oscillation :math:`(\\exp(-kt)sin(2\\pi*t/T+phase))`.
+     damped oscillation :math:`(\\exp(-kt)cos(2\\pi t/T+phase))`.
     '''
     k_cplx = complex(k,-2*np.pi/T)
     sigma = fwhm/(2*np.sqrt(2*np.log(2)))
@@ -192,4 +182,10 @@ k: float, T: float, phase: float) -> Union[float, np.ndarray]:
     
     ans = np.exp(complex(0, phase))*ans
 
-    return ans.imag
+    return ans.real
+
+
+'''
+[TODO]
+Implement analytic dmp_osc_conv_cauchy
+'''

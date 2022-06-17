@@ -1,5 +1,7 @@
 # Signal, Cauchy IRF
 
+## Exponential decay
+
 When instrument response function is modeled as normalized cauchy distribution, experimental signal is modeled as convolution of exponentical decay and normalized cauchy distribution.
 
 \begin{align*}

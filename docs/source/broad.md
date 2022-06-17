@@ -137,7 +137,7 @@ plt.show()
     
 
 
-# peak shift
+## peak shift
 
 To see how peak shift afftects broadened spectrum, 
 set fwhm_G = fwhm_L = 1.0 eV

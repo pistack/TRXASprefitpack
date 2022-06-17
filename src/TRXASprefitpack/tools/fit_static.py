@@ -17,16 +17,15 @@ from lmfit import Parameters, fit_report, minimize
 
 def fit_static():
 
-    def magick(e, peaks, fwhm_G, fwhm_L, peak_factor, policy, no_base, data=None, eps=None):
+    def magick(e, thy_data, no_base, data=None, eps=None):
         if no_base:
-            A = gen_theory_data(e, peaks, 1, fwhm_G, fwhm_L, peak_factor, policy)
-            A = A/eps
+            A = thy_data/eps
             y = data/eps
             c, _, _, _ = LA.lstsq(A.reshape(A.size, 1), y)
             c = np.hstack((c,np.zeros(2)))
         else:
             A = np.ones((e.shape[0], 3))
-            A[:, 0] = gen_theory_data(e, peaks, 1, fwhm_G, fwhm_L, peak_factor, policy)
+            A[:, 0] = thy_data
             A[:, 1] = e
             A[:, 0] = A[:, 0]/eps
             A[:, 1] = A[:, 1]/eps
@@ -44,10 +43,11 @@ def fit_static():
         fwhm_L = params['fwhm_L']
         peak_factor = params['peak_factor']
         chi = np.zeros(data.shape)
+        thy_data = gen_theory_data(e, peaks, 1, fwhm_G, fwhm_L, peak_factor, policy)
         for i in range(data.shape[1]):
-            c = magick(e, peaks, fwhm_G, fwhm_L, peak_factor, policy, no_base,
+            c = magick(e, thy_data, no_base,
                        data=data[:, i], eps=eps[:, i])
-            chi[:, i] = data[:, i] - peak_fit(e, peaks, fwhm_G, fwhm_L, peak_factor, policy, c)
+            chi[:, i] = data[:, i] - (c[0]*thy_data+c[1]*e+c[2])
         chi = chi.flatten()/eps.flatten()
         return chi
 
@@ -100,6 +100,8 @@ energy unit for measured static spectrum and theoretically calculated spectrum s
     help='fix gaussian fwhm value')
     parse.add_argument('--fix_fwhm_L', action='store_true',
     help='fix lorenzian fwhm value')
+    parse.add_argument('--slow', action='store_true',
+    help='use slower but robust global optimization algorithm')
 
     args = parse.parse_args()
 
@@ -163,10 +165,15 @@ energy unit for measured static spectrum and theoretically calculated spectrum s
                    min=peak_factor/2,
                    max=2*peak_factor)
 
-    # First, Nelder-Mead
-    out = minimize(residual, fit_params, method='Nelder', calc_covar=False,
-                   args=(e, peaks, policy, no_base),
-                   kws={'data': data, 'eps': eps})
+    # First, Nelder-Mead (if slow use ampgo instead)
+    if args.slow:
+        out = minimize(residual, fit_params, method='ampgo', calc_covar=False,
+        args=(e, peaks, policy, no_base),
+        kws={'data': data, 'eps': eps})
+    else:
+        out = minimize(residual, fit_params, method='Nelder', calc_covar=False,
+        args=(e, peaks, policy, no_base),
+        kws={'data': data, 'eps': eps})
     # Then do Levenberg-Marquardt
     out = minimize(residual, out.params,
                    args=(e, peaks, policy, no_base),
@@ -184,12 +191,13 @@ energy unit for measured static spectrum and theoretically calculated spectrum s
     fit = np.zeros((data.shape[0], data.shape[1]+1))
     base[:, 0] = e
     fit[:, 0] = e
+    thy_data_opt = gen_theory_data(e, peaks, 1, fwhm_G, fwhm_L, peak_factor, policy)
     A = np.zeros(num_scan)
     for i in range(num_scan):
-        c = magick(e, peaks, fwhm_G, fwhm_L, peak_factor, policy, no_base, data=data[:, i],
+        c = magick(e, thy_data_opt, no_base, data=data[:, i],
                    eps=eps[:, i])
         base[:, i+1] = c[1]*e+c[2]
-        fit[:, i+1] = peak_fit(e, peaks, fwhm_G, fwhm_L, peak_factor, policy, c)
+        fit[:, i+1] = c[0]*thy_data_opt+c[1]*e+c[2]
         A[i] = c[0]
 
     f = open(out_prefix+'_fit_report.txt', 'w')
@@ -200,6 +208,10 @@ energy unit for measured static spectrum and theoretically calculated spectrum s
     np.savetxt(out_prefix+'_fit.txt', fit)
     np.savetxt(out_prefix+'_A.txt', A)
 
-    plot_result('static', num_scan, chi2_ind, data-base[:, 1:], eps, fit-base)
+    reduced_fit = np.zeros_like(fit)
+    reduced_fit[:, 0] = fit[:, 0]
+    reduced_fit[:, 1:] = fit[:, 1:] - base[:, 1:]
+
+    plot_result('static', num_scan, chi2_ind, data-base[:, 1:], eps, reduced_fit)
 
     return

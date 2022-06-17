@@ -1,3 +1,3 @@
 TODO 
-make test case or toy example
-update example
+1. implement ``dmp_osc_conv_cauchy``, ``dmp_osc_conv_pvoigt``.
+2. implement ``fit_dmp`` utility

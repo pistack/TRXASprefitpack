@@ -38,11 +38,13 @@ def set_bound_tau(tau: float):
 def read_data(prefix: str, num_scan: int, num_data_pts: int, default_SN: float) -> Tuple[np.ndarray, np.ndarray]:
     '''
     Read data from prefix_i.txt (1 <= i <= num_scan)
+
     Args:
      prefix: prefix of scan_file
      num_scan: the number of scan file to read
      num_data_pts: the number of data points per each scan file
      default_SN: Default Signal/Noise
+    
     Return:
      Tuple of data of eps
     '''
@@ -62,6 +64,7 @@ def plot_result(scan_name: str, num_scan: int, chi2_ind: Union[list, np.ndarray]
 data: np.ndarray, eps: np.ndarray, fit: np.ndarray):
     '''
     Plot fitting result
+
     Args:
      scan_name: name of scan
      num_scan: the number of scans
@@ -69,6 +72,7 @@ data: np.ndarray, eps: np.ndarray, fit: np.ndarray):
      data: exprimental data
      eps: error or data quality of experimental data
      fit: fitting result
+
     Note:
      1. the first column of fit array should be time range
      2. data array should not contain time range
@@ -98,6 +102,7 @@ def contribution_table(scan_name: str, table_title: str, num_scan: int, num_comp
      num_scan: the number of scan
      num_comp: the number of component
      coeff: coefficient matrix
+     
     Return:
      contribution table
     '''
