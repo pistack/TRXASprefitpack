@@ -28,7 +28,6 @@ Licence: LGPL3
 * libraries
   * See source documents [Docs](https://trxasprefitpack.readthedocs.io/en/stable/)
   
-
 ## How to get documents for TRXASprefitpack package
 
 * From www web

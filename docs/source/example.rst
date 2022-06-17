@@ -9,3 +9,4 @@ Examples
    broad
    Rate_eq
    dmp_osc
+   BenchMark
