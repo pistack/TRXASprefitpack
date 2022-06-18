@@ -2,7 +2,7 @@
 broad:
 submodule for broading theoritical spectrum
 
-:copyright: 2021 by pistack (Junho Lee).
+:copyright: 2021-2022 by pistack (Junho Lee).
 :license: LGPL3
 '''
 

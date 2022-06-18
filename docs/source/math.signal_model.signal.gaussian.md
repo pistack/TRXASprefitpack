@@ -42,6 +42,7 @@ This is also equivalent to
 $\mathrm{erfcx}(x)$ is scaled complementary error function, see [dlmf section 7.2](https://dlmf.nist.gov/7.2).
 
 ### Implementation Note
+
 When $x>0$, $\mathrm{erfc}(x)$ deverges and when $x<0$, $\exp(-x)$ deverges.
 To tame such divergency, I use following implementation.
 
