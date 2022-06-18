@@ -71,7 +71,7 @@ Then,
 When $z$ is the complex number with $\Im z \neq 0$,
 
 \begin{equation*}
-\mathrm{Ei}(z) = -E_1(-z) + i \pi \mathrm{sgn} \cdot \left(\Im(z)\right)
+\mathrm{Ei}(z) = -E_1(-z) + i \pi \cdot \mathrm{sgn} \left(\Im(z)\right)
 \end{equation*}
 
 So, the experimental signal can be expressed to
