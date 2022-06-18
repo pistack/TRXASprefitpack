@@ -1,12 +1,12 @@
 # BenchMark
 
-Tests ``exp_conv_gau``, ``exp_conv_cauchy``, ``dmp_osc_conv_gau`` routine
+Tests ``exp_conv_gau``, ``exp_conv_cauchy``, ``dmp_osc_conv_gau``, ``dmp_osc_conv_cauchy`` routine
 
 
 ```python
 import numpy as np
 from scipy.signal import convolve
-from TRXASprefitpack import gau_irf, cauchy_irf, exp_conv_gau, exp_conv_cauchy, dmp_osc_conv_gau
+from TRXASprefitpack import gau_irf, cauchy_irf, exp_conv_gau, exp_conv_cauchy, dmp_osc_conv_gau, dmp_osc_conv_cauchy
 import matplotlib.pyplot as plt
 ```
 
@@ -80,7 +80,7 @@ plt.show()
 %timeit gau_signal_1_ref = 0.001*convolve(gau_irf_1, decay_1, mode='same')
 ```
 
-    352 µs ± 2.67 µs per loop (mean ± std. dev. of 7 runs, 1000 loops each)
+    379 µs ± 1.26 µs per loop (mean ± std. dev. of 7 runs, 1000 loops each)
 
 
 
@@ -88,7 +88,7 @@ plt.show()
 %timeit gau_signal_1_tst = exp_conv_gau(t_1_sample, fwhm, 1/tau_1)
 ```
 
-    23.6 µs ± 78.7 ns per loop (mean ± std. dev. of 7 runs, 10000 loops each)
+    24 µs ± 106 ns per loop (mean ± std. dev. of 7 runs, 10000 loops each)
 
 
 Analytic implementation matches to numerical one. Moreover it saves much more computation time (about ~18x), since numerial implementation need to compute convolution of 0.001 ps step data to achieve similiar accuracy level of analytic one.
@@ -186,7 +186,7 @@ plt.show()
 %timeit cauchy_signal_1_ref = 0.001*convolve(cauchy_irf_1, decay_1, mode='same')
 ```
 
-    331 µs ± 2.06 µs per loop (mean ± std. dev. of 7 runs, 1000 loops each)
+    338 µs ± 9.16 µs per loop (mean ± std. dev. of 7 runs, 1000 loops each)
 
 
 
@@ -194,10 +194,10 @@ plt.show()
 %timeit cauchy_signal_1_tst = exp_conv_cauchy(t_1_sample, fwhm, 1/tau_1)
 ```
 
-    70.8 µs ± 420 ns per loop (mean ± std. dev. of 7 runs, 10000 loops each)
+    68.4 µs ± 1.53 µs per loop (mean ± std. dev. of 7 runs, 10000 loops each)
 
 
-Computation time for ``exp_conv_cauchy`` routine is about 2-3 times longer than ``exp_conv_gau`` routine. Because ``exp_conv_cauchy`` routine requires expansive complex operation.
+Computation time for ``exp_conv_cauchy`` routine is about 2-3 times longer than ``exp_conv_gau`` routine. Because ``exp_conv_cauchy`` routine requires expansive exponential integral function
 
 ### Test -2-
 
@@ -300,7 +300,7 @@ plt.show()
 %timeit dmp_osc_signal_1_ref = (t[1]-t[0])*convolve(gau_irf_0, dmp_osc_1, mode='same')
 ```
 
-    103 ms ± 154 µs per loop (mean ± std. dev. of 7 runs, 10 loops each)
+    111 ms ± 1.91 ms per loop (mean ± std. dev. of 7 runs, 10 loops each)
 
 
 
@@ -308,7 +308,7 @@ plt.show()
 %timeit dmp_osc_signal_1_tst = dmp_osc_conv_gau(t_sample, fwhm, 1/tau, T_1, phi_1)
 ```
 
-    43.3 µs ± 1.33 µs per loop (mean ± std. dev. of 7 runs, 10000 loops each)
+    43.8 µs ± 110 ns per loop (mean ± std. dev. of 7 runs, 10000 loops each)
 
 
 Analytic implementation matches to numerical one. Moreover it saves much more computation time (about 1000~3000x), since numerial implementation need to compute convolution of 0.0001 ps step data to achieve similiar accuracy level of analytic one
@@ -374,5 +374,127 @@ plt.show()
 
     
 ![png](BenchMark_files/BenchMark_37_0.png)
+    
+
+
+## ``dmp_osc_conv_cauchy``
+
+Test condition.
+
+1. fwhm = 0.15, tau = 10, T = 0.1, phase: 0, time range [-50, 50]
+2. fwhm = 0.15, tau = 10, T = 0.5, phase: $\pi/4$, time range [-50, 50]
+2. fwhm = 0.15, tau = 10, T = 3, phase: $\pi/2$, time range [-50, 50]
+
+
+```python
+# To test exp_conv_cauchy routine, calculates convolution numerically
+cauchy_irf_0 = cauchy_irf(t, fwhm)
+
+
+dmp_osc_cauchy_signal_1_ref = (t[1]-t[0])*convolve(cauchy_irf_0, dmp_osc_1, mode='same')
+dmp_osc_cauchy_signal_2_ref = (t[1]-t[0])*convolve(cauchy_irf_0, dmp_osc_2, mode='same')
+dmp_osc_cauchy_signal_3_ref = (t[1]-t[0])*convolve(cauchy_irf_0, dmp_osc_3, mode='same')
+
+dmp_osc_cauchy_signal_1_tst = dmp_osc_conv_cauchy(t_sample, fwhm, 1/tau, T_1, phi_1)
+dmp_osc_cauchy_signal_2_tst = dmp_osc_conv_cauchy(t_sample, fwhm, 1/tau, T_2, phi_2)
+dmp_osc_cauchy_signal_3_tst = dmp_osc_conv_cauchy(t_sample, fwhm, 1/tau, T_3, phi_3)
+```
+
+### Test -1-
+
+
+```python
+plt.plot(t, dmp_osc_cauchy_signal_1_ref, label='ref test 1')
+plt.plot(t_sample, dmp_osc_cauchy_signal_1_tst, 'ro', label='analytic expression')
+plt.legend()
+plt.xlim(-1, 1)
+plt.show()
+```
+
+
+    
+![png](BenchMark_files/BenchMark_41_0.png)
+    
+
+
+
+```python
+%timeit dmp_osc_cauchy_signal_1_ref = (t[1]-t[0])*convolve(cauchy_irf_0, dmp_osc_1, mode='same')
+```
+
+    106 ms ± 1.02 ms per loop (mean ± std. dev. of 7 runs, 10 loops each)
+
+
+
+```python
+%timeit dmp_osc_cauchy_signal_1_tst = dmp_osc_conv_cauchy(t_sample, fwhm, 1/tau, T_1, phi_1)
+```
+
+    274 µs ± 1.52 µs per loop (mean ± std. dev. of 7 runs, 1000 loops each)
+
+
+``dmp_osc_cauchy`` routine is 5-6 times slower than ``dmp_osc_gau`` routine due to the evaluation of expansive exponential integral function
+
+### Test -2-
+
+
+```python
+plt.plot(t, dmp_osc_cauchy_signal_2_ref, label='ref test 2')
+plt.plot(t_sample, dmp_osc_cauchy_signal_2_tst, 'ro', label='analytic expression')
+plt.legend()
+plt.xlim(-1, 1)
+plt.show()
+```
+
+
+    
+![png](BenchMark_files/BenchMark_46_0.png)
+    
+
+
+
+```python
+plt.plot(t, dmp_osc_cauchy_signal_2_ref, label='ref test 2')
+plt.plot(t_sample, dmp_osc_cauchy_signal_2_tst, 'ro', label='analytic expression')
+plt.legend()
+plt.xlim(-1, 10)
+plt.show()
+```
+
+
+    
+![png](BenchMark_files/BenchMark_47_0.png)
+    
+
+
+### Test -3-
+
+
+```python
+plt.plot(t, dmp_osc_cauchy_signal_3_ref, label='ref test 3')
+plt.plot(t_sample, dmp_osc_cauchy_signal_3_tst, 'ro', label='analytic expression')
+plt.legend()
+plt.xlim(-1, 2)
+plt.show()
+```
+
+
+    
+![png](BenchMark_files/BenchMark_49_0.png)
+    
+
+
+
+```python
+plt.plot(t, dmp_osc_cauchy_signal_3_ref, label='ref test 3')
+plt.plot(t_sample, dmp_osc_cauchy_signal_3_tst, 'ro', label='analytic expression')
+plt.legend()
+plt.xlim(-1, 20)
+plt.show()
+```
+
+
+    
+![png](BenchMark_files/BenchMark_50_0.png)
     
 
