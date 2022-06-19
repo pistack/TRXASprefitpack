@@ -101,7 +101,6 @@ data: np.ndarray, eps: np.ndarray, fit: np.ndarray, res: Optional[np.ndarray] = 
 
     else:
         for i in range(num_scan):
-            fig = plt.figure(i+1)
             title = f'Chi squared: {chi2_ind[i]:.2f}'
             plt.title(title)
             plt.errorbar(t, data[:, i],

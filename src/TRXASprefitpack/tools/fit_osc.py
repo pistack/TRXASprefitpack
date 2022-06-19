@@ -9,7 +9,6 @@
 
 import argparse
 import numpy as np
-from pandas import period_range
 from ..mathfun import dmp_osc_conv, fact_anal_dmp_osc_conv
 from .misc import set_bound_tau, read_data, contribution_table, plot_result
 from lmfit import Parameters, fit_report, minimize
