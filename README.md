@@ -10,27 +10,34 @@
 
 [![Documentation Status](https://readthedocs.org/projects/trxasprefitpack/badge/?version=latest)](https://trxasprefitpack.readthedocs.io/en/latest/?badge=latest)
 
-stable version:  0.4.10
+stable version:  0.5.0
 
-Copyright: (C) 2021-2022  Junho Lee (@pistack) (Email: pistatex@yonsei.ac.kr)
+Copyright: (C) 2021-2022  Junho Lee (@pistack) (Email: pistack@yonsei.ac.kr)
 
 Licence: LGPL3
 
 ## Features
+
 * Utilites
-  * **auto_scale**: match the scaling of energy scan and time scan data
-  * **broadenig**: voigt broadening your theoritical calculated line spectrum
-  * **fit_static**: fitting experimental ground state spectrum using voigt broadened theoritical calculated line spectrum
-  * **fit_tscan**: fitting time delay scan data with the sum of exponential decays convolved with gaussian, lorenzian(cauchy), pseudo voigt instrument response function
+  1. broadening: broad theoretically calculated line shape spectrum with voigt profile
+  2. fit_static: fitting theoretically calculated line shape spectrum with experimental spectrum
+  3. fit_irf: Find irf parameter of experimental measured irf function
+  4. fit_tscan: Find lifetime constants of experimental time trace spectrum
+  5. fit_seq: fitting experimental time trace spectrum with 1st order sequential decay dynamics
+  6. fit_osc: fitting residual of experimental time trace with damped oscilliation
 
 * libraries
-  * See source documents [Docs](https://trxasprefitpack.readthedocs.io/)
+  1. Compute convolution of exponential decay and gaussian, cauchy function analytically.
+  2. Compute convolition of damped oscilliation and gaussian, cauchy function analytically.
+  3. Voigt broadening line shape spectrum
+  4. Solve first order rate equation (general, lower triangle, sequential decay) and analytically compute the convolution of rate equation model solution and gaussian, cauchy function.
+  5. Find best coefficients for linear combination of exponential decay or damped oscilliation via solving linear least square problem.
+  * See source documents [Docs](https://trxasprefitpack.readthedocs.io/en/stable/)
   
-
 ## How to get documents for TRXASprefitpack package
 
 * From www web
-  * [Docs](https://trxasprefitpack.readthedocs.io/) are hosted in readthedocs
+  * [Docs](https://trxasprefitpack.readthedocs.io/en/stable/) are hosted in readthedocs
 
 * From source
   * go to docs directory and type
@@ -38,6 +45,7 @@ Licence: LGPL3
     * for mac and linux: ``make``
 
 ## How to install TRXASprefitpack package
+
 * Easy way
   * ``pip install TRXASprefitpack``
 * Advanced way (from release tar archive)
@@ -47,7 +55,7 @@ Licence: LGPL3
   * Now type ``pip install .``
 * Advanced way (from repository)
   * ``git clone https://github.com/pistack/TRXASprefitpack.git``
-  * ``git checkout v0.4.10``
+  * ``git checkout v0.5.0``
   * ``cd TRXASprefitpack``
   * ``python3 -m build``
   * ``cd dist``
@@ -56,5 +64,6 @@ Licence: LGPL3
   * ``pip install .``
 
 ## Examples
+
 Jupyter notebook examples for ``TRXASprefitpack`` are located in
-[example](https://github.com/pistack/TRXASprefitpack-example/tree/v0.4.6)
+[example](https://github.com/pistack/TRXASprefitpack-example/tree/v0.5.1)

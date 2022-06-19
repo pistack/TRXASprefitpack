@@ -229,7 +229,9 @@ def fit_seq():
     chi2_ind = np.sum(chi2_ind**2, axis=0)/(data.shape[0]-len(out.params))
 
     fit = np.zeros((data.shape[0], data.shape[1]+1))
+    res = np.zeros((data.shape[0], data.shape[1]+1))
     fit[:, 0] = t
+    res[:, 0] = t
 
     if irf in ['g', 'c']:
         fwhm_opt = out.params['fwhm']
@@ -260,6 +262,8 @@ def fit_seq():
         else:
             abs[:, i] = abs_tmp
     
+    res[:, 1:] = data - fit[:, 1:]
+    
     contrib_table = contribution_table('tscan', 'Excited State Contribution', num_scan,
     num_ex, abs)
     fit_content = fit_report(out) + '\n' + contrib_table
@@ -273,6 +277,12 @@ def fit_seq():
     np.savetxt(out_prefix+'_fit.txt', fit)
     np.savetxt(out_prefix+'_abs.txt', abs)
 
-    plot_result('tscan', num_scan, chi2_ind, data, eps, fit)
+    # save residual of individual fitting 
+
+    for i in range(data.shape[1]):
+        res_ind = np.vstack((res[:, 0], res[:, i+1], eps[:, i]))
+        np.savetxt(out_prefix+f'_res_{i+1}.txt', res_ind.T)
+
+    plot_result('tscan', num_scan, chi2_ind, data, eps, fit, res)
 
     return

@@ -2,7 +2,7 @@
 # submodule for miscellaneous function of
 # tools subpackage
 
-from typing import Tuple, Union
+from typing import Tuple, Union, Optional
 import numpy as np
 import matplotlib.pyplot as plt
 
@@ -38,11 +38,13 @@ def set_bound_tau(tau: float):
 def read_data(prefix: str, num_scan: int, num_data_pts: int, default_SN: float) -> Tuple[np.ndarray, np.ndarray]:
     '''
     Read data from prefix_i.txt (1 <= i <= num_scan)
+
     Args:
      prefix: prefix of scan_file
      num_scan: the number of scan file to read
      num_data_pts: the number of data points per each scan file
      default_SN: Default Signal/Noise
+    
     Return:
      Tuple of data of eps
     '''
@@ -59,9 +61,10 @@ def read_data(prefix: str, num_scan: int, num_data_pts: int, default_SN: float) 
     return data, eps
 
 def plot_result(scan_name: str, num_scan: int, chi2_ind: Union[list, np.ndarray],
-data: np.ndarray, eps: np.ndarray, fit: np.ndarray):
+data: np.ndarray, eps: np.ndarray, fit: np.ndarray, res: Optional[np.ndarray] = None):
     '''
     Plot fitting result
+
     Args:
      scan_name: name of scan
      num_scan: the number of scans
@@ -69,22 +72,44 @@ data: np.ndarray, eps: np.ndarray, fit: np.ndarray):
      data: exprimental data
      eps: error or data quality of experimental data
      fit: fitting result
+     res: residual of fitting (data-fit)
+
     Note:
      1. the first column of fit array should be time range
      2. data array should not contain time range
     '''
     t = fit[:, 0]
-    for i in range(num_scan):
-        plt.figure(i+1)
-        title = f'Chi squared: {chi2_ind[i]:.2f}'
-        plt.title(title)
-        plt.errorbar(t, data[:, i],
-                     eps[:, i], marker='o', mfc='none',
-                     label=f'{scan_name} expt {i+1}',
-                     linestyle='none')
-        plt.plot(t, fit[:, i+1],
-                 label=f'fit {scan_name} {i+1}')
-        plt.legend()
+    if res is not None:
+        for i in range(num_scan):
+            fig = plt.figure(i+1)
+            title = f'Chi squared: {chi2_ind[i]:.2f}'
+            plt.suptitle(title)
+            sub1 = fig.add_subplot(211)
+            sub1.errorbar(t, data[:, i],
+            eps[:, i], marker='o', mfc='none',
+            label=f'expt {scan_name} {i+1}',
+            linestyle='none')
+            sub1.plot(t, fit[:, i+1],
+            label=f'fit {scan_name} {i+1}')
+            sub1.legend()
+            sub2 = fig.add_subplot(212)
+            sub2.errorbar(t, res[:, i+1],
+            eps[:, i], marker='o', mfc='none',
+            label=f'{scan_name} res {i+1}',
+            linestyle='none')
+            sub2.legend()
+
+    else:
+        for i in range(num_scan):
+            title = f'Chi squared: {chi2_ind[i]:.2f}'
+            plt.title(title)
+            plt.errorbar(t, data[:, i],
+            eps[:, i], marker='o', mfc='none',
+            label=f'expt {scan_name} {i+1}',
+            linestyle='none')
+            plt.plot(t, fit[:, i+1],
+            label=f'fit {scan_name} {i+1}')
+            plt.legend()
     plt.show()
     return
 
@@ -98,6 +123,7 @@ def contribution_table(scan_name: str, table_title: str, num_scan: int, num_comp
      num_scan: the number of scan
      num_comp: the number of component
      coeff: coefficient matrix
+     
     Return:
      contribution table
     '''

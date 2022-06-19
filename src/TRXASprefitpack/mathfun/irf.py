@@ -40,7 +40,7 @@ def cauchy_irf(t: Union[float, np.ndarray], fwhm: float) -> Union[float, np.ndar
     '''
 
     gamma = fwhm/2
-    return gamma/np.pi*1/(t**2+gamma**2)
+    return gamma/np.pi/(t**2+gamma**2)
 
 def pvoigt_irf(t: Union[float, np.ndarray], fwhm_G: float, fwhm_L: float, eta: float) -> Union[float, np.ndarray]:
     '''
@@ -56,5 +56,8 @@ def pvoigt_irf(t: Union[float, np.ndarray], fwhm_G: float, fwhm_L: float, eta: f
      linear combination of gaussian and lorenzian function with mixing parameter eta.
     '''
 
-    return eta*cauchy_irf(t, fwhm_L)+(1-eta)*gau_irf(t, fwhm_G)
+    u = gau_irf(t, fwhm_G)
+    v = cauchy_irf(t, fwhm_L)
+
+    return u + eta*(v-u)
 

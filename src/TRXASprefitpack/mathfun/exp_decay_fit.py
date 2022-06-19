@@ -13,6 +13,8 @@ import scipy.linalg as LA
 from .rate_eq import compute_signal_gau, compute_signal_cauchy, compute_signal_pvoigt
 from .A_matrix import make_A_matrix_cauchy
 from .A_matrix import make_A_matrix_gau, make_A_matrix_pvoigt
+from .A_matrix import make_A_matrix_cauchy_osc
+from .A_matrix import make_A_matrix_gau_osc, make_A_matrix_pvoigt_osc
 
 
 def model_n_comp_conv(t: np.ndarray,
@@ -343,3 +345,149 @@ eps: Optional[np.ndarray] = None) -> np.ndarray:
         abs = coeff
 
     return abs
+
+
+def dmp_osc_conv(t: np.ndarray, fwhm: Union[float, np.ndarray],
+                      tau: np.ndarray,
+                      T: np.ndarray,
+                      phase: np.ndarray,
+                      c: np.ndarray,
+                      irf: Optional[str] = 'g',
+                      eta: Optional[float] = None
+                      ) -> np.ndarray:
+
+    '''
+    Constructs convolution of sum of damped oscillation and
+    instrumental response function
+    Supported instrumental response function are
+
+      * g: gaussian distribution
+      * c: cauchy distribution
+      * pv: pseudo voigt profile
+
+    Args:
+       t: time
+       fwhm: full width at half maximum of instrumental response function
+       tau: lifetime of vibration
+       T: period of vibration
+       phase: phase factor
+       c: coefficient for each damping oscillation component
+       irf: shape of instrumental
+            response function [default: g]
+
+              * 'g': normalized gaussian distribution,
+              * 'c': normalized cauchy distribution,
+              * 'pv': pseudo voigt profile :math:`(1-\\eta)g + \\eta c`
+       eta: mixing parameter for pseudo voigt profile
+            (only needed for pseudo voigt profile,
+            default value is guessed according to
+            Journal of Applied Crystallography. 33 (6): 1311–1316.)
+
+    Returns:
+      Convolution of sum of damped oscillation and instrumental
+      response function.
+
+    Note:
+        *fwhm* For gaussian and cauchy distribution,
+        only one value of fwhm is needed,
+        so fwhm is assumed to be float
+        However, for pseudo voigt profile,
+        it needs two value of fwhm, one for gaussian part and
+        the other for cauchy part.
+        So, in this case,
+        fwhm is assumed to be numpy.ndarray with size 2.
+    '''
+
+    if irf == 'g':
+        A = make_A_matrix_gau_osc(t, fwhm, 1/tau, T, phase)
+    elif irf == 'c':
+        A = make_A_matrix_cauchy_osc(t, fwhm, 1/tau, T, phase)
+    elif irf == 'pv':
+        if eta is None:
+            f = fwhm[0]**5+2.69269*fwhm[0]**4*fwhm[1] + \
+                2.42843*fwhm[0]**3*fwhm[1]**2 + \
+                4.47163*fwhm[0]**2*fwhm[1]**3 + \
+                0.07842*fwhm[0]*fwhm[1]**4 + \
+                fwhm[1]**5
+            f = f**(1/5)
+            x = fwhm[1]/f
+            eta = 1.36603*x-0.47719*x**2+0.11116*x**3
+        A = make_A_matrix_pvoigt_osc(t, fwhm[0], fwhm[1], eta, 1/tau, T, phase)
+
+    y = c@A
+
+    return y
+
+def fact_anal_dmp_osc_conv(t: np.ndarray,
+                       fwhm: Union[float, np.ndarray],
+                       tau: np.ndarray, T: np.ndarray, phase: np.ndarray,
+                       irf: Optional[str] = 'g',
+                       eta: Optional[float] = None,
+                       data: Optional[np.ndarray] = None,
+                       eps: Optional[np.ndarray] = None
+                       ) -> np.ndarray:
+
+    '''
+    Estimate the best coefficiets when full width at half maximum fwhm
+    , life constant tau, period of vibration T and phase factor are given
+
+    Supported instrumental response functions are 
+
+       1. 'g': gaussian distribution
+       2. 'c': cauchy distribution
+       3. 'pv': pseudo voigt profile
+
+    Args:
+       t: time
+       fwhm: full width at half maximum of instrumental response function
+       tau: life time for each component
+       T: period of vibration of each component
+       phase: phase factor for each component
+       irf: shape of instrumental
+            response function [default: g]
+
+              * 'g': normalized gaussian distribution,
+              * 'c': normalized cauchy distribution,
+              * 'pv': pseudo voigt profile :math:`(1-\\eta)g + \\eta c`
+       eta: mixing parameter for pseudo voigt profile
+            (only needed for pseudo voigt profile,
+            default value is guessed according to
+            Journal of Applied Crystallography. 33 (6): 1311–1316.)
+       data: time scan data to fit
+       eps: standard error of data
+
+    Returns:
+     Best coefficient for given damped oscillation component.
+
+    Note:
+     data should not contain time range and
+     the dimension of the data must be one.
+    '''
+
+    k = 1/tau
+
+    if irf == 'g':
+        A = make_A_matrix_gau_osc(t, fwhm, k, T, phase)
+    elif irf == 'c':
+        A = make_A_matrix_cauchy_osc(t, fwhm, k, T, phase)
+    elif irf == 'pv':
+        if eta is None:
+            f = fwhm[0]**5+2.69269*fwhm[0]**4*fwhm[1] + \
+                2.42843*fwhm[0]**3*fwhm[1]**2 + \
+                4.47163*fwhm[0]**2*fwhm[1]**3 + \
+                0.07842*fwhm[0]*fwhm[1]**4 + \
+                fwhm[1]**5
+            f = f**(1/5)
+            x = fwhm[1]/f
+            eta = 1.36603*x-0.47719*x**2+0.11116*x**3
+        A = make_A_matrix_pvoigt_osc(t, fwhm[0], fwhm[1], eta, k, T, phase)
+
+    if eps is not None:
+        y = data/eps
+        for i in range(k.shape[0]):
+            A[i, :] = A[i, :]/eps
+    else:
+        y = data
+    c, _, _, _ = LA.lstsq(A.T, y)
+
+    return c

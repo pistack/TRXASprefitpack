@@ -46,6 +46,7 @@ broadening and peak parameter
   * -o OUT, --out OUT     prefix for output files
   * --fix_fwhm_G          fix gaussian fwhm value
   * --fix_fwhm_L          fix lorenzian fwhm value
+  * --slow                use slower but robust global optimization algorithm
 
 
 
