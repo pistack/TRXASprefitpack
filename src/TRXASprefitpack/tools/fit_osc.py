@@ -1,6 +1,6 @@
-# fit seq
-# fitting tscan data
-# Using sequential decay model convolved with
+# fit osc
+# fitting residual of time scan data with
+# convolution of sum of damped oscillation and
 # normalized gaussian distribution
 # normalized cauchy distribution
 # normalized pseudo voigt profile
@@ -9,48 +9,31 @@
 
 import argparse
 import numpy as np
-from ..mathfun import solve_seq_model, rate_eq_conv, fact_anal_rate_eq_conv
+from pandas import period_range
+from ..mathfun import dmp_osc_conv, fact_anal_dmp_osc_conv
 from .misc import set_bound_tau, read_data, contribution_table, plot_result
 from lmfit import Parameters, fit_report, minimize
 
 description = '''
-fit seq: fitting tscan data using the solution of sequtial decay equation covolved with gaussian/cauchy(lorenzian)/pseudo voigt irf function.
-It uses lmfit python module to fitting experimental time trace data to sequential decay module.
-To find contribution of each excited state species, it solves linear least square problem via scipy lstsq module.
-
-
-It supports 4 types of sequential decay
-Type 0: both raising and decay
-    GS -> 1 -> 2 -> ... -> n -> GS
-Type 1: no raising
-    1 -> 2 -> ... -> n -> GS
-Type 2: no decay
-    GS -> 1 -> 2 -> ... -> n
-Type 3: Neither raising nor decay
-    1 -> 2 -> ... -> n 
+fit osc: fitting residual of experimental time trace spectrum data with the convolution of the sum of damped oscilliation and irf function
+There are three types of irf function (gaussian, cauchy, pseudo voigt)
+It uses lmfit python package to fitting residual of time trace data and estimates error bound of irf parameter, lifetime constants and
+period of vibrations. 
+To calculate the contribution of each damped oscilliation component, it solve least linear square problem via scipy linalg lstsq module.
 '''
 
 epilog = '''
 *Note
-1. The number of time zero parameter should be same as the number of scan to fit.
-2. Type 0 sequential decay needs n+1 lifetime constants for n excited state species
-3. Type 1, 2 sequential decay needs n lifetime constants for n excited state species
-4. Type 3 sequential decay needs n-1 lifetime constants for n excited state species
-5. if you set shape of irf to pseudo voigt (pv), then you should provide two full width at half maximum value for gaussian and cauchy parts, respectively.
-'''
 
-seq_decay_help = '''
-type of sequential decay
-0. GS -> 1 -> 2 -> ... -> n -> GS (both raising and decay)
-1. 1 -> 2 -> ... -> n -> GS (No raising)
-2. GS -> 1 -> 2 -> ... -> n (No decay)
-3. 1 -> 2 -> ... -> n (Neither raising nor decay)
-Default option is type 0 both raising and decay
+1. The number of tau, period and phase parameter should be same
 
-*Note
-1. type 0 needs n+1 lifetime value
-2. type 1 and 2 need n lifetime value
-3. type 3 needs n-1 lifetime value
+2. The number of time zero should be same as the number of residual scan file to fit.
+
+3. phase should be confined in [-pi/2, pi/2] (pi ~ 3.14)
+
+4. If you set shape of irf to pseudo voigt (pv), then
+   you should provide two full width at half maximum
+   value for gaussian and cauchy parts, respectively.
 '''
 
 irf_help = '''
@@ -73,26 +56,28 @@ It would not be used when you did not set irf or use gaussian irf function
 '''
 
 
+def fit_osc():
 
-def fit_seq():
-
-    def residual(params, t, num_tau, exclude, irf, data=None, eps=None):
+    def residual(params, t, num_comp, irf, data=None, eps=None):
         if irf in ['g', 'c']:
             fwhm = params['fwhm']
         else:
             fwhm = np.array([params['fwhm_G'], params['fwhm_L']])
-        tau = np.zeros(num_tau)
-        for i in range(num_tau):
+        tau = np.zeros(num_comp)
+        T = np.zeros(num_comp)
+        phase = np.zeros(num_comp)
+        for i in range(num_comp):
             tau[i] = params[f'tau_{i+1}']
-        eigval, V, c = solve_seq_model(tau)
-
+            T[i] = params[f'period_{i+1}']
+            phase[i] = params[f'phi_{i+1}']
         chi = np.zeros((data.shape[0], data.shape[1]))
         for i in range(data.shape[1]):
             t0 = params[f't_0_{i+1}']
-            abs = fact_anal_rate_eq_conv(t-t0, fwhm, eigval, V, c, exclude, irf=irf,
+            c = fact_anal_dmp_osc_conv(t-t0, fwhm, tau, T, phase, irf=irf,
                                    data=data[:, i], eps=eps[:, i])
+
             chi[:, i] = data[:, i] - \
-                rate_eq_conv(t-t0, fwhm, abs, eigval, V, c, irf=irf)
+                dmp_osc_conv(t-t0, fwhm, tau, T, phase, c, irf=irf)
         chi = chi.flatten()/eps.flatten()
 
         return chi
@@ -101,8 +86,6 @@ def fit_seq():
     parser = argparse.ArgumentParser(formatter_class=tmp,
                                      description=description,
                                      epilog=epilog)
-    parser.add_argument('-sdt', '--seq_decay_type', type=int, default=0,
-                        help=seq_decay_help)
     parser.add_argument('--irf', default='g', choices=['g', 'c', 'pv'],
                         help=irf_help)
     parser.add_argument('--fwhm_G', type=float,
@@ -110,16 +93,22 @@ def fit_seq():
     parser.add_argument('--fwhm_L', type=float,
                         help=fwhm_L_help)
     parser.add_argument('prefix',
-                        help='prefix for tscan files ' +
-                        'It will read prefix_i.txt')
+                        help='prefix of residual of time delay scan data to fit' +
+                        'It will prefix_i.txt')
     parser.add_argument('-t0', '--time_zeros', type=float, nargs='+',
-                        help='time zeros for each tscan')
+                        help='time zeros for each residual of tscan')
     parser.add_argument('-t0f', '--time_zeros_file',
-                        help='filename for time zeros of each tscan')
-    parser.add_argument('--tau', type=float, nargs='*',
-                        help='lifetime of each decay')
+                        help='filename for time zeros of each residual of tscan')
+    parser.add_argument('--tau', type=float, nargs='+',
+                        help='lifetime of each component')
+    parser.add_argument('--period', type=float, nargs='+',
+                        help='period of the vibration of each component')
+    parser.add_argument('--phase', type=float, nargs='+',
+    help='phase factor of each damped oscilliation component')
     parser.add_argument('--fix_irf', action='store_true',
     help='fix irf parameter (fwhm_G, fwhm_L) during fitting process')
+    parser.add_argument('--fix_t0', action='store_true',
+    help='fix time zero during fitting process')
     parser.add_argument('--slow', action='store_true',
     help='use slower but robust global optimization algorithm')
     parser.add_argument('-o', '--out', default=None,
@@ -130,8 +119,6 @@ def fit_seq():
     if args.out is None:
         args.out = prefix
     out_prefix = args.out
-
-    seq_decay_type = args.seq_decay_type
 
     irf = args.irf
     if irf == 'g':
@@ -156,25 +143,12 @@ def fit_seq():
             fwhm = 0.5346*args.fwhm_L + \
                 np.sqrt(0.2166*args.fwhm_L**2+args.fwhm_G**2)
 
-    if args.tau is None:
-        print('Please set lifetime constants for each decay')
-        return
-    else:
-        tau = np.array(args.tau)
-        num_tau = tau.size
-        if seq_decay_type == 0:
-            num_ex = num_tau-1
-            exclude = 'first_and_last'
-        elif seq_decay_type == 1:
-            num_ex = num_tau
-            exclude = 'last'
-        elif seq_decay_type == 2:
-            num_ex = num_tau
-            exclude = 'first'
-        else:
-            num_ex = num_tau+1
-            exclude = None
-    
+
+    tau = np.array(args.tau)
+    T = np.array(args.period)
+    phi = np.array(args.phase)
+    num_comp = tau.size
+
     if (args.time_zeros is None) and (args.time_zeros_file is None):
         print('You should set either time_zeros or time_zeros_file!\n')
         return
@@ -202,36 +176,37 @@ def fit_seq():
     for i in range(num_scan):
         fit_params.add(f't_0_{i+1}', value=time_zeros[i],
                        min=time_zeros[i]-2*fwhm,
-                       max=time_zeros[i]+2*fwhm)
+                       max=time_zeros[i]+2*fwhm, vary=(not args.fix_t0))
 
-    for i in range(num_tau):
-        bd = set_bound_tau(tau[i])
-        fit_params.add(f'tau_{i+1}', value=tau[i], min=bd[0], max=bd[1])
+
+    for i in range(num_comp):
+        bd1 = set_bound_tau(tau[i])
+        bd2 = set_bound_tau(T[i])
+        fit_params.add(f'tau_{i+1}', value=tau[i], min=bd1[0], max=bd1[1])
+        fit_params.add(f'period_{i+1}', value=T[i], min=bd2[0], max=bd2[1])
+        fit_params.add(f'phi_{i+1}', value=phi[i], min=-np.pi/2-0.1, max=np.pi/2+0.1)
 
     # Second initial guess using global optimization algorithm
     if args.slow: 
         out = minimize(residual, fit_params, method='ampgo', calc_covar=False,
-        args=(t, num_tau, exclude, irf),
+        args=(t, num_comp, irf),
         kws={'data': data, 'eps': eps})
     else:
         out = minimize(residual, fit_params, method='nelder', calc_covar=False,
-        args=(t, num_tau, exclude, irf),
+        args=(t, num_comp, irf),
         kws={'data': data, 'eps': eps})
 
     # Then do Levenberg-Marquardt
     out = minimize(residual, out.params,
-                   args=(t, num_tau, exclude),
+                   args=(t, num_comp),
                    kws={'data': data, 'eps': eps, 'irf': irf})
 
-    chi2_ind = residual(out.params, t, num_tau, exclude,
-                        irf, data=data, eps=eps)
+    chi2_ind = residual(out.params, t, num_comp, irf, data=data, eps=eps)
     chi2_ind = chi2_ind.reshape(data.shape)
     chi2_ind = np.sum(chi2_ind**2, axis=0)/(data.shape[0]-len(out.params))
 
     fit = np.zeros((data.shape[0], data.shape[1]+1))
-    res = np.zeros((data.shape[0], data.shape[1]+1))
     fit[:, 0] = t
-    res[:, 0] = t
 
     if irf in ['g', 'c']:
         fwhm_opt = out.params['fwhm']
@@ -240,32 +215,25 @@ def fit_seq():
         tmp_L = out.params['fwhm_L']
         fwhm_opt = np.array([tmp_G, tmp_L])
 
-    tau_opt = np.zeros(num_tau)
-    for j in range(num_tau):
-        tau_opt[j] = out.params[f'tau_{j+1}']
-    
-    eigval_opt, V_opt, c_opt = solve_seq_model(tau_opt)
+    tau_opt = np.zeros(num_comp)
+    T_opt = np.zeros(num_comp)
+    phi_opt = np.zeros(num_comp)
 
-    abs = np.zeros((num_ex, num_scan))
+    for j in range(num_comp):
+        tau_opt[j] = out.params[f'tau_{j+1}']
+        T_opt[j] = out.params[f'period_{j+1}']
+        phi_opt[j] = out.params[f'phi_{j+1}']
+
+    c = np.zeros((num_comp, num_scan))
     for i in range(num_scan):
-        abs_tmp = fact_anal_rate_eq_conv(t-out.params[f't_0_{i+1}'],
-        fwhm_opt, eigval_opt, V_opt, c_opt, exclude, 
-        data=data[:, i], eps=eps[:, i], irf=irf)
-        fit[:, i+1] = rate_eq_conv(t-out.params[f't_0_{i+1}'],
-        fwhm_opt, abs_tmp, eigval_opt, V_opt, c_opt, irf=irf)
-        if seq_decay_type == 0:
-            abs[:, i] = abs_tmp[1:-1]
-        elif seq_decay_type == 1:
-            abs[:, i] = abs_tmp[:-1]
-        elif seq_decay_type == 2:
-            abs[:, i] = abs_tmp[1:]
-        else:
-            abs[:, i] = abs_tmp
+        c[:, i] = fact_anal_dmp_osc_conv(t-out.params[f't_0_{i+1}'], fwhm_opt,
+        tau_opt, T_opt, phi_opt, irf=irf, data=data[:, i], eps=eps[:, i])
+        fit[:, i+1] = dmp_osc_conv(t-out.params[f't_0_{i+1}'], fwhm_opt,
+        tau_opt, T_opt, phi_opt, c[:, i], irf=irf)
     
-    res[:, 1:] = data - fit[:, 1:]
-    
-    contrib_table = contribution_table('tscan', 'Excited State Contribution', num_scan,
-    num_ex, abs)
+    contrib_table = contribution_table('tscan', 'Component Contribution',
+    num_scan, num_comp, c)
+
     fit_content = fit_report(out) + '\n' + contrib_table
 
     print(fit_content)
@@ -275,14 +243,8 @@ def fit_seq():
     f.close()
 
     np.savetxt(out_prefix+'_fit.txt', fit)
-    np.savetxt(out_prefix+'_abs.txt', abs)
+    np.savetxt(out_prefix+'_c.txt', c)
 
-    # save residual of individual fitting 
-
-    for i in range(data.shape[1]):
-        res_ind = np.vstack((res[:, 0], res[:, i+1], eps[:, i]))
-        np.savetxt(out_prefix+f'_res_{i+1}.txt', res_ind.T)
-
-    plot_result('tscan', num_scan, chi2_ind, data, eps, fit, res)
+    plot_result('res tscan', num_scan, chi2_ind, data, eps, fit)
 
     return

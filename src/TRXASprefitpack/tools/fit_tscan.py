@@ -200,7 +200,9 @@ def fit_tscan():
     chi2_ind = np.sum(chi2_ind**2, axis=0)/(data.shape[0]-len(out.params))
 
     fit = np.zeros((data.shape[0], data.shape[1]+1))
+    res = np.zeros((data.shape[0], data.shape[1]+1))
     fit[:, 0] = t
+    res[:, 0] = t
 
     if irf in ['g', 'c']:
         fwhm_opt = out.params['fwhm']
@@ -223,14 +225,11 @@ def fit_tscan():
                                      tau_opt,
                                      data=data[:, i],
                                      eps=eps[:, i],
-                                     base=base,
-                                     irf=irf)
+                                     base=base, irf=irf)
         fit[:, i+1] = model_n_comp_conv(t-out.params[f't_0_{i+1}'],
-                                        fwhm_opt,
-                                        tau_opt,
-                                        c[:, i],
-                                        base=base,
-                                        irf=irf)
+        fwhm_opt, tau_opt, c[:, i], base, irf=irf)
+    
+    res[:, 1:] = data - fit[:, 1:]
     
     contrib_table = contribution_table('tscan', 'Component Contribution',
     num_scan, num_comp, c)
@@ -246,6 +245,12 @@ def fit_tscan():
     np.savetxt(out_prefix+'_fit.txt', fit)
     np.savetxt(out_prefix+'_c.txt', c)
 
-    plot_result('tscan', num_scan, chi2_ind, data, eps, fit)
+    # save residual of individual fitting 
+
+    for i in range(data.shape[1]):
+        res_ind = np.vstack((res[:, 0], res[:, i+1], eps[:, i]))
+        np.savetxt(out_prefix+f'_res_{i+1}.txt', res_ind.T)
+
+    plot_result('tscan', num_scan, chi2_ind, data, eps, fit, res)
 
     return

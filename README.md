@@ -19,11 +19,12 @@ Licence: LGPL3
 ## Features
 
 * Utilites
-  1. broadening: broad theoretically calculated line shape spectrum with voigt profile 
+  1. broadening: broad theoretically calculated line shape spectrum with voigt profile
   2. fit_static: fitting theoretically calculated line shape spectrum with experimental spectrum
   3. fit_irf: Find irf parameter of experimental measured irf function
   4. fit_tscan: Find lifetime constants of experimental time trace spectrum
-  5. fit_seq: fitting experimental time trace spectrum with 1st order sequential decay dynamics 
+  5. fit_seq: fitting experimental time trace spectrum with 1st order sequential decay dynamics
+  6. fit_osc: fitting residual of experimental time trace with damped oscilliation
 
 * libraries
   * See source documents [Docs](https://trxasprefitpack.readthedocs.io/en/stable/)
