@@ -1,7 +1,7 @@
 # fit_tscan Basic Example
 
 Basic usage example for fit_tscan utility.
-Yon can find example file from [TRXASprefitpack-example](https://github.com/pistack/TRXASprefitpack-example/tree/v0.5.0) fit_tscan subdirectory.
+Yon can find example file from [TRXASprefitpack-example](https://github.com/pistack/TRXASprefitpack-example/tree/v0.5.1) fit_tscan subdirectory.
 
 1. In fit_tscan sub directory you can find ``example_1.txt``, ``example_2.txt``, ``example_3.txt``, ``example_4.txt`` files.
 These examples are generated from rate equation example section 2. branched decay with varying time zero of each scan around -0.15 ps.

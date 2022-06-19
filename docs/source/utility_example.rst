@@ -8,3 +8,4 @@ Utility Examples
    example.fit_static
    example.fit_tscan
    example.fit_seq
+   example.fit_osc

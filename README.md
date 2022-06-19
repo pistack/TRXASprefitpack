@@ -27,6 +27,11 @@ Licence: LGPL3
   6. fit_osc: fitting residual of experimental time trace with damped oscilliation
 
 * libraries
+  1. Compute convolution of exponential decay and gaussian, cauchy function analytically.
+  2. Compute convolition of damped oscilliation and gaussian, cauchy function analytically.
+  3. Voigt broadening line shape spectrum
+  4. Solve first order rate equation (general, lower triangle, sequential decay) and analytically compute the convolution of rate equation model solution and gaussian, cauchy function.
+  5. Find best coefficients for linear combination of exponential decay or damped oscilliation via solving linear least square problem.
   * See source documents [Docs](https://trxasprefitpack.readthedocs.io/en/stable/)
   
 ## How to get documents for TRXASprefitpack package
@@ -61,4 +66,4 @@ Licence: LGPL3
 ## Examples
 
 Jupyter notebook examples for ``TRXASprefitpack`` are located in
-[example](https://github.com/pistack/TRXASprefitpack-example/tree/v0.5.0)
+[example](https://github.com/pistack/TRXASprefitpack-example/tree/v0.5.1)

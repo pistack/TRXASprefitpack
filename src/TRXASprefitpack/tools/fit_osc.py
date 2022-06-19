@@ -183,7 +183,7 @@ def fit_osc():
         bd2 = set_bound_tau(T[i])
         fit_params.add(f'tau_{i+1}', value=tau[i], min=bd1[0], max=bd1[1])
         fit_params.add(f'period_{i+1}', value=T[i], min=bd2[0], max=bd2[1])
-        fit_params.add(f'phi_{i+1}', value=phi[i], min=-np.pi/2-0.1, max=np.pi/2+0.1)
+        fit_params.add(f'phi_{i+1}', value=phi[i], min=-np.pi/2, max=np.pi/2+0.1)
 
     # Second initial guess using global optimization algorithm
     if args.slow: 

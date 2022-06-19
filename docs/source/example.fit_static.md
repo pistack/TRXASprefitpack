@@ -1,7 +1,7 @@
 # fit_static Basic Example
 
 Basic usage example ``fit_static`` utility.
-Yon can find example file from [TRXASprefitpack-example](https://github.com/pistack/TRXASprefitpack-example/tree/v0.5.0) fit_static subdirectory.
+Yon can find example file from [TRXASprefitpack-example](https://github.com/pistack/TRXASprefitpack-example/tree/v0.5.1) fit_static subdirectory.
 
 ## Peak position shifting
 

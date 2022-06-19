@@ -1,7 +1,7 @@
 # fit_seq Basic Example
 
 Basic usage example for fit_seq utility.
-Yon can find example file from [TRXASprefitpack-example](https://github.com/pistack/TRXASprefitpack-example/tree/v0.5.0) fit_seq subdirectory.
+Yon can find example file from [TRXASprefitpack-example](https://github.com/pistack/TRXASprefitpack-example/tree/v0.5.1) fit_seq subdirectory.
 
 1. In fit_seq sub directory you can find ``example_1.txt``, ``example_2.txt``, ``example_3.txt``, ``example_4.txt`` files.
 These examples are generated from rate equation example section 1. sequential decay with varying time zero of each scan around -150 ps.
