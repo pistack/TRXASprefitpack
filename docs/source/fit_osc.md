@@ -1,4 +1,4 @@
-# fit_tscan
+# fit_osc
 
 fit osc: fitting residual of experimental time trace spectrum data with the convolution of the sum of damped oscilliation and irf function
 There are three types of irf function (gaussian, cauchy, pseudo voigt)
