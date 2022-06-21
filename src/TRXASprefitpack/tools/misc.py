@@ -148,3 +148,35 @@ def contribution_table(scan_name: str, table_title: str, num_scan: int, num_comp
     
     cont_table = f'[[{table_title}]]' + '\n' + cont_table
     return cont_table
+
+def parse_matrix(mat_str: np.ndarray, tau: np.ndarray) -> np.ndarray:
+    '''
+    Parse user supplied rate equation matrix
+
+    Args:
+     mat_str: user supplied rate equation (lower triangular matrix)
+     tau: life time constants (inverse of rate constant)
+    
+    Return:
+     parsed rate equation matrix.
+    '''
+
+    L = np.zeros_like(mat_str, dtype=float)
+    num_comp = L.shape[0]
+    mask = (mat_str != '0')
+    red_mat_str = mat_str[mask]
+    red_L = np.zeros_like(red_mat_str)
+
+    for i in range(red_mat_str.size):
+        tmp = red_mat_str[i]
+        if '-' in tmp:
+            tmp = tmp.strip('-('); tmp = tmp.strip(')')
+            k_lst = tmp.split('+')
+            for k in k_lst:
+                red_L[i] = red_L[i] - 1/tau[int(k[1:])-1]
+        else:
+            red_L[i] = 1/tau[int(tau[1:])-1]
+    
+    L[mask] = red_L
+    
+    return L
