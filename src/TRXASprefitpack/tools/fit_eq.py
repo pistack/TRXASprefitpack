@@ -82,7 +82,7 @@ def fit_eq():
         
         L = parse_matrix(mat_str, tau)
         y0 = np.zeros(L.shape[0]); y0[0] = 1
-        eigval, V, c = solve_l_model(L)
+        eigval, V, c = solve_l_model(L, y0)
 
         chi = np.zeros((data.shape[0], data.shape[1]))
         for i in range(data.shape[1]):
@@ -163,12 +163,13 @@ def fit_eq():
     else:
         tau = np.array(args.tau)
         num_tau = tau.size
+        num_comp = rate_eq_mat_str.shape[0]
         if exclude == 'first_and_last':
-            num_ex = num_tau-2
+            num_ex = num_comp-2
         elif exclude in ['first', 'last']:
-            num_ex = num_tau-1
+            num_ex = num_comp-1
         else:
-            num_ex = num_tau
+            num_ex = num_comp
     
     if (args.time_zeros is None) and (args.time_zeros_file is None):
         print('You should set either time_zeros or time_zeros_file!\n')
@@ -240,8 +241,11 @@ def fit_eq():
         tau_opt[j] = out.params[f'tau_{j+1}']
     
     L_opt = parse_matrix(rate_eq_mat_str, tau_opt)
+
+    y0 = np.zeros(L_opt.shape[0])
+    y0[0] = 1
     
-    eigval_opt, V_opt, c_opt = solve_l_model(L_opt)
+    eigval_opt, V_opt, c_opt = solve_l_model(L_opt, y0)
 
     abs = np.zeros((num_ex, num_scan))
     for i in range(num_scan):

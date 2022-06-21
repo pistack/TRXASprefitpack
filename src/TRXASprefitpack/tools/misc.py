@@ -165,7 +165,7 @@ def parse_matrix(mat_str: np.ndarray, tau: np.ndarray) -> np.ndarray:
     num_comp = L.shape[0]
     mask = (mat_str != '0')
     red_mat_str = mat_str[mask]
-    red_L = np.zeros_like(red_mat_str)
+    red_L = np.zeros_like(red_mat_str, dtype=float)
 
     for i in range(red_mat_str.size):
         tmp = red_mat_str[i]
@@ -175,7 +175,7 @@ def parse_matrix(mat_str: np.ndarray, tau: np.ndarray) -> np.ndarray:
             for k in k_lst:
                 red_L[i] = red_L[i] - 1/tau[int(k[1:])-1]
         else:
-            red_L[i] = 1/tau[int(tau[1:])-1]
+            red_L[i] = 1/tau[int(tmp[1:])-1]
     
     L[mask] = red_L
     
