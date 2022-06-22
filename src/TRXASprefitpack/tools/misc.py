@@ -159,6 +159,10 @@ def parse_matrix(mat_str: np.ndarray, tau: np.ndarray) -> np.ndarray:
     
     Return:
      parsed rate equation matrix.
+    
+    Note:
+     Every entry in the rate equation matrix should be
+     '0', '1*ki', '-x.xxx*ki', 'x.xxx*ki' or '-(x.xxx*ki+y.yyy*kj+...)'
     '''
 
     L = np.zeros_like(mat_str, dtype=float)
@@ -170,12 +174,15 @@ def parse_matrix(mat_str: np.ndarray, tau: np.ndarray) -> np.ndarray:
     for i in range(red_mat_str.size):
         tmp = red_mat_str[i]
         if '-' in tmp:
-            tmp = tmp.strip('-('); tmp = tmp.strip(')')
+            tmp = tmp.strip('-')
+            tmp = tmp.strip('('); tmp = tmp.strip(')')
             k_lst = tmp.split('+')
             for k in k_lst:
-                red_L[i] = red_L[i] - 1/tau[int(k[1:])-1]
+                k_pair = k.split('*')
+                red_L[i] = red_L[i] - float(k_pair[0])/tau[int(k_pair[1][1:])-1]
         else:
-            red_L[i] = 1/tau[int(tmp[1:])-1]
+            tmp_pair = tmp.split('*')
+            red_L[i] = float(tmp_pair[0])/tau[int(tmp_pair[1][1:])-1]
     
     L[mask] = red_L
     
