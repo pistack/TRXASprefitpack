@@ -7,7 +7,7 @@ subpackage for the mathematical functions for TRXASprefitpack
 '''
 
 from .broad import gen_theory_data
-from .irf import gau_irf, cauchy_irf, pvoigt_irf
+from .irf import gau_irf, cauchy_irf, pvoigt_irf, calc_eta
 from .exp_conv_irf import exp_conv_gau, exp_conv_cauchy, exp_conv_pvoigt
 from .exp_conv_irf import dmp_osc_conv_gau, dmp_osc_conv_cauchy, dmp_osc_conv_pvoigt
 from .rate_eq import solve_model, solve_seq_model, solve_l_model, compute_model
@@ -19,7 +19,7 @@ from .exp_decay_fit import dmp_osc_conv, fact_anal_dmp_osc_conv
 
 
 __all__ = ['gen_theory_data',
-           'gau_irf', 'cauchy_irf', 'pvoigt_irf',
+           'gau_irf', 'cauchy_irf', 'pvoigt_irf', 'calc_eta',
            'exp_conv_gau', 'exp_conv_cauchy', 'exp_conv_pvoigt',
            'dmp_osc_conv_gau', 'dmp_osc_conv_cauchy', 'dmp_osc_conv_pvoigt',
            'solve_model', 'solve_seq_model', 'solve_l_model', 'compute_model',
