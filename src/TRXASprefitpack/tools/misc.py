@@ -166,7 +166,6 @@ def parse_matrix(mat_str: np.ndarray, tau: np.ndarray) -> np.ndarray:
     '''
 
     L = np.zeros_like(mat_str, dtype=float)
-    num_comp = L.shape[0]
     mask = (mat_str != '0')
     red_mat_str = mat_str[mask]
     red_L = np.zeros_like(red_mat_str, dtype=float)
