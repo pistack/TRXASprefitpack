@@ -126,11 +126,13 @@ def make_A_matrix_dmp_osc(t: np.ndarray, fwhm: Union[float, np.ndarray],
     return
 
 def fact_anal_A(A: np.ndarray, data: Optional[np.ndarray] = None, err: Optional[np.ndarray] = None) -> np.ndarray:
+    B = np.zeros_like(A)
+    y = np.zeros_like(data)
     if err is None:
-        B = np.copy(A)
-        y = np.copy(data)
+        B = A
+        y = data
     else:
-        B = np.einsum('i,ij->ij', 1/err, A)
+        B = np.einsum('j,ij->ij', 1/err, A)
         y = data/err
     
     c, _, _, _ = lstsq(B.T, y)

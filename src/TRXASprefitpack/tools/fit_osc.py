@@ -9,6 +9,7 @@
 
 import argparse
 import numpy as np
+from ..mathfun.A_matrix import make_A_matrix_dmp_osc, fact_anal_A
 from ..mathfun import dmp_osc_conv, fact_anal_dmp_osc_conv
 from .misc import set_bound_tau, read_data, contribution_table, plot_result
 from lmfit import Parameters, fit_report, minimize
@@ -72,11 +73,9 @@ def fit_osc():
         chi = np.zeros((data.shape[0], data.shape[1]))
         for i in range(data.shape[1]):
             t0 = params[f't_0_{i+1}']
-            c = fact_anal_dmp_osc_conv(t-t0, fwhm, tau, T, phase, irf=irf,
-                                   data=data[:, i], eps=eps[:, i])
-
-            chi[:, i] = data[:, i] - \
-                dmp_osc_conv(t-t0, fwhm, tau, T, phase, c, irf=irf)
+            A = make_A_matrix_dmp_osc(t-t0, fwhm, tau, T, phase, irf)
+            c = fact_anal_A(A, data[:,i], eps[:, i])
+            chi[:, i] = data[:, i] - (c@A)
         chi = chi.flatten()/eps.flatten()
 
         return chi

@@ -9,7 +9,7 @@
 
 import argparse
 import numpy as np
-from ..mathfun import gau_irf, cauchy_irf, pvoigt_irf
+from ..mathfun.irf import gau_irf, cauchy_irf, pvoigt_irf, calc_eta
 from .misc import read_data, plot_result
 from lmfit import Parameters, fit_report, minimize
 
@@ -69,10 +69,7 @@ def fit_irf():
             elif irf == 'c':
                 chi[:, i] = data[:, i] - cauchy_irf(t-t0, fwhm)
             else:
-                f = fwhm[0]**5+2.69269*fwhm[0]**4*fwhm[1]+2.42843*fwhm[0]**3*fwhm[1]**2 + \
-                    4.47163*fwhm[0]**2*fwhm[1]**3 + 0.07842*fwhm[0]*fwhm[1]**4 + fwhm[1]**5
-                f = f**(1/5)
-                eta = 1.36603*(fwhm[1]/f)-0.47719*(fwhm[1]/f)**2+0.11116*(fwhm[1]/f)**3
+                eta = calc_eta(fwhm[0], fwhm[1])
                 chi[:, i] = data[:, i] - pvoigt_irf(t-t0, fwhm[0], fwhm[1], eta)
         chi = chi.flatten()/eps.flatten()
 

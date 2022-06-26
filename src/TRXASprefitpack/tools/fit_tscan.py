@@ -9,6 +9,7 @@
 
 import argparse
 import numpy as np
+from ..mathfun.A_matrix import make_A_matrix_exp, fact_anal_A
 from ..mathfun import model_n_comp_conv, fact_anal_exp_conv
 from .misc import set_bound_tau, read_data, contribution_table, plot_result
 from lmfit import Parameters, fit_report, minimize
@@ -67,12 +68,10 @@ def fit_tscan():
         chi = np.zeros((data.shape[0], data.shape[1]))
         for i in range(data.shape[1]):
             t0 = params[f't_0_{i+1}']
-            c = fact_anal_exp_conv(t-t0, fwhm, tau, irf=irf,
-                                   data=data[:, i], eps=eps[:, i], base=base)
+            A = make_A_matrix_exp(t-t0, fwhm, tau, base, irf)
+            c = fact_anal_A(A, data[:,i], eps[:,i])
 
-            chi[:, i] = data[:, i] - \
-                model_n_comp_conv(t-t0, fwhm, tau, c, base=base,
-                                  irf=irf)
+            chi[:, i] = data[:, i] - (c@A)
         chi = chi.flatten()/eps.flatten()
 
         return chi
