@@ -41,7 +41,7 @@ def gen_theory_data(e: np.ndarray,
     sigma = fwhm_G/(2*np.sqrt(2*np.log(2)))
     gamma = fwhm_L/2
 
-    num_e = e.shape[0]
+    num_e = e.size
     num_peaks = peaks.shape[0]
     v_matrix = np.zeros((num_e, num_peaks))
     peak_copy = np.copy(peaks[:, 0])

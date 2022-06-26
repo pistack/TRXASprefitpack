@@ -123,17 +123,16 @@ def make_A_matrix_dmp_osc(t: np.ndarray, fwhm: Union[float, np.ndarray],
             eta = calc_eta(fwhm[0], fwhm[1])
         A = make_A_matrix_pvoigt_osc(t, fwhm[0], fwhm[1], eta, 1/tau, T, phase)
 
-    return
+    return A
 
-def fact_anal_A(A: np.ndarray, data: Optional[np.ndarray] = None, err: Optional[np.ndarray] = None) -> np.ndarray:
-    B = np.zeros_like(A)
-    y = np.zeros_like(data)
-    if err is None:
-        B = A
-        y = data
-    else:
-        B = np.einsum('j,ij->ij', 1/err, A)
-        y = data/err
+def fact_anal_A(A: np.ndarray, data: Optional[np.ndarray] = None, eps: Optional[np.ndarray] = None) -> np.ndarray:
+    B = np.copy(A)
+    y = np.copy(data)
+    if eps is None:
+        eps = np.ones_like(data)
+    
+    B = np.einsum('j,ij->ij', 1/eps, B)
+    y = y/eps
     
     c, _, _, _ = lstsq(B.T, y)
     return c

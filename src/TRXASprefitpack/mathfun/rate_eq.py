@@ -246,7 +246,8 @@ fwhm: Union[float, np.ndarray], irf: Optional[str] = 'g', eta: Optional[float] =
 
   return (c * V) @ A
 
-def fact_anal_model(model: np.ndarray, exclude: Optional[str] = None, data: Optional[np.ndarray] = None, eps: Optional[np.ndarray] = None):
+def fact_anal_model(model: np.ndarray, exclude: Optional[str] = None, 
+data: Optional[np.ndarray] = None, eps: Optional[np.ndarray] = None):
 
   abs = np.zeros(model.shape[0])
   B = np.copy(model)

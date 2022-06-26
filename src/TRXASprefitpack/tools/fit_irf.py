@@ -137,7 +137,7 @@ def fit_irf():
         num_scan = time_zeros.size
 
     t = np.genfromtxt(f'{prefix}_1.txt')[:, 0]
-    num_data_pts = t.shape[0]
+    num_data_pts = t.size
     data, eps = read_data(prefix, num_scan, num_data_pts, 10)
 
     print(f'fitting with {num_scan} data set!\n')
