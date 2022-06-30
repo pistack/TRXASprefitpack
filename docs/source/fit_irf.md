@@ -2,7 +2,11 @@
 
 fit irf: fitting shape of instrumental response function
 There are three irf shapes are avaliable.
-1. gaussian 2. cauchy(lorenzian) 3. pseudo voigt shape
+
+1. gaussian
+2. cauchy(lorenzian)
+3. pseudo voigt shape
+
 It uses lmfit python package to fit experimentally measured instrumental response function to three model irf shape.
 
 ```{Note}
@@ -45,29 +49,3 @@ It uses lmfit python package to fit experimentally measured instrumental respons
   * --slow                use slower but robust global optimization algorithm
   * -o OUT, --out OUT     prefix for output files
 
-## Parameter bound scheme
-
-* fwhm: temporal width of x-ray pulse
-  * lower bound: 0.5*fwhm_init
-  * upper bound: 2*fwhm_init
-
-* t_0: centre or timezero for each scan
-  * lower bound: t_0 - 2*fwhm_init
-  * upper bound: t_0 + 2*fwhm_init
-
-## Mixing parameter eta
-
-For pseudo voigt IRF function, mixing parameter eta is guessed to
-
-\begin{equation*}
-\eta = 1.36603({fwhm}_L/f)-0.47719({fwhm}_L/f)^2+0.11116({fwhm}_L/f)^3
-\end{equation*}
-
-where
-\begin{align*}
-f &= ({fwhm}_G^5+2.69269{fwhm}_G^4{fwhm}_L+2.42843{fwhm}_G^3{fwhm}_L^2 \\
-  &+ 4.47163{fwhm}_G^2{fwhm}_L^3+0.07842{fwhm}_G{fwhm}_L^4 \\
-  &+ {fwhm}_L^5)^{1/5}
-\end{align*}
-
-This guess is according to [J. Appl. Cryst. (2000). **33**, 1311-1316](https://doi.org/10.1107/S0021889800010219)

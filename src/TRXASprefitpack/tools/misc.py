@@ -17,8 +17,10 @@ def set_bound_tau(tau: float):
      list of upper bound and lower bound of tau
     '''
     bound = [tau/2, 1]
-    if 0.1 < tau <= 10:
-        bound = [0.05, 100]
+    if 0.1 < tau <= 1:
+        bound = [0.05, 10]
+    elif 1 < tau <= 10:
+        bound = [0.5, 50]
     elif 10 < tau <= 100:
         bound = [5, 500]
     elif 100 < tau <= 1000:
