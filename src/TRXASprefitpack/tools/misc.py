@@ -17,8 +17,10 @@ def set_bound_tau(tau: float):
      list of upper bound and lower bound of tau
     '''
     bound = [tau/2, 1]
-    if 0.1 < tau <= 10:
-        bound = [0.05, 100]
+    if 0.1 < tau <= 1:
+        bound = [0.05, 10]
+    elif 1 < tau <= 10:
+        bound = [0.5, 50]
     elif 10 < tau <= 100:
         bound = [5, 500]
     elif 100 < tau <= 1000:
@@ -148,3 +150,41 @@ def contribution_table(scan_name: str, table_title: str, num_scan: int, num_comp
     
     cont_table = f'[[{table_title}]]' + '\n' + cont_table
     return cont_table
+
+def parse_matrix(mat_str: np.ndarray, tau: np.ndarray) -> np.ndarray:
+    '''
+    Parse user supplied rate equation matrix
+
+    Args:
+     mat_str: user supplied rate equation (lower triangular matrix)
+     tau: life time constants (inverse of rate constant)
+    
+    Return:
+     parsed rate equation matrix.
+    
+    Note:
+     Every entry in the rate equation matrix should be
+     '0', '1*ki', '-x.xxx*ki', 'x.xxx*ki' or '-(x.xxx*ki+y.yyy*kj+...)'
+    '''
+
+    L = np.zeros_like(mat_str, dtype=float)
+    mask = (mat_str != '0')
+    red_mat_str = mat_str[mask]
+    red_L = np.zeros_like(red_mat_str, dtype=float)
+
+    for i in range(red_mat_str.size):
+        tmp = red_mat_str[i]
+        if '-' in tmp:
+            tmp = tmp.strip('-')
+            tmp = tmp.strip('('); tmp = tmp.strip(')')
+            k_lst = tmp.split('+')
+            for k in k_lst:
+                k_pair = k.split('*')
+                red_L[i] = red_L[i] - float(k_pair[0])/tau[int(k_pair[1][1:])-1]
+        else:
+            tmp_pair = tmp.split('*')
+            red_L[i] = float(tmp_pair[0])/tau[int(tmp_pair[1][1:])-1]
+    
+    L[mask] = red_L
+    
+    return L

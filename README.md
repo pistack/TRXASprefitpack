@@ -19,12 +19,14 @@ Licence: LGPL3
 ## Features
 
 * Utilites
-  1. broadening: broad theoretically calculated line shape spectrum with voigt profile
-  2. fit_static: fitting theoretically calculated line shape spectrum with experimental spectrum
-  3. fit_irf: Find irf parameter of experimental measured irf function
-  4. fit_tscan: Find lifetime constants of experimental time trace spectrum
-  5. fit_seq: fitting experimental time trace spectrum with 1st order sequential decay dynamics
-  6. fit_osc: fitting residual of experimental time trace with damped oscilliation
+
+1. broadening: broaden theoretically calculated line shape spectrum with voigt profile 
+2. fit_static: fitting theoretically calculated line shape spectrum with experimental spectrum
+3. fit_irf: Find irf parameter of experimental measured irf function
+4. fit_tscan: Find lifetime constants of experimental time trace spectrum
+5. fit_seq: fitting experimental time trace spectrum with 1st order sequential decay dynamics 
+6. fit_eq: fitting experimental time trace spectrum by 1st order rate equation matrix supplied from user
+7. fit_osc: fitting residual of experimental time trace spectrum with damped oscilliaton 
 
 * libraries
   1. Compute convolution of exponential decay and gaussian, cauchy function analytically.

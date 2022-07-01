@@ -7,9 +7,10 @@ the solution and signal
 :license: LGPL3.
 '''
 
-from typing import Tuple
+from typing import Optional, Tuple, Union
 import numpy as np
 import scipy.linalg as LA  # replace numpy.linalg to scipy.linalg
+from .irf import calc_eta
 from .A_matrix import make_A_matrix, make_A_matrix_cauchy
 from .A_matrix import make_A_matrix_gau, make_A_matrix_pvoigt
 
@@ -55,15 +56,18 @@ def solve_l_model(equation: np.ndarray,
     eigval = np.diagonal(equation)
     V = np.eye(eigval.size)
     c = np.zeros(eigval.size)
+    tmp = np.zeros(eigval.size)
 
     for i in range(1, eigval.size):
-      V[i, :i] = equation[i,:i] @ V[:i,:i]/(eigval[:i]-eigval[i])
+      tmp[:i] = eigval[:i]-eigval[i]
+      tmp[:i][tmp[:i] == 0] = 1
+      V[i, :i] = equation[i,:i] @ V[:i,:i]/tmp[:i]
 
     c[0] = y0[0]
     for i in range(1, eigval.size):
       c[i] = y0[i] - np.dot(c[:i], V[i,:i])
 
-    return eigval.real, V, c
+    return eigval, V, c
 
 def solve_seq_model(tau):
     '''
@@ -223,3 +227,56 @@ def compute_signal_pvoigt(t: np.ndarray,
     A = make_A_matrix_pvoigt(t, fwhm_G, fwhm_L, eta, -eigval)
     y_signal = (c * V) @ A
     return y_signal
+
+def compute_signal_irf(t: np.ndarray, eigval: np.ndarray, V: np.ndarray, c: np.ndarray, 
+fwhm: Union[float, np.ndarray], irf: Optional[str] = 'g', eta: Optional[float] = None):
+
+  if irf == 'g':
+    A = make_A_matrix_gau(t, fwhm, -eigval)
+
+  elif irf == 'c':
+    A = make_A_matrix_cauchy(t, fwhm, -eigval)
+
+  elif irf == 'pv':
+
+    if eta is None:
+      eta = calc_eta(fwhm[0], fwhm[1])
+
+    A = make_A_matrix_pvoigt(t, fwhm[0], fwhm[1], eta, -eigval)
+
+  return (c * V) @ A
+
+def fact_anal_model(model: np.ndarray, exclude: Optional[str] = None, 
+data: Optional[np.ndarray] = None, eps: Optional[np.ndarray] = None):
+
+  abs = np.zeros(model.shape[0])
+  B = np.copy(model)
+  y = np.copy(data)
+
+  if eps is None:
+    eps = np.ones_like(data)
+  
+  y = y/eps
+
+  if exclude == 'first':
+    C = np.einsum('j,ij->ij', 1/eps, B[1:, :])
+  elif exclude == 'last':
+    C = np.einsum('j,ij->ij', 1/eps, B[:-1,:])
+  elif exclude == 'first_and_last':
+    C = np.einsum('j,ij->ij', 1/eps, B[1:-1,:])
+  else:
+    C = np.einsum('j,ij->ij', 1/eps, B)
+  
+  coeff, _, _, _  = LA.lstsq(C.T, y)
+
+  if exclude == 'first':
+    abs[1:] = coeff
+  elif exclude == 'last':
+    abs[:-1] = coeff
+  elif exclude == 'first_and_last':
+    abs[1:-1] = coeff
+  else:
+    abs = coeff
+
+  return abs
+

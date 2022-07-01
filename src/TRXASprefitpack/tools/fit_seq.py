@@ -9,6 +9,7 @@
 
 import argparse
 import numpy as np
+from ..mathfun.rate_eq import compute_signal_irf, fact_anal_model
 from ..mathfun import solve_seq_model, rate_eq_conv, fact_anal_rate_eq_conv
 from .misc import set_bound_tau, read_data, contribution_table, plot_result
 from lmfit import Parameters, fit_report, minimize
@@ -89,10 +90,9 @@ def fit_seq():
         chi = np.zeros((data.shape[0], data.shape[1]))
         for i in range(data.shape[1]):
             t0 = params[f't_0_{i+1}']
-            abs = fact_anal_rate_eq_conv(t-t0, fwhm, eigval, V, c, exclude, irf=irf,
-                                   data=data[:, i], eps=eps[:, i])
-            chi[:, i] = data[:, i] - \
-                rate_eq_conv(t-t0, fwhm, abs, eigval, V, c, irf=irf)
+            model = compute_signal_irf(t-t0, eigval, V, c, fwhm, irf)
+            abs = fact_anal_model(model, exclude, data[:, i], eps[:, i])
+            chi[:, i] = data[:, i] - (abs @ model)
         chi = chi.flatten()/eps.flatten()
 
         return chi
@@ -186,7 +186,7 @@ def fit_seq():
         num_scan = time_zeros.size
 
     t = np.genfromtxt(f'{prefix}_1.txt')[:, 0]
-    num_data_pts = t.shape[0]
+    num_data_pts = t.size
     data, eps = read_data(prefix, num_scan, num_data_pts, 10)
 
     print(f'fitting with {num_scan} data set!\n')
