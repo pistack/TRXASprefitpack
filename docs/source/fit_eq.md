@@ -1,4 +1,4 @@
-# fit_seq
+# fit_eq
 
 fit eq: fitting tscan data using the solution of lower triangular 1st order rate equation covolved with gaussian/cauchy(lorenzian)/pseudo voigt irf function.
 It uses lmfit python module to fitting experimental time trace data to sequential decay module.
@@ -31,24 +31,21 @@ In rate equation model, the ground state would be
 * optional arguments:
   * -h, --help            show this help message and exit
   * -re_mat RATE_EQ_MAT, --rate_eq_mat RATE_EQ_MAT
-                        
                         Filename for user supplied rate equation matrix. 
-                        i th rate constant should be denoted by ki in rate equation matrix file.
+                        ``i`` th rate constant should be denoted by ``ki`` in rate equation matrix file.
                         Moreover rate equation matrix should be lower triangular.
   * -gsi GS_INDEX, --gs_index GS_INDEX
-                        
-                        Index of ground state species.
-                        1. ``first_and_last``, first and last species are both ground state
-                        2. ``first``, first species is ground state
-                        3. ``last``,  last species is ground state
-                        4. Did not set., There is no ground state species in model equation.
+    * Index of ground state species.
+    1. ``first_and_last``, first and last species are both ground state
+    2. ``first``, first species is ground state
+    3. ``last``,  last species is ground state
+    4. Did not set., There is no ground state species in model rate equation.
   * --irf {g,c,pv}        
-                        shape of instrument response functon
-                        1. g: gaussian distribution
-                        2. c: cauchy distribution
-                        3. pv: pseudo voigt profile, linear combination of gaussian distribution and cauchy distribution 
-                            pv = eta*c+(1-eta)*g 
-                            the mixing parameter is fixed according to Journal of Applied Crystallography. 33 (6): 1311–1316. 
+    * shape of instrument response functon
+    1. g: gaussian distribution
+    2. c: cauchy distribution
+    3. pv: pseudo voigt profile, linear combination of gaussian distribution and cauchy distribution pv = eta*c+(1-eta)*g 
+       the mixing parameter is fixed according to Journal of Applied Crystallography. 33 (6): 1311–1316. 
   * --fwhm_G FWHM_G       
                         full width at half maximum for gaussian shape
                         It would not be used when you set cauchy irf function
@@ -72,7 +69,7 @@ User supplied rate equation matrix should have following format.
 
 ### Example 1. Sequential Decay
 
-```{python}
+```python
 A -> B -> C -> D
 ```
 
@@ -87,7 +84,7 @@ A -> B -> C -> D
 
 ### Example 2. Branched Decay
 
-```{python}
+```python
 A -> B -> D
   -> C -> D
 ```
@@ -99,5 +96,15 @@ A -> B -> D
 0 & 1*k3 & 1*k4 & 0
 \end{matrix}
 
-Note that the eigenvalues of Branched Decay are $-(k_1+k_2),\ -k_3,\ -k_4,\ 0$. That is the model signal deduced by branched decay is represented by sum of four exponential decay component $\{\exp\left(-(k_1+k_2)t\right), \exp\left(-k_3t\right), \exp\left(-k_4t\right), 1\}$.
+Note that the eigenvalues of Branched Decay are $-(k_1+k_2),\ -k_3,\ -k_4,\ 0$. That is the model signal deduced by branched decay is represented by sum of four exponential decay component $\{\exp\left(-(k_1+k_2)t\right), \exp\left(-k_3t\right), \exp\left(-k_4t\right), 1\}$. Therefore time scan fitting does not distinguish branched decay and sequential decay with rate constant $k'_1 = k_1+k_2$, $k'_2 = k_3$, $k'_3 = k_4$ and $k'_4 = 0$. Because of this, in time scan fitting, $k_1$ and $k_2$ in branched decay are highly correlated so that one cannot directly determine ratio between $k_1$ and $k_2$.
+
+However if one knows difference absorption coefficient of each species or ratio of $k_1$ and $k_2$ from other experiments, they want to fix $k_2=r*k_1$ then user can give following rate equation matrix.
+
+For example $r=0.8$,
+\begin{matrix}
+-(1*k1+0.8*k1) & 0 & 0 & 0 \\
+1*k1 & -1*k2 & 0 & 0 \\
+0.8*k1 & 0 & -1*k3 & 0 \\
+0 & 1*k2 & 1*k3 & 0
+\end{matrix}
 
