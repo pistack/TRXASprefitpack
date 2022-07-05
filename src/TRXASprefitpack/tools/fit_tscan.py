@@ -25,13 +25,15 @@ epilog = '''
 *Note
 
 1. The number of time zero parameter should be same as the
-   number of scan to fit.
+   total number of scan to fit.
 
-2. if you set shape of irf to pseudo voigt (pv), then
+2. Every scan file whose prefix of filename is same should have same scan range
+
+3. if you set shape of irf to pseudo voigt (pv), then
    you should provide two full width at half maximum
    value for gaussian and cauchy parts, respectively.
 
-3. If you did not set tau then it assume you finds the
+4. If you did not set tau then it assume you finds the
    timezero of this scan. So, --no_base option is discouraged.
 '''
 
@@ -86,9 +88,11 @@ def fit_tscan():
                         help=fwhm_G_help)
     parser.add_argument('--fwhm_L', type=float,
                         help=fwhm_L_help)
-    parser.add_argument('prefix',
+    parser.add_argument('prefix', nargs='+',
                         help='prefix for tscan files ' +
                         'It will read prefix_i.txt')
+    parser.add_argument('--num_file', type=int, nargs='+',
+                         help='number of scan file corresponding to each prefix')
     parser.add_argument('-t0', '--time_zeros', type=float, nargs='+',
                         help='time zeros for each tscan')
     parser.add_argument('-t0f', '--time_zeros_file',
@@ -101,13 +105,12 @@ def fit_tscan():
     help='fix irf parameter (fwhm_G, fwhm_L) during fitting process')
     parser.add_argument('--slow', action='store_true',
     help='use slower but robust global optimization algorithm')
-    parser.add_argument('-o', '--out', default=None,
+    parser.add_argument('-o', '--out', default='out',
                         help='prefix for output files')
     args = parser.parse_args()
 
     prefix = args.prefix
-    if args.out is None:
-        args.out = prefix
+    num_file = args.num_file
     out_prefix = args.out
 
     irf = args.irf
@@ -152,12 +155,16 @@ def fit_tscan():
     else:
         time_zeros = np.array(args.time_zeros)
         num_scan = time_zeros.size
+    
+    t = []; data = []; eps = []; num_scan = 0
+    for p,n in zip(prefix, num_file):
+        num_scan = num_scan + n
+        t_aux = np.genfromtxt(f'{p}_1.txt')[:, 0]
+        num_data_pts = t.size
+        data_aux, eps_aux = read_data(p, n, num_data_pts, 10)
+        t.append(t_aux); data.append(data_aux); eps.append(eps_aux)
 
-    t = np.genfromtxt(f'{prefix}_1.txt')[:, 0]
-    num_data_pts = t.size
-    data, eps = read_data(prefix, num_scan, num_data_pts, 10)
-
-    print(f'fitting with {num_scan} data set!\n')
+    print(f'fitting with total {num_scan} data set!\n')
     fit_params = Parameters()
     if irf in ['g', 'c']:
         fit_params.add('fwhm', value=fwhm,
@@ -167,10 +174,13 @@ def fit_tscan():
                        min=0.5*args.fwhm_G, max=2*args.fwhm_G, vary=(not args.fix_irf))
         fit_params.add('fwhm_L', value=args.fwhm_L,
                        min=0.5*args.fwhm_L, max=2*args.fwhm_L, vary=(not args.fix_irf))
-    for i in range(num_scan):
-        fit_params.add(f't_0_{i+1}', value=time_zeros[i],
-                       min=time_zeros[i]-2*fwhm,
-                       max=time_zeros[i]+2*fwhm)
+    count = 0
+    for p, n in zip(prefix, num_file):
+        for i in range(n):
+            fit_params.add(f't_0_{p}_{i+1}', value=time_zeros[count+i],
+            min=time_zeros[count+i]-2*fwhm,
+            max=time_zeros[count+i]+2*fwhm)
+        count = count + n
 
     if not find_zero:
         for i in range(num_comp):
@@ -180,76 +190,93 @@ def fit_tscan():
 
     # Second initial guess using global optimization algorithm
     if args.slow: 
-        out = minimize(residual, fit_params, method='ampgo', calc_covar=False,
+        opt = minimize(residual, fit_params, method='ampgo', calc_covar=False,
         args=(t, num_comp, base, irf),
         kws={'data': data, 'eps': eps})
     else:
-        out = minimize(residual, fit_params, method='nelder', calc_covar=False,
+        opt = minimize(residual, fit_params, method='nelder', calc_covar=False,
         args=(t, num_comp, base, irf),
         kws={'data': data, 'eps': eps})
 
     # Then do Levenberg-Marquardt
-    out = minimize(residual, out.params,
+    opt = minimize(residual, opt.params,
                    args=(t, num_comp, base),
                    kws={'data': data, 'eps': eps, 'irf': irf})
 
-    chi2_ind = residual(out.params, t, num_comp, base,
+    res = residual(opt.params, t, num_comp, base,
                         irf, data=data, eps=eps)
-    chi2_ind = chi2_ind.reshape(data.shape)
-    chi2_ind = np.sum(chi2_ind**2, axis=0)/(data.shape[0]-len(out.params))
+    
+    # Calc individual chi2
+    start = 0; end = 0; chi2_ind = []
+    for i in range(len(data)):
+        end = start + data[i].size
+        res_aux = res[start:end].reshape(data[i].shape)
+        chi2_ind_aux = np.sum(res_aux**2, axis=0)/(data[i].shape[0]-len(opt.params))
+        chi2_ind.append(chi2_ind_aux)
+        start = end
 
-    fit = np.zeros((data.shape[0], data.shape[1]+1))
-    res = np.zeros((data.shape[0], data.shape[1]+1))
-    fit[:, 0] = t
-    res[:, 0] = t
+    fit = []; res = []
+    for i in len(data):
+        fit_aux = np.zeros((data[i].shape[0], data[i].shape[1]+1))
+        res_aux = np.zeros((data[i].shape[0], data[i].shape[1]+1))
+        fit_aux[:, 0] = t[i]
+        res_aux[:, 0] = t[i]
+        fit.append(fit_aux); res.append(res_aux)
 
     if irf in ['g', 'c']:
-        fwhm_opt = out.params['fwhm']
+        fwhm_opt = opt.params['fwhm']
     else:
-        tmp_G = out.params['fwhm_G']
-        tmp_L = out.params['fwhm_L']
+        tmp_G = opt.params['fwhm_G']
+        tmp_L = opt.params['fwhm_L']
         fwhm_opt = np.array([tmp_G, tmp_L])
 
     tau_opt = np.zeros(num_comp)
     for j in range(num_comp):
-        tau_opt[j] = out.params[f'tau_{j+1}']
+        tau_opt[j] = opt.params[f'tau_{j+1}']
 
     if base:
         c = np.zeros((num_comp+1, num_scan))
     else:
         c = np.zeros((num_comp, num_scan))
-    for i in range(num_scan):
-        c[:, i] = fact_anal_exp_conv(t-out.params[f't_0_{i+1}'],
-                                     fwhm_opt,
-                                     tau_opt,
-                                     data=data[:, i],
-                                     eps=eps[:, i],
-                                     base=base, irf=irf)
-        fit[:, i+1] = model_n_comp_conv(t-out.params[f't_0_{i+1}'],
-        fwhm_opt, tau_opt, c[:, i], base, irf=irf)
     
-    res[:, 1:] = data - fit[:, 1:]
-    
-    contrib_table = contribution_table('tscan', 'Component Contribution',
-    num_scan, num_comp, c)
+    c = []
+    for i in range(len(prefix)):
+        if base:
+            c_aux = np.zeros((num_comp+1, num_file[i]))
+        else:
+            c_aux = np.zeros((num_comp, num_file[i]))
+        
+        for j in range(num_file[i]):
+            c_aux[:, j] = fact_anal_exp_conv(t[i]-opt.parms[f't_0_{j+1}'],
+            fwhm_opt, tau_opt, data=data[i][:, j], eps=eps[i][:, j], base=base, irf=irf)
+            fit[i][:, j] = model_n_comp_conv(t-opt.params[f't_0_{j+1}'],
+            fwhm_opt, tau_opt, c[:, j], base, irf)
+        c.append(c_aux)
+        res[i][:, 1:] = data[i] - fit[i][:, 1:]
+    contrib_table = ''
+    for i in range(len(prefix)):
+        contrib_table = contrib_table + '\n' + \
+            contribution_table('tscan', f'Component Contribution of {prefix}',
+            num_file[i], num_comp, c[i])
 
-    fit_content = fit_report(out) + '\n' + contrib_table
+    fit_content = fit_report(opt) + contrib_table
 
     print(fit_content)
 
     f = open(out_prefix+'_fit_report.txt', 'w')
     f.write(fit_content)
     f.close()
-
-    np.savetxt(out_prefix+'_fit.txt', fit)
-    np.savetxt(out_prefix+'_c.txt', c)
+    for p in prefix:
+        np.savetxt(f'{out_prefix}_{p}_fit.txt', fit[i])
+        np.savetxt(f'{out_prefix}_{p}_c.txt', c[i])
 
     # save residual of individual fitting 
-
-    for i in range(data.shape[1]):
-        res_ind = np.vstack((res[:, 0], res[:, i+1], eps[:, i]))
-        np.savetxt(out_prefix+f'_res_{i+1}.txt', res_ind.T)
-
-    plot_result('tscan', num_scan, chi2_ind, data, eps, fit, res)
+    for i in range(len(prefix)):
+        for j in range(data[i].shape[1]):
+            res_ind = np.vstack((res[i][:, 0], res[i][:, j+1], eps[i][:, j]))
+            np.savetxt(f'out_prefix_{p}_res_{i+1}.txt', res_ind.T)
+    
+    for i in range(len(prefix)):
+        plot_result(f'tscan_{prefix[i]}', num_file[i], chi2_ind[i], data[i], eps[i], fit[i], res[i])
 
     return
