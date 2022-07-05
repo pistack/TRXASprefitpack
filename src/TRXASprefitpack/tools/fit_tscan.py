@@ -67,16 +67,20 @@ def fit_tscan():
         tau = np.zeros(num_comp)
         for i in range(num_comp):
             tau[i] = params[f'tau_{i+1}']
-        chi = np.empty(0)
+        sum = 0
         for i in range(len(prefix)):
-            chi_aux = np.zeros_like(data[i])
+            sum = sum + data[i].size
+        chi = np.empty(sum)
+        start = 0; end = 0
+        for i in range(len(prefix)):
             for j in range(data[i].shape[1]):
                 t0 = params[f't_0_{prefix[i]}_{j+1}']
-                A = make_A_matrix_exp(t-t0, fwhm, tau, base, irf)
+                A = make_A_matrix_exp(t[i]-t0, fwhm, tau, base, irf)
                 c = fact_anal_A(A, data[i][:,j], eps[i][:,j])
-                chi_aux[:, j] = data[i][:, j] - (c@A)
-            chi_aux = chi_aux.flatten()/eps[i].flatten()
-            chi = np.hstack((chi, chi_aux))
+                chi[end:end+data[i].shape[0]] = data[i][:, j] - (c@A)
+                end = end + data[i].shape[0]
+            chi[start:end] = chi[start:end]/eps[i].flatten()
+            start = end
         return chi
 
     tmp = argparse.RawTextHelpFormatter
@@ -156,14 +160,15 @@ def fit_tscan():
     else:
         time_zeros = np.array(args.time_zeros)
         num_scan = time_zeros.size
-    
-    t = []; data = []; eps = []; num_scan = 0
-    for p,n in zip(prefix, num_file):
-        num_scan = num_scan + n
-        t_aux = np.genfromtxt(f'{p}_1.txt')[:, 0]
-        num_data_pts = t.size
-        data_aux, eps_aux = read_data(p, n, num_data_pts, 10)
-        t.append(t_aux); data.append(data_aux); eps.append(eps_aux)
+    t = np.empty(len(prefix), dtype=object)
+    data = np.empty(len(prefix), dtype=object)
+    eps = np.empty(len(prefix), dtype=object)
+    num_scan = 0
+    for i in range(len(prefix)):
+        num_scan = num_scan + num_file[i]
+        t[i] = np.genfromtxt(f'{prefix[i]}_1.txt')[:, 0]
+        num_data_pts = t[i].size
+        data[i], eps[i] = read_data(prefix[i], num_file[i], num_data_pts, 10)
 
     print(f'fitting with total {num_scan} data set!\n')
     fit_params = Parameters()
@@ -204,25 +209,11 @@ def fit_tscan():
                    args=(t, prefix, num_comp, base),
                    kws={'data': data, 'eps': eps, 'irf': irf})
 
-    res = residual(opt.params, t, prefix, num_comp, base,
-                        irf, data=data, eps=eps)
-    
-    # Calc individual chi2
-    start = 0; end = 0; chi2_ind = []
-    for i in range(len(data)):
-        end = start + data[i].size
-        res_aux = res[start:end].reshape(data[i].shape)
-        chi2_ind_aux = np.sum(res_aux**2, axis=0)/(data[i].shape[0]-len(opt.params))
-        chi2_ind.append(chi2_ind_aux)
-        start = end
-
-    fit = []; res = []
-    for i in len(data):
-        fit_aux = np.zeros((data[i].shape[0], data[i].shape[1]+1))
-        res_aux = np.zeros((data[i].shape[0], data[i].shape[1]+1))
-        fit_aux[:, 0] = t[i]
-        res_aux[:, 0] = t[i]
-        fit.append(fit_aux); res.append(res_aux)
+    fit = np.empty(len(prefix), dtype=object); res = np.empty(len(prefix), dtype=object)
+    for i in range(len(prefix)):
+        fit[i] = np.zeros((data[i].shape[0], data[i].shape[1]+1))
+        res[i] = np.zeros((data[i].shape[0], data[i].shape[1]+1))
+        fit[i][:, 0] = t[i]; res[i][:, 0] = t[i]
 
     if irf in ['g', 'c']:
         fwhm_opt = opt.params['fwhm']
@@ -235,29 +226,39 @@ def fit_tscan():
     for j in range(num_comp):
         tau_opt[j] = opt.params[f'tau_{j+1}']
 
-    if base:
-        c = np.zeros((num_comp+1, num_scan))
-    else:
-        c = np.zeros((num_comp, num_scan))
+    # Calc individual chi2
+    chi = residual(opt.params, t, prefix, num_comp, base,
+                        irf, data=data, eps=eps)
     
-    c = []
+    start = 0; end = 0; chi2_ind = np.empty(len(prefix), dtype=object)
+
+    for i in range(len(prefix)):
+        end = start + data[i].size
+        chi_aux = chi[start:end].reshape(data[i].shape)
+        if irf == 'pv':
+            chi2_ind_aux = np.sum(chi_aux**2, axis=0)/(data[i].shape[0]-(tau_opt.size+3))
+        else:
+            chi2_ind_aux = np.sum(chi_aux**2, axis=0)/(data[i].shape[0]-(tau_opt.size+2))
+        chi2_ind[i] = chi2_ind_aux
+        start = end
+    
+    c = np.empty(len(prefix), dtype=object)
     for i in range(len(prefix)):
         if base:
-            c_aux = np.zeros((num_comp+1, num_file[i]))
+            c[i] = np.zeros((num_comp+1, num_file[i]))
         else:
-            c_aux = np.zeros((num_comp, num_file[i]))
+            c[i] = np.zeros((num_comp, num_file[i]))
         
         for j in range(num_file[i]):
-            c_aux[:, j] = fact_anal_exp_conv(t[i]-opt.parms[f't_0_{j+1}'],
+            c[i][:, j] = fact_anal_exp_conv(t[i]-opt.params[f't_0_{prefix[i]}_{j+1}'],
             fwhm_opt, tau_opt, data=data[i][:, j], eps=eps[i][:, j], base=base, irf=irf)
-            fit[i][:, j] = model_n_comp_conv(t-opt.params[f't_0_{j+1}'],
-            fwhm_opt, tau_opt, c[:, j], base, irf)
-        c.append(c_aux)
+            fit[i][:, j+1] = model_n_comp_conv(t[i]-opt.params[f't_0_{prefix[i]}_{j+1}'],
+            fwhm_opt, tau_opt, c[i][:, j], base, irf)
         res[i][:, 1:] = data[i] - fit[i][:, 1:]
     contrib_table = ''
     for i in range(len(prefix)):
         contrib_table = contrib_table + '\n' + \
-            contribution_table('tscan', f'Component Contribution of {prefix}',
+            contribution_table('tscan', f'Component Contribution of {prefix[i]}',
             num_file[i], num_comp, c[i])
 
     fit_content = fit_report(opt) + contrib_table
@@ -275,7 +276,7 @@ def fit_tscan():
     for i in range(len(prefix)):
         for j in range(data[i].shape[1]):
             res_ind = np.vstack((res[i][:, 0], res[i][:, j+1], eps[i][:, j]))
-            np.savetxt(f'out_prefix_{p}_res_{i+1}.txt', res_ind.T)
+            np.savetxt(f'{out_prefix}_{prefix[i]}_res_{j+1}.txt', res_ind.T)
     
     for i in range(len(prefix)):
         plot_result(f'tscan_{prefix[i]}', num_file[i], chi2_ind[i], data[i], eps[i], fit[i], res[i])
