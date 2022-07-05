@@ -43,7 +43,7 @@ def exp_conv_gau(t: Union[float, np.ndarray], fwhm: float,
     else:
         mask = z > 0
         inv_mask = np.invert(mask)
-        ans = np.zeros(t.shape[0], dtype=np.float64)
+        ans = np.empty(t.size, dtype=np.float64)
         ans[mask] = 1/2*np.exp(-(t[mask]/sigma)**2/2) * \
             erfcx(z[mask]/np.sqrt(2))
         ans[inv_mask] = 1/2*np.exp(ksigma*z[inv_mask]-ksigma**2/2) * \
@@ -90,7 +90,7 @@ def exp_conv_cauchy(t: Union[float, np.ndarray],
             mask = np.abs(kt) < 200
             inv_mask = np.invert(mask)
 
-            ans = np.zeros(t.shape[0], dtype=np.float64)
+            ans = np.empty(t.size, dtype=np.float64)
             inv_z = 1/(kt[inv_mask]+ikgamma)
 
             # abs(kt) < 200
@@ -168,7 +168,7 @@ k: float, T: float, phase: float) -> Union[float, np.ndarray]:
     else:
         mask = z.real > 0
         inv_mask = np.invert(mask)
-        ans = np.zeros(t.shape[0], dtype=np.complex128)
+        ans = np.empty(t.size, dtype=np.complex128)
         ans[mask] = 1/2*np.exp(-(t[mask]/sigma)**2/2) * \
             wofz(z[mask]/complex(0, -np.sqrt(2)))
         ans[inv_mask] = np.exp(sigmak_cplx*z[inv_mask]-sigmak_cplx**2/2) - \
@@ -214,8 +214,8 @@ k: float, T: float, phase: float) -> Union[float, np.ndarray]:
             ans2 = exp1x_asymp(-1/z2)*complex(-np.cos(phase), np.sin(phase))
     
     else:
-        ans1 = np.zeros_like(t, dtype=np.complex128)
-        ans2 = np.zeros_like(t, dtype=np.complex128)
+        ans1 = np.empty(t.size, dtype=np.complex128)
+        ans2 = np.empty(t.size, dtype=np.complex128)
         mask1 = np.abs(z1.real) < 200; inv_mask1 = np.invert(mask1)
         mask2 = np.abs(z2.real) < 200; inv_mask2 = np.invert(mask2)
 

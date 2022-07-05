@@ -64,7 +64,7 @@ def fit_tscan():
             fwhm = params['fwhm']
         else:
             fwhm = np.array([params['fwhm_G'], params['fwhm_L']])
-        tau = np.zeros(num_comp)
+        tau = np.empty(num_comp, dtype=float)
         for i in range(num_comp):
             tau[i] = params[f'tau_{i+1}']
         sum = 0
@@ -211,8 +211,8 @@ def fit_tscan():
 
     fit = np.empty(len(prefix), dtype=object); res = np.empty(len(prefix), dtype=object)
     for i in range(len(prefix)):
-        fit[i] = np.zeros((data[i].shape[0], data[i].shape[1]+1))
-        res[i] = np.zeros((data[i].shape[0], data[i].shape[1]+1))
+        fit[i] = np.empty((data[i].shape[0], data[i].shape[1]+1))
+        res[i] = np.empty((data[i].shape[0], data[i].shape[1]+1))
         fit[i][:, 0] = t[i]; res[i][:, 0] = t[i]
 
     if irf in ['g', 'c']:
@@ -245,9 +245,9 @@ def fit_tscan():
     c = np.empty(len(prefix), dtype=object)
     for i in range(len(prefix)):
         if base:
-            c[i] = np.zeros((num_comp+1, num_file[i]))
+            c[i] = np.empty((num_comp+1, num_file[i]))
         else:
-            c[i] = np.zeros((num_comp, num_file[i]))
+            c[i] = np.empty((num_comp, num_file[i]))
         
         for j in range(num_file[i]):
             c[i][:, j] = fact_anal_exp_conv(t[i]-opt.params[f't_0_{prefix[i]}_{j+1}'],

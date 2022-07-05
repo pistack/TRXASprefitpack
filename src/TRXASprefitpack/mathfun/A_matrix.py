@@ -15,7 +15,7 @@ from .exp_conv_irf import dmp_osc_conv_gau, dmp_osc_conv_cauchy
 
 def make_A_matrix(t: np.ndarray, k: np.ndarray) -> np.ndarray:
 
-    A = np.zeros((k.size, t.size))
+    A = np.empty((k.size, t.size))
     for i in range(k.size):
         A[i, :] = np.exp(-k[i]*t)
     A = A*np.heaviside(t, 1)
@@ -27,7 +27,7 @@ def make_A_matrix(t: np.ndarray, k: np.ndarray) -> np.ndarray:
 def make_A_matrix_gau(t: np.ndarray, fwhm: float,
                       k: np.ndarray) -> np.ndarray:
 
-    A = np.zeros((k.size, t.size))
+    A = np.empty((k.size, t.size))
     for i in range(k.size):
         A[i, :] = exp_conv_gau(t, fwhm, k[i])
 
@@ -37,7 +37,7 @@ def make_A_matrix_gau(t: np.ndarray, fwhm: float,
 def make_A_matrix_cauchy(t: np.ndarray, fwhm: float,
                          k: np.ndarray) -> np.ndarray:
 
-    A = np.zeros((k.size, t.size))
+    A = np.empty((k.size, t.size))
     for i in range(k.size):
         A[i, :] = exp_conv_cauchy(t, fwhm, k[i])
 
@@ -82,7 +82,7 @@ def make_A_matrix_exp(t: np.ndarray,
 def make_A_matrix_gau_osc(t: np.ndarray, fwhm: float,
 k: np.ndarray, T: np.ndarray, phase: np.ndarray) -> np.ndarray:
 
-    A = np.zeros((k.size, t.size))
+    A = np.empty((k.size, t.size))
     for i in range(k.size):
         A[i, :] = dmp_osc_conv_gau(t, fwhm, k[i], T[i], phase[i])
 
@@ -91,7 +91,7 @@ k: np.ndarray, T: np.ndarray, phase: np.ndarray) -> np.ndarray:
 def make_A_matrix_cauchy_osc(t: np.ndarray, fwhm: float,
 k: np.ndarray, T: np.ndarray, phase: np.ndarray) -> np.ndarray:
 
-    A = np.zeros((k.size, t.size))
+    A = np.empty((k.size, t.size))
     for i in range(k.size):
         A[i, :] = dmp_osc_conv_cauchy(t, fwhm, k[i], T[i], phase[i])
 
@@ -126,13 +126,12 @@ def make_A_matrix_dmp_osc(t: np.ndarray, fwhm: Union[float, np.ndarray],
     return A
 
 def fact_anal_A(A: np.ndarray, data: Optional[np.ndarray] = None, eps: Optional[np.ndarray] = None) -> np.ndarray:
-    B = np.copy(A)
-    y = np.copy(data)
+
     if eps is None:
         eps = np.ones_like(data)
     
-    B = np.einsum('j,ij->ij', 1/eps, B)
-    y = y/eps
+    B = np.einsum('j,ij->ij', 1/eps, A)
+    y = data/eps
     
     c, _, _, _ = lstsq(B.T, y)
     return c
