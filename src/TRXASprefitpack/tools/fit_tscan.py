@@ -59,7 +59,7 @@ It would not be used when you did not set irf or use gaussian irf function
 
 def fit_tscan():
 
-    def residual(params, t, num_comp, base, irf, data=None, eps=None):
+    def residual(params, t, prefix, num_comp, base, irf, data=None, eps=None):
         if irf in ['g', 'c']:
             fwhm = params['fwhm']
         else:
@@ -67,15 +67,16 @@ def fit_tscan():
         tau = np.zeros(num_comp)
         for i in range(num_comp):
             tau[i] = params[f'tau_{i+1}']
-        chi = np.zeros((data.shape[0], data.shape[1]))
-        for i in range(data.shape[1]):
-            t0 = params[f't_0_{i+1}']
-            A = make_A_matrix_exp(t-t0, fwhm, tau, base, irf)
-            c = fact_anal_A(A, data[:,i], eps[:,i])
-
-            chi[:, i] = data[:, i] - (c@A)
-        chi = chi.flatten()/eps.flatten()
-
+        chi = np.empty(0)
+        for i in range(len(prefix)):
+            chi_aux = np.zeros_like(data[i])
+            for j in range(data[i].shape[1]):
+                t0 = params[f't_0_{prefix[i]}_{j+1}']
+                A = make_A_matrix_exp(t-t0, fwhm, tau, base, irf)
+                c = fact_anal_A(A, data[i][:,j], eps[i][:,j])
+                chi_aux[:, j] = data[i][:, j] - (c@A)
+            chi_aux = chi_aux.flatten()/eps[i].flatten()
+            chi = np.hstack((chi, chi_aux))
         return chi
 
     tmp = argparse.RawTextHelpFormatter
@@ -191,19 +192,19 @@ def fit_tscan():
     # Second initial guess using global optimization algorithm
     if args.slow: 
         opt = minimize(residual, fit_params, method='ampgo', calc_covar=False,
-        args=(t, num_comp, base, irf),
+        args=(t, prefix, num_comp, base, irf),
         kws={'data': data, 'eps': eps})
     else:
         opt = minimize(residual, fit_params, method='nelder', calc_covar=False,
-        args=(t, num_comp, base, irf),
+        args=(t, prefix, num_comp, base, irf),
         kws={'data': data, 'eps': eps})
 
     # Then do Levenberg-Marquardt
     opt = minimize(residual, opt.params,
-                   args=(t, num_comp, base),
+                   args=(t, prefix, num_comp, base),
                    kws={'data': data, 'eps': eps, 'irf': irf})
 
-    res = residual(opt.params, t, num_comp, base,
+    res = residual(opt.params, t, prefix, num_comp, base,
                         irf, data=data, eps=eps)
     
     # Calc individual chi2
