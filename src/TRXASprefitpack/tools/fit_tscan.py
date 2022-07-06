@@ -68,11 +68,11 @@ def fit_tscan():
         for i in range(num_comp):
             tau[i] = params[f'tau_{i+1}']
         sum = 0
-        for i in range(len(prefix)):
+        for i in range(prefix.size):
             sum = sum + data[i].size
         chi = np.empty(sum)
         start = 0; end = 0
-        for i in range(len(prefix)):
+        for i in range(prefix.size):
             for j in range(data[i].shape[1]):
                 t0 = params[f't_0_{prefix[i]}_{j+1}']
                 A = make_A_matrix_exp(t[i]-t0, fwhm, tau, base, irf)
@@ -114,8 +114,8 @@ def fit_tscan():
                         help='prefix for output files')
     args = parser.parse_args()
 
-    prefix = args.prefix
-    num_file = args.num_file
+    prefix = np.array(args.prefix, dtype=str)
+    num_file = np.array(args.num_file, dtype=int)
     out_prefix = args.out
 
     irf = args.irf
@@ -149,28 +149,28 @@ def fit_tscan():
         find_zero = False
         tau = np.array(args.tau)
         base = args.no_base
-        num_comp = tau.shape[0]
+        num_comp = tau.size
 
     if (args.time_zeros is None) and (args.time_zeros_file is None):
         print('You should set either time_zeros or time_zeros_file!\n')
         return
     elif args.time_zeros is None:
         time_zeros = np.genfromtxt(args.time_zeros_file)
-        num_scan = time_zeros.size
     else:
         time_zeros = np.array(args.time_zeros)
-        num_scan = time_zeros.size
-    t = np.empty(len(prefix), dtype=object)
-    data = np.empty(len(prefix), dtype=object)
-    eps = np.empty(len(prefix), dtype=object)
-    num_scan = 0
-    for i in range(len(prefix)):
-        num_scan = num_scan + num_file[i]
+
+    t = np.empty(prefix.size, dtype=object)
+    data = np.empty(prefix.size, dtype=object)
+    eps = np.empty(prefix.size, dtype=object)
+    num_scan = np.sum(num_file)
+
+    for i in range(prefix.size):
         t[i] = np.genfromtxt(f'{prefix[i]}_1.txt')[:, 0]
         num_data_pts = t[i].size
         data[i], eps[i] = read_data(prefix[i], num_file[i], num_data_pts, 10)
 
     print(f'fitting with total {num_scan} data set!\n')
+
     fit_params = Parameters()
     if irf in ['g', 'c']:
         fit_params.add('fwhm', value=fwhm,
@@ -180,13 +180,14 @@ def fit_tscan():
                        min=0.5*args.fwhm_G, max=2*args.fwhm_G, vary=(not args.fix_irf))
         fit_params.add('fwhm_L', value=args.fwhm_L,
                        min=0.5*args.fwhm_L, max=2*args.fwhm_L, vary=(not args.fix_irf))
+
     count = 0
     for p, n in zip(prefix, num_file):
         for i in range(n):
-            fit_params.add(f't_0_{p}_{i+1}', value=time_zeros[count+i],
-            min=time_zeros[count+i]-2*fwhm,
-            max=time_zeros[count+i]+2*fwhm)
-        count = count + n
+            fit_params.add(f't_0_{p}_{i+1}', value=time_zeros[count],
+            min=time_zeros[count]-2*fwhm,
+            max=time_zeros[count]+2*fwhm)
+            count = count + 1
 
     if not find_zero:
         for i in range(num_comp):
@@ -209,8 +210,8 @@ def fit_tscan():
                    args=(t, prefix, num_comp, base),
                    kws={'data': data, 'eps': eps, 'irf': irf})
 
-    fit = np.empty(len(prefix), dtype=object); res = np.empty(len(prefix), dtype=object)
-    for i in range(len(prefix)):
+    fit = np.empty(prefix.size, dtype=object); res = np.empty(prefix.size, dtype=object)
+    for i in range(prefix.size):
         fit[i] = np.empty((data[i].shape[0], data[i].shape[1]+1))
         res[i] = np.empty((data[i].shape[0], data[i].shape[1]+1))
         fit[i][:, 0] = t[i]; res[i][:, 0] = t[i]
@@ -230,20 +231,17 @@ def fit_tscan():
     chi = residual(opt.params, t, prefix, num_comp, base,
                         irf, data=data, eps=eps)
     
-    start = 0; end = 0; chi2_ind = np.empty(len(prefix), dtype=object)
-
-    for i in range(len(prefix)):
+    start = 0; end = 0; chi2_ind = np.empty(prefix.size, dtype=object)
+    num_param_ind = tau_opt.size+2+1*(irf == 'pv')+1*base
+    for i in range(prefix.size):
         end = start + data[i].size
         chi_aux = chi[start:end].reshape(data[i].shape)
-        if irf == 'pv':
-            chi2_ind_aux = np.sum(chi_aux**2, axis=0)/(data[i].shape[0]-(tau_opt.size+3))
-        else:
-            chi2_ind_aux = np.sum(chi_aux**2, axis=0)/(data[i].shape[0]-(tau_opt.size+2))
+        chi2_ind_aux = np.sum(chi_aux**2, axis=0)/(data[i].shape[0]-num_param_ind)
         chi2_ind[i] = chi2_ind_aux
         start = end
     
-    c = np.empty(len(prefix), dtype=object)
-    for i in range(len(prefix)):
+    c = np.empty(prefix.size, dtype=object)
+    for i in range(prefix.size):
         if base:
             c[i] = np.empty((num_comp+1, num_file[i]))
         else:
@@ -256,7 +254,7 @@ def fit_tscan():
             fwhm_opt, tau_opt, c[i][:, j], base, irf)
         res[i][:, 1:] = data[i] - fit[i][:, 1:]
     contrib_table = ''
-    for i in range(len(prefix)):
+    for i in range(prefix.size):
         contrib_table = contrib_table + '\n' + \
             contribution_table('tscan', f'Component Contribution of {prefix[i]}',
             num_file[i], num_comp, c[i])
@@ -273,12 +271,12 @@ def fit_tscan():
         np.savetxt(f'{out_prefix}_{p}_c.txt', c[i])
 
     # save residual of individual fitting 
-    for i in range(len(prefix)):
+    for i in range(prefix.size):
         for j in range(data[i].shape[1]):
             res_ind = np.vstack((res[i][:, 0], res[i][:, j+1], eps[i][:, j]))
             np.savetxt(f'{out_prefix}_{prefix[i]}_res_{j+1}.txt', res_ind.T)
     
-    for i in range(len(prefix)):
+    for i in range(prefix.size):
         plot_result(f'tscan_{prefix[i]}', num_file[i], chi2_ind[i], data[i], eps[i], fit[i], res[i])
 
     return
