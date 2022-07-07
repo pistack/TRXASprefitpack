@@ -31,7 +31,7 @@ To fitting with residual of time scan data, you should have high quality time sc
 ![png](fit_osc_example_file/example_osc_fit_report.png)
 
 1. From fitting report of previous time delay scan fitting, get full width and half maximum value of irf function and time zero of tscan 2.
-2. Copy ``example_res_2.txt`` to ``example_osc_1.txt``, since we will do residual fitting with time scan 2.
+2. Copy ``out_res_2.txt`` to ``example_osc_1.txt``, since we will do residual fitting with time scan 2.
 3. Type ``fit_osc -h`` to get help message of ``fit_osc``. Detailed descriptions would be found in ``utility`` section.
 4. Type ``fit_osc example_osc --irf g --fwhm_G 0.14 -t0 -0.06 --tau 3 --period 0.4 --phase 0 --fix_irf``. Since oscillation feature may distort time zero, we do not fix time zero value to the value from previous time scan fitting. However you can fix time zero via ``--fix_t0`` option. Optionally you can turn on ``ampgo`` method via ``--slow`` option.
 5. After residual fitting is finished, it prints fitting result and draws plot.

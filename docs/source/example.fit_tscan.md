@@ -16,12 +16,12 @@ These examples are generated from rate equation example section 2. branched deca
 
 ![png](fit_tscan_example_file/example_tscan_fit_comp_table.png)
 
-* Close all fitting result plot windows then ``example_c.txt``, ``example_fit.txt``, ``example_fit_report.txt`` and ``example_res_i.txt`` files will be generated.
+* Close all fitting result plot windows then ``out_c.txt``, ``out_fit.txt``, ``out_fit_report.txt`` and ``out_res_i.txt`` files will be generated.
 
-``example_c.txt`` contains coefficient of each component in each time delay scan
+``out_c.txt`` contains coefficient of each component in each time delay scan
 
-``example_fit.txt`` contains fitting curve of time delay scan
+``out_fit.txt`` contains fitting curve of time delay scan
 
-``example_fit_report.txt`` contains fitting result report.
+``out_fit_report.txt`` contains fitting result report.
 
-``example_res_i.txt`` contains residual of time delay scan (data-fit)
+``out_res_i.txt`` contains residual of time delay scan (data-fit)

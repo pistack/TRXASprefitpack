@@ -16,12 +16,12 @@ These examples are generated from rate equation example section 1. sequential de
 
 ![png](fit_seq_example_file/example_seq_fit_contrib_table.png)
 
-* Close all fitting result plot windows then ``example_abs.txt``, ``example_fit.txt``, ``example_fit_report.txt`` and ``example_res_i.txt`` files will be generated.
+* Close all fitting result plot windows then ``out_abs.txt``, ``out_fit.txt``, ``out_fit_report.txt`` and ``out_res_i.txt`` files will be generated.
 
-``example_abs.txt`` contains  coefficient of each excited states in each time delay scan
+``out_abs.txt`` contains  coefficient of each excited states in each time delay scan
 
-``example_fit.txt`` contains fitting curve of time delay scan
+``out_fit.txt`` contains fitting curve of time delay scan
 
-``example_fit_report.txt`` contains fitting result report.
+``out_fit_report.txt`` contains fitting result report.
 
-``example_res_i.txt`` contains residual of time delay scan (data-fit)
+``out_res_i.txt`` contains residual of time delay scan (data-fit)
