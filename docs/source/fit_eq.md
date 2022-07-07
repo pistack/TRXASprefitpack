@@ -21,8 +21,9 @@ In rate equation model, the ground state would be
 
 ```{Note}
 1. The number of time zero parameter should be same as the number of scan to fit.
-2. The rate equation matrix shoule be lower triangular.
-3. if you set shape of irf to pseudo voigt (pv), then you should provide two full width at half maximum value for gaussian and cauchy parts, respectively.
+2. Every scan file whose prefix of filename is same should have same scan range.
+3. The rate equation matrix shoule be lower triangular.
+4. if you set shape of irf to pseudo voigt (pv), then you should provide two full width at half maximum value for gaussian and cauchy parts, respectively.
 ```
 
 * positional arguments:
@@ -52,6 +53,8 @@ In rate equation model, the ground state would be
   * --fwhm_L FWHM_L       
                         full width at half maximum for cauchy shape
                         It would not be used when you did not set irf or use gaussian irf function
+  * --num_file NUM_FILE [NUM_FILE ...]
+    number of san file corresponding to each prefix
   * -t0 TIME_ZEROS [TIME_ZEROS ...], --time_zeros TIME_ZEROS [TIME_ZEROS ...]
                         time zeros for each tscan
   * -t0f TIME_ZEROS_FILE, --time_zeros_file TIME_ZEROS_FILE

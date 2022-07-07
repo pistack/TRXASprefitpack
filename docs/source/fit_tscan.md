@@ -8,6 +8,7 @@ To calculate the contribution of each life time component, it solve least linear
 ```{Note}
 * The number of time zero parameter should be same as the
   number of scan to fit.
+* Every scan file whose prefix of filename is same should have same scan range
 * If you set shape of irf to pseudo voigt (pv), then
 you should provide two full width at half maximum
 value for gaussian and cauchy parts, respectively.
@@ -38,6 +39,8 @@ timezero of this scan. So, --no_base option is discouraged.
   * --fwhm_L FWHM_L       full width at half maximum for cauchy shape It should
     not used when you did not set irf or use gaussian irf
     function
+  * --num_file NUM_FILE [NUM_FILE ...]
+    number of scan file corresponding to each prefix
   * -t0 TIME_ZEROS [TIME_ZEROS ...], --time_zeros TIME_ZEROS [TIME_ZEROS ...]
     time zeros for each tscan
   * -t0f TIME_ZEROS_FILE, --time_zeros_file TIME_ZEROS_FILE
