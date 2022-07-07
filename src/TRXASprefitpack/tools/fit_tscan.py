@@ -266,9 +266,10 @@ def fit_tscan():
     f = open(out_prefix+'_fit_report.txt', 'w')
     f.write(fit_content)
     f.close()
-    for p in prefix:
-        np.savetxt(f'{out_prefix}_{p}_fit.txt', fit[i])
-        np.savetxt(f'{out_prefix}_{p}_c.txt', c[i])
+
+    for i in range(prefix.size):
+        np.savetxt(f'{out_prefix}_{prefix[i]}_fit.txt', fit[i])
+        np.savetxt(f'{out_prefix}_{prefix[i]}_c.txt', c[i])
 
     # save residual of individual fitting 
     for i in range(prefix.size):
