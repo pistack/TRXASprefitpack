@@ -63,9 +63,9 @@ def fit_osc():
             fwhm = params['fwhm']
         else:
             fwhm = np.array([params['fwhm_G'], params['fwhm_L']])
-        tau = np.zeros(num_comp)
-        T = np.zeros(num_comp)
-        phase = np.zeros(num_comp)
+        tau = np.empty(num_comp)
+        T = np.empty(num_comp)
+        phase = np.empty(num_comp)
         for i in range(num_comp):
             tau[i] = params[f'tau_{i+1}']
             T[i] = params[f'period_{i+1}']

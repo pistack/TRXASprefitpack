@@ -69,7 +69,7 @@ def solve_l_model(equation: np.ndarray,
 
     return eigval, V, c
 
-def solve_seq_model(tau):
+def solve_seq_model(tau: np.ndarray):
     '''
     Solve sequential decay model
     
@@ -87,11 +87,12 @@ def solve_seq_model(tau):
        2. eigenvectors for equation
        3. coefficient to match initial condition
     '''
-    eigval = np.zeros(tau.size+1)
-    c = np.zeros(eigval.size)
+    eigval = np.empty(tau.size+1)
+    c = np.empty(eigval.size)
     V = np.eye(eigval.size)
     
     eigval[:-1] = -1/tau
+    eigval[-1] = 0
 
     for i in range(1, eigval.size):
       V[i, :i] = V[i-1,:i]*eigval[i-1]/(eigval[i]-eigval[:i])
@@ -250,24 +251,22 @@ def fact_anal_model(model: np.ndarray, exclude: Optional[str] = None,
 data: Optional[np.ndarray] = None, eps: Optional[np.ndarray] = None):
 
   abs = np.zeros(model.shape[0])
-  B = np.copy(model)
-  y = np.copy(data)
 
   if eps is None:
     eps = np.ones_like(data)
   
-  y = y/eps
+  y = data/eps
 
   if exclude == 'first':
-    C = np.einsum('j,ij->ij', 1/eps, B[1:, :])
+    B = np.einsum('j,ij->ij', 1/eps, model[1:, :])
   elif exclude == 'last':
-    C = np.einsum('j,ij->ij', 1/eps, B[:-1,:])
+    B = np.einsum('j,ij->ij', 1/eps, model[:-1,:])
   elif exclude == 'first_and_last':
-    C = np.einsum('j,ij->ij', 1/eps, B[1:-1,:])
+    B = np.einsum('j,ij->ij', 1/eps, model[1:-1,:])
   else:
-    C = np.einsum('j,ij->ij', 1/eps, B)
+    B = np.einsum('j,ij->ij', 1/eps, model)
   
-  coeff, _, _, _  = LA.lstsq(C.T, y)
+  coeff, _, _, _  = LA.lstsq(B.T, y, cond=1e-3)
 
   if exclude == 'first':
     abs[1:] = coeff

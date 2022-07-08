@@ -24,7 +24,7 @@ def fit_static():
             c, _, _, _ = LA.lstsq(A.reshape(A.size, 1), y)
             c = np.hstack((c,np.zeros(2)))
         else:
-            A = np.ones((e.shape[0], 3))
+            A = np.ones((e.size, 3))
             A[:, 0] = thy_data
             A[:, 1] = e
             A[:, 0] = A[:, 0]/eps
@@ -38,7 +38,7 @@ def fit_static():
         fwhm_G = params['fwhm_G']
         fwhm_L = params['fwhm_L']
         peak_factor = params['peak_factor']
-        chi = np.zeros(data.shape)
+        chi = np.empty(data.shape)
         thy_data = gen_theory_data(e, peaks, 1, fwhm_G, fwhm_L, peak_factor, policy)
         for i in range(data.shape[1]):
             c = magick(e, thy_data, no_base,
@@ -156,35 +156,36 @@ energy unit for measured static spectrum and theoretically calculated spectrum s
     else:
         fit_params.add('fwhm_G', value=0, vary=False)
         fit_params.add('fwhm_L', value=fwhm, min=fwhm/2, max=2*fwhm, vary=(not args.fix_fwhm_L))
-
-    fit_params.add('peak_factor', value=peak_factor,
-                   min=peak_factor/2,
-                   max=2*peak_factor)
+        
+    if policy == 'scale':
+        fit_params.add('peak_factor', value=peak_factor, min=peak_factor/2, max=2*peak_factor)
+    else:
+        fit_params.add('peak_factor', value=peak_factor, min=-2*np.abs(peak_factor), max=2*np.abs(peak_factor))
 
     # First, Nelder-Mead (if slow use ampgo instead)
     if args.slow:
-        out = minimize(residual, fit_params, method='ampgo', calc_covar=False,
+        opt = minimize(residual, fit_params, method='ampgo', calc_covar=False,
         args=(e, peaks, policy, no_base),
         kws={'data': data, 'eps': eps})
     else:
-        out = minimize(residual, fit_params, method='Nelder', calc_covar=False,
+        opt = minimize(residual, fit_params, method='Nelder', calc_covar=False,
         args=(e, peaks, policy, no_base),
         kws={'data': data, 'eps': eps})
     # Then do Levenberg-Marquardt
-    out = minimize(residual, out.params,
+    opt = minimize(residual, opt.params,
                    args=(e, peaks, policy, no_base),
                    kws={'data': data, 'eps': eps})
 
-    print(fit_report(out))
-    chi2_ind = residual(out.params, e, peaks, policy, no_base, data=data, eps=eps)
+    print(fit_report(opt))
+    chi2_ind = residual(opt.params, e, peaks, policy, no_base, data=data, eps=eps)
     chi2_ind = chi2_ind.reshape(data.shape)
     chi2_ind = np.sum(chi2_ind**2, axis=0)/(data.shape[0]-6)
 
-    fwhm_G = out.params['fwhm_G']
-    fwhm_L = out.params['fwhm_L']
-    peak_factor = out.params['peak_factor']
-    base = np.zeros((data.shape[0], data.shape[1]+1))
-    fit = np.zeros((data.shape[0], data.shape[1]+1))
+    fwhm_G = opt.params['fwhm_G']
+    fwhm_L = opt.params['fwhm_L']
+    peak_factor = opt.params['peak_factor']
+    base = np.empty((data.shape[0], data.shape[1]+1))
+    fit = np.empty((data.shape[0], data.shape[1]+1))
     base[:, 0] = e
     fit[:, 0] = e
     thy_data_opt = gen_theory_data(e, peaks, 1, fwhm_G, fwhm_L, peak_factor, policy)
@@ -197,14 +198,14 @@ energy unit for measured static spectrum and theoretically calculated spectrum s
         A[i] = c[0]
 
     f = open(out_prefix+'_fit_report.txt', 'w')
-    f.write(fit_report(out))
+    f.write(fit_report(opt))
     f.close()
 
     np.savetxt(out_prefix+'_base.txt', base)
     np.savetxt(out_prefix+'_fit.txt', fit)
     np.savetxt(out_prefix+'_A.txt', A)
 
-    reduced_fit = np.zeros_like(fit)
+    reduced_fit = np.empty_like(fit)
     reduced_fit[:, 0] = fit[:, 0]
     reduced_fit[:, 1:] = fit[:, 1:] - base[:, 1:]
 
