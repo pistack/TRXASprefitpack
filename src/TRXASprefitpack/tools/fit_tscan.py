@@ -248,10 +248,11 @@ def fit_tscan():
             c[i] = np.empty((num_comp, num_file[i]))
         
         for j in range(num_file[i]):
-            c[i][:, j] = fact_anal_exp_conv(t[i]-opt.params[f't_0_{prefix[i]}_{j+1}'],
-            fwhm_opt, tau_opt, data=data[i][:, j], eps=eps[i][:, j], base=base, irf=irf)
-            fit[i][:, j+1] = model_n_comp_conv(t[i]-opt.params[f't_0_{prefix[i]}_{j+1}'],
-            fwhm_opt, tau_opt, c[i][:, j], base, irf)
+            A = make_A_matrix_exp(t[i]-opt.params[f't_0_{prefix[i]}_{j+1}'],
+            fwhm_opt, tau_opt, base, irf)
+            c_tmp = fact_anal_A(A, data[i][:, j], eps[i][:, j])
+            c[i][:, j] = c_tmp
+            fit[i][:, j+1] = c_tmp @ A
         res[i][:, 1:] = data[i] - fit[i][:, 1:]
     contrib_table = ''
     for i in range(prefix.size):

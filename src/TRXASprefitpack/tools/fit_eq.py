@@ -10,7 +10,7 @@
 import argparse
 import numpy as np
 from ..mathfun.rate_eq import compute_signal_irf, fact_anal_model
-from ..mathfun import solve_l_model, rate_eq_conv, fact_anal_rate_eq_conv
+from ..mathfun import solve_l_model
 from .misc import parse_matrix
 from .misc import set_bound_tau, read_data, contribution_table, plot_result
 from lmfit import Parameters, fit_report, minimize
@@ -273,10 +273,10 @@ def fit_eq():
     for i in range(prefix.size):
         abs[i] = np.zeros((num_ex, num_file[i]))
         for j in range(num_file[i]):
-            abs_tmp = fact_anal_rate_eq_conv(t[i]-opt.params[f't_0_{prefix[i]}_{j+1}'],
-            fwhm_opt, eigval_opt, V_opt, c_opt, exclude, data=data[i][:, j], eps=eps[i][:, j], irf=irf)
-            fit[i][:, j+1] = rate_eq_conv(t[i]-opt.params[f't_0_{prefix[i]}_{j+1}'],
-            fwhm_opt, abs_tmp, eigval_opt, V_opt, c_opt, irf=irf)
+            model = compute_signal_irf(t[i]-opt.params[f't_0_{prefix[i]}_{j+1}'],
+            eigval_opt, V_opt, c_opt, fwhm_opt, irf)
+            abs_tmp = fact_anal_model(model, exclude, data[i][:, j], eps[i][:, j])
+            fit[i][:, j+1] = abs_tmp @ model
             if exclude == 'first_and_last':
                 abs[i][:, j] = abs_tmp[1:-1]
             elif exclude == 'last':
