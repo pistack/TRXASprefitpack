@@ -430,9 +430,9 @@ data: Optional[np.ndarray] = None, eps: Optional[np.ndarray] = None) -> Tuple[np
     # evaluates dads
     for i in range(data.shape[0]):
       A_scaled = np.einsum('j,ij->ij', 1/eps[i,:], A)
-      _, s, Vh = LA.svd(A_scaled.T, full_matrices=False)
+      U, s, Vh = LA.svd(A_scaled.T, full_matrices=False)
       cov = Vh.T @ np.einsum('i,ij->ij', 1/s**2, Vh)
-      c[:,i] = cov @ (A_scaled @ data_scaled[i,:])
+      c[:,i] = np.einsum('j,ij->ij', 1/s, Vh.T) @ (U.T @ data_scaled[i,:])
       res = data_scaled[i,:] - (c[:,i] @ A_scaled)
       red_chi2 = np.sum(res**2)/dof
       c_eps[:,i] = np.sqrt(red_chi2*np.diag(cov))
@@ -505,9 +505,9 @@ data: Optional[np.ndarray] = None, eps: Optional[np.ndarray] = None) -> Tuple[np
     # evaluates sads
     for i in range(data.shape[0]):
       A_scaled = np.einsum('j,ij->ij', 1/eps[i,:], B)
-      _, s, Vh = LA.svd(A_scaled.T, full_matrices= False)
+      U, s, Vh = LA.svd(A_scaled.T, full_matrices= False)
       cov = Vh.T @ np.einsum('i,ij->ij', 1/s**2, Vh)
-      abs[:,i] = cov @ (A_scaled @ data_scaled[i,:])
+      abs[:,i] = np.einsum('j,ij->ij', 1/s, Vh.T) @ (U.T @ data_scaled[i,:])
       res = data_scaled[i,:] - (abs[:,i] @ A_scaled)
       red_chi2 = np.sum(res**2)/dof
       abs_eps[:,i] = np.sqrt(red_chi2*np.diag(cov))

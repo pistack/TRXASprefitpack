@@ -43,3 +43,6 @@ The error $\sigma(E_i)$ of estimated associated difference spectrum matrix $C(E_
 \sigma(E_i) = \sqrt{\frac{\chi^2}{m-k}}\sqrt{\mathrm{diag}\left(Cov\right)}
 \end{equation*}
 
+
+
+
