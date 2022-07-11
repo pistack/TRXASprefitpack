@@ -1,0 +1,1 @@
+# Associated Difference Spectrum

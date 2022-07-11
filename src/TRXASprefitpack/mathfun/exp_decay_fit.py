@@ -394,15 +394,13 @@ data: Optional[np.ndarray] = None, eps: Optional[np.ndarray] = None) -> Tuple[np
       fwhm: full width at half maximum of instrumental response function
       tau: life time for each component
       base: whether or not include baseline [default: True]
-      irf: shape of instrumental
-           response function [default: g]
-            * 'g': normalized gaussian distribution,
-            * 'c': normalized cauchy distribution,
-            * 'pv': pseudo voigt profile :math:`(1-\\eta)g + \\eta c`
+      irf: shape of instrumental response function [default: g]
+           * 'g': normalized gaussian distribution,
+           * 'c': normalized cauchy distribution,
+           * 'pv': pseudo voigt profile :math:`(1-\\eta)g + \\eta c`
       eta: mixing parameter for pseudo voigt profile
-           (only needed for pseudo voigt profile,
-            default value is guessed according to
-            Journal of Applied Crystallography. 33 (6): 1311–1316.)
+           (only needed for pseudo voigt profile, default value is guessed according to
+           Journal of Applied Crystallography. 33 (6): 1311–1316.)
       data: energy scan data
       eps: standard error of data 
     
@@ -432,12 +430,12 @@ data: Optional[np.ndarray] = None, eps: Optional[np.ndarray] = None) -> Tuple[np
     # evaluates dads
     for i in range(data.shape[0]):
       A_scaled = np.einsum('j,ij->ij', 1/eps[i,:], A)
-      _, s, Vh = LA.svd(A_scaled.T, full_matrices= False)
+      _, s, Vh = LA.svd(A_scaled.T, full_matrices=False)
       cov = Vh.T @ np.einsum('i,ij->ij', 1/s**2, Vh)
-      c[i,:] = (data_scaled[i,:] @ A_scaled) @ cov
-      res = data_scaled[i,:] - (c[i,:] @ A_scaled)
+      c[:,i] = cov @ (A_scaled @ data_scaled[i,:])
+      res = data_scaled[i,:] - (c[:,i] @ A_scaled)
       red_chi2 = np.sum(res**2)/dof
-      c_eps[i,:] = np.sqrt(red_chi2*np.diag(cov))
+      c_eps[:,i] = np.sqrt(red_chi2*np.diag(cov))
 
 
     return c, c_eps
@@ -455,20 +453,16 @@ data: Optional[np.ndarray] = None, eps: Optional[np.ndarray] = None) -> Tuple[np
       V: eigenvector of rate equation matrix 
       c: coefficient to match initial condition of rate equation
       exclude: exclude either 'first' or 'last' element or both 'first' and 'last' element.
-                
-                * 'first' : exclude first element
-                * 'last' : exclude last element
-                * 'first_and_last' : exclude both first and last element  
-                * None : Do not exclude any element [default]
-      irf: shape of instrumental
-           response function [default: g]
-            * 'g': normalized gaussian distribution,
-            * 'c': normalized cauchy distribution,
-            * 'pv': pseudo voigt profile :math:`(1-\\eta)g + \\eta c`
-      eta: mixing parameter for pseudo voigt profile
-           (only needed for pseudo voigt profile,
-            default value is guessed according to
-            Journal of Applied Crystallography. 33 (6): 1311–1316.)
+               * 'first' : exclude first element
+               * 'last' : exclude last element
+               * 'first_and_last' : exclude both first and last element  
+               * None : Do not exclude any element [default]
+      irf: shape of instrumental response function [default: g]
+           * 'g': normalized gaussian distribution,
+           * 'c': normalized cauchy distribution,
+           * 'pv': pseudo voigt profile :math:`(1-\\eta)g + \\eta c`
+      eta: mixing parameter for pseudo voigt profile (only needed for pseudo voigt profile,
+           default value is guessed according to Journal of Applied Crystallography. 33 (6): 1311–1316.)
       data: energy scan data
       eps: standard error of data 
     
@@ -477,8 +471,7 @@ data: Optional[np.ndarray] = None, eps: Optional[np.ndarray] = None) -> Tuple[np
     
     Note:
      1. eigval, V, c should be obtained from solve_model
-     2. To calculate species associated difference spectrum of n excited state species, you should measure at least n+1
-     energy scan
+     2. To calculate species associated difference spectrum of n excited state species, you should measure at least n+1 energy scan
      3. Difference spectrum of ground state is zero, so ground state species should be excluded from rate equation or via exclude option.
     '''
     # initialization
@@ -514,10 +507,10 @@ data: Optional[np.ndarray] = None, eps: Optional[np.ndarray] = None) -> Tuple[np
       A_scaled = np.einsum('j,ij->ij', 1/eps[i,:], B)
       _, s, Vh = LA.svd(A_scaled.T, full_matrices= False)
       cov = Vh.T @ np.einsum('i,ij->ij', 1/s**2, Vh)
-      abs[i,:] = (data_scaled[i,:] @ A_scaled) @ cov
-      res = data_scaled[i,:] - (abs[i,:] @ A_scaled)
+      abs[:,i] = cov @ (A_scaled @ data_scaled[i,:])
+      res = data_scaled[i,:] - (abs[:,i] @ A_scaled)
       red_chi2 = np.sum(res**2)/dof
-      abs_eps[i,:] = np.sqrt(red_chi2*np.diag(cov))
+      abs_eps[:,i] = np.sqrt(red_chi2*np.diag(cov))
 
 
     return abs, abs_eps

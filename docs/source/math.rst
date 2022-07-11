@@ -6,3 +6,4 @@ Mathematics
 
    math.signal_model
    math.rate_eq
+   math.ads
