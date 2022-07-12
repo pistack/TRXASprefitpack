@@ -7,7 +7,6 @@ import argparse
 import numpy as np
 import matplotlib.pyplot as plt
 from ..mathfun import dads
-from .misc import parse_matrix
 
 description = '''
 calc dads: Calculate decay associated difference spectrum from experimental energy scan data and
@@ -52,16 +51,16 @@ def calc_dads():
                         help=fwhm_G_help)
     parser.add_argument('--fwhm_L', type=float,
                         help=fwhm_L_help)
-    parser.add_argument('--escan_file',
+    parser.add_argument('escan_file',
                         help='filename for scale corrected energy scan file')
-    parser.add_argument('--escan_err_file',
+    parser.add_argument('escan_err_file',
     help='filename for the scaled estimated experimental error of energy scan file')
     parser.add_argument('-t0', '--time_zero', type=float,
                         help='time zero of energy scan')
     parser.add_argument('--escan_time', type=float, nargs='+',
     help='time delay for each energy scan')
     parser.add_argument('--tau', type=float, nargs='+',
-                        help='lifetime of each decay path')
+                        help='lifetime of each decay component')
     parser.add_argument('--no_base', action='store_false',
     help='Exclude baseline (i.e. very long lifetime component)')
     parser.add_argument('-o', '--out', default='out',
@@ -96,7 +95,7 @@ def calc_dads():
     else:
         tau = np.array(args.tau)
     
-    if (args.time_zeros is None):
+    if (args.time_zero is None):
         print('You should set time_zero for energy scan \n')
         return
     else:
@@ -121,7 +120,7 @@ def calc_dads():
     # plot sads results
     plt.title('Decay Associated Difference Spectrum')
     for i in range(ads.shape[0]):
-        plt.errorbar(e, ads[i,:], label=f'decay {i+1}')
+        plt.errorbar(e, ads[i,:], ads_eps[i,:], label=f'decay {i+1}')
     plt.legend()
     plt.show()
 

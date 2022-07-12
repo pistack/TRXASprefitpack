@@ -88,9 +88,9 @@ def calc_sads():
                         help=fwhm_G_help)
     parser.add_argument('--fwhm_L', type=float,
                         help=fwhm_L_help)
-    parser.add_argument('--escan_file',
+    parser.add_argument('escan_file',
                         help='filename for scale corrected energy scan file')
-    parser.add_argument('--escan_err_file',
+    parser.add_argument('escan_err_file',
     help='filename for the scaled estimated experimental error of energy scan file')
     parser.add_argument('-t0', '--time_zero', type=float,
                         help='time zero of energy scan')
@@ -130,7 +130,7 @@ def calc_sads():
     else:
         tau = np.array(args.tau)
     
-    if (args.time_zeros is None):
+    if (args.time_zero is None):
         print('You should set time_zero for energy scan \n')
         return
     else:
@@ -163,7 +163,7 @@ def calc_sads():
     # plot sads results
     plt.title('Species Associated Difference Spectrum')
     for i in range(ads.shape[0]):
-        plt.errorbar(e, ads[i,:], label=f'excited state {i+1}')
+        plt.errorbar(e, ads[i,:], ads_eps[i,:], label=f'excited state {i+1}')
     plt.legend()
     plt.show()
 
