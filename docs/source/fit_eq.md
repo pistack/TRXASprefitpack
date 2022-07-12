@@ -75,13 +75,14 @@ User supplied rate equation matrix should have following format.
 ```python
 A -> B -> C -> D
 ```
-
+\begin{equation*}
 \begin{matrix}
 -1*k1 & 0 & 0 & 0 \\
 1*k1 & -1*k2 & 0 & 0 \\
 0 & 1*k2 & -1*k3 & 0 \\
 0 & 0 & 1*k3 & 0
 \end{matrix}
+\end{equation*}
 
 ``k1, k2, k3`` mean rate constant of each decay, inverse of lifetime ``tau1, tau2, tau3``.
 
@@ -91,23 +92,26 @@ A -> B -> C -> D
 A -> B -> D
   -> C -> D
 ```
-
+\begin{equation*}
 \begin{matrix}
 -(1*k1+1*k2) & 0 & 0 & 0 \\
 1*k1 & -1*k3 & 0 & 0 \\
 1*k2 & 0 & -1*k4 & 0 \\
 0 & 1*k3 & 1*k4 & 0
 \end{matrix}
+\end{equation*}
 
 Note that the eigenvalues of Branched Decay are $-(k_1+k_2),\ -k_3,\ -k_4,\ 0$. That is the model signal deduced by branched decay is represented by sum of four exponential decay component $\{\exp\left(-(k_1+k_2)t\right), \exp\left(-k_3t\right), \exp\left(-k_4t\right), 1\}$. Therefore time scan fitting does not distinguish branched decay and sequential decay with rate constant $k'_1 = k_1+k_2$, $k'_2 = k_3$, $k'_3 = k_4$ and $k'_4 = 0$. Because of this, in time scan fitting, $k_1$ and $k_2$ in branched decay are highly correlated so that one cannot directly determine ratio between $k_1$ and $k_2$.
 
 However if one knows difference absorption coefficient of each species or ratio of $k_1$ and $k_2$ from other experiments, they want to fix $k_2=r*k_1$ then user can give following rate equation matrix.
 
 For example $r=0.8$,
+\begin{equation*}
 \begin{matrix}
 -(1*k1+0.8*k1) & 0 & 0 & 0 \\
 1*k1 & -1*k2 & 0 & 0 \\
 0.8*k1 & 0 & -1*k3 & 0 \\
 0 & 1*k2 & 1*k3 & 0
 \end{matrix}
+\end{equation*}
 
