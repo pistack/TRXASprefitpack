@@ -34,6 +34,7 @@ Licence: LGPL3
   3. Voigt broadening line shape spectrum
   4. Solve first order rate equation (general, lower triangle, sequential decay) and analytically compute the convolution of rate equation model solution and gaussian, cauchy function.
   5. Find best coefficients for linear combination of exponential decay or damped oscilliation via solving linear least square problem.
+  6. Calculates decay assicoated difference spectrum (dads) and species associated difference spectrum from experimentally measured energy scan spectrum.
   * See source documents [Docs](https://trxasprefitpack.readthedocs.io/en/stable/)
   
 ## How to get documents for TRXASprefitpack package

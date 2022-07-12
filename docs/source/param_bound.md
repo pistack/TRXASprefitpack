@@ -12,8 +12,6 @@
 
 ## Time Delay fitting
 
-## Parameter bound scheme
-
 * fwhm: temporal width of x-ray pulse
   * lower bound: 0.5*fwhm_init
   * upper bound: 2*fwhm_init

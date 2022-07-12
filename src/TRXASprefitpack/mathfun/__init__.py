@@ -16,6 +16,7 @@ from .rate_eq import compute_signal_pvoigt
 from .exp_decay_fit import model_n_comp_conv, fact_anal_exp_conv
 from .exp_decay_fit import rate_eq_conv, fact_anal_rate_eq_conv
 from .exp_decay_fit import dmp_osc_conv, fact_anal_dmp_osc_conv
+from .exp_decay_fit import sads, dads
 
 
 __all__ = ['gen_theory_data',
@@ -26,4 +27,5 @@ __all__ = ['gen_theory_data',
            'compute_signal_gau', 'compute_signal_cauchy', 'compute_signal_pvoigt', 
            'model_n_comp_conv', 'fact_anal_exp_conv',
            'rate_eq_conv', 'fact_anal_rate_eq_conv',
-           'dmp_osc_conv', 'fact_anal_dmp_osc_conv']
+           'dmp_osc_conv', 'fact_anal_dmp_osc_conv',
+           'sads', 'dads']
