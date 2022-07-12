@@ -1,9 +1,13 @@
-usage: calc_sads.py [-h] [-re_mat RATE_EQ_MAT] [--seq] [-gsi GS_INDEX] [--irf {g,c,pv}] [--fwhm_G FWHM_G] [--fwhm_L FWHM_L] [-t0 TIME_ZERO] [--escan_time ESCAN_TIME [ESCAN_TIME ...]]
-                    [--tau TAU [TAU ...]] [-o OUT]
-                    escan_file escan_err_file
+# calc_sads
 
 calc sads: Calculate species associated difference spectrum from experimental energy scan data and
 the convolution of lower triangular 1st order rate equation model and instrumental response function
+
+* usage: calc_sads
+                    [-h] [-re_mat RATE_EQ_MAT] [--seq] [-gsi GS_INDEX] [--irf {g,c,pv}] [--fwhm_G FWHM_G] [--fwhm_L FWHM_L] [-t0 TIME_ZERO] [--escan_time ESCAN_TIME [ESCAN_TIME ...]]
+                    [--tau TAU [TAU ...]] [-o OUT]
+                    escan_file escan_err_file
+
 
 ```{Note}
 In rate equation model, the ground state would be
