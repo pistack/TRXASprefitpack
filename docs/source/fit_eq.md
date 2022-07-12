@@ -4,7 +4,7 @@ fit eq: fitting tscan data using the solution of lower triangular 1st order rate
 It uses lmfit python module to fitting experimental time trace data to sequential decay module.
 To find contribution of each excited state species, it solves linear least square problem via scipy lstsq module.
 
-* usage: fit_eq.py 
+* usage: fit_eq
                  [-h] [-re_mat RATE_EQ_MAT] [-gsi GS_INDEX] [--irf {g,c,pv}]
                  [--fwhm_G FWHM_G] [--fwhm_L FWHM_L]
                  [-t0 TIME_ZEROS [TIME_ZEROS ...]] [-t0f TIME_ZEROS_FILE]

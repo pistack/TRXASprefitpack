@@ -8,7 +8,7 @@ from ..mathfun.A_matrix import make_A_matrix_exp
 from .misc import read_data
 
 description = '''
-match scale: match scaling of each energy scan data via one reference time delay scan data.
+match scale: match scaling of each energy scan data to one reference time delay scan data.
 Experimentally measured time delay scan data has unsystematic error, which makes correct scaling of
 each energy scan data ambiguous. To reduce such ambiguity, it fits reference time delay scan with the sum of
 the convolution of exponential decay and instrumental response function.  
@@ -18,13 +18,9 @@ epilog = '''
 *Note
 
 1. Fitting parameters (time_zero, fwhm, tau) are should be evaluated previosuly from fit_tscan utility.
-
 2. Time zero of reference time delay scan and energy scan should be same.
-
 3. Energy scan range contains energy of reference time delay scan.
-
-4. if you set shape of irf to pseudo voigt (pv), then
-   you should provide two full width at half maximum
+4. if you set shape of irf to pseudo voigt (pv), then you should provide two full width at half maximum
    value for gaussian and cauchy parts, respectively.
 '''
 

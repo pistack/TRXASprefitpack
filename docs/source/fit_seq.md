@@ -27,7 +27,7 @@ value for gaussian and cauchy parts, respectively.
 * type 3 sequential decay needs ``n-1`` lifetime 
 ```
 
-* usage: fit_seq.py 
+* usage: fit_seq
                   [-h] [-sdt SEQ_DECAY_TYPE] [--irf {g,c,pv}]
                   [--fwhm_G FWHM_G] [--fwhm_L FWHM_L]
                   [-t0 TIME_ZEROS [TIME_ZEROS ...]] [-t0f TIME_ZEROS_FILE]

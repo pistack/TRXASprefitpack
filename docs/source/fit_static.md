@@ -14,7 +14,7 @@ broadening and peak parameter
 ```
 
 
-* usage: fit_static.py 
+* usage: fit_static
                        [-h] [-ls {v,g,l}] [--fwhm_G FWHM_G] [--fwhm_L FWHM_L]
                        [--no_base] [--scale_energy] [-o OUT] [--fix_fwhm_G]
                        [--fix_fwhm_L]

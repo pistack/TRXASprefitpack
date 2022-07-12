@@ -13,7 +13,7 @@ To calculate the contribution of each damped oscilliation component, it solve le
 * If you set shape of irf to pseudo voigt (pv), then you should provide two full width at half maximum value for gaussian and cauchy parts, respectively.
 ```
 
-usage: fit_osc.py 
+usage: fit_osc
                   [-h] [--irf {g,c,pv}] [--fwhm_G FWHM_G] [--fwhm_L FWHM_L]
                   [-t0 TIME_ZEROS [TIME_ZEROS ...]] [-t0f TIME_ZEROS_FILE]
                   [--tau TAU [TAU ...]] [--period PERIOD [PERIOD ...]]

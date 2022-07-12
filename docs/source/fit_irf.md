@@ -20,7 +20,7 @@ It uses lmfit python package to fit experimentally measured instrumental respons
 ```
 
 
-* usage: fit_irf.py 
+* usage: fit_irf
                   [-h] [--irf {g,c,pv}] [--fwhm_G FWHM_G] [--fwhm_L FWHM_L]
                   [-t0 TIME_ZEROS [TIME_ZEROS ...]] [-t0f TIME_ZEROS_FILE]
                   [--slow] [-o OUT]
