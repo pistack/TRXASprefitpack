@@ -1,6 +1,6 @@
-# broadening py
-# Wrapper script for fit_static()
-# Date: 2021. 8. 31.
+# calc_broad py
+# Wrapper script for calc_broad()
+# Date: 2022. 7. 12.
 # Author: pistack
 # Email: pistatex@yonsei.ac.kr
 
@@ -10,7 +10,7 @@ import sys
 path = os.path.dirname(os.path.realpath(__file__))
 sys.path.append(path+"/../src/")
 
-from TRXASprefitpack.tools import broadening
+from TRXASprefitpack.tools import calc_broad
 
 if __name__ == "__main__":
-    broadening()
+    calc_broad()

@@ -1,8 +1,8 @@
-# broadening
+# calc_broad
 
-broadening: generates voigt broadened theoritical calc spectrum
+calc_broad: calculates voigt broadened theoritical calc spectrum
 
-* usage: broadening.py 
+* usage: calc_broad 
                        [-h] [--scale_energy] [-o OUT]
                        peak e_min e_max e_step A fwhm_G fwhm_L peak_factor
 

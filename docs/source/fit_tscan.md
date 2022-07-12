@@ -16,7 +16,7 @@ value for gaussian and cauchy parts, respectively.
 timezero of this scan. So, --no_base option is discouraged.
 ```
 
-* usage: fit_tscan.py 
+* usage: fit_tscan
                       [-h] [--irf {g,c,pv}] [--fwhm_G FWHM_G] [--fwhm_L FWHM_L]
                       [-t0 TIME_ZEROS [TIME_ZEROS ...]] [-t0f TIME_ZEROS_FILE]
                       [--tau [TAU [TAU ...]]] [--no_base] [--fix_irf] [--slow]

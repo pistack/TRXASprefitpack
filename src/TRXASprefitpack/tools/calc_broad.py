@@ -3,9 +3,9 @@ import numpy as np
 from ..mathfun import gen_theory_data
 
 
-def broadening():
+def calc_broad():
     description = '''
-    broadening: generates voigt broadened theoritical calc spectrum
+    calc_broad: Evaluates voigt broadened theoritical calc spectrum
     '''
 
     parser = argparse.ArgumentParser(description=description)
