@@ -12,6 +12,7 @@ Welcome to TRXASprefitpack's documentation!
 
    math
    utility
+   utility_workflow
    utility_example
    example
    TRXASprefitpack

@@ -1,52 +1,22 @@
-# calc_sads
-# Calculate species associated difference spectrum from experimental 
-# energy scan data and the convolution of lower triangular 1st order rate equation model and
+# calc_dads
+# Calculate decay associated difference spectrum from experimental 
+# energy scan data and the convolution of sum of exponential decay and
 # instrumental response function.
 
 import argparse
 import numpy as np
 import matplotlib.pyplot as plt
-from ..mathfun import solve_seq_model, solve_l_model, sads
+from ..mathfun import dads
 from .misc import parse_matrix
 
 description = '''
-calc sads: Calculate species associated difference spectrum from experimental energy scan data and
-the convolution of lower triangular 1st order rate equation model and instrumental response function
-
-In rate equation model, the ground state would be
-1. ''first_and_last'' species
-2. ''first'' species
-3. ''last'' species
-4. ground state is not included in the rate equation model
+calc dads: Calculate decay associated difference spectrum from experimental energy scan data and
+the convolution of sum of exponential decay and instrumental response function
 '''
 
 epilog = '''
 *Note
-1. Associated difference spectrum of ground state species is zero.
-2. The rate equation matrix shoule be lower triangular.
-3. Rate equation matrix for sequential decay model is sparse, so if your model is sequential decay then use --seq option
-4. if you set shape of irf to pseudo voigt (pv), then you should provide two full width at half maximum value for gaussian and cauchy parts, respectively.
-'''
-
-gs_help = '''
-Index of ground state species.
-1. ``first_and_last``, first and last species are both ground state
-2. ``first``, first species is ground state
-3. ``last``,  last species is ground state
-4. Did not set., There is no ground state species in model equation.
-'''
-
-seq_help = '''
-Use sequential decay dynamics instead of more general lower triangular one.
-If this option is turned on, it use following sequential decay dynamics
-1 -> 2 -> 3 -> ... -> last
-You can control the behavior of first and last species via --gsi option
-'''
-
-rate_eq_mat_help = '''
-Filename for user supplied rate equation matrix. 
-i th rate constant should be denoted by ki in rate equation matrix file.
-Moreover rate equation matrix should be lower triangular.
+1. if you set shape of irf to pseudo voigt (pv), then you should provide two full width at half maximum value for gaussian and cauchy parts, respectively.
 '''
 
 irf_help = '''
@@ -70,18 +40,12 @@ It would not be used when you did not set irf or use gaussian irf function
 
 
 
-def calc_sads():
+def calc_dads():
 
     tmp = argparse.RawTextHelpFormatter
     parser = argparse.ArgumentParser(formatter_class=tmp,
                                      description=description,
                                      epilog=epilog)
-    parser.add_argument('-re_mat', '--rate_eq_mat', type=str, 
-                        help=rate_eq_mat_help)
-    parser.add_argument('--seq', action='store_true',
-    help=seq_help)
-    parser.add_argument('-gsi', '--gs_index', type=str, 
-    help=gs_help)
     parser.add_argument('--irf', default='g', choices=['g', 'c', 'pv'],
                         help=irf_help)
     parser.add_argument('--fwhm_G', type=float,
@@ -98,6 +62,8 @@ def calc_sads():
     help='time delay for each energy scan')
     parser.add_argument('--tau', type=float, nargs='+',
                         help='lifetime of each decay path')
+    parser.add_argument('--no_base', action='store_false',
+    help='Exclude baseline (i.e. very long lifetime component)')
     parser.add_argument('-o', '--out', default='out',
                         help='prefix for output files')
     args = parser.parse_args()
@@ -140,30 +106,22 @@ def calc_sads():
     escan_err = np.genfromtxt(args.escan_err_file)
     escan_time = np.array(args.escan_time)
     out_prefix = args.out
-    exclude = args.gs_index
-
-    if args.seq:
-        eigval, V, c = solve_seq_model(tau)
-    else:
-        rate_eq_mat_str = np.genfromtxt(args.rate_eq_mat, dtype=str)
-        L_mat = parse_matrix(rate_eq_mat_str, tau)
-        y0 = np.zeros(L_mat.shape[0]); y0[0] = 1
-        eigval, V, c = solve_l_model(L_mat, y0)
+    base = args.no_base
     
-    ads, ads_eps = sads(escan_time-time_zero, fwhm, eigval, V, c, exclude, irf, data=escan_data[:,1:], eps=escan_err)
+    ads, ads_eps = dads(escan_time-time_zero, fwhm, tau, base, irf, data=escan_data[:,1:], eps=escan_err)
 
     e = escan_data[:,0]
 
     out_ads = np.vstack((e, ads)).T
 
     # save calculated sads results
-    np.savetxt(f'{out_prefix}_sads.txt', out_ads)
-    np.savetxt(f'{out_prefix}_sads_eps.txt', ads_eps.T)
+    np.savetxt(f'{out_prefix}_dads.txt', out_ads)
+    np.savetxt(f'{out_prefix}_dads_eps.txt', ads_eps.T)
 
     # plot sads results
-    plt.title('Species Associated Difference Spectrum')
+    plt.title('Decay Associated Difference Spectrum')
     for i in range(ads.shape[0]):
-        plt.errorbar(e, ads[i,:], label=f'excited state {i+1}')
+        plt.errorbar(e, ads[i,:], label=f'decay {i+1}')
     plt.legend()
     plt.show()
 

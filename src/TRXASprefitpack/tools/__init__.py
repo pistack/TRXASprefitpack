@@ -13,7 +13,10 @@ from .fit_irf import fit_irf
 from .fit_seq import fit_seq
 from .fit_eq import fit_eq
 from .fit_osc import fit_osc
+from .calc_dads import calc_dads
+from .calc_sads import calc_sads
 
 __all__ = ['broadening', 'match_scale',
            'fit_static', 'fit_tscan',
-           'fit_irf', 'fit_seq', 'fit_eq', 'fit_osc']
+           'fit_irf', 'fit_seq', 'fit_eq', 'fit_osc',
+           'calc_dads', 'calc_sads']
