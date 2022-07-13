@@ -10,8 +10,8 @@ from typing import Tuple, Union, Optional
 import numpy as np
 import scipy.linalg as LA
 
-from .rate_eq import compute_signal_irf
-from .A_matrix import make_A_matrix_exp, make_A_matrix_dmp_osc
+from .rate_eq import compute_signal_irf, fact_anal_model
+from .A_matrix import make_A_matrix_exp, make_A_matrix_dmp_osc, fact_anal_A
 
 
 def model_n_comp_conv(t: np.ndarray,
@@ -131,7 +131,7 @@ def fact_anal_exp_conv(t: np.ndarray,
     
     y = data/eps
     A = np.einsum('j,ij->ij', 1/eps, A)
-    c, _, _, _ = LA.lstsq(A.T, y)
+    c, _, _, _ = LA.lstsq(A.T, y, cond=1e-2)
 
     return c
 
@@ -256,7 +256,7 @@ eps: Optional[np.ndarray] = None) -> np.ndarray:
     else:
         B = np.einsum('j,ij->ij', 1/eps, A)
     
-    coeff, _, _, _ = LA.lstsq(B.T, y)
+    coeff, _, _, _ = LA.lstsq(B.T, y, cond=1e-2)
 
     if exclude == 'first_and_last':
         abs[1:-1] = coeff
@@ -378,7 +378,7 @@ def fact_anal_dmp_osc_conv(t: np.ndarray,
     
     y = data/eps
     A = np.einsum('j,ij->ij', 1/eps, A)
-    c, _, _, _ = LA.lstsq(A.T, y)
+    c, _, _, _ = LA.lstsq(A.T, y, cond=1e-2)
 
     return c
 
@@ -428,11 +428,14 @@ data: Optional[np.ndarray] = None, eps: Optional[np.ndarray] = None) -> Tuple[np
     data_scaled = data/eps
 
     # evaluates dads
+    cond = 1e-2
     for i in range(data.shape[0]):
-      A_scaled = np.einsum('j,ij->ij', 1/eps[i,:], A)
-      U, s, Vh = LA.svd(A_scaled.T, full_matrices=False)
-      cov = Vh.T @ np.einsum('i,ij->ij', 1/s**2, Vh)
-      c[:,i] = np.einsum('j,ij->ij', 1/s, Vh.T) @ (U.T @ data_scaled[i,:])
+      A_scaled = np.einsum('j,ij->ij', 1/eps[i,:], B)
+      U, s, Vh = LA.svd(A_scaled.T, full_matrices= False)
+      mask = s > cond*s[0]
+      U_turn = U[:,mask]; s_turn = s[mask]; Vh_turn = Vh[mask, :]
+      cov = Vh_turn.T @ np.einsum('i,ij->ij', 1/s_turn**2, Vh_turn)
+      c[:,i] = np.einsum('j,ij->ij', 1/s_turn, Vh_turn.T) @ (U_turn.T @ data_scaled[i,:])
       res = data_scaled[i,:] - (c[:,i] @ A_scaled)
       red_chi2 = np.sum(res**2)/dof
       c_eps[:,i] = np.sqrt(red_chi2*np.diag(cov))
@@ -503,11 +506,14 @@ data: Optional[np.ndarray] = None, eps: Optional[np.ndarray] = None) -> Tuple[np
     data_scaled = data/eps
 
     # evaluates sads
+    cond = 1e-2
     for i in range(data.shape[0]):
       A_scaled = np.einsum('j,ij->ij', 1/eps[i,:], B)
       U, s, Vh = LA.svd(A_scaled.T, full_matrices= False)
-      cov = Vh.T @ np.einsum('i,ij->ij', 1/s**2, Vh)
-      abs[:,i] = np.einsum('j,ij->ij', 1/s, Vh.T) @ (U.T @ data_scaled[i,:])
+      mask = s > cond*s[0]
+      U_turn = U[:,mask]; s_turn = s[mask]; Vh_turn = Vh[mask, :]
+      cov = Vh_turn.T @ np.einsum('i,ij->ij', 1/s_turn**2, Vh_turn)
+      abs[:,i] = np.einsum('j,ij->ij', 1/s_turn, Vh_turn.T) @ (U_turn.T @ data_scaled[i,:])
       res = data_scaled[i,:] - (abs[:,i] @ A_scaled)
       red_chi2 = np.sum(res**2)/dof
       abs_eps[:,i] = np.sqrt(red_chi2*np.diag(cov))
