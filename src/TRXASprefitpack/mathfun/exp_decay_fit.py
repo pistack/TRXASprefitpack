@@ -430,7 +430,7 @@ data: Optional[np.ndarray] = None, eps: Optional[np.ndarray] = None) -> Tuple[np
     # evaluates dads
     cond = 1e-2
     for i in range(data.shape[0]):
-      A_scaled = np.einsum('j,ij->ij', 1/eps[i,:], B)
+      A_scaled = np.einsum('j,ij->ij', 1/eps[i,:], A)
       U, s, Vh = LA.svd(A_scaled.T, full_matrices= False)
       mask = s > cond*s[0]
       U_turn = U[:,mask]; s_turn = s[mask]; Vh_turn = Vh[mask, :]
