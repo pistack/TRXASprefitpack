@@ -70,16 +70,14 @@ def fit_tscan():
         for i in range(prefix.size):
             sum = sum + data[i].size
         chi = np.empty(sum)
-        start = 0; end = 0
+        end = 0
         for i in range(prefix.size):
             for j in range(data[i].shape[1]):
                 t0 = params[f't_0_{prefix[i]}_{j+1}']
                 A = make_A_matrix_exp(t[i]-t0, fwhm, tau, base, irf)
                 c = fact_anal_A(A, data[i][:,j], eps[i][:,j])
-                chi[end:end+data[i].shape[0]] = data[i][:, j] - (c@A)
+                chi[end:end+data[i].shape[0]] = (data[i][:, j] - (c@A))/eps[i][:, j]
                 end = end + data[i].shape[0]
-            chi[start:end] = chi[start:end]/eps[i].flatten()
-            start = end
         return chi
 
     tmp = argparse.RawTextHelpFormatter

@@ -9,6 +9,8 @@
 
 import argparse
 import numpy as np
+
+from ..mathfun.A_matrix import fact_anal_A
 from ..mathfun.irf import gau_irf, cauchy_irf, pvoigt_irf, calc_eta
 from .misc import read_data, plot_result
 from lmfit import Parameters, fit_report, minimize
@@ -65,12 +67,15 @@ def fit_irf():
         for i in range(data.shape[1]):
             t0 = params[f't_0_{i+1}']
             if irf == 'g':
-                chi[:, i] = data[:, i] - gau_irf(t-t0, fwhm)
+                A = gau_irf(t-t0, fwhm)
             elif irf == 'c':
-                chi[:, i] = data[:, i] - cauchy_irf(t-t0, fwhm)
+                A = cauchy_irf(t-t0, fwhm)
             else:
                 eta = calc_eta(fwhm[0], fwhm[1])
-                chi[:, i] = data[:, i] - pvoigt_irf(t-t0, fwhm[0], fwhm[1], eta)
+                A = pvoigt_irf(t-t0, fwhm[0], fwhm[1], eta)
+            A = A.reshape((1, A.size))
+            c = fact_anal_A(A, data[:, i], eps[:, i])
+            chi[:, i] = data[:, i] - (c@A)
         chi = chi.flatten()/eps.flatten()
 
         return chi
@@ -186,17 +191,21 @@ def fit_irf():
             fwhm_out = np.array([tmp_G, tmp_L])
         
         if irf == 'g':
-            fit[:, i+1] = gau_irf(t-out.params[f't_0_{i+1}'],
+            A = gau_irf(t-out.params[f't_0_{i+1}'],
             fwhm_out)
         elif irf == 'c':
-            fit[:, i+1] = cauchy_irf(t-out.params[f't_0_{i+1}'],
+            A = cauchy_irf(t-out.params[f't_0_{i+1}'],
             fwhm_out)
         else:
             f_out = fwhm_out[0]**5+2.69269*fwhm_out[0]**4*fwhm_out[1]+2.42843*fwhm_out[0]**3*fwhm_out[1]**2 + \
                     4.47163*fwhm_out[0]**2*fwhm_out[1]**3 + 0.07842*fwhm_out[0]*fwhm_out[1]**4 + fwhm_out[1]**5
             f_out = f_out**(1/5)
             eta_out = 1.36603*(fwhm_out[1]/f_out)-0.47719*(fwhm_out[1]/f_out)**2+0.11116*(fwhm_out[1]/f_out)**3
-            fit[:, i+1] = pvoigt_irf(t-out.params[f't_0_{i+1}'], fwhm_out[0], fwhm_out[1], eta_out)
+            A = pvoigt_irf(t-out.params[f't_0_{i+1}'], fwhm_out[0], fwhm_out[1], eta_out)
+        
+        A = A.reshape((1, A.size))
+        c = fact_anal_A(A, data[:, i], eps[:, i])
+        fit[:, i+1] = c@A
     
     f = open(out_prefix+'_fit_report.txt', 'w')
     f.write(fit_report(out))
