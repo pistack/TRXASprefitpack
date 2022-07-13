@@ -1,3 +1,1 @@
-1. calc_dads and calc_sads utility
-2. Add details in rate equation section of document
-3. Write associate spectrum section
+

@@ -14,6 +14,7 @@ Dampled oscillation is modeled to $\exp(-kt)\cos(2\pi t/T+\phi)$
 
 
 ```python
+import sys
 import numpy as np
 import matplotlib.pyplot as plt
 from TRXASprefitpack import dmp_osc_conv_gau, dmp_osc_conv_cauchy, dmp_osc_conv_pvoigt
@@ -42,14 +43,12 @@ eta = 0.3
 
 # time range
 t_0 = np.arange(-2, -1, 0.2)
-t_1 = np.arange(-1, 1, 0.1)
+t_1 = np.arange(-1, 1, 0.02)
 t_2 = np.arange(1, 3, 0.2)
 t_3 = np.arange(3, 10, 0.5)
-t_4 = np.arange(10, 50, 4)
-t_5 = np.arange(50, 100, 10)
-t_6 = np.arange(100, 1100, 100)
+t_4 = np.arange(10, 54, 4)
 
-t = np.hstack((t_0, t_1, t_2, t_3, t_4, t_5, t_6)) 
+t = np.hstack((t_0, t_1, t_2, t_3, t_4)) 
 ```
 
 ## ``dmp_osc_conv_gau`` routine
@@ -76,7 +75,7 @@ help(dmp_osc_conv_gau)
          Convolution of normalized gaussian distribution and 
          damped oscillation :math:`(\exp(-kt)cos(2\pi t/T+phase))`.
     
-
+    
 
 
 ```python
@@ -117,22 +116,6 @@ plt.show()
     
 
 
-
-```python
-plt.plot(t, gau_osc_1, label=f'period: {period[0]} ps')
-plt.plot(t, gau_osc_2, label=f'period: {period[1]} ps')
-plt.plot(t, gau_osc_3, label=f'period: {period[2]} ps')
-plt.legend()
-plt.xlim(-2, 1000)
-plt.show()
-```
-
-
-    
-![png](dmp_osc_files/dmp_osc_9_0.png)
-    
-
-
 ## ``dmp_osc_conv_cauchy`` routine
 
 
@@ -157,7 +140,7 @@ help(dmp_osc_conv_cauchy)
          Convolution of normalized cauchy distribution and 
          damped oscillation :math:`(\exp(-kt)cos(2\pi t/T+phase))`.
     
-
+    
 
 
 ```python
@@ -178,7 +161,7 @@ plt.show()
 
 
     
-![png](dmp_osc_files/dmp_osc_13_0.png)
+![png](dmp_osc_files/dmp_osc_12_0.png)
     
 
 
@@ -194,23 +177,7 @@ plt.show()
 
 
     
-![png](dmp_osc_files/dmp_osc_14_0.png)
-    
-
-
-
-```python
-plt.plot(t, cauchy_osc_1, label=f'period: {period[0]} ps')
-plt.plot(t, cauchy_osc_2, label=f'period: {period[1]} ps')
-plt.plot(t, cauchy_osc_3, label=f'period: {period[2]} ps')
-plt.legend()
-plt.xlim(-2, 1000)
-plt.show()
-```
-
-
-    
-![png](dmp_osc_files/dmp_osc_15_0.png)
+![png](dmp_osc_files/dmp_osc_13_0.png)
     
 
 
@@ -245,7 +212,7 @@ help(dmp_osc_conv_pvoigt)
          Convolution of normalized pseudo voigt profile and
          damped oscillation :math:`(\exp(-kt)cos(2\pi t/T+phase))`.
     
-
+    
 
 
 ```python
@@ -266,15 +233,15 @@ plt.show()
 
 
     
-![png](dmp_osc_files/dmp_osc_19_0.png)
+![png](dmp_osc_files/dmp_osc_17_0.png)
     
 
 
 
 ```python
-plt.plot(t, cauchy_osc_1, label=f'period: {period[0]} ps')
-plt.plot(t, cauchy_osc_2, label=f'period: {period[1]} ps')
-plt.plot(t, cauchy_osc_3, label=f'period: {period[2]} ps')
+plt.plot(t, pvoigt_osc_1, label=f'period: {period[0]} ps')
+plt.plot(t, pvoigt_osc_2, label=f'period: {period[1]} ps')
+plt.plot(t, pvoigt_osc_3, label=f'period: {period[2]} ps')
 plt.legend()
 plt.xlim(-1, 50)
 plt.show()
@@ -282,23 +249,7 @@ plt.show()
 
 
     
-![png](dmp_osc_files/dmp_osc_20_0.png)
-    
-
-
-
-```python
-plt.plot(t, cauchy_osc_1, label=f'period: {period[0]} ps')
-plt.plot(t, cauchy_osc_2, label=f'period: {period[1]} ps')
-plt.plot(t, cauchy_osc_3, label=f'period: {period[2]} ps')
-plt.legend()
-plt.xlim(-2, 1000)
-plt.show()
-```
-
-
-    
-![png](dmp_osc_files/dmp_osc_21_0.png)
+![png](dmp_osc_files/dmp_osc_18_0.png)
     
 
 
