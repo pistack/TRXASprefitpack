@@ -266,7 +266,7 @@ data: Optional[np.ndarray] = None, eps: Optional[np.ndarray] = None):
   else:
     B = np.einsum('j,ij->ij', 1/eps, model)
   
-  coeff, _, _, _  = LA.lstsq(B.T, y, cond=1e-3)
+  coeff, _, _, _  = LA.lstsq(B.T, y, cond=1e-2)
 
   if exclude == 'first':
     abs[1:] = coeff

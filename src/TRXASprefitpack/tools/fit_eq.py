@@ -108,8 +108,8 @@ def fit_eq():
                                      epilog=epilog)
     parser.add_argument('-re_mat', '--rate_eq_mat', type=str, 
                         help=rate_eq_mat_help)
-    parser.add_argument('-gsi', '--gs_index', type=str, 
-    help=gs_help)
+    parser.add_argument('-gsi', '--gs_index', default=None, type=str,
+    choices=['first', 'last', 'first_and_last'], help=gs_help)
     parser.add_argument('--irf', default='g', choices=['g', 'c', 'pv'],
                         help=irf_help)
     parser.add_argument('--fwhm_G', type=float,

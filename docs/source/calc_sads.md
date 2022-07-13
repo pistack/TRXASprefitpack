@@ -37,8 +37,9 @@ In rate equation model, the ground state would be
   * --seq
                         Use sequential decay dynamics instead of more general lower triangular one.
                         If this option is turned on, it use following sequential decay dynamics
-                        1 -> 2 -> 3 -> ... -> last
                         You can control the behavior of first and last species via --gsi option
+
+                        first -> 2 -> 3 -> ... -> last
   * -gsi GS_INDEX, --gs_index GS_INDEX
     * Index of ground state species.
     1. ``first_and_last``, first and last species are both ground state
