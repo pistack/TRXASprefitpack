@@ -10,8 +10,8 @@ from typing import Tuple, Union, Optional
 import numpy as np
 import scipy.linalg as LA
 
-from .rate_eq import compute_signal_irf, fact_anal_model
-from .A_matrix import make_A_matrix_exp, make_A_matrix_dmp_osc, fact_anal_A
+from .rate_eq import compute_signal_irf
+from .A_matrix import make_A_matrix_exp, make_A_matrix_dmp_osc
 
 
 def model_n_comp_conv(t: np.ndarray,
