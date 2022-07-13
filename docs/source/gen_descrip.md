@@ -23,4 +23,4 @@ Utilites of ``TRXASprefitpack`` package
 
 * The fit utility use [lmfit](https://dx.doi.org/10.5281/zenodo.11813) package to fit data and estimate parameter error bound.
 * During optimization process it uses [Nelder-Mead Algorithm](https://en.wikipedia.org/wiki/Nelder%E2%80%93Mead_method) to find least chi square solution and then [Levenberg-Marquardt Algorithm](https://en.wikipedia.org/wiki/Levenberg%E2%80%93Marquardt_algorithm) to refine such solution and estimate parameter error bound
-* When ``--slow`` option is turned, it uses global optimization algorithm [Adaptive Memory Programming for Global Optimization](https://www.sciencedirect.com/science/article/abs/pii/S0305054809002937) to find least chi square solution.
+* When ``--slow`` option is turned, it uses global optimization algorithm [Adaptive Memory Programming for Global Optimization](https://www.sciencedirect.com/science/article/abs/pii/S0305054809002937) with [L-BFGS-B](https://en.wikipedia.org/wiki/Limited-memory_BFGS) local solver to find least chi square solution.
