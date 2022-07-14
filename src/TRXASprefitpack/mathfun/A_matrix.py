@@ -33,7 +33,6 @@ def make_A_matrix_gau(t: np.ndarray, fwhm: float,
 
     return A
 
-
 def make_A_matrix_cauchy(t: np.ndarray, fwhm: float,
                          k: np.ndarray) -> np.ndarray:
 

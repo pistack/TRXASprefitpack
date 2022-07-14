@@ -9,6 +9,7 @@
 
 import argparse
 import numpy as np
+from ..mathfun import deriv_exp_sum_conv_gau
 from ..mathfun.A_matrix import make_A_matrix_exp, fact_anal_A
 from .misc import set_bound_tau, read_data, contribution_table, plot_result
 from lmfit import Parameters, fit_report, minimize
@@ -76,9 +77,51 @@ def fit_tscan():
                 t0 = params[f't_0_{prefix[i]}_{j+1}']
                 A = make_A_matrix_exp(t[i]-t0, fwhm, tau, base, irf)
                 c = fact_anal_A(A, data[i][:,j], eps[i][:,j])
-                chi[end:end+data[i].shape[0]] = (data[i][:, j] - (c@A))/eps[i][:, j]
+                chi[end:end+data[i].shape[0]] = ((c@A) - data[i][:, j])/eps[i][:, j]
                 end = end + data[i].shape[0]
         return chi
+    
+    def df_gau(params, t, prefix, num_comp, base, irf, data=None, eps=None):
+        fwhm = params['fwhm']
+        tau = np.empty(num_comp, dtype=float)
+        for i in range(num_comp):
+            tau[i] = params[f'tau_{i+1}']
+        sum = 0
+        for i in range(prefix.size):
+            sum = sum + data[i].size
+        num_param = len(params)
+        if not fwhm.vary:
+            num_param = num_param-1
+        num_t0 = 0
+        for i in range(prefix.size):
+            num_t0 = num_t0 + data[i].shape[1]
+        df = np.zeros((num_param, sum))
+        end = 0; t0_idx = 1*fwhm.vary; tau_start = num_t0 + t0_idx
+        for i in range(prefix.size):
+            step = data[i].shape[0]
+            for j in range(data[i].shape[1]):
+                t0 = params[f't_0_{prefix[i]}_{j+1}']
+
+                A = make_A_matrix_exp(t[i]-t0, fwhm, tau, base, irf)
+                c = fact_anal_A(A, data[i][:,j], eps[i][:,j])
+
+                grad = deriv_exp_sum_conv_gau(t[i]-t0, fwhm, 1/tau, c, base)
+                grad = np.einsum('j,ij->ij', 1/eps[i][:, j], grad)
+                df[tau_start:, end:end+step] = np.einsum('i,ij->ij', -1/tau**2, grad[2:,:])
+                df[t0_idx, end:end+step] = -grad[0, :]
+
+                if fwhm.vary:
+                    df[0, end:end+step] = grad[1, :]
+                
+                end = end + step
+                t0_idx = t0_idx + 1
+
+        return df
+    
+    def grad_f_gau(params, t, prefix, num_comp, base, irf, data=None, eps=None):
+        res = residual(params, t, prefix, num_comp, base, irf, data, eps)
+        df = df_gau(params, t, prefix, num_comp, base, irf, data, eps)
+        return df @ res
 
     tmp = argparse.RawTextHelpFormatter
     parser = argparse.ArgumentParser(formatter_class=tmp,
@@ -191,21 +234,35 @@ def fit_tscan():
             bd = set_bound_tau(tau[i])
             fit_params.add(f'tau_{i+1}', value=tau[i], min=bd[0],
                            max=bd[1])
+    
+    x0 = np.zeros(len(fit_params)); bound = len(fit_params)*[None]
+    count = 0
+    for parm in fit_params:
+        x0[count] = fit_params[parm].value
+        bound[count] = (fit_params[parm].min, fit_params[parm].max)
+        count = count + 1
+    
+    print(x0)
+    print(bound)
 
     # Second initial guess using global optimization algorithm
-    if args.slow: 
-        opt = minimize(residual, fit_params, method='ampgo', calc_covar=False,
-        args=(t, prefix, num_comp, base, irf),
-        kws={'data': data, 'eps': eps})
+    if args.slow and irf == 'g': 
+        opt = minimize(residual, fit_params, args=(t, prefix, num_comp, base, irf), method='ampgo', calc_covar=False,
+        kws={'data': data, 'eps': eps}, local_opts={'jac':grad_f_gau, 'args': (t, prefix, num_comp, base, irf)})
     else:
         opt = minimize(residual, fit_params, method='nelder', calc_covar=False,
         args=(t, prefix, num_comp, base, irf),
         kws={'data': data, 'eps': eps})
 
     # Then do Levenberg-Marquardt
-    opt = minimize(residual, opt.params,
-                   args=(t, prefix, num_comp, base),
-                   kws={'data': data, 'eps': eps, 'irf': irf})
+    if irf == 'g':
+        opt = minimize(residual, opt.params,
+        args=(t, prefix, num_comp, base),
+        kws={'data': data, 'eps': eps, 'irf': irf}, Dfun=df_gau, col_deriv=1)
+    else:
+        opt = minimize(residual, opt.params,
+        args=(t, prefix, num_comp, base),
+        kws={'data': data, 'eps': eps, 'irf': irf})
 
     fit = np.empty(prefix.size, dtype=object); res = np.empty(prefix.size, dtype=object)
     for i in range(prefix.size):
