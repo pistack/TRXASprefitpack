@@ -91,7 +91,9 @@ def fit_tscan():
                 t0_idx = t0_idx + 1
         return chi
 
-    def residual_scaler(params, t, prefix, num_comp, base, irf, fix_irf, data=None, eps=None):
+    def residual_scaler(params, fwhm, t, prefix, num_comp, base, irf, fix_irf, data=None, eps=None):
+        if fix_irf:
+            params = np.hstack((fwhm, params))
         return np.sum(residual(params, t, prefix, num_comp, base, irf, fix_irf, data, eps)**2)
     
     def df_gau(params, t, prefix, num_comp, base, irf, fix_irf, data=None, eps=None):
@@ -136,7 +138,9 @@ def fit_tscan():
 
         return df
     
-    def grad_f_gau(params, t, prefix, num_comp, base, irf, fix_irf, data=None, eps=None):
+    def grad_f_gau(params, fwhm, t, prefix, num_comp, base, irf, fix_irf, data=None, eps=None):
+        if fix_irf:
+            params = np.hstack((fwhm, params))
         res = residual(params, t, prefix, num_comp, base, irf, fix_irf, data, eps)
         df = df_gau(params, t, prefix, num_comp, base, irf, fix_irf, data, eps)
         return df @ res
@@ -253,24 +257,33 @@ def fit_tscan():
             fit_params.add(f'tau_{i+1}', value=tau[i], min=bd[0],
                            max=bd[1])
     
-    x0 = np.empty(len(fit_params)); bd = len(fit_params)*[None]
+    thresh = 1*args.fix_irf*(1*(irf in ['g', 'c'])+2*(irf=='pv'))
+    x0 = np.empty(len(fit_params)-thresh); bd = (len(fit_params)-thresh)*[None]
     count = 0
     for parm in fit_params:
-        x0[count] = fit_params[parm].value; bd[count] = (fit_params[parm].min, fit_params[parm].max)
+        if count >= thresh:
+            x0[count-thresh] = fit_params[parm].value
+            bd[count-thresh] = (fit_params[parm].min, fit_params[parm].max)
         count = count+1
+    
+    if irf in ['g', 'c']:
+        fwhm = np.array([fit_params['fwhm']])
+    else:
+        fwhm = np.array([fit_params['fwhm_G'], fit_params['fwhm_L']])
 
     # Second initial guess using global optimization algorithm
     if args.slow and irf == 'g': 
-        result = ampgo(residual_scaler, bd, args=(t, prefix, num_comp, base, irf, args.fix_irf, data, eps), x0=x0, jac=grad_f_gau)
+        result = ampgo(residual_scaler, bd, args=(fwhm, t, prefix, num_comp, base, irf, args.fix_irf, data, eps), x0=x0, jac=grad_f_gau)
     elif args.slow and irf != 'g':
-        result = ampgo(residual_scaler, bd, args=(t, prefix, num_comp, base, irf, args.fix_irf, data, eps), x0=x0)
+        result = ampgo(residual_scaler, bd, args=(fwhm, t, prefix, num_comp, base, irf, args.fix_irf, data, eps), x0=x0)
     else:
-        result = opt_minimize(residual_scaler, x0, args=(t, prefix, num_comp, base, irf, args.fix_irf, data, eps), 
+        result = opt_minimize(residual_scaler, x0, args=(fwhm, t, prefix, num_comp, base, irf, args.fix_irf, data, eps), 
         method='Nelder-Mead', bounds=bd, tol=1e-7, options={'maxfev':2000*(len(fit_params)+1)})
     
     count = 0
     for parm in fit_params:
-        fit_params[parm].value = result['x'][count]
+        if count >= thresh:
+            fit_params[parm].value = result['x'][count-thresh]
         count = count+1
     # Then do Levenberg-Marquardt
     if irf == 'g':
