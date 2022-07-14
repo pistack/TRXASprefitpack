@@ -9,9 +9,12 @@
 
 import argparse
 import numpy as np
+from ..mathfun import deriv_exp_sum_conv_gau
 from ..mathfun.A_matrix import make_A_matrix_exp, fact_anal_A
 from .misc import set_bound_tau, read_data, contribution_table, plot_result
 from lmfit import Parameters, fit_report, minimize
+from scipy.optimize import minimize as opt_minimize
+from ampgo import ampgo
 
 description = '''
 fit tscan: fitting experimental time trace spectrum data with the convolution of the sum of exponential decay and irf function
@@ -58,27 +61,89 @@ It would not be used when you did not set irf or use gaussian irf function
 
 def fit_tscan():
 
-    def residual(params, t, prefix, num_comp, base, irf, data=None, eps=None):
+    def residual(params, t, prefix, num_comp, base, irf, fix_irf, data=None, eps=None):
+        params = np.atleast_1d(params)
+
         if irf in ['g', 'c']:
-            fwhm = params['fwhm']
+            num_irf = 1
+            fwhm = params[0]
         else:
-            fwhm = np.array([params['fwhm_G'], params['fwhm_L']])
+            num_irf = 2
+            fwhm = np.array([params[0], params[1]])
+        num_t0 = 0
+        for i in range(prefix.size):
+            num_t0 = data[i].shape[1] + num_t0
         tau = np.empty(num_comp, dtype=float)
         for i in range(num_comp):
-            tau[i] = params[f'tau_{i+1}']
+            tau[i] = params[num_irf+num_t0+i]
         sum = 0
         for i in range(prefix.size):
             sum = sum + data[i].size
         chi = np.empty(sum)
-        end = 0
+        end = 0; t0_idx = num_irf
         for i in range(prefix.size):
             for j in range(data[i].shape[1]):
-                t0 = params[f't_0_{prefix[i]}_{j+1}']
+                t0 = params[t0_idx]
                 A = make_A_matrix_exp(t[i]-t0, fwhm, tau, base, irf)
                 c = fact_anal_A(A, data[i][:,j], eps[i][:,j])
-                chi[end:end+data[i].shape[0]] = (data[i][:, j] - (c@A))/eps[i][:, j]
+                chi[end:end+data[i].shape[0]] = ((c@A) - data[i][:, j])/eps[i][:, j]
                 end = end + data[i].shape[0]
+                t0_idx = t0_idx + 1
         return chi
+
+    def residual_scaler(params, fwhm, t, prefix, num_comp, base, irf, fix_irf, data=None, eps=None):
+        if fix_irf:
+            params = np.hstack((fwhm, params))
+        return np.sum(residual(params, t, prefix, num_comp, base, irf, fix_irf, data, eps)**2)
+    
+    def df_gau(params, t, prefix, num_comp, base, irf, fix_irf, data=None, eps=None):
+        params = np.atleast_1d(params)
+
+        fwhm = params[0]; num_irf = 1
+        num_t0 = 0
+        for i in range(prefix.size):
+            num_t0 = num_t0 + data[i].shape[1]
+        
+        tau = np.empty(num_comp, dtype=float)
+        for i in range(num_comp):
+            tau[i] = params[num_irf+num_t0+i]
+        sum = 0
+        for i in range(prefix.size):
+            sum = sum + data[i].size
+        num_param = num_irf+num_t0+num_comp
+        if fix_irf:
+            num_param = num_param-1
+        df = np.zeros((num_param, sum))
+        end = 0; t0_idx = 1-1*fix_irf; tau_start = num_t0 + t0_idx
+        t0_idx_curr = 1
+        for i in range(prefix.size):
+            step = data[i].shape[0]
+            for j in range(data[i].shape[1]):
+                t0 = params[t0_idx_curr]
+
+                A = make_A_matrix_exp(t[i]-t0, fwhm, tau, base, irf)
+                c = fact_anal_A(A, data[i][:,j], eps[i][:,j])
+
+                grad = deriv_exp_sum_conv_gau(t[i]-t0, fwhm, 1/tau, c, base)
+                grad = np.einsum('j,ij->ij', 1/eps[i][:, j], grad)
+                df[tau_start:, end:end+step] = np.einsum('i,ij->ij', -1/tau**2, grad[2:,:])
+                df[t0_idx, end:end+step] = -grad[0, :]
+
+                if not fix_irf:
+                    df[0, end:end+step] = grad[1, :]
+                
+                end = end + step
+                t0_idx = t0_idx + 1
+                t0_idx_curr = t0_idx_curr + 1
+
+        return df
+    
+    def grad_f_gau(params, fwhm, t, prefix, num_comp, base, irf, fix_irf, data=None, eps=None):
+        if fix_irf:
+            params = np.hstack((fwhm, params))
+        res = residual(params, t, prefix, num_comp, base, irf, fix_irf, data, eps)
+        df = df_gau(params, t, prefix, num_comp, base, irf, fix_irf, data, eps)
+        return df @ res
 
     tmp = argparse.RawTextHelpFormatter
     parser = argparse.ArgumentParser(formatter_class=tmp,
@@ -191,21 +256,44 @@ def fit_tscan():
             bd = set_bound_tau(tau[i])
             fit_params.add(f'tau_{i+1}', value=tau[i], min=bd[0],
                            max=bd[1])
+    
+    thresh = 1*args.fix_irf*(1*(irf in ['g', 'c'])+2*(irf=='pv'))
+    x0 = np.empty(len(fit_params)-thresh); bd = (len(fit_params)-thresh)*[None]
+    count = 0
+    for parm in fit_params:
+        if count >= thresh:
+            x0[count-thresh] = fit_params[parm].value
+            bd[count-thresh] = (fit_params[parm].min, fit_params[parm].max)
+        count = count+1
+    
+    if irf in ['g', 'c']:
+        fwhm = np.array([fit_params['fwhm']])
+    else:
+        fwhm = np.array([fit_params['fwhm_G'], fit_params['fwhm_L']])
 
     # Second initial guess using global optimization algorithm
-    if args.slow: 
-        opt = minimize(residual, fit_params, method='ampgo', calc_covar=False,
-        args=(t, prefix, num_comp, base, irf),
-        kws={'data': data, 'eps': eps})
+    if args.slow and irf == 'g': 
+        result = ampgo(residual_scaler, bd, args=(fwhm, t, prefix, num_comp, base, irf, args.fix_irf, data, eps), x0=x0, jac=grad_f_gau)
+    elif args.slow and irf != 'g':
+        result = ampgo(residual_scaler, bd, args=(fwhm, t, prefix, num_comp, base, irf, args.fix_irf, data, eps), x0=x0)
     else:
-        opt = minimize(residual, fit_params, method='nelder', calc_covar=False,
-        args=(t, prefix, num_comp, base, irf),
-        kws={'data': data, 'eps': eps})
-
+        result = opt_minimize(residual_scaler, x0, args=(fwhm, t, prefix, num_comp, base, irf, args.fix_irf, data, eps), 
+        method='Nelder-Mead', bounds=bd, tol=1e-7, options={'maxfev':2000*(len(fit_params)+1)})
+    
+    count = 0
+    for parm in fit_params:
+        if count >= thresh:
+            fit_params[parm].value = result['x'][count-thresh]
+        count = count+1
     # Then do Levenberg-Marquardt
-    opt = minimize(residual, opt.params,
-                   args=(t, prefix, num_comp, base),
-                   kws={'data': data, 'eps': eps, 'irf': irf})
+    if irf == 'g':
+        opt = minimize(residual, fit_params,
+        args=(t, prefix, num_comp, base, irf, args.fix_irf),
+        kws={'data': data, 'eps': eps}, Dfun=df_gau, col_deriv=1)
+    else:
+        opt = minimize(residual, fit_params,
+        args=(t, prefix, num_comp, base, irf, args.fix_irf),
+        kws={'data': data, 'eps': eps})
 
     fit = np.empty(prefix.size, dtype=object); res = np.empty(prefix.size, dtype=object)
     for i in range(prefix.size):
@@ -226,7 +314,7 @@ def fit_tscan():
 
     # Calc individual chi2
     chi = residual(opt.params, t, prefix, num_comp, base,
-                        irf, data=data, eps=eps)
+                        irf, args.fix_irf, data=data, eps=eps)
     
     start = 0; end = 0; chi2_ind = np.empty(prefix.size, dtype=object)
     num_param_ind = tau_opt.size+2+1*(irf == 'pv')+1*base

@@ -7,7 +7,7 @@ exponential decay convolved with irf
 :license: LGPL3.
 '''
 
-from typing import Union
+from typing import Union, Optional
 import numpy as np
 from scipy.special import erfc, erfcx, wofz, exp1
 
@@ -50,6 +50,79 @@ def exp_conv_gau(t: Union[float, np.ndarray], fwhm: float,
             erfc(z[inv_mask]/np.sqrt(2))
 
     return ans
+
+def deriv_exp_conv_gau(t: Union[float, np.ndarray], fwhm: float,
+                 k: float) -> np.ndarray:
+
+    '''
+    Compute derivative of exponential function convolved with normalized gaussian
+    distribution
+
+    Args:
+      t: time
+      fwhm: full width at half maximum of gaussian distribution
+      k: rate constant (inverse of life time)
+
+    Returns:
+     Derivative of Convolution of normalized gaussian distribution and exponential
+     decay :math:`(\\exp(-kt))`.
+    Note:
+     1st row: df/dt
+     2nd row: df/d(fwhm)
+     3rd row: df/dk
+    '''
+
+    sigma = fwhm/(2*np.sqrt(2*np.log(2)))
+    f = exp_conv_gau(t, fwhm, k)
+    g = np.exp(-(t/sigma)**2/2)/np.sqrt(2*np.pi)
+
+    if not isinstance(t, np.ndarray):
+        grad = np.empty(3)
+        grad[0] = g/sigma - k*f
+        grad[1] = ((k**2*sigma)*f - (k+t/sigma**2)*g)/(2*np.sqrt(2*np.log(2)))
+        grad[2] = (sigma**2*k-t)*f - sigma*g
+    else:
+        grad = np.empty((3, t.size))
+        grad[0, :] = g/sigma - k*f
+        grad[1, :] = ((k**2*sigma)*f - (k+t/sigma**2)*g)/(2*np.sqrt(2*np.log(2)))
+        grad[2, :] = (sigma**2*k-t)*f - sigma*g
+
+    return grad
+
+def deriv_exp_sum_conv_gau(t: np.ndarray, fwhm: float,
+                 k: np.ndarray, c: np.ndarray, base: Optional[bool] = True) -> np.ndarray:
+
+    '''
+    Compute derivative of sum of exponential function convolved with normalized gaussian
+    distribution
+
+    Args:
+      t: time
+      fwhm: full width at half maximum of gaussian distribution
+      k: rate constant (inverse of life time)
+      c: coefficient
+      base: include baseline (i.e. k=0)
+
+    Returns:
+     Derivative of Convolution of normalized gaussian distribution and sum of exponential
+     decay :math:`(\\exp(-kt))`.
+    Note:
+     1st row: df/dt
+     2nd row: df/d(fwhm)
+     2+i th row: df/dk_i
+    '''
+    grad = np.zeros((2+k.size, t.size))
+    for i in range(k.size):
+        grad_i = deriv_exp_conv_gau(t, fwhm, k[i])
+        grad[0, :] = grad[0, :] + c[i]*grad_i[0, :]
+        grad[1, :] = grad[1, :] + c[i]*grad_i[1, :]
+        grad[2+i, :] = c[i]*grad_i[2, :]
+    if base:
+        grad_i = deriv_exp_conv_gau(t, fwhm, 0)
+        grad[0, :] = grad[0, :] + c[-1]*grad_i[0, :]
+        grad[1, :] = grad[1, :] + c[-1]*grad_i[1, :]
+
+    return grad
 
 def exp1x_asymp(z: Union[complex, np.ndarray]) -> Union[complex, np.ndarray]:
     return z*(1+z*(1+2*z*(1+3*z*(1+4*z*(1+5*z*(1+6*z*(1+7*z*(1+8*z*(1+9*z*(1+10*z))))))))))
