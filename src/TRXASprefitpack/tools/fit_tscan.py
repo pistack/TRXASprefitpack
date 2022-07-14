@@ -234,16 +234,6 @@ def fit_tscan():
             bd = set_bound_tau(tau[i])
             fit_params.add(f'tau_{i+1}', value=tau[i], min=bd[0],
                            max=bd[1])
-    
-    x0 = np.zeros(len(fit_params)); bound = len(fit_params)*[None]
-    count = 0
-    for parm in fit_params:
-        x0[count] = fit_params[parm].value
-        bound[count] = (fit_params[parm].min, fit_params[parm].max)
-        count = count + 1
-    
-    print(x0)
-    print(bound)
 
     # Second initial guess using global optimization algorithm
     if args.slow and irf == 'g': 
