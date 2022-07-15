@@ -142,7 +142,7 @@ def fit_tscan():
             step = data[i].shape[0]
             for j in range(data[i].shape[1]):
                 t0 = params[t0_idx_curr]
-                A = make_A_matrix_exp(t[i]-t0, fwhm, tau, base, irf)
+                A = make_A_matrix_exp(t[i]-t0, fwhm, tau, base, irf, eta)
                 c = fact_anal_A(A, data[i][:,j], eps[i][:,j])
                 
                 if irf == 'g':
@@ -150,8 +150,8 @@ def fit_tscan():
                 elif irf == 'c':
                     grad = deriv_exp_sum_conv_cauchy(t[i]-t0, fwhm, 1/tau, c, base)
                 else:
-                    grad_gau = deriv_exp_sum_conv_gau(t[i]-t0, fwhm, 1/tau, c, base)
-                    grad_cauchy = deriv_exp_sum_conv_cauchy(t[i]-t0, fwhm, 1/tau, c, base)
+                    grad_gau = deriv_exp_sum_conv_gau(t[i]-t0, fwhm[0], 1/tau, c, base)
+                    grad_cauchy = deriv_exp_sum_conv_cauchy(t[i]-t0, fwhm[1], 1/tau, c, base)
                     grad = grad_gau + eta*(grad_cauchy-grad_gau)
    
                 grad = np.einsum('j,ij->ij', 1/eps[i][:, j], grad)

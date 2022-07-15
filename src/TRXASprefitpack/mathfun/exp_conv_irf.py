@@ -215,12 +215,17 @@ def deriv_exp_conv_cauchy(t: Union[float, np.ndarray],
             grad[2] = -(t*f.imag+fwhm*f.real/2)/np.pi
     else:
         grad = np.empty((3, t.size))
-        z = (t+complex(0, fwhm/2))
-        f = exp1x(-k*z)
-        tmp = -(k*f+1/z)/np.pi
-        grad[0, :] = tmp.imag
-        grad[1, :] = tmp.real/2
-        grad[2, :] = -(t*f.imag+fwhm*f.real/2)/np.pi
+        if k == 0:
+            grad[0] = 2/(np.pi*fwhm*(1+(2*t/fwhm)**2))
+            grad[1] = -t/fwhm*grad[0]
+            grad[2] = 0
+        else:
+            z = (t+complex(0, fwhm/2))
+            f = exp1x(-k*z)
+            tmp = -(k*f+1/z)/np.pi
+            grad[0, :] = tmp.imag
+            grad[1, :] = tmp.real/2
+            grad[2, :] = -(t*f.imag+fwhm*f.real/2)/np.pi
     return grad
 
 # calculate derivative of the convolution of sum of exponential decay and instrumental response function
