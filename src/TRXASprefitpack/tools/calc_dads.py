@@ -6,7 +6,7 @@
 import argparse
 import numpy as np
 import matplotlib.pyplot as plt
-from ..mathfun import dads
+from ..driver import dads
 
 description = '''
 calc dads: Calculate decay associated difference spectrum from experimental energy scan data and
@@ -107,7 +107,7 @@ def calc_dads():
     out_prefix = args.out
     base = args.no_base
     
-    ads, ads_eps = dads(escan_time-time_zero, fwhm, tau, base, irf, data=escan_data[:,1:], eps=escan_err)
+    ads, ads_eps, fit = dads(escan_time-time_zero, fwhm, tau, base, irf, data=escan_data[:,1:], eps=escan_err)
 
     e = escan_data[:,0]
 
@@ -116,11 +116,22 @@ def calc_dads():
     # save calculated sads results
     np.savetxt(f'{out_prefix}_dads.txt', out_ads)
     np.savetxt(f'{out_prefix}_dads_eps.txt', ads_eps.T)
+    np.savetxt(f'{out_prefix}_fit.txt', fit)
 
     # plot sads results
+    plt.figure(1)
     plt.title('Decay Associated Difference Spectrum')
     for i in range(ads.shape[0]):
         plt.errorbar(e, ads[i,:], ads_eps[i,:], label=f'decay {i+1}')
+    plt.legend()
+
+    offset = 2*np.max(np.abs(escan_data[:, 1:]))
+    plt.figure(2)
+    plt.title(f'Retrieved Energy Scan (time_zero: {time_zero:.3e}')
+    for i in range(escan_time.size):
+        plt.errorbar(e, escan_data[:, i+1]+i*offset, escan_err[:, i], marker='o', mfc='none',
+        label=f'{escan_time[i]: .3e} (expt)')
+        plt.plot(e, fit[:, i]+i*offset, label=f'{escan_time[i]: .3e} (fit)')
     plt.legend()
     plt.show()
 

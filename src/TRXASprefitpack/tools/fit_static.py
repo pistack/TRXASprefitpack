@@ -10,7 +10,7 @@
 import argparse
 import numpy as np
 import scipy.linalg as LA
-from ..mathfun import gen_theory_data
+from ..driver import gen_theory_data
 from .misc import read_data, plot_result
 from lmfit import Parameters, fit_report, minimize
 

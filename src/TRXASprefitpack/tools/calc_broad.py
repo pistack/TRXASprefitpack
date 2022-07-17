@@ -1,6 +1,6 @@
 import argparse
 import numpy as np
-from ..mathfun import gen_theory_data
+from ..driver import gen_theory_data
 
 
 def calc_broad():
