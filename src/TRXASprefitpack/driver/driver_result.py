@@ -28,6 +28,8 @@ class DriverResult(dict):
             'pv': pseudo voigt instrumental response function (linear combination of gaussian and lorenzian function)
        eta (float): mixing parameter ((1-eta)*g+eta*c)
        param_name (np.ndarray): name of parameter
+       n_decay (int): number of decay components (including baseline feature)
+       n_osc (int): number of damped oscillation components
        x (np.ndarray): best parameter
        bounds (sequence of tuple): boundary of each parameter
        base (bool): whether or not use baseline feature in fitting process
@@ -116,7 +118,7 @@ def print_DriverResult(result: DriverResult, name_of_dset: Optional[Sequence[str
       doc_lst.append(' ')
       doc_lst.append("[Parameters]")
       for pn, pv, p_err in zip(result['param_name'], result['x'], result['x_eps']):
-            doc_lst.append(f"    {pn}: {pv: .8f} +/- {p_err: .8f} ({100*p_err/pv: .2f}%)".rstrip('0').rstrip('.'))
+            doc_lst.append(f"    {pn}: {pv: .8f} +/- {p_err: .8f} ({100*np.abs(p_err/pv): .2f}%)".rstrip('0').rstrip('.'))
       doc_lst.append(' ')
       doc_lst.append("[Parameter Bound]")
       for pn, pv, bd in zip(result['param_name'], result['x'], result['bounds']):
@@ -133,18 +135,24 @@ def print_DriverResult(result: DriverResult, name_of_dset: Optional[Sequence[str
             for j in range(coeff_contrib.shape[1]):
                   row.append(f'tscan_{j+1}')
             doc_lst.append('\t'.join(row))
-            for d in range(coeff_contrib.shape[0]-1):
-                  row = [f"     {result['model']} {d+1}"]
+            for d in range(result['n_decay']-1):
+                  row = [f"     decay {d+1}"]
                   for l in range(coeff_contrib.shape[1]):
                         row.append(f'{coeff_contrib[d, l]: .2f}%')
                   doc_lst.append('\t'.join(row))
             if result['base']:
                   row = [f'     base']
             else:
-                  row = [f"     {result['model']} {coeff_contrib.shape[0]}"]
-            for l in range(coeff_contrib.shape[1]):
-                  row.append(f'{coeff_contrib[coeff_contrib.shape[0]-1,l]: .2f}%')
-            doc_lst.append('\t'.join(row))
+                  row = [f"     decay {result['n_decay']}"]
+            if result['n_decay'] > 0:
+                  for l in range(coeff_contrib.shape[1]):
+                        row.append(f"{coeff_contrib[result['n_decay']-1,l]: .2f}%")
+                  doc_lst.append('\t'.join(row))
+            for o in range(result['n_decay'], result['n_decay']+result['n_osc']):
+                  row =[f"    dmp_osc {o+1-result['n_decay']}"]
+                  for l in range(coeff_contrib.shape[1]):
+                        row.append(f'{coeff_contrib[o, l]: .2f}%')
+                  doc_lst.append('\t'.join(row))
       doc_lst.append(' ')
 
       doc_lst.append("[Parameter Correlation]")

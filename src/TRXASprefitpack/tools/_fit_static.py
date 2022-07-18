@@ -10,7 +10,7 @@
 import argparse
 import numpy as np
 import scipy.linalg as LA
-from ..driver import gen_theory_data
+from ..mathfun import gen_theory_data
 from .misc import read_data, plot_result
 from lmfit import Parameters, fit_report, minimize
 
@@ -53,8 +53,6 @@ broadened by spectral line shape
 v: voigt profile,
 g: gaussian,
 l: lorenzian,
-It uses lmfit python package to fit experimental spectrum and estimates the error bound of
-broadening and peak parameter
 Moreover, it uses linear baseline to correct baseline feature of experimental spectrum
 '''
 
@@ -82,13 +80,8 @@ energy unit for measured static spectrum and theoretically calculated spectrum s
     help ='Do not include linear base line during fitting process')
     parse.add_argument('--scale_energy', action='store_true',
     help='Scaling the energy of peak instead of shifting to match experimental spectrum')
-    parse.add_argument('prefix',
-                       help='prefix for experimental spectrum files' +
-                       '\n' + 'It will read prefix_i.txt files')
-    parse.add_argument('num_scan', type=int,
-                       help='the number of static peak scan files')
-    parse.add_argument('peak_file',
-                       help='filename for theoretical line shape spectrum')
+    parse.add_argument('filename', help='filename for experimental spectrum')
+    parse.add_argument('peak_file', help='filename for theoretical line shape spectrum')
     parse.add_argument('peak_factor', type=float,
     help='parameter to match descrepency between thoretical spectrum and experimental spectrum')
     parse.add_argument('-o', '--out', help='prefix for output files')
@@ -96,7 +89,7 @@ energy unit for measured static spectrum and theoretically calculated spectrum s
     help='fix gaussian fwhm value')
     parse.add_argument('--fix_fwhm_L', action='store_true',
     help='fix lorenzian fwhm value')
-    parse.add_argument('--slow', action='store_true',
+    parse.add_argument('--method_glb', action='store_true',
     help='use slower but robust global optimization algorithm')
 
     args = parse.parse_args()

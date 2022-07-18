@@ -17,9 +17,12 @@ from .res_decay import residual_decay
 from .res_decay import jac_res_decay
 from .res_osc import residual_dmp_osc
 from .res_osc import jac_res_dmp_osc
+from .res_both import residual_both
+from .res_both import jac_res_both
 
 __all__ = ['set_bound_t0', 'set_bound_tau',
            'res_lmfit', 'jac_lmfit',
            'residual_scalar', 'grad_res_scalar',
            'residual_decay', 'jac_res_decay',
-           'residual_dmp_osc', 'jac_res_dmp_osc']
+           'residual_dmp_osc', 'jac_res_dmp_osc',
+           'residual_both', 'jac_res_both']

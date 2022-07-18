@@ -274,5 +274,7 @@ def fit_transient_exp(irf: str, fwhm_init: Union[float, np.ndarray],
       result['method_lsq'] = method_lsq
       result['message_glb'] = res_go['message']
       result['message_lsq'] = res_lsq['message']
+      result['n_osc'] = 0
+      result['n_decay'] = tau_init.size + 1*base
 
       return result

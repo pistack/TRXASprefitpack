@@ -9,15 +9,19 @@
 
 import argparse
 import numpy as np
-
-from TRXASprefitpack.driver.driver_result import save_DriverResult
-
-from ..driver import fit_transient_exp, print_DriverResult, plot_DriverResult
+from ..driver import print_DriverResult, plot_DriverResult, save_DriverResult
+from ..driver import fit_transient_exp, fit_transient_dmp_osc, fit_transient_both
 from .misc import read_data
+
+FITDRIVER = {'decay': fit_transient_exp, 'osc': fit_transient_dmp_osc, 'both': fit_transient_both}
 
 
 description = '''
-fit tscan: fitting experimental time trace spectrum data with the convolution of the sum of exponential decay and irf function
+fit tscan: fitting experimental time trace spectrum data with the convolution of the sum of 
+1. exponential decay (mode = decay)
+2. damped oscillation (mode = osc)
+3. exponential decay, damped oscillation (mode=both)
+and irf function
 There are three types of irf function (gaussian, cauchy, pseudo voigt)
 To calculate the contribution of each life time component, it solve least linear square problem via scipy linalg lstsq module.
 '''
@@ -34,8 +38,24 @@ epilog = '''
    you should provide two full width at half maximum
    value for gaussian and cauchy parts, respectively.
 
-4. If you did not set tau then it assume you finds the
-   timezero of this scan. So, --no_base option is discouraged.
+4. If you did not set tau and `mode=decay` then `--no_base` option is discouraged.
+
+5. If you set `mode=decay` then any parameter whoose subscript is `osc` is discarded (i.e. tau_osc, period_osc, phase_osc).
+
+6. If you set `mode=osc` then `tau` parameter is discarded. Also, baseline feature is not included in fitting function.
+
+7. The number of tau_osc, period_osc and phase_osc parameter should be same
+
+8. phase_osc should be confined in [-pi/2, pi/2] (pi ~ 3.14)
+
+9. If you set `mode=both` then you should set `tau`, `tau_osc`, `period_osc` and `phase_osc`. However the number of `tau` and `tau_osc` need not to be same.
+'''
+
+mode_help = '''
+Mode of fitting
+ `decay`: fitting with the sum of the convolution of exponential decay and instrumental response function
+ `osc`: fitting with the sum of the convolution of damped oscillation and instrumental response function
+ `both`: fitting with the sum of both decay and osc
 '''
 
 irf_help = '''
@@ -70,6 +90,8 @@ def fit_tscan():
     parser = argparse.ArgumentParser(formatter_class=tmp,
                                      description=description,
                                      epilog=epilog)
+    parser.add_argument('--mode', default='decay', choices=['decay', 'osc', 'both'],
+    help=mode_help)
     parser.add_argument('--irf', default='g', choices=['g', 'c', 'pv'],
                         help=irf_help)
     parser.add_argument('--fwhm_G', type=float,
@@ -86,11 +108,19 @@ def fit_tscan():
     parser.add_argument('-t0f', '--time_zeros_file',
                         help='filename for time zeros of each tscan')
     parser.add_argument('--tau', type=float, nargs='*',
-                        help='lifetime of each component')
+                        help='lifetime of each decay component [mode: decay, both]')
+    parser.add_argument('--tau_osc', type=float, nargs='+',
+                        help='lifetime of each damped oscillation component [mode: osc, both]')
+    parser.add_argument('--period_osc', type=float, nargs='+',
+                        help='period of the vibration of each damped oscillation component [mode: osc, both]')
+    parser.add_argument('--phase_osc', type=float, nargs='+',
+    help='phase factor of each damped oscilliation component [model: osc, both]')
     parser.add_argument('--no_base', action='store_false',
-                        help='exclude baseline for fitting')
+                        help='exclude baseline for fitting [mode: decay, both]')
     parser.add_argument('--fix_irf', action='store_true',
     help='fix irf parameter (fwhm_G, fwhm_L) during fitting process')
+    parser.add_argument('--fix_t0', action='store_true',
+    help='fix time zero parameter during fitting process.')
     parser.add_argument('--method_glb', default='ampgo', choices=['ampgo', 'basinhopping'],
     help=method_glb_help)
     parser.add_argument('-o', '--outdir', default='out',
@@ -122,13 +152,6 @@ def fit_tscan():
         else:
             fwhm_init = np.array([args.fwhm_G, args.fwhm_L])
 
-    if args.tau is None:
-        base = True
-        tau_init = None
-    else:
-        tau_init = np.array(args.tau)
-        base = args.no_base
-
     if (args.time_zeros is None) and (args.time_zeros_file is None):
         print('You should set either time_zeros or time_zeros_file!\n')
         return
@@ -155,10 +178,38 @@ def fit_tscan():
             bound_fwhm = [(fwhm_init, fwhm_init)]
         else:
             bound_fwhm = [(fwhm_init[0], fwhm_init[0]), (fwhm_init[1], fwhm_init[1])]
+    
+    bound_t0 = None
+    if args.fix_t0:
+        bound_t0 = t0_init.size*[None]
+        for i in range(t0_init.size):
+            bound_t0[i] = (t0_init[i], t0_init[i])
+    dargs = []
+    base = False
+    if args.mode in ['decay', 'both']:
+        if args.tau is None:
+            base = True
+            tau_init = None
+        else:
+            tau_init = np.array(args.tau)
+            base = args.no_base
+        dargs.append(tau_init)
+        if args.mode == 'decay':
+            dargs.append(base)
+    if args.mode in ['osc', 'both']:
+        tau_osc_init = np.array(args.tau_osc)
+        period_osc_init = np.array(args.period_osc)
+        phase_osc_init = np.array(args.phase_osc)
+        dargs.append(tau_osc_init)
+        dargs.append(period_osc_init)
+        dargs.append(phase_osc_init)
+    
+    if args.mode == 'both':
+        dargs.append(base)
 
     
-    result = fit_transient_exp(irf, fwhm_init, t0_init, tau_init, base, method_glb=args.method_glb, 
-    bound_fwhm=bound_fwhm, t=t, data=data, eps=eps)
+    result = FITDRIVER[args.mode](irf, fwhm_init, t0_init, *dargs, method_glb=args.method_glb, 
+    bound_fwhm=bound_fwhm, bound_t0=bound_t0, t=t, data=data, eps=eps)
 
     print(print_DriverResult(result, prefix))
     plot_DriverResult(result, name_of_dset=prefix, t=t, data=data, eps=eps)
