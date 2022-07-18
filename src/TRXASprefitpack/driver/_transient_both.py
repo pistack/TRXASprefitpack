@@ -105,7 +105,7 @@ def fit_transient_both(irf: str, fwhm_init: Union[float, np.ndarray],
        bound_period_osc (sequence of tuple): boundary for period of damped oscillation component, 
         if `bound_period_osc` is `None`, the upper and lower bound are given by ``set_bound_tau``.
        bound_phase_osc (sequence of tuple): boundary for phase factor of damped oscillation component,
-        if `bound_phase_osc` is `None`, the upper and lower bound are gien as (-np.pi/2-1e-2, np.pi/2+1e-2).
+        if `bound_phase_osc` is `None`, the upper and lower bound are gien as (-np.pi, np.pi).
        t (sequence of np.narray): time scan range for each datasets
        data (sequence of np.ndarray): sequence of datasets for time delay scan (it should not contain time scan range)
        eps (sequence of np.ndarray): sequence of estimated errors of each dataset
@@ -160,7 +160,7 @@ def fit_transient_both(irf: str, fwhm_init: Union[float, np.ndarray],
             bound[osc_start+tau_osc_init.size:osc_start+2*tau_osc_init.size] = bound_period_osc
       
       if bound_phase_osc is None:
-            bound[osc_start+2*tau_osc_init.size:] = tau_osc_init.size*[(-np.pi/2-1e-2,np.pi/2+1e-2)]
+            bound[osc_start+2*tau_osc_init.size:] = tau_osc_init.size*[(-np.pi,np.pi)]
       else:
             bound[osc_start+2*tau_osc_init.size:] = bound_phase_osc
       
@@ -258,7 +258,7 @@ def fit_transient_both(irf: str, fwhm_init: Union[float, np.ndarray],
             for j in range(data[i].shape[1]):
                   A[:tau_init.size+1*base, :] = make_A_matrix_exp(t[i]-param_opt[t0_idx], fwhm_opt, tau_opt, base, irf)
                   A[tau_init.size+1*base:, :] = make_A_matrix_dmp_osc(t[i]-param_opt[t0_idx], fwhm_opt, 
-                  tau_osc_opt, period_osc_opt, period_osc_opt, irf)
+                  tau_osc_opt, period_osc_opt, phase_osc_opt, irf)
 
                   c[i][:, j] = fact_anal_A(A, data[i][:, j], eps[i][:, j])
                   fit[i][:, j] = c[i][:, j] @ A

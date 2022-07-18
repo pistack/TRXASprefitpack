@@ -96,7 +96,7 @@ def fit_transient_dmp_osc(irf: str, fwhm_init: Union[float, np.ndarray],
        bound_period (sequence of tuple): boundary for period of damped oscillation component, 
         if `bound_period` is `None`, the upper and lower bound are given by ``set_bound_tau``.
        bound_phase (sequence of tuple): boundary for phase factor of damped oscillation component,
-        if `bound_phase` is `None`, the upper and lower bound are given as (-np.pi/2-1e-2, np.pi/2+1e-2).
+        if `bound_phase` is `None`, the upper and lower bound are given as (-np.pi, np.pi).
        t (sequence of np.narray): time scan range for each datasets
        data (sequence of np.ndarray): sequence of datasets for time delay scan (it should not contain time scan range)
        eps (sequence of np.ndarray): sequence of estimated errors of each dataset
@@ -143,7 +143,7 @@ def fit_transient_dmp_osc(irf: str, fwhm_init: Union[float, np.ndarray],
             bound[num_irf+t0_init.size+num_comp:num_irf+t0_init.size+2*num_comp] = bound_period
       
       if bound_phase is None:
-            bound[num_irf+t0_init.size+2*num_comp:] = num_comp*[(-np.pi/2-1e-2, np.pi/2+1e-2)]
+            bound[num_irf+t0_init.size+2*num_comp:] = num_comp*[(-np.pi, np.pi)]
       else:
             bound[num_irf+t0_init.size+2*num_comp:] = bound_phase
 
