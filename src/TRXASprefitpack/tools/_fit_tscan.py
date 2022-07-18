@@ -10,6 +10,8 @@
 import argparse
 import numpy as np
 
+from TRXASprefitpack.driver.driver_result import save_DriverResult
+
 from ..driver import fit_transient_exp, print_DriverResult, plot_DriverResult
 from .misc import read_data
 
@@ -17,7 +19,6 @@ from .misc import read_data
 description = '''
 fit tscan: fitting experimental time trace spectrum data with the convolution of the sum of exponential decay and irf function
 There are three types of irf function (gaussian, cauchy, pseudo voigt)
-It uses lmfit python package to fitting time trace data and estimates error bound of irf parameter and lifetime constants. 
 To calculate the contribution of each life time component, it solve least linear square problem via scipy linalg lstsq module.
 '''
 
@@ -56,6 +57,12 @@ full width at half maximum for cauchy shape
 It would not be used when you did not set irf or use gaussian irf function
 '''
 
+method_glb_help='''
+Global optimization Method
+ 'ampgo': Adapted Memory Programming for Global Optimization Algorithm
+ 'basinhopping'
+'''
+
 
 def fit_tscan():
 
@@ -84,13 +91,14 @@ def fit_tscan():
                         help='exclude baseline for fitting')
     parser.add_argument('--fix_irf', action='store_true',
     help='fix irf parameter (fwhm_G, fwhm_L) during fitting process')
-    parser.add_argument('-o', '--out', default='out',
-                        help='prefix for output files')
+    parser.add_argument('--method_glb', default='ampgo', choices=['ampgo', 'basinhopping'],
+    help=method_glb_help)
+    parser.add_argument('-o', '--outdir', default='out',
+                        help='name of directory to store output files')
     args = parser.parse_args()
 
     prefix = np.array(args.prefix, dtype=str)
     num_file = np.array(args.num_file, dtype=int)
-    out_prefix = args.out
 
     irf = args.irf
     if irf == 'g':
@@ -98,7 +106,6 @@ def fit_tscan():
             print('You are using gaussian irf, so you should set fwhm_G!\n')
             return
         else:
-            num_irf = 1
             fwhm_init = args.fwhm_G
     elif irf == 'c':
         if args.fwhm_L is None:
@@ -106,7 +113,6 @@ def fit_tscan():
                   'so you should set fwhm_L!\n')
             return
         else:
-            num_irf = 1
             fwhm_init = args.fwhm_L
     else:
         if (args.fwhm_G is None) or (args.fwhm_L is None):
@@ -114,18 +120,14 @@ def fit_tscan():
                   'so you should set both fwhm_G and fwhm_L!\n')
             return
         else:
-            num_irf = 2
             fwhm_init = np.array([args.fwhm_G, args.fwhm_L])
 
     if args.tau is None:
-        find_zero = True  # time zero mode
         base = True
-        num_comp = 0
+        tau_init = None
     else:
-        find_zero = False
         tau_init = np.array(args.tau)
         base = args.no_base
-        num_comp = tau_init.size
 
     if (args.time_zeros is None) and (args.time_zeros_file is None):
         print('You should set either time_zeros or time_zeros_file!\n')
@@ -155,9 +157,11 @@ def fit_tscan():
             bound_fwhm = [(fwhm_init[0], fwhm_init[0]), (fwhm_init[1], fwhm_init[1])]
 
     
-    result = fit_transient_exp(irf, fwhm_init, t0_init, tau_init, base, method_glb='ampgo', bound_fwhm=bound_fwhm, t=t, data=data, eps=eps)
+    result = fit_transient_exp(irf, fwhm_init, t0_init, tau_init, base, method_glb=args.method_glb, 
+    bound_fwhm=bound_fwhm, t=t, data=data, eps=eps)
 
-    print(print_DriverResult(result))
+    print(print_DriverResult(result, prefix))
     plot_DriverResult(result, name_of_dset=prefix, t=t, data=data, eps=eps)
+    save_DriverResult(result, args.outdir, name_of_dset=prefix, t=t, eps=eps)
 
     return

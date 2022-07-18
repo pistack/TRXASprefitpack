@@ -9,8 +9,10 @@ convolution of sum of exponential decay and instrumental response function
 from ._ampgo import ampgo
 from .broad import gen_theory_data
 from .ads import sads, dads
-from .driver_result import DriverResult, print_DriverResult, plot_DriverResult
+from .driver_result import DriverResult, print_DriverResult, plot_DriverResult, save_DriverResult
 from ._transient_exp import fit_transient_exp
+from ._transient_dmp_osc import fit_transient_dmp_osc
 
 __all__ = ['ampgo', 'gen_theory_data', 'sads', 'dads',
-           'DriverResult', 'print_DriverResult', 'plot_DriverResult', 'fit_transient_exp']
+           'DriverResult', 'print_DriverResult', 'plot_DriverResult', 'save_DriverResult',
+           'fit_transient_exp']

@@ -1,7 +1,7 @@
 '''
-transient:
+_transient_dmp_osc:
 submodule for fitting time delay scan with the
-convolution of sum of exponential decay and instrumental response function 
+convolution of sum of damped oscillation and instrumental response function 
 
 :copyright: 2021-2022 by pistack (Junho Lee).
 :license: LGPL3.
@@ -13,35 +13,38 @@ from .driver_result import DriverResult
 from ._ampgo import ampgo
 from scipy.optimize import basinhopping
 from scipy.optimize import least_squares
-from ..mathfun.A_matrix import make_A_matrix_exp, fact_anal_A
+from ..mathfun.A_matrix import make_A_matrix_dmp_osc, fact_anal_A
 from ..res.parm_bound import set_bound_t0, set_bound_tau
 from ..res.res_gen import residual_scalar, grad_res_scalar
-from ..res.res_decay import residual_decay, jac_res_decay
+from ..res.res_osc import residual_dmp_osc, jac_res_dmp_osc
 
 GLOBAL_OPTS = {'ampgo': ampgo, 'basinhopping': basinhopping}
 
-def fit_transient_exp(irf: str, fwhm_init: Union[float, np.ndarray], 
-                      t0_init: np.ndarray, tau_init: np.ndarray, base: bool, 
-                      method_glb: Optional[str] = 'ampgo', 
-                      method_lsq: Optional[str] = 'trf',
-                      kwargs_glb: Optional[dict] = None, 
-                      kwargs_lsq: Optional[dict] = None,
-                      bound_fwhm: Optional[Sequence[Tuple[float, float]]] = None, 
-                      bound_t0: Optional[Sequence[Tuple[float, float]]] = None, 
-                      bound_tau: Optional[Sequence[Tuple[float, float]]] = None,
-                      t: Optional[Sequence[np.ndarray]] = None, 
-                      data: Optional[Sequence[np.ndarray]] = None,
-                      eps: Optional[Sequence[np.ndarray]] = None) -> DriverResult:
+def fit_transient_dmp_osc(irf: str, fwhm_init: Union[float, np.ndarray], 
+                          t0_init: np.ndarray, tau_init: np.ndarray, period_init: np.ndarray,
+                          phase_init: np.ndarray,
+                          method_glb: Optional[str] = 'ampgo', 
+                          method_lsq: Optional[str] = 'trf',
+                          kwargs_glb: Optional[dict] = None, 
+                          kwargs_lsq: Optional[dict] = None,
+                          bound_fwhm: Optional[Sequence[Tuple[float, float]]] = None, 
+                          bound_t0: Optional[Sequence[Tuple[float, float]]] = None, 
+                          bound_tau: Optional[Sequence[Tuple[float, float]]] = None,
+                          bound_period: Optional[Sequence[Tuple[float, float]]] = None,
+                          bound_phase: Optional[Sequence[Tuple[float, float]]] = None,
+                          t: Optional[Sequence[np.ndarray]] = None, 
+                          data: Optional[Sequence[np.ndarray]] = None,
+                          eps: Optional[Sequence[np.ndarray]] = None) -> DriverResult:
                       
       '''
       driver routine for fitting multiple data set of time delay scan data with
-      sum of the convolution of exponential decay and instrumental response function.
+      sum of the convolution of dmped oscillation and instrumental response function.
 
       This driver using two step algorithm to search best parameter, its covariance and
       estimated parameter error.
 
-      Model: sum of convolution of exponential decay and instrumental response function
-      :math:`\\sum_{i=1}^n c_i y_i(t-t_0, {fwhm}, 1/\\tau_i) + {base}*c_{n+1} y_{n+1}(t-t0, {fwhm}, 0)`
+      Model: sum of convolution of damped oscillation and instrumental response function
+      :math:`\\sum_{i=1}^n c_i y_i(t-t_0, {fwhm}, 1/\\tau_i)`
       
       Objective function: chi squared
       :math:`\\chi^2 = \sum_i \\left(\\frac{model-data_i}{eps_i}\\right)^2`
@@ -74,8 +77,9 @@ def fit_transient_exp(irf: str, fwhm_init: Union[float, np.ndarray],
         
         if irf == 'pv' then fwhm_init is the numpy.ndarray with [fwhm_G, fwhm_L]
        t0_init (np.ndarray): time zeros for each scan
-       tau_init (np.ndarray): lifetime constant for each decay component
-       base (bool): Whether or not include baseline feature (i.e. very long lifetime constant)
+       tau_init (np.ndarray): lifetime constant for each damped oscillation component
+       period_init (np.ndarray): period of each oscillation component
+       phase_init (np.ndarray): phase factor of each oscillation component
        method_glb ({'ampgo', 'basinhopping'}): 
         method of global optimization used in fitting process
        method_lsq ({'trf', 'dogbox', 'lm'}): method of local optimization for least_squares
@@ -87,8 +91,12 @@ def fit_transient_exp(irf: str, fwhm_init: Union[float, np.ndarray],
         the upper and lower bound are given as `(fwhm_init/2, 2*fwhm_init)`.
        bound_t0 (sequence of tuple): boundary for time zero parameter. 
         If `bound_t0` is `None`, the upper and lower bound are given as `(t0-2*fwhm_init, t0+2*fwhm_init)`.
-       bound_tau (sequence of tuple): boundary for lifetime constant for decay component, 
+       bound_tau (sequence of tuple): boundary for lifetime constant for damped oscillation component, 
         if `bound_tau` is `None`, the upper and lower bound are given by ``set_bound_tau``.
+       bound_period (sequence of tuple): boundary for period of damped oscillation component, 
+        if `bound_period` is `None`, the upper and lower bound are given by ``set_bound_tau``.
+       bound_phase (sequence of tuple): boundary for phase factor of damped oscillation component,
+        if `bound_phase` is `None`, the upper and lower bound are gien as (-np.pi/2-1e-4, np.pi/2+1e-4).
        t (sequence of np.narray): time scan range for each datasets
        data (sequence of np.ndarray): sequence of datasets for time delay scan (it should not contain time scan range)
        eps (sequence of np.ndarray): sequence of estimated errors of each dataset
@@ -96,15 +104,18 @@ def fit_transient_exp(irf: str, fwhm_init: Union[float, np.ndarray],
        Returns:
         DriverResult class object
       '''
-      
+      num_comp = tau_init.size
+
       num_irf = 1*(irf in ['g', 'c'])+2*(irf == 'pv')
-      num_param = num_irf+t0_init.size+tau_init.size
+      num_param = num_irf+t0_init.size+3*num_comp
       param = np.empty(num_param, dtype=float)
       fix_param_idx = np.empty(num_param, dtype=bool)
 
       param[:num_irf] = fwhm_init
       param[num_irf:num_irf+t0_init.size] = t0_init
-      param[num_irf+t0_init.size:] = tau_init
+      param[num_irf+t0_init.size:num_irf+t0_init.size+num_comp] = tau_init
+      param[num_irf+t0_init.size+num_comp:num_irf+t0_init.size+2*num_comp] = period_init
+      param[num_irf+t0_init.size+2*num_comp:] = phase_init
       bound = num_param*[None]
 
       if bound_fwhm is None:
@@ -120,15 +131,26 @@ def fit_transient_exp(irf: str, fwhm_init: Union[float, np.ndarray],
             bound[num_irf:num_irf+t0_init.size] = bound_t0
       
       if bound_tau is None:
-            for i in range(tau_init.size):
+            for i in range(num_comp):
                   bound[i+num_irf+t0_init.size] = set_bound_tau(tau_init[i], fwhm_init)
       else:
-            bound[num_irf+t0_init.size:] = bound_tau
+            bound[num_irf+t0_init.size:num_irf+t0_init.size+num_comp] = bound_tau
+      
+      if bound_period is None:
+            for i in range(num_comp):
+                  bound[i+num_irf+t0_init.size+num_comp] = set_bound_tau(period_init[i], fwhm_init)
+      else:
+            bound[num_irf+t0_init.size+num_comp:num_irf+t0_init.size+2*num_comp] = bound_period
+      
+      if bound_phase is None:
+            bound[num_irf+t0_init.size+2*num_comp:] = num_comp*[(-np.pi/2-1e-4, np.pi/2+1e-4)]
+      else:
+            bound[num_irf+t0_init.size+2*num_comp:] = bound_phase
 
       for i in range(num_param):
             fix_param_idx[i] = (bound[i][0] == bound[i][1])
       
-      go_args = (residual_decay, jac_res_decay, tau_init.size, base, irf, fix_param_idx, t, data, eps)
+      go_args = (residual_dmp_osc, jac_res_dmp_osc, num_comp, irf, fix_param_idx, t, data, eps)
       min_go_kwargs = {'args': go_args, 'jac': grad_res_scalar, 'bounds': bound}
       if irf == 'pv' and not (fix_param_idx[0] and fix_param_idx[1]):
             min_go_kwargs['jac'] = None
@@ -161,30 +183,34 @@ def fit_transient_exp(irf: str, fwhm_init: Union[float, np.ndarray],
                         bound_tuple[1][i] = bound[i][1]*(1-1e-4)+1e-8
       
       if irf == 'pv' and not (fix_param_idx[0] and fix_param_idx[1]):
-            res_lsq = least_squares(residual_decay, param_gopt, method=method_lsq, jac='2-point', bounds=bound_tuple, **kwargs_lsq)
+            res_lsq = least_squares(residual_dmp_osc, param_gopt, method=method_lsq, jac='2-point', bounds=bound_tuple, **kwargs_lsq)
       else:
-            res_lsq = least_squares(residual_decay, param_gopt, method=method_lsq, jac=jac_res_decay, bounds=bound_tuple, **kwargs_lsq)
+            res_lsq = least_squares(residual_dmp_osc, param_gopt, method=method_lsq, jac=jac_res_dmp_osc, bounds=bound_tuple, **kwargs_lsq)
       param_opt = res_lsq['x']
 
       fwhm_opt = param_opt[:num_irf]
-      tau_opt = param_opt[num_irf+t0_init.size:]
+      tau_opt = param_opt[num_irf+t0_init.size:num_irf+t0_init.size+num_comp]
+      period_opt = param_opt[num_irf+t0_init.size+num_comp:num_irf+t0_init.size+2*num_comp]
+      phase_opt = param_opt[num_irf+t0_init.size+2*num_comp:]
       
       fit = np.empty(len(t), dtype=object); res = np.empty(len(t), dtype=object)
       
+      num_tot_scan = 0
       for i in range(len(t)):
-        fit[i] = np.empty((data[i].shape[0], data[i].shape[1]+1))
-        res[i] = np.empty((data[i].shape[0], data[i].shape[1]+1))
-        fit[i][:, 0] = t[i]; res[i][:, 0] = t[i]
+            num_tot_scan = num_tot_scan + data[i].shape[1]
+            fit[i] = np.empty(data[i].shape)
+            res[i] = np.empty(data[i].shape)
+
 
     # Calc individual chi2
       chi = res_lsq['fun']
-      num_param_tot = tau_init.size+1*base+num_param-np.sum(fix_param_idx)
+      num_param_tot = num_tot_scan*num_comp+num_param-np.sum(fix_param_idx)
       chi2 = 2*res_lsq['cost']
       red_chi2 = chi2/(chi.size-num_param_tot)
       
       start = 0; end = 0; 
       chi2_ind = np.empty(len(t), dtype=object); red_chi2_ind = np.empty(len(t), dtype=object)
-      num_param_ind = 2*tau_opt.size+1*base+2+1*(irf == 'pv')
+      num_param_ind = 4*num_comp+2+1*(irf == 'pv')
 
       for i in range(len(t)):
             end = start + data[i].size
@@ -206,22 +232,21 @@ def fit_transient_exp(irf: str, fwhm_init: Union[float, np.ndarray],
             param_name[1] = 'fwhm_L'
 
       for i in range(len(t)):
-            if base:
-                  c[i] = np.empty((tau_init.size+1, data[i].shape[1]))
-            else:
-                  c[i] = np.empty((tau_init.size, data[i].shape[1]))
+            c[i] = np.empty((num_comp, data[i].shape[1]))
             
             for j in range(data[i].shape[1]):
-                  A = make_A_matrix_exp(t[i]-param_opt[t0_idx], fwhm_opt, tau_opt, base, irf)
+                  A = make_A_matrix_dmp_osc(t[i]-param_opt[t0_idx], fwhm_opt, tau_opt, period_opt, phase_opt, irf)
                   c[i][:, j] = fact_anal_A(A, data[i][:, j], eps[i][:, j])
-                  fit[i][:, j+1] = c[i][:, j] @ A
+                  fit[i][:, j] = c[i][:, j] @ A
                   param_name[t0_idx] = f't_0_{i+1}_{j+1}'
                   t0_idx = t0_idx + 1
             
-            res[i][:, 1:] = data[i] - fit[i][:, 1:]
+            res[i] = data[i] - fit[i]
       
-      for i in range(tau_init.size):
+      for i in range(num_comp):
             param_name[num_irf+t0_init.size+i] = f'tau_{i+1}'
+            param_name[num_irf+t0_init.size+num_comp+i] = f'period_{i+1}'
+            param_name[num_irf+t0_init.size+2*num_comp+i] = f'phase_{i+1}'
       
       jac = res_lsq['jac']
       hes = jac.T @ jac
@@ -236,7 +261,7 @@ def fit_transient_exp(irf: str, fwhm_init: Union[float, np.ndarray],
       corr[mask_2d] = corr[mask_2d]/weight[mask_2d]
 
       result = DriverResult()
-      result['model'] = 'decay'
+      result['model'] = 'dmp_osc'
       result['fit'] = fit; result['res'] = res; result['irf'] = irf
 
       if irf == 'g':
@@ -247,7 +272,7 @@ def fit_transient_exp(irf: str, fwhm_init: Union[float, np.ndarray],
             result['eta'] = calc_eta(fwhm_opt[0], fwhm_opt[1])
       
       result['param_name'] = param_name; result['x'] = param_opt
-      result['bounds'] = bound; result['base'] = base; result['c'] = c
+      result['bounds'] = bound; result['base'] = False; result['c'] = c
       result['chi2'] = chi2; result['chi2_ind'] = chi2_ind
       result['aic'] = chi.size*np.log(chi2/chi.size)+2*num_param_tot
       result['bic'] = chi.size*np.log(chi2/chi.size)+num_param_tot*np.log(chi.size)

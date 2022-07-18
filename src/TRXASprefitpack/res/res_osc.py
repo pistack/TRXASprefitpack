@@ -194,9 +194,9 @@ def jac_res_dmp_osc(params: np.ndarray, num_comp: int, irf: str,
                 grad = grad_gau + eta*(grad_cauchy-grad_gau)
    
             grad = np.einsum('j,ij->ij', 1/e[:, j], grad)
-            df[end:end+step, tau_start:tau_start+num_comp] = np.einsum('i,ij->ij', -1/tau**2, grad[2:2+num_comp,:])
-            df[end:end+step, tau_start+num_comp: tau_start+2*num_comp] = grad[2+num_comp:2+2*num_comp,:]
-            df[end:end+step, tau_start+2*num_comp:] = grad[2+2*num_comp:,:]
+            df[end:end+step, tau_start:tau_start+num_comp] = np.einsum('i,ij->ij', -1/tau**2, grad[2:2+num_comp,:]).T
+            df[end:end+step, tau_start+num_comp: tau_start+2*num_comp] = grad[2+num_comp:2+2*num_comp,:].T
+            df[end:end+step, tau_start+2*num_comp:] = grad[2+2*num_comp:,:].T
             df[end:end+step, t0_idx] = -grad[0, :]
             df[end:end+step, 0] = grad[1, :]
                 

@@ -5,13 +5,15 @@ subpackage for TRXASprefitpack utilities
 :copyright: 2021-2022 by pistack (Junho Lee).
 :license: LGPL3
 '''
-from .calc_broad import calc_broad
-from .match_scale import match_scale
-from .fit_static import fit_static
-from .fit_tscan import fit_tscan
-from .calc_dads import calc_dads
-from .calc_sads import calc_sads
+from ._calc_broad import calc_broad
+from ._match_scale import match_scale
+from ._fit_static import fit_static
+from ._fit_tscan import fit_tscan
+from ._fit_osc import fit_osc
+from ._calc_dads import calc_dads
+from ._calc_sads import calc_sads
 
-__all__ = ['calc_broad', 'match_scale',
-           'fit_static', 'fit_tscan',
-           'calc_dads', 'calc_sads']
+__all__ = ['match_scale',
+           'calc_broad', 'calc_dads', 'calc_sads',
+           'fit_static',
+           'fit_tscan', 'fit_osc']

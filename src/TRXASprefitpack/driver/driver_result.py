@@ -1,4 +1,7 @@
+from html.entities import name2codepoint
 from typing import Optional, Sequence
+import os
+from pathlib import Path
 import numpy as np
 import matplotlib.pyplot as plt
 
@@ -71,17 +74,21 @@ class DriverResult(dict):
       def __dir__(self):
             return list(self.keys())
 
-def print_DriverResult(result: DriverResult, corr_tol=1e-1) -> str:
+def print_DriverResult(result: DriverResult, name_of_dset: Optional[Sequence[str]] = None, corr_tol: float =1e-1) -> str:
       '''
       Pretty docstring of DriverResult class
 
       Args:
        result: DriverResult class instance which has fitting result
+       name_of_dset: name of each data sets
        corr_tol: parameter correlation greather `corr_tol` would be reported
       
       Returns:
        string which reports fitting results
       '''
+
+      if name_of_dset is None:
+            name_of_dset = list(range(1, 1+len(result['red_chi2_ind'])))
 
       doc_lst = []
       doc_lst.append("[Model information]")
@@ -119,7 +126,7 @@ def print_DriverResult(result: DriverResult, corr_tol=1e-1) -> str:
 
       doc_lst.append("[Component Contribution]")
       for i in range(len(result['c'])):
-            doc_lst.append(f"    DataSet {i+1}:")
+            doc_lst.append(f"    DataSet {name_of_dset[i]}:")
             row = ['     #tscan']
             coeff_abs = np.abs(result['c'][i])
             coeff_sum = np.sum(coeff_abs, axis=0)
@@ -128,14 +135,14 @@ def print_DriverResult(result: DriverResult, corr_tol=1e-1) -> str:
                   row.append(f'tscan_{j+1}')
             doc_lst.append('\t'.join(row))
             for d in range(coeff_contrib.shape[0]-1):
-                  row = [f'     decay {d+1}']
+                  row = [f"     {result['model']} {d+1}"]
                   for l in range(coeff_contrib.shape[1]):
                         row.append(f'{coeff_contrib[d, l]: .2f}%')
                   doc_lst.append('\t'.join(row))
             if result['base']:
                   row = [f'     base']
             else:
-                  row = [f'     decay {coeff_contrib.shape[0]}']
+                  row = [f"     {result['model']} {coeff_contrib.shape[0]}"]
             for l in range(coeff_contrib.shape[1]):
                   row.append(f'{coeff_contrib[coeff_contrib.shape[0]-1,l]: .2f}%')
             doc_lst.append('\t'.join(row))
@@ -156,7 +163,9 @@ def print_DriverResult(result: DriverResult, corr_tol=1e-1) -> str:
 
       return '\n'.join(doc_lst)
 
-def plot_DriverResult(result: DriverResult, name_of_dset: Optional[Sequence[str]] = None, t: Optional[Sequence[np.ndarray]] = None, 
+def plot_DriverResult(result: DriverResult, name_of_dset: Optional[Sequence[str]] = None,
+                      x_min: Optional[float] = None, x_max: Optional[float] = None, save_fig: Optional[str] = None, 
+                      t: Optional[Sequence[np.ndarray]] = None, 
                       data: Optional[Sequence[np.ndarray]] = None,
                       eps: Optional[Sequence[np.ndarray]] = None):
       '''
@@ -165,6 +174,9 @@ def plot_DriverResult(result: DriverResult, name_of_dset: Optional[Sequence[str]
       Args:
        result: fitting result
        name_of_dset: name of each dataset
+       x_min: minimum x range
+       x_max: maximum x range
+       save_fig: prefix of saved png plots. If `save_fig` is `None`, plots are displayed istead of being saved.
        t: sequence of scan range of each dataset
        data: sequence of datasets for time delay scan (it should not contain time scan range)
        eps: sequence of estimated errors of each dataset
@@ -183,11 +195,73 @@ def plot_DriverResult(result: DriverResult, name_of_dset: Optional[Sequence[str]
                   sub1.set_title(subtitle)
                   sub1.errorbar(t[i], data[i][:, j], eps[i][:, j], marker='o', mfc='none',
                   label=f'expt {title}', linestyle='none')
-                  sub1.plot(t[i], result['fit'][i][:, j+1], label=f'fit {title}')
+                  sub1.plot(t[i], result['fit'][i][:, j], label=f'fit {title}')
                   sub1.legend()
                   sub2 = fig.add_subplot(212)
-                  sub2.errorbar(t[i], result['res'][i][:, j+1], 
+                  sub2.errorbar(t[i], result['res'][i][:, j], 
                   eps[i][:, j], marker='o', mfc='none', label=f'res {title}', linestyle='none')
                   sub2.legend()
-      plt.show()
+                  if x_min is not None and x_max is not None:
+                        sub1.set_xlim(x_min, x_max)
+                        sub2.set_xlim(x_min, x_max)
+                  if save_fig is not None:
+                        plt.savefig(f'{save_fig}_{name_of_dset[i]}_{j+1}.png')
+      if save_fig is None:
+            plt.show()
+      return
+
+def save_DriverResult(result: DriverResult, dirname: str, name_of_dset: Optional[Sequence[str]] = None,
+                      t: Optional[Sequence[np.ndarray]] = None,
+                      eps: Optional[Sequence[np.ndarray]] = None):
+      '''
+      save fitting result to the text file
+
+      Args:
+       result: fitting result
+       dirname: name of the directory in which text files for fitting result are saved.
+       name_of_dset: name of each data sets. If `name_of_dset` is None then it is set to [1,2,3,....]
+       t: sequence of scan range
+       eps: sequence of estimated error of each datasets
+      
+      Returns:
+       `fit_summary.txt`: Summary for the fitting result
+       `weight_{name_of_dset[i]}.txt`: Weight of each model component of i th dataset
+       `fit_{name_of_dset[i]}.txt`: fitting curve for i th dataset
+       `res_{name_f_dset[i]}_j.txt`: residual (fit-data) curve for j th scan of i th data
+                                     The format of text file is (t, res, eps)
+
+      
+      Note:
+       If `dirname` directory is not exists, it creates `dirname` directory.
+      '''
+      if not (Path.cwd()/dirname).exists():
+            os.mkdir(dirname)
+
+      if name_of_dset is None:
+            name_of_dset = list(range(1, 1+len(t)))
+      
+      with open(f'{dirname}/fit_summary.txt', 'w') as f:
+            f.write(print_DriverResult(result, name_of_dset))
+      
+      for i in range(len(t)):
+            coeff_fmt = eps[i].shape[1]*['%.8e']
+            fit_fmt = (1+eps[i].shape[1])*['%.8e']
+            coeff_header_lst = []
+            fit_header_lst = ['time_delay']
+            for j in range(eps[i].shape[1]):
+                  res_save = np.vstack((t[i], result['res'][i][:,j], eps[i][:,j])).T
+                  np.savetxt(f'{dirname}/res_{name_of_dset[i]}_{j+1}.txt', res_save,
+                  fmt=['%.8e', '%.8e', '%.8e'], 
+                  header=f'time_delay \t res_{name_of_dset[i]}_{j+1} \t eps')
+                  fit_header_lst.append(f'fit_{name_of_dset[i]}_{j+1}')
+                  coeff_header_lst.append(f'tscan_{name_of_dset[i]}_{j+1}')
+            
+            fit_header = '\t'.join(fit_header_lst)
+            coeff_header = '\t'.join(coeff_header_lst)
+
+            np.savetxt(f'{dirname}/weight_{name_of_dset[i]}.txt', result['c'][i], fmt=coeff_fmt,
+            header=coeff_header)
+            fit_save = np.vstack((t[i], result['fit'][i].T)).T
+            np.savetxt(f'{dirname}/fit_{name_of_dset[i]}.txt', fit_save, fmt=fit_fmt, header=fit_header)
+      
       return

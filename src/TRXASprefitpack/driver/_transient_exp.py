@@ -1,5 +1,5 @@
 '''
-transient:
+_transient_exp:
 submodule for fitting time delay scan with the
 convolution of sum of exponential decay and instrumental response function 
 
@@ -96,9 +96,13 @@ def fit_transient_exp(irf: str, fwhm_init: Union[float, np.ndarray],
        Returns:
         DriverResult class object
       '''
-      
+      if tau_init is None:
+            num_comp = 0
+      else:
+            num_comp = tau_init.size
+
       num_irf = 1*(irf in ['g', 'c'])+2*(irf == 'pv')
-      num_param = num_irf+t0_init.size+tau_init.size
+      num_param = num_irf+t0_init.size+num_comp
       param = np.empty(num_param, dtype=float)
       fix_param_idx = np.empty(num_param, dtype=bool)
 
@@ -120,7 +124,7 @@ def fit_transient_exp(irf: str, fwhm_init: Union[float, np.ndarray],
             bound[num_irf:num_irf+t0_init.size] = bound_t0
       
       if bound_tau is None:
-            for i in range(tau_init.size):
+            for i in range(num_comp):
                   bound[i+num_irf+t0_init.size] = set_bound_tau(tau_init[i], fwhm_init)
       else:
             bound[num_irf+t0_init.size:] = bound_tau
@@ -128,7 +132,7 @@ def fit_transient_exp(irf: str, fwhm_init: Union[float, np.ndarray],
       for i in range(num_param):
             fix_param_idx[i] = (bound[i][0] == bound[i][1])
       
-      go_args = (residual_decay, jac_res_decay, tau_init.size, base, irf, fix_param_idx, t, data, eps)
+      go_args = (residual_decay, jac_res_decay, num_comp, base, irf, fix_param_idx, t, data, eps)
       min_go_kwargs = {'args': go_args, 'jac': grad_res_scalar, 'bounds': bound}
       if irf == 'pv' and not (fix_param_idx[0] and fix_param_idx[1]):
             min_go_kwargs['jac'] = None
@@ -171,14 +175,16 @@ def fit_transient_exp(irf: str, fwhm_init: Union[float, np.ndarray],
       
       fit = np.empty(len(t), dtype=object); res = np.empty(len(t), dtype=object)
       
+      num_tot_scan = 0
       for i in range(len(t)):
-        fit[i] = np.empty((data[i].shape[0], data[i].shape[1]+1))
-        res[i] = np.empty((data[i].shape[0], data[i].shape[1]+1))
-        fit[i][:, 0] = t[i]; res[i][:, 0] = t[i]
+            num_tot_scan = num_tot_scan + data[i].shape[1]
+            fit[i] = np.empty(data[i].shape)
+            res[i] = np.empty(data[i].shape)
+
 
     # Calc individual chi2
       chi = res_lsq['fun']
-      num_param_tot = tau_init.size+1*base+num_param-np.sum(fix_param_idx)
+      num_param_tot = num_tot_scan*(num_comp+1*base)+num_param-np.sum(fix_param_idx)
       chi2 = 2*res_lsq['cost']
       red_chi2 = chi2/(chi.size-num_param_tot)
       
@@ -207,20 +213,20 @@ def fit_transient_exp(irf: str, fwhm_init: Union[float, np.ndarray],
 
       for i in range(len(t)):
             if base:
-                  c[i] = np.empty((tau_init.size+1, data[i].shape[1]))
+                  c[i] = np.empty((num_comp+1, data[i].shape[1]))
             else:
-                  c[i] = np.empty((tau_init.size, data[i].shape[1]))
+                  c[i] = np.empty((num_comp, data[i].shape[1]))
             
             for j in range(data[i].shape[1]):
                   A = make_A_matrix_exp(t[i]-param_opt[t0_idx], fwhm_opt, tau_opt, base, irf)
                   c[i][:, j] = fact_anal_A(A, data[i][:, j], eps[i][:, j])
-                  fit[i][:, j+1] = c[i][:, j] @ A
+                  fit[i][:, j] = c[i][:, j] @ A
                   param_name[t0_idx] = f't_0_{i+1}_{j+1}'
                   t0_idx = t0_idx + 1
             
-            res[i][:, 1:] = data[i] - fit[i][:, 1:]
+            res[i] = data[i] - fit[i]
       
-      for i in range(tau_init.size):
+      for i in range(num_comp):
             param_name[num_irf+t0_init.size+i] = f'tau_{i+1}'
       
       jac = res_lsq['jac']
