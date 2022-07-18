@@ -69,14 +69,12 @@ def solve_l_model(equation: np.ndarray,
 
     return eigval, V, c
 
-def solve_seq_model(tau: np.ndarray):
+def solve_seq_model(tau: np.ndarray, y0: np.ndarray):
     '''
     Solve sequential decay model
     
     sequential decay model: 
       0 -> 1 -> 2 -> 3 -> ... -> n 
-    initial condition:
-     y0 = [1, 0, 0, ..., 0] 
 
     Args:
       tau: liftime constants for each decay
@@ -99,7 +97,7 @@ def solve_seq_model(tau: np.ndarray):
     
     c[0] = 1
     for i in range(1, eigval.size):
-      c[i] = -np.dot(c[:i], V[i,:i])
+      c[i] = y0[i]-np.dot(c[:i], V[i,:i])
     return eigval, V, c
 
 def compute_model(t: np.ndarray,

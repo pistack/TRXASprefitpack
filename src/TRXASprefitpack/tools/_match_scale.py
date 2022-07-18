@@ -132,8 +132,11 @@ def match_scale():
     escan_data_scaled[:, 1:] = np.einsum('j,ij->ij', scale_factor, escan_data)
     escan_eps_scaled = np.einsum('j,ij->ij', scale_factor, escan_eps)
 
-    np.savetxt(f'{out_prefix}_escan_scaled.txt', escan_data_scaled)
-    np.savetxt(f'{out_prefix}_eps_scaled.txt', escan_eps_scaled)
+    header_escan = '\t'.join(list(map(str,escan_time)))
+    
+
+    np.savetxt(f'{out_prefix}_escan_scaled.txt', escan_data_scaled, header='energy \t'+header_escan)
+    np.savetxt(f'{out_prefix}_eps_scaled.txt', escan_eps_scaled, fmt=len(escan_time)*['%.8e'], header=header_escan)
     np.savetxt(f'{out_prefix}_escan_time.txt', escan_time)
 
     return

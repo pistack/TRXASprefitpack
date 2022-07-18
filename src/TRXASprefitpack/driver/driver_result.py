@@ -1,4 +1,3 @@
-from html.entities import name2codepoint
 from typing import Optional, Sequence
 import os
 from pathlib import Path

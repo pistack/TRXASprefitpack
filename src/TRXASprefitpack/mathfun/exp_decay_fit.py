@@ -1,12 +1,12 @@
 '''
 exp_conv_irf:
-submodule for fitting data with sum of exponential decay convolved with irf
+submodule for fitting data with sum of exponential decay or damped oscillation convolved with irf
 
 :copyright: 2021-2022 by pistack (Junho Lee).
 :license: LGPL3.
 '''
 
-from typing import Tuple, Union, Optional
+from typing import Union, Optional
 import numpy as np
 import scipy.linalg as LA
 

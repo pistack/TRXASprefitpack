@@ -113,12 +113,18 @@ def calc_dads():
 
     out_ads = np.vstack((e, ads)).T
 
-    # save calculated sads results
-    np.savetxt(f'{out_prefix}_dads.txt', out_ads)
-    np.savetxt(f'{out_prefix}_dads_eps.txt', ads_eps.T)
-    np.savetxt(f'{out_prefix}_fit.txt', fit)
+    ads_header_lst = []
+    for i in range(ads.shape[0]):
+        ads_header.append(f'ex{i+1}')
+    ads_header = '\t'.join(ads_header_lst)
+    fit_header = '\t'.join(list(map(str, escan_time)))
 
-    # plot sads results
+    # save calculated dads results
+    np.savetxt(f'{out_prefix}_dads.txt', out_ads, fmt=out_ads.shape[1]*['%.8e'], header='energy \t'+ads_header)
+    np.savetxt(f'{out_prefix}_dads_eps.txt', ads_eps.T, fmt=ads_eps.shape[0]*['%.8e'], header=ads_header)
+    np.savetxt(f'{out_prefix}_dads_fit.txt', fit, fmt=(len(escan_time)+1)*['%.8e'], header='energy \t'+fit_header)
+
+    # plot dads results
     plt.figure(1)
     plt.title('Decay Associated Difference Spectrum')
     for i in range(ads.shape[0]):

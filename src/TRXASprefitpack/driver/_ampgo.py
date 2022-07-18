@@ -88,7 +88,7 @@ def ampgo(func: Callable, x0: np.ndarray, maxfev: Optional[int] = None, totalite
 
     for i in range(n):
         if bounds[i] is None:
-            l, u = -np.inf, np.inf
+            low[i], up[i] = -np.inf, np.inf
         else:
             l, u = bounds[i]
             if l is None:

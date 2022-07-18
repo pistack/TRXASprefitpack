@@ -83,6 +83,8 @@ def calc_sads():
     help=seq_help)
     parser.add_argument('-gsi', '--gs_index', default=None, type=str, 
     choices=['first', 'last', 'first_and_last'], help=gs_help)
+    parser.add_argument('--init_cond', default=None, nargs='+', type=float,
+    help='initial condition ith argument is corresponding to inital concentration of ith component')
     parser.add_argument('--irf', default='g', choices=['g', 'c', 'pv'],
                         help=irf_help)
     parser.add_argument('--fwhm_G', type=float,
@@ -142,13 +144,13 @@ def calc_sads():
     escan_time = np.array(args.escan_time)
     out_prefix = args.out
     exclude = args.gs_index
+    y0 = np.array(args.init_cond)
 
     if args.seq:
-        eigval, V, c = solve_seq_model(tau)
+        eigval, V, c = solve_seq_model(tau, y0)
     else:
         rate_eq_mat_str = np.genfromtxt(args.rate_eq_mat, dtype=str)
         L_mat = parse_matrix(rate_eq_mat_str, tau)
-        y0 = np.zeros(L_mat.shape[0]); y0[0] = 1
         eigval, V, c = solve_l_model(L_mat, y0)
     
     ads, ads_eps, fit = sads(escan_time-time_zero, fwhm, eigval, V, c, exclude, irf, data=escan_data[:,1:], eps=escan_err)
@@ -156,11 +158,17 @@ def calc_sads():
     e = escan_data[:,0]
 
     out_ads = np.vstack((e, ads)).T
+    out_fit = np.vstack((e,fit.T)).T
+    ads_header_lst = []
+    for i in range(ads.shape[0]):
+        ads_header_lst.append(f'ex{i+1}')
+    ads_header = '\t'.join(ads_header_lst)
+    fit_header = '\t'.join(list(map(str, escan_time)))
 
     # save calculated sads results
-    np.savetxt(f'{out_prefix}_sads.txt', out_ads)
-    np.savetxt(f'{out_prefix}_sads_eps.txt', ads_eps.T)
-    np.savetxt(f'{out_prefix}_fit.txt', fit)
+    np.savetxt(f'{out_prefix}_sads.txt', out_ads, fmt=out_ads.shape[1]*['%.8e'], header='energy \t'+ads_header)
+    np.savetxt(f'{out_prefix}_sads_eps.txt', ads_eps.T, fmt=ads_eps.shape[0]*['%.8e'], header=ads_header)
+    np.savetxt(f'{out_prefix}_sads_fit.txt', out_fit, fmt=(len(escan_time)+1)*['%.8e'], header='energy \t'+fit_header)
 
     # plot sads results
     plt.figure(1)
