@@ -1,6 +1,4 @@
-numpy
-scipy
+numpy >= 1.15.4
+scipy >= 1.0.0
 matplotlib
-ampgo
-lmfit
 

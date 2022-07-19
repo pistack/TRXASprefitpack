@@ -2,7 +2,6 @@ from typing import Optional, Sequence
 import os
 from pathlib import Path
 import numpy as np
-import matplotlib.pyplot as plt
 
 class DriverResult(dict):
       '''
@@ -169,53 +168,6 @@ def print_DriverResult(result: DriverResult, name_of_dset: Optional[Sequence[str
                   doc_lst.append(f"    ({result['param_name'][pair[0]]}, {result['param_name'][pair[1]]}) = {result['corr'][pair] : .3f}".rstrip('0').rstrip('.'))
 
       return '\n'.join(doc_lst)
-
-def plot_DriverResult(result: DriverResult, name_of_dset: Optional[Sequence[str]] = None,
-                      x_min: Optional[float] = None, x_max: Optional[float] = None, save_fig: Optional[str] = None, 
-                      t: Optional[Sequence[np.ndarray]] = None, 
-                      data: Optional[Sequence[np.ndarray]] = None,
-                      eps: Optional[Sequence[np.ndarray]] = None):
-      '''
-      plot fitting Result
-
-      Args:
-       result: fitting result
-       name_of_dset: name of each dataset
-       x_min: minimum x range
-       x_max: maximum x range
-       save_fig: prefix of saved png plots. If `save_fig` is `None`, plots are displayed istead of being saved.
-       t: sequence of scan range of each dataset
-       data: sequence of datasets for time delay scan (it should not contain time scan range)
-       eps: sequence of estimated errors of each dataset
-      '''
-      if name_of_dset is None:
-            name_of_dset = list(range(1, len(t)+1))
-      
-      start = 0
-      for i in range(len(t)):
-            for j in range(data[i].shape[1]):
-                  fig = plt.figure(start+j)
-                  title = f'{name_of_dset[i]} scan #{j+1}'
-                  subtitle = f"Chi squared: {result['red_chi2_ind'][i][j]: .2f}"
-                  plt.suptitle(title)
-                  sub1 = fig.add_subplot(211)
-                  sub1.set_title(subtitle)
-                  sub1.errorbar(t[i], data[i][:, j], eps[i][:, j], marker='o', mfc='none',
-                  label=f'expt {title}', linestyle='none')
-                  sub1.plot(t[i], result['fit'][i][:, j], label=f'fit {title}')
-                  sub1.legend()
-                  sub2 = fig.add_subplot(212)
-                  sub2.errorbar(t[i], result['res'][i][:, j], 
-                  eps[i][:, j], marker='o', mfc='none', label=f'res {title}', linestyle='none')
-                  sub2.legend()
-                  if x_min is not None and x_max is not None:
-                        sub1.set_xlim(x_min, x_max)
-                        sub2.set_xlim(x_min, x_max)
-                  if save_fig is not None:
-                        plt.savefig(f'{save_fig}_{name_of_dset[i]}_{j+1}.png')
-      if save_fig is None:
-            plt.show()
-      return
 
 def save_DriverResult(result: DriverResult, dirname: str, name_of_dset: Optional[Sequence[str]] = None,
                       t: Optional[Sequence[np.ndarray]] = None,

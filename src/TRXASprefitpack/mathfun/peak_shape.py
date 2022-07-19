@@ -196,9 +196,9 @@ def deriv_voigt(e: Union[float, np.ndarray], fwhm_G: float, fwhm_L: float) -> np
         grad[2, :] = -f_z.imag/(2*np.sqrt(2)*sigma)
     else:
         grad = np.empty(3)
-        grad = f_z.real/(sigma*np.sqrt(2))
-        grad = (-f/sigma-z/sigma*f_z).real/(2*np.sqrt(2*np.log(2)))
-        grad = -f_z.imag/(2*np.sqrt(2)*sigma)
+        grad[0] = f_z.real/(sigma*np.sqrt(2))
+        grad[1] = (-f/sigma-z/sigma*f_z).real/(2*np.sqrt(2*np.log(2)))
+        grad[2] = -f_z.imag/(2*np.sqrt(2)*sigma)
     return grad
 
 

@@ -83,19 +83,12 @@ def residual_both(params: np.ndarray, num_comp: int, num_comp_osc:int, base: boo
         sum = sum + d.size
     
     chi = np.empty(sum)
-    tau = np.empty(num_comp, dtype=float)
-    tau_osc = np.empty(num_comp_osc, dtype=float)
-    period_osc = np.empty(num_comp_osc, dtype=float)
-    phase_osc = np.empty(num_comp_osc, dtype=float)
-    
-    for i in range(num_comp):
-        tau[i] = params[num_irf+num_t0+i]
-    for i in range(num_comp_osc):
-        tau_osc[i] = params[num_irf+num_t0+num_comp+i]
-        period_osc[i] = params[num_irf+num_t0+num_comp+num_comp_osc+i]
-        phase_osc[i] = params[num_irf+num_t0+num_comp+2*num_comp_osc+i]
-    
 
+    tau = params[num_irf+num_t0:num_irf+num_t0+num_comp]
+    tau_osc = params[num_irf+num_t0+num_comp:num_irf+num_t0+num_comp+num_comp_osc]
+    period_osc = params[num_irf+num_t0+num_comp+num_comp_osc:num_irf+num_t0+num_comp+2*num_comp_osc]
+    phase_osc = params[num_irf+num_t0+num_comp+2*num_comp_osc:]
+    
     end = 0; t0_idx = num_irf
     for ti,d,e in zip(t,data,eps):
         A = np.empty((num_comp+1*base+num_comp_osc, d.shape[0]))
@@ -178,18 +171,11 @@ def jac_res_both(params: np.ndarray, num_comp: int, num_comp_osc:int, base: bool
     for d in data:
         num_t0 = d.shape[1] + num_t0
         sum = sum + d.size
-
-    tau = np.empty(num_comp, dtype=float)
-    tau_osc = np.empty(num_comp_osc, dtype=float)
-    period_osc = np.empty(num_comp_osc, dtype=float)
-    phase_osc = np.empty(num_comp_osc, dtype=float)
     
-    for i in range(num_comp):
-        tau[i] = params[num_irf+num_t0+i]
-    for i in range(num_comp_osc):
-        tau_osc[i] = params[num_irf+num_t0+num_comp+i]
-        period_osc[i] = params[num_irf+num_t0+num_comp+num_comp_osc+i]
-        phase_osc[i] = params[num_irf+num_t0+num_comp+2*num_comp_osc+i]
+    tau = params[num_irf+num_t0:num_irf+num_t0+num_comp]
+    tau_osc = params[num_irf+num_t0+num_comp:num_irf+num_t0+num_comp+num_comp_osc]
+    period_osc = params[num_irf+num_t0+num_comp+num_comp_osc:num_irf+num_t0+num_comp+2*num_comp_osc]
+    phase_osc = params[num_irf+num_t0+num_comp+2*num_comp_osc:]
     
     num_param = num_irf+num_t0+num_comp+3*num_comp_osc
 

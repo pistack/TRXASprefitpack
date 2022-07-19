@@ -2,9 +2,10 @@
 # submodule for miscellaneous function of
 # tools subpackage
 
-from typing import Tuple, Union, Optional
+from typing import Optional, Tuple, Sequence
 import numpy as np
 import matplotlib.pyplot as plt
+from ..driver import StaticResult, DriverResult
 
 def read_data(prefix: str, num_scan: int, num_data_pts: int, default_SN: float) -> Tuple[np.ndarray, np.ndarray]:
     '''
@@ -30,60 +31,6 @@ def read_data(prefix: str, num_scan: int, num_data_pts: int, default_SN: float) 
         else:
             eps[:, i] = A[:, 2]
     return data, eps
-
-def plot_result(scan_name: str, num_scan: int, chi2_ind: Union[list, np.ndarray],
-data: np.ndarray, eps: np.ndarray, fit: np.ndarray, res: Optional[np.ndarray] = None):
-    '''
-    Plot fitting result
-
-    Args:
-     scan_name: name of scan
-     num_scan: the number of scans
-     chi2_ind: list or array of the chi squared value of each indivisual scan
-     data: exprimental data
-     eps: error or data quality of experimental data
-     fit: fitting result
-     res: residual of fitting (data-fit)
-
-    Note:
-     1. the first column of fit array should be time range
-     2. data array should not contain time range
-    '''
-    t = fit[:, 0]
-    if res is not None:
-        for i in range(num_scan):
-            fig = plt.figure(i+1)
-            title = f'Chi squared: {chi2_ind[i]:.2f}'
-            plt.suptitle(title)
-            sub1 = fig.add_subplot(211)
-            sub1.errorbar(t, data[:, i],
-            eps[:, i], marker='o', mfc='none',
-            label=f'expt {scan_name} {i+1}',
-            linestyle='none')
-            sub1.plot(t, fit[:, i+1],
-            label=f'fit {scan_name} {i+1}')
-            sub1.legend()
-            sub2 = fig.add_subplot(212)
-            sub2.errorbar(t, res[:, i+1],
-            eps[:, i], marker='o', mfc='none',
-            label=f'{scan_name} res {i+1}',
-            linestyle='none')
-            sub2.legend()
-
-    else:
-        for i in range(num_scan):
-            plt.figure(i+1)
-            title = f'Chi squared: {chi2_ind[i]:.2f}'
-            plt.title(title)
-            plt.errorbar(t, data[:, i],
-            eps[:, i], marker='o', mfc='none',
-            label=f'expt {scan_name} {i+1}',
-            linestyle='none')
-            plt.plot(t, fit[:, i+1],
-            label=f'fit {scan_name} {i+1}')
-            plt.legend()
-    plt.show()
-    return
 
 def parse_matrix(mat_str: np.ndarray, tau: np.ndarray) -> np.ndarray:
     '''
@@ -122,3 +69,98 @@ def parse_matrix(mat_str: np.ndarray, tau: np.ndarray) -> np.ndarray:
     L[mask] = red_L
     
     return L
+
+def plot_StaticResult(result: StaticResult,
+                      x_min: Optional[float] = None, x_max: Optional[float] = None, save_fig: Optional[str] = None, 
+                      e: Optional[np.ndarray] = None, 
+                      data: Optional[np.ndarray] = None,
+                      eps: Optional[np.ndarray] = None):
+      '''
+      plot static fitting Result
+
+      Args:
+       result: static fitting result
+       name_of_dset: name of each dataset
+       x_min: minimum x range
+       x_max: maximum x range
+       save_fig: prefix of saved png plots. If `save_fig` is `None`, plots are displayed istead of being saved.
+       e: scan range of data
+       data: static spectrum (it should not contain energy scan range)
+       eps: estimated errors of static spectrum
+      '''
+      
+      fig = plt.figure(0)
+      title = 'Static Spectrum'
+      subtitle = f"Chi squared: {result['red_chi2']: .2f}"
+      plt.suptitle(title)
+      sub1 = fig.add_subplot(211)
+      sub1.set_title(subtitle)
+      sub1.errorbar(e, data, eps, marker='o', mfc='none', label=f'expt {title}', linestyle='none')
+      sub1.plot(e, result['fit'], label=f'fit {title}')
+      for i in range(result['n_voigt']):
+            sub1.plot(e, result['fit_comp'][i, :], label=f'{i}th voigt component', linestyle='dashed')
+      if result['edge'] is not None:
+            sub1.plot(e, result['fit_comp'][-1, :], label=f"{result['edge']} type edge", linestyle='dashed')
+      if result['base_order'] is not None:
+        sub1.plot(e, result['base'], label=f"base [order {result['base_order']}]", linestyle='dashed')
+      sub1.legend()
+      sub2 = fig.add_subplot(212)
+      sub2.errorbar(e, result['res'], eps, 
+      marker='o', mfc='none', label=f'res {title}', linestyle='none')
+      sub2.legend()
+      
+      if x_min is not None and x_max is not None:
+            sub1.set_xlim(x_min, x_max)
+            sub2.set_xlim(x_min, x_max)
+      if save_fig is not None:
+            plt.savefig(f'{save_fig}_Static.png')
+      if save_fig is None:
+            plt.show()
+      return
+
+def plot_DriverResult(result: DriverResult, name_of_dset: Optional[Sequence[str]] = None,
+                      x_min: Optional[float] = None, x_max: Optional[float] = None, save_fig: Optional[str] = None, 
+                      t: Optional[Sequence[np.ndarray]] = None, 
+                      data: Optional[Sequence[np.ndarray]] = None,
+                      eps: Optional[Sequence[np.ndarray]] = None):
+      '''
+      plot fitting Result
+
+      Args:
+       result: fitting result
+       name_of_dset: name of each dataset
+       x_min: minimum x range
+       x_max: maximum x range
+       save_fig: prefix of saved png plots. If `save_fig` is `None`, plots are displayed istead of being saved.
+       t: sequence of scan range of each dataset
+       data: sequence of datasets for time delay scan (it should not contain time scan range)
+       eps: sequence of estimated errors of each dataset
+      '''
+      if name_of_dset is None:
+            name_of_dset = list(range(1, len(t)+1))
+      
+      start = 0
+      for i in range(len(t)):
+            for j in range(data[i].shape[1]):
+                  fig = plt.figure(start+j)
+                  title = f'{name_of_dset[i]} scan #{j+1}'
+                  subtitle = f"Chi squared: {result['red_chi2_ind'][i][j]: .2f}"
+                  plt.suptitle(title)
+                  sub1 = fig.add_subplot(211)
+                  sub1.set_title(subtitle)
+                  sub1.errorbar(t[i], data[i][:, j], eps[i][:, j], marker='o', mfc='none',
+                  label=f'expt {title}', linestyle='none')
+                  sub1.plot(t[i], result['fit'][i][:, j], label=f'fit {title}')
+                  sub1.legend()
+                  sub2 = fig.add_subplot(212)
+                  sub2.errorbar(t[i], result['res'][i][:, j], 
+                  eps[i][:, j], marker='o', mfc='none', label=f'res {title}', linestyle='none')
+                  sub2.legend()
+                  if x_min is not None and x_max is not None:
+                        sub1.set_xlim(x_min, x_max)
+                        sub2.set_xlim(x_min, x_max)
+                  if save_fig is not None:
+                        plt.savefig(f'{save_fig}_{name_of_dset[i]}_{j+1}.png')
+      if save_fig is None:
+            plt.show()
+      return

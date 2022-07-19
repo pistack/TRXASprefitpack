@@ -2,7 +2,6 @@ from typing import Optional, Sequence
 import os
 from pathlib import Path
 import numpy as np
-import matplotlib.pyplot as plt
 
 class StaticResult(dict):
       '''
@@ -16,11 +15,11 @@ class StaticResult(dict):
               `thy`: sum of voigt broadened theoretical lineshape spectrum, edge function and base function
 
        fit (np.ndarray): fitting curve for data (n,)
-       base (np.ndaaray): fitting curve for baseline
+       fit_comp (np.ndarray): curve for each voigt component and edge
+       base (np.ndaray): fitting curve for baseline
        res (np.ndarray): residual curve (data-fit) for each data (n,)
-       edge ({'none', 'gaussian', 'lorenzian'}): type of edge function
-
-            'none': edge function is not included
+       edge ({'gaussian', 'lorenzian'}): type of edge function, if edge is None then edge function is not
+       included in the fitting model
 
             'gaussian': gaussian type edge function
 
@@ -28,17 +27,16 @@ class StaticResult(dict):
        base_order (int): order of baseline function
                          if base_order is None then baseline is not included in the fitting model
        param_name (np.ndarray): name of parameter
-       n_voigt (int): number of decay voigt (including baseline feature)
+       n_voigt (int): number of voigt component
        x (np.ndarray): best parameter
        bounds (sequence of tuple): boundary of each parameter
-       c (sequence of np.ndarray): best weight of each voigt component and edge of data
+       c (np.ndarray): best weight of each voigt component and edge of data
        chi2 (float): chi squared value of fitting
        aic (float): Akaike Information Criterion statistic: :math:`N\\log(\\chi^2/N)+2N_{parm}`
        bic (float): Bayesian Information Criterion statistic: :math:`N\\log(\\chi^2/N)+N_{parm}\log(N)`
        red_chi2 (float): total reduced chi squared value of fitting
        nfev (int): total number of function evaluation
        n_param (int): total number of effective parameter
-       n_param_ind (int): number of parameter which affects fitting quality of indiviual time delay scan
        num_pts (int): total number of data points 
        jac (np.ndarray): jacobian of objective function at optimal point
        cov (np.ndarray): covariance matrix (i.e. inverse of (jac.T @ jac))
@@ -86,7 +84,8 @@ def print_StaticResult(result: StaticResult, corr_tol: float =1e-1) -> str:
       doc_lst = []
       doc_lst.append("[Model information]")
       doc_lst.append(f"    model : {result['model']}")
-      doc_lst.append(f"    edge: {result['edge']}")
+      if result['edge'] is not None:
+            doc_lst.append(f"    edge: {result['edge']}")
       if result['base_order'] is not None:
             doc_lst.append(f"    base_order: {result['base_order']}")
       doc_lst.append(' ')
@@ -119,18 +118,20 @@ def print_StaticResult(result: StaticResult, corr_tol: float =1e-1) -> str:
 
       doc_lst.append("[Component Contribution]")
       doc_lst.append(f"    Static spectrum")
-      if result['base_order'] == -1:
+      if result['base_order'] is None:
             coeff_abs = np.abs(result['c'])
+            coeff_contrib = 100*result['c']
       else:
             coeff_abs = np.abs(result['c'][:-result['base_order']-1])
+            coeff_contrib = 100*result['c'][:-result['base_order']-1]
       coeff_sum = np.sum(coeff_abs)
-      coeff_contrib = 100*result['c'][:-result['base_order']-1]/coeff_sum
+      coeff_contrib = coeff_contrib/coeff_sum
       for v in range(result['n_voigt']):
             row = [f"     voigt {v+1}"]
             row.append(f'{coeff_contrib[v]: .2f}%')
             doc_lst.append('\t'.join(row))
-      if result['edge'] != 'none':
-            row = [f"     {result['edge']}"]
+      if result['edge'] is not None:
+            row = [f"     {result['edge']} type edge"]
             row.append(f"{coeff_contrib[result['n_voigt']]: .2f}%")
             doc_lst.append('\t'.join(row))
       doc_lst.append(' ')
@@ -150,49 +151,6 @@ def print_StaticResult(result: StaticResult, corr_tol: float =1e-1) -> str:
 
       return '\n'.join(doc_lst)
 
-def plot_StaticResult(result: StaticResult,
-                      x_min: Optional[float] = None, x_max: Optional[float] = None, save_fig: Optional[str] = None, 
-                      e: Optional[np.ndarray] = None, 
-                      data: Optional[np.ndarray] = None,
-                      eps: Optional[np.ndarray] = None):
-      '''
-      plot static fitting Result
-
-      Args:
-       result: static fitting result
-       name_of_dset: name of each dataset
-       x_min: minimum x range
-       x_max: maximum x range
-       save_fig: prefix of saved png plots. If `save_fig` is `None`, plots are displayed istead of being saved.
-       e: scan range of data
-       data: static spectrum (it should not contain energy scan range)
-       eps: estimated errors of static spectrum
-      '''
-      
-      fig = plt.figure(0)
-      title = 'Static Spectrum'
-      subtitle = f"Chi squared: {result['red_chi2']: .2f}"
-      plt.suptitle(title)
-      sub1 = fig.add_subplot(211)
-      sub1.set_title(subtitle)
-      sub1.errorbar(e, data, eps, marker='o', mfc='none', label=f'expt {title}', linestyle='none')
-      sub1.plot(e, result['fit'], label=f'fit {title}')
-      sub1.plot(e, result['base'], label=f"base [order {result['base_order']}]", linestyle='dashed')
-      sub1.legend()
-      sub2 = fig.add_subplot(212)
-      sub2.errorbar(e, result['res'], eps, 
-      marker='o', mfc='none', label=f'res {title}', linestyle='none')
-      sub2.legend()
-      
-      if x_min is not None and x_max is not None:
-            sub1.set_xlim(x_min, x_max)
-            sub2.set_xlim(x_min, x_max)
-      if save_fig is not None:
-            plt.savefig(f'{save_fig}_Static.png')
-      if save_fig is None:
-            plt.show()
-      return
-
 def save_StaticResult(result: StaticResult, dirname: str, name_of_dset: Optional[Sequence[str]] = None,
                       e: Optional[Sequence[np.ndarray]] = None,
                       eps: Optional[Sequence[np.ndarray]] = None):
@@ -208,7 +166,7 @@ def save_StaticResult(result: StaticResult, dirname: str, name_of_dset: Optional
       Returns:
        `fit_summary.txt`: Summary for the fitting result
        `weight.txt`: Weight of each voigt and edge component
-       `fit.txt`: fitting curve and baseline curve for static spectrum
+       `fit.txt`: fitting, each voigt, edge and baseline curve for static spectrum
        `res.txt`: residual (fit-data) curve for static spectrum
 
       Note:
@@ -219,13 +177,25 @@ def save_StaticResult(result: StaticResult, dirname: str, name_of_dset: Optional
       
       with open(f'{dirname}/fit_summary.txt', 'w') as f:
             f.write(print_StaticResult(result))
-      
 
+      tot_comp = result['n_voigt']
+      if result['edge'] is not None:
+            tot_comp = tot_comp+1
+      if result['base_order'] is not None:
+            tot_comp = tot_comp+1
       coeff_fmt = ['%.8e']
-      fit_fmt = 3*['%.8e']
-      fit_header_lst = ['energy', 'fit', 'base']
+      fit_fmt = (2+tot_comp)*['%.8e']
+      fit_header_lst = ['energy', 'fit']
+      for i in range(result['n_voigt']):
+            fit_header_lst.append(f'voigt_{i}')
+      if result['edge'] is not None:
+            fit_header_lst.append(f"{result['edge']}_type_edge")
+      if result['base'] is not None:
+            fit_header_lst.append("base")
+            fit_save = np.vstack((e, result['fit'], result['fit_comp'], result['base'])).T
+      else:
+            fit_save = np.vstack((e, result['fit'], result['fit_comp'])).T
       res_save = np.vstack((e, result['res'], eps)).T
-      fit_save = np.vstack((e, result['fit'], result['base'])).T
       np.savetxt(f'{dirname}/res.txt', res_save, fmt=['%.8e', '%.8e', '%.8e'], 
       header=f'energy \t res \t eps')
       fit_header = '\t'.join(fit_header_lst)

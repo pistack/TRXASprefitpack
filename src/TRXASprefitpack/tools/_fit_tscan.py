@@ -9,9 +9,9 @@
 
 import argparse
 import numpy as np
-from ..driver import print_DriverResult, plot_DriverResult, save_DriverResult
+from ..driver import print_DriverResult, save_DriverResult
 from ..driver import fit_transient_exp, fit_transient_dmp_osc, fit_transient_both
-from .misc import read_data
+from .misc import read_data, plot_DriverResult
 
 FITDRIVER = {'decay': fit_transient_exp, 'osc': fit_transient_dmp_osc, 'both': fit_transient_both}
 
@@ -103,7 +103,7 @@ def fit_tscan():
                         'It will read prefix_i.txt')
     parser.add_argument('--num_file', type=int, nargs='+',
                          help='number of scan file corresponding to each prefix')
-    parser.add_argument('-t0', '--time_zeros', type=float, nargs='+',
+    parser.add_argument('-t0_init', '--time_zeros', type=float, nargs='+',
                         help='time zeros for each tscan')
     parser.add_argument('-t0f', '--time_zeros_file',
                         help='filename for time zeros of each tscan')

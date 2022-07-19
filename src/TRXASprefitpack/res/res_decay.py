@@ -76,9 +76,7 @@ def residual_decay(params: np.ndarray, num_comp: int, base: bool, irf: str,
     
     chi = np.empty(sum)
     tau = np.empty(num_comp, dtype=float)
-    
-    for i in range(num_comp):
-        tau[i] = params[num_irf+num_t0+i]
+    tau = params[num_irf+num_t0:]
 
     end = 0; t0_idx = num_irf
     for ti,d,e in zip(t,data,eps):
@@ -153,10 +151,8 @@ def jac_res_decay(params: np.ndarray, num_comp: int, base: bool, irf: str,
     for d in data:
         num_t0 = num_t0 + d.shape[1]
         sum = sum + d.size
-        
-    tau = np.empty(num_comp, dtype=float)
-    for i in range(num_comp):
-        tau[i] = params[num_irf+num_t0+i]
+
+    tau = params[num_irf+num_t0:]
     
     num_param = num_irf+num_t0+num_comp
 

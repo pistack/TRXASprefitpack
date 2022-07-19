@@ -81,14 +81,10 @@ def residual_dmp_osc(params: np.ndarray, num_comp: int, irf: str,
         sum = sum + d.size
     
     chi = np.empty(sum)
-    tau = np.empty(num_comp, dtype=float)
-    period = np.empty(num_comp, dtype=float)
-    phase = np.empty(num_comp, dtype=float)
     
-    for i in range(num_comp):
-        tau[i] = params[num_irf+num_t0+i]
-        period[i] = params[num_irf+num_t0+num_comp+i]
-        phase[i] = params[num_irf+num_t0+2*num_comp+i]
+    tau = params[num_irf+num_t0:num_irf+num_t0+num_comp]
+    period = params[num_irf+num_t0+num_comp:num_irf+num_t0+2*num_comp]
+    phase = params[num_irf+num_t0+2*num_comp:num_irf+num_t0+3*num_comp]
 
     end = 0; t0_idx = num_irf
     for ti,d,e in zip(t,data,eps):
@@ -167,15 +163,10 @@ def jac_res_dmp_osc(params: np.ndarray, num_comp: int, irf: str,
     for d in data:
         num_t0 = num_t0 + d.shape[1]
         sum = sum + d.size
-        
-    tau = np.empty(num_comp, dtype=float)
-    period = np.empty(num_comp, dtype=float)
-    phase = np.empty(num_comp, dtype=float)
 
-    for i in range(num_comp):
-        tau[i] = params[num_irf+num_t0+i]
-        period[i] = params[num_irf+num_t0+num_comp+i]
-        phase[i] = params[num_irf+num_t0+2*num_comp+i]
+    tau = params[num_irf+num_t0:num_irf+num_t0+num_comp]
+    period = params[num_irf+num_t0+num_comp:num_irf+num_t0+2*num_comp]
+    phase = params[num_irf+num_t0+2*num_comp:num_irf+num_t0+3*num_comp]
     
     num_param = num_irf+num_t0+3*num_comp
 
