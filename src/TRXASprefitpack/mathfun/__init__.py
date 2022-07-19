@@ -6,6 +6,8 @@ subpackage for the mathematical functions for TRXASprefitpack
 :license: LGPL3.
 '''
 
+from .peak_shape import voigt, edge_gaussian, edge_lorenzian
+from .peak_shape import deriv_voigt, deriv_edge_gaussian, deriv_edge_lorenzian
 from .broad import gen_theory_data
 from .irf import gau_irf, cauchy_irf, pvoigt_irf, calc_eta
 from .exp_conv_irf import exp_conv_gau, exp_conv_cauchy, exp_conv_pvoigt
@@ -21,7 +23,9 @@ from .exp_decay_fit import rate_eq_conv, fact_anal_rate_eq_conv
 from .exp_decay_fit import dmp_osc_conv, fact_anal_dmp_osc_conv
 
 
-__all__ = ['gen_theory_data',
+__all__ = ['voigt', 'edge_gaussian', 'edge_lorenzian',
+           'deriv_voigt', 'deriv_edge_gaussian', 'deriv_edge_lorenzian',
+           'gen_theory_data',
            'gau_irf', 'cauchy_irf', 'pvoigt_irf', 'calc_eta',
            'exp_conv_gau', 'exp_conv_cauchy', 'exp_conv_pvoigt',
            'deriv_exp_conv_gau', 'deriv_exp_conv_cauchy',

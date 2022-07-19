@@ -8,7 +8,7 @@ submodule for broading theoritical spectrum
 
 from typing import Optional
 import numpy as np
-from scipy.special import voigt_profile
+from .peak_shape import voigt
 
 
 def gen_theory_data(e: np.ndarray,
@@ -38,9 +38,6 @@ def gen_theory_data(e: np.ndarray,
       numpy ndarray of voigt broadened theoritical lineshape spectrum
     '''
 
-    sigma = fwhm_G/(2*np.sqrt(2*np.log(2)))
-    gamma = fwhm_L/2
-
     num_e = e.size
     num_peaks = peaks.shape[0]
     v_matrix = np.zeros((num_e, num_peaks))
@@ -50,7 +47,7 @@ def gen_theory_data(e: np.ndarray,
     else:
       peak_copy = peak_factor*peak_copy 
     for i in range(num_peaks):
-        v_matrix[:, i] = voigt_profile(e-peak_copy[i], sigma, gamma)
+        v_matrix[:, i] = voigt(e-peak_copy[i], fwhm_G, fwhm_L)
 
     broadened_theory = A * v_matrix @ peaks[:, 1].reshape((num_peaks, 1))
     broadened_theory = broadened_theory.flatten()

@@ -14,6 +14,26 @@ from ..mathfun import gen_theory_data
 from .misc import read_data, plot_result
 from lmfit import Parameters, fit_report, minimize
 
+description = '''
+fit static: fitting static spectrum with theoretically calculated line spectrum
+broadened by spectral line shape
+v: voigt profile,
+g: gaussian,
+l: lorenzian,
+Moreover, it uses linear baseline to correct baseline feature of experimental spectrum
+'''
+
+epilog = ''' 
+*Note
+energy unit for measured static spectrum and theoretically calculated spectrum should be same
+'''
+
+method_glb_help='''
+Global optimization Method
+ 'ampgo': Adapted Memory Programming for Global Optimization Algorithm
+ 'basinhopping'
+'''
+
 
 def fit_static():
 
@@ -47,19 +67,7 @@ def fit_static():
         chi = chi.flatten()/eps.flatten()
         return chi
 
-    description = '''
-fit static: fitting static spectrum with theoretically calculated line spectrum
-broadened by spectral line shape
-v: voigt profile,
-g: gaussian,
-l: lorenzian,
-Moreover, it uses linear baseline to correct baseline feature of experimental spectrum
-'''
 
-    epilog = ''' 
-*Note
-energy unit for measured static spectrum and theoretically calculated spectrum should be same
-'''
     tmp = argparse.RawDescriptionHelpFormatter
     parse = argparse.ArgumentParser(formatter_class=tmp,
                                     description=description,
@@ -89,8 +97,8 @@ energy unit for measured static spectrum and theoretically calculated spectrum s
     help='fix gaussian fwhm value')
     parse.add_argument('--fix_fwhm_L', action='store_true',
     help='fix lorenzian fwhm value')
-    parse.add_argument('--method_glb', action='store_true',
-    help='use slower but robust global optimization algorithm')
+    parse.add_argument('--method_glb', default='ampgo', choices=['ampgo', 'basinhopping'],
+    help=method_glb_help)
 
     args = parse.parse_args()
 

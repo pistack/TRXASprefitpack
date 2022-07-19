@@ -53,7 +53,10 @@ def residual_decay(params: np.ndarray, num_comp: int, base: bool, irf: str,
      eps: sequence of estimated error of datasets
 
     Returns:
-     Residucal vector
+     Residual vector
+    
+    Note:
+     each dataset does not include time range.
     '''
     params = np.atleast_1d(params)
     
@@ -129,7 +132,7 @@ def jac_res_decay(params: np.ndarray, num_comp: int, base: bool, irf: str,
      eps: sequence of estimated error of datasets
 
     Returns:
-     Gradient of residucal vector
+     Gradient of residual vector
     
     Note:
      Gradient is implemented for gaussian and cauchy irf.

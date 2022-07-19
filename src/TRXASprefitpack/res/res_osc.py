@@ -56,6 +56,12 @@ def residual_dmp_osc(params: np.ndarray, num_comp: int, irf: str,
      t: time points for each data set
      data: sequence of datasets
      eps: sequence of estimated error of datasets
+    
+    Returns:
+     Residual vector
+    
+    Note:
+     each dataset does not contain time range
     '''
 
     params = np.atleast_1d(params)
@@ -140,7 +146,7 @@ def jac_res_dmp_osc(params: np.ndarray, num_comp: int, irf: str,
      eps: sequence of estimated error of datasets
 
     Returns:
-     Gradient of residucal vector
+     Gradient of residual vector
 
     Note:
      Gradient is implemented for gaussian and cauchy irf.

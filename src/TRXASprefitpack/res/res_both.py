@@ -61,7 +61,10 @@ def residual_both(params: np.ndarray, num_comp: int, num_comp_osc:int, base: boo
      eps: sequence of estimated error of datasets
 
     Returns:
-     Residucal vector
+     Residual vector
+    
+    Note:
+     each dataset does not contain time range
     '''
     params = np.atleast_1d(params)
     
@@ -153,7 +156,7 @@ def jac_res_both(params: np.ndarray, num_comp: int, num_comp_osc:int, base: bool
      eps: sequence of estimated error of datasets
 
     Returns:
-     Gradient of residucal vector
+     Gradient of residual vector
     
     Note:
      Gradient is implemented for gaussian and cauchy irf.
