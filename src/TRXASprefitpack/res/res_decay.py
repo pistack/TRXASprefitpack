@@ -75,7 +75,6 @@ def residual_decay(params: np.ndarray, num_comp: int, base: bool, irf: str,
         sum = sum + d.size
     
     chi = np.empty(sum)
-    tau = np.empty(num_comp, dtype=float)
     tau = params[num_irf+num_t0:]
 
     end = 0; t0_idx = num_irf
