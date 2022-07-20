@@ -14,7 +14,7 @@ from .static_result import StaticResult
 from ._ampgo import ampgo
 from scipy.optimize import basinhopping
 from scipy.optimize import least_squares
-from ..mathfun.peak_shape import voigt, edge_gaussian, edge_lorenzian, voigt_thy
+from ..mathfun.peak_shape import edge_gaussian, edge_lorenzian, voigt_thy
 from ..mathfun.A_matrix import fact_anal_A
 from ..res.res_gen import residual_scalar, grad_res_scalar
 from ..res.res_thy import residual_thy, jac_res_thy

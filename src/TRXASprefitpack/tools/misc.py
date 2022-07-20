@@ -2,7 +2,7 @@
 # submodule for miscellaneous function of
 # tools subpackage
 
-from typing import Optional, Tuple, Sequence, Union
+from typing import Optional, Tuple
 import numpy as np
 import matplotlib.pyplot as plt
 from ..driver import StaticResult, DriverResult
@@ -47,7 +47,6 @@ def calc_param_rate_eq(mat_str: np.ndarray, tau_obs: np.ndarray) -> np.ndarray:
         Number of parameter used to define rate equation and size of tau should 
         be same.
       '''
-      L = np.zeros_like(mat_str, dtype=float)
       mat_str_diag = np.diag(mat_str)
       mat_str_diag_reduced = mat_str_diag[mat_str_diag != '0']
       Eq = np.zeros((tau_obs.size, tau_obs.size), dtype=float)
