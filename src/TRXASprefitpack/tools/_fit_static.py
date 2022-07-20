@@ -86,11 +86,11 @@ def fit_static():
     args = parse.parse_args()
 
     filename = args.filename
-    if args.mode == 'voigt' and args.e0_voigit is None:
+    if args.mode == 'voigt' and args.e0_voigt is None:
         e0_init = None
         fwhm_G_init = None
         fwhm_L_init = None
-    elif args.mode == 'voigt' and args.e0_voigit is not None:
+    elif args.mode == 'voigt' and args.e0_voigt is not None:
         e0_init = np.array(args.e0_voigt)
         fwhm_G_init = np.array(args.fwhm_G_voigt)
         fwhm_L_init = np.array(args.fwhm_L_voigt)

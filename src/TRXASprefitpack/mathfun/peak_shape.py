@@ -72,7 +72,8 @@ def voigt_thy(e: np.ndarray, thy_peak: np.ndarray,
               policy: Optional[str] = 'shift') -> np.ndarray:
 
     '''
-    Calculates voigt broadened theoretically calculated lineshape spectrum
+    Calculates normalized 
+    voigt broadened theoretically calculated lineshape spectrum
 
     Args:
         e: energy 
@@ -89,7 +90,7 @@ def voigt_thy(e: np.ndarray, thy_peak: np.ndarray,
                           peak_factor = [shift_factor, scale_factor]
 
     Returns:
-      voigt broadened theoritical lineshape spectrum
+      normalized voigt broadened theoritical lineshape spectrum
     '''
 
     v_matrix = np.empty((e.size, thy_peak.shape[0]))
@@ -105,7 +106,7 @@ def voigt_thy(e: np.ndarray, thy_peak: np.ndarray,
 
     broadened_theory = v_matrix @ thy_peak[:, 1].reshape((peak_copy.size, 1))
 
-    return broadened_theory.flatten()/peak_copy.size
+    return broadened_theory.flatten()/np.sum(thy_peak[:, 1])
 
 def deriv_edge_gaussian(e: Union[float, np.ndarray], fwhm_G: float) -> np.ndarray:
     '''
@@ -247,7 +248,8 @@ def deriv_voigt_thy(e: np.ndarray, thy_peak: np.ndarray,
               policy: Optional[str] = 'shift') -> np.ndarray:
 
     '''
-    Calculates derivative of voigt broadened theoretically calculated lineshape spectrum
+    Calculates derivative of normalized 
+    voigt broadened theoretically calculated lineshape spectrum
 
     Args:
         e: energy 
@@ -264,7 +266,7 @@ def deriv_voigt_thy(e: np.ndarray, thy_peak: np.ndarray,
                           peak_factor = [shift_factor, scale_factor]
 
     Returns:
-      derivative of voigt broadened theoritical lineshape spectrum
+      derivative of normalized voigt broadened theoritical lineshape spectrum
     
     Note:
      1st row: df/d(fwhm_G)
@@ -305,7 +307,7 @@ def deriv_voigt_thy(e: np.ndarray, thy_peak: np.ndarray,
         grad[2, :] = -grad_tmp[0, :]
         grad[3, :] = np.einsum('i,i->i', thy_peak[:, 1], grad_tmp[0, :])
 
-    return grad/thy_peak.shape[0]
+    return grad/np.sum(thy_peak[:, 1])
 
 
 

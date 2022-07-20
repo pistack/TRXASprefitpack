@@ -9,6 +9,7 @@ sum of voigt broadend theoretical spectrum, edge function and baseline function
 
 from typing import Optional, Tuple
 import numpy as np
+from numpy.polynomial.legendre import legval
 from .static_result import StaticResult
 from ._ampgo import ampgo
 from scipy.optimize import basinhopping
@@ -249,9 +250,10 @@ def fit_static_thy(thy_peak: np.ndarray, fwhm_G_init: np.ndarray, fwhm_L_init: n
                   A[1, :] = edge_lorenzian(e-param_opt[-2], param_opt[-1])
     
       if base_order is not None:
-            A[base_start, :] = np.ones(e.size)
-            for i in range(base_order):
-                  A[base_start+i+1] = e*A[base_start+i]
+            e_max = np.max(e); e_min = np.min(e)
+            e_norm = 2*(e-(e_max+e_min)/2)/(e_max-e_min)
+            tmp = np.eye(base_order+1)
+            A[base_start:, :] = legval(e_norm, tmp, tensor=True)
       
       c = fact_anal_A(A, data, eps)
 

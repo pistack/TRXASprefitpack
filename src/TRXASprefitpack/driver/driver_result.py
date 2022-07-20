@@ -1,4 +1,3 @@
-from typing import Optional, Sequence
 import os
 from pathlib import Path
 import numpy as np
@@ -67,32 +66,6 @@ class DriverResult(dict):
 
                      `-1` : least square optimization process is failed
       '''
-      def __init__(self):
-            self.model = None
-            self.fit = None; self.fit_decay = None; self.fit_osc = None
-            self.name_of_dset = None
-            self.t = None; self.data = None; self.eps = None
-            self.res = None; self.irf = None; self.eta = None
-            self.param_name = None; self.n_decay = None
-            self.n_osc = None; self.x = None; self.bounds = None
-            self.base = None; self.c = None
-            self.chi2 = None; self.aic = None; self.bic = None
-            self.chi2_ind = None
-            self.red_chi2 = None; self.red_chi2_ind = None
-            self.nfev = None
-            self.n_param = None; self.n_param_ind = None
-            self.num_pts = None
-            self.jac = None
-            self.cov = None
-            self.cov_scaled = None
-            self.corr = None
-            self.x_eps = None
-            self.method_glb = None
-            self.message_glb = None
-            self.method_lsq = None
-            self.success_lsq = None
-            self.message_lsq = None
-            self.status = None
 
       def __getattr__(self, name):
             try:

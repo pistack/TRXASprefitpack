@@ -58,37 +58,6 @@ class StaticResult(dict):
 
                      `-1` : least square optimization process is failed
       '''
-      def __init__(self):
-            self.model = None
-            self.fit = None; self.fit_comp = None
-            self.base = None
-            self.e = None; self.data = None; self.eps = None
-            self.res = None
-            self.edge = None
-            self.base_order = None
-            self.param_name = None
-            self.n_voigt = None
-            self.x = None
-            self.bounds = None
-            self.c = None
-            self.chi2 = None
-            self.aic = None
-            self.bic = None
-            self.red_chi2 = None
-            self.nfev = None
-            self.n_param = None
-            self.num_pts = None
-            self.jac = None
-            self.cov = None
-            self.cov_scaled = None
-            self.corr = None
-            self.x_eps = None
-            self.method_glb = None
-            self.message_glb = None
-            self.method_lsq = None
-            self.success_lsq = None
-            self.message_lsq = None
-            self.status = None
 
       def __getattr__(self, name):
             try:

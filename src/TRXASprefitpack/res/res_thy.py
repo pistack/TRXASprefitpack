@@ -8,6 +8,7 @@ sum of voigt broadened theoretical spectrum, edge function and base function
 '''
 from typing import Optional
 import numpy as np
+from numpy.polynomial.legendre import legval
 from ..mathfun.A_matrix import fact_anal_A
 from ..mathfun.peak_shape import voigt_thy, edge_gaussian, edge_lorenzian
 from ..mathfun.peak_shape import deriv_voigt_thy, deriv_edge_gaussian, deriv_edge_lorenzian
@@ -91,9 +92,10 @@ def residual_thy(params: np.ndarray, policy: str, thy_peak: np.ndarray, edge: Op
             A[1, :] = edge_lorenzian(e-params[-2], params[-1])
     
     if base_order is not None:
-        A[base_start, :] = np.ones(e.size)
-        for i in range(base_order):
-            A[base_start+i+1] = e*A[base_start+i]
+        e_max = np.max(e); e_min = np.min(e)
+        e_norm = 2*(e-(e_max+e_min)/2)/(e_max-e_min)
+        tmp = np.eye(base_order+1)
+        A[base_start:, :] = legval(e_norm, tmp, tensor=True)
     
     c = fact_anal_A(A, data, eps)
 
@@ -180,9 +182,10 @@ def jac_res_thy(params: np.ndarray, policy: str, thy_peak: np.ndarray, edge: Opt
             A[1, :] = edge_lorenzian(e-params[-2], params[-1])
     
     if base_order is not None:
-        A[base_start, :] = np.ones(e.size)
-        for i in range(base_order):
-            A[base_start+i+1] = e*A[base_start+i]
+        e_max = np.max(e); e_min = np.min(e)
+        e_norm = 2*(e-(e_max+e_min)/2)/(e_max-e_min)
+        tmp = np.eye(base_order+1)
+        A[base_start:, :] = legval(e_norm, tmp, tensor=True)
     
     c = fact_anal_A(A, data, eps)
 
