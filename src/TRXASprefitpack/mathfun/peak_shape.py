@@ -1,12 +1,12 @@
 '''
 peak_shape:
 submodule for the mathematical functions for
-peak_shape function
+peak shape function
 
 :copyright: 2021-2022 by pistack (Junho Lee).
 :license: LGPL3.
 '''
-from typing import Union
+from typing import Union, Optional
 import numpy as np
 from scipy.special import erf, wofz
 
@@ -65,6 +65,47 @@ def voigt(e: Union[float, np.ndarray], fwhm_G: float, fwhm_L: float) -> Union[fl
     
     z = (e+complex(0,fwhm_L/2))/(sigma*np.sqrt(2))
     return wofz(z).real/(sigma*np.sqrt(2*np.pi))
+
+def voigt_thy(e: np.ndarray, thy_peak: np.ndarray,
+              fwhm_G: float, fwhm_L: float,
+              peak_factor: Union[float, np.ndarray],
+              policy: Optional[str] = 'shift') -> np.ndarray:
+
+    '''
+    Calculates voigt broadened theoretically calculated lineshape spectrum
+
+    Args:
+        e: energy 
+        thy_peak: theoretical calculated peak position and intensity
+        fwhm_G: full width at half maximum of gaussian shape 
+        fwhm_L: full width at half maximum of lorenzian shape 
+        peak_factor: Peak factor, its behavior depends on policy.
+        policy {'shift', 'scale', 'both'}: Policy to match discrepency 
+         between experimental data and theoretical spectrum.
+
+                 'shift' : Default option, shift peak position by peak_factor
+                 'scale' : scale peak position by peak_factor
+                 'both' : both shift and scale peak postition
+                          peak_factor = [shift_factor, scale_factor]
+
+    Returns:
+      voigt broadened theoritical lineshape spectrum
+    '''
+
+    v_matrix = np.empty((e.size, thy_peak.shape[0]))
+    peak_copy = np.copy(thy_peak[:, 0])
+    if policy == 'shift':
+      peak_copy = peak_copy - peak_factor
+    elif policy == 'scale':
+      peak_copy = peak_factor*peak_copy 
+    else:
+        peak_copy = peak_factor[1]*peak_copy - peak_factor[0]
+    for i in range(peak_copy.size):
+        v_matrix[:, i] = voigt(e-peak_copy[i], fwhm_G, fwhm_L)
+
+    broadened_theory = v_matrix @ thy_peak[:, 1].reshape((peak_copy.size, 1))
+
+    return broadened_theory.flatten()/peak_copy.size
 
 def deriv_edge_gaussian(e: Union[float, np.ndarray], fwhm_G: float) -> np.ndarray:
     '''
@@ -156,7 +197,6 @@ def deriv_voigt(e: Union[float, np.ndarray], fwhm_G: float, fwhm_L: float) -> np
      g means normalized gaussian shape with full width at half maximum parameter: fwhm_G
     '''
 
-
     if fwhm_G == 0:
         tmp = fwhm_L/2/np.pi/(e**2+fwhm_L**2/4)**2
         if isinstance(e, np.ndarray):
@@ -201,6 +241,71 @@ def deriv_voigt(e: Union[float, np.ndarray], fwhm_G: float, fwhm_L: float) -> np
         grad[2] = -f_z.imag/(2*np.sqrt(2)*sigma)
     return grad
 
+def deriv_voigt_thy(e: np.ndarray, thy_peak: np.ndarray,
+              fwhm_G: float, fwhm_L: float,
+              peak_factor: Union[float, np.ndarray],
+              policy: Optional[str] = 'shift') -> np.ndarray:
+
+    '''
+    Calculates derivative of voigt broadened theoretically calculated lineshape spectrum
+
+    Args:
+        e: energy 
+        thy_peak: theoretical calculated peak position and intensity
+        fwhm_G: full width at half maximum of gaussian shape 
+        fwhm_L: full width at half maximum of lorenzian shape 
+        peak_factor: Peak factor, its behavior depends on policy.
+        policy {'shift', 'scale', 'both'}: Policy to match discrepency 
+         between experimental data and theoretical spectrum.
+
+                 'shift' : Default option, shift peak position by peak_factor
+                 'scale' : scale peak position by peak_factor
+                 'both' : both shift and scale peak postition
+                          peak_factor = [shift_factor, scale_factor]
+
+    Returns:
+      derivative of voigt broadened theoritical lineshape spectrum
+    
+    Note:
+     1st row: df/d(fwhm_G)
+     2nd row: df/d(fwhm_L)
+     if policy in ['shift', 'scale']:
+        3rd row: df/d(peak_factor)
+     if policy == 'both':
+        3rd row: df/d(peak_factor[0]), peak_factor[0]: shift factor
+        4th row: df/d(peak_factor[1]), peak_factor[1]: scale factor
+    '''
+
+    deriv_voigt_matrix = np.zeros((thy_peak.shape[0], 3, e.size))
+    peak_copy = np.copy(thy_peak[:, 0])
+    if policy == 'shift':
+      peak_copy = peak_copy - peak_factor
+    elif policy == 'scale':
+      peak_copy = peak_factor*peak_copy 
+    else:
+        peak_copy = peak_factor[1]*peak_copy - peak_factor[0]
+    for i in range(peak_copy.size):
+        deriv_voigt_matrix[i, :, :] = deriv_voigt(e-peak_copy[i], fwhm_G, fwhm_L)
+    
+    grad_tmp = np.einsum('i,ijk->jk', thy_peak[:, 1], deriv_voigt_matrix)
+
+    if policy in ['shift', 'scale']:
+        grad = np.empty((3, e.size))
+    else:
+        grad = np.empty((4, e.size))
+    
+    grad[0, :] = grad_tmp[1, :]
+    grad[1, :] = grad_tmp[2, :]
+
+    if policy == 'shift':
+        grad[2, :] = -grad_tmp[0, :]
+    elif policy == 'scale':
+        grad[2, :] = np.einsum('i,i->i', thy_peak[:, 1], grad_tmp[0, :])
+    else:
+        grad[2, :] = -grad_tmp[0, :]
+        grad[3, :] = np.einsum('i,i->i', thy_peak[:, 1], grad_tmp[0, :])
+
+    return grad/thy_peak.shape[0]
 
 
 

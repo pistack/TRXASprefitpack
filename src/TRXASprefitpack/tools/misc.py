@@ -2,7 +2,7 @@
 # submodule for miscellaneous function of
 # tools subpackage
 
-from typing import Optional, Tuple, Sequence
+from typing import Optional, Tuple, Sequence, Union
 import numpy as np
 import matplotlib.pyplot as plt
 from ..driver import StaticResult, DriverResult
@@ -32,20 +32,59 @@ def read_data(prefix: str, num_scan: int, num_data_pts: int, default_SN: float) 
             eps[:, i] = A[:, 2]
     return data, eps
 
-def parse_matrix(mat_str: np.ndarray, tau: np.ndarray) -> np.ndarray:
+def calc_param_rate_eq(mat_str: np.ndarray, tau_obs: np.ndarray) -> np.ndarray:
+      '''
+      Deduce rate equation parameter from observed time constants 
+       Args:
+        mat_str: user supplied rate equation
+        tau_obs: observed time constants (time constant of each decay component)
+       Returns:
+        tau_rate: time constants for rate equation parameter 
+       Note:
+        Every entry in the rate equation matrix should be
+        '0', '1*ki', '-x.xxx*ki', 'x.xxx*ki' or '-(x.xxx*ki+y.yyy*kj+...)'
+        Number of non zero diagonal elements and size of tau should be same
+        Number of parameter used to define rate equation and size of tau should 
+        be same.
+      '''
+      L = np.zeros_like(mat_str, dtype=float)
+      mat_str_diag = np.diag(mat_str)
+      mat_str_diag_reduced = mat_str_diag[mat_str_diag != '0']
+      Eq = np.zeros((tau_obs.size, tau_obs.size), dtype=float)
+
+      # Deduce rate equation parameter k
+      for i in range(mat_str_diag_reduced.size):
+            tmp = mat_str_diag_reduced[i]
+            tmp.strip('-').strip('(').strip(')')
+            k_lst = tmp.split('+')
+            for k in k_lst:
+                  k_pair = k.split('*')
+                  Eq[i, int(k_pair[1][1:])-1] = float(k_pair[0])
+      
+      k_rate = np.linalg.solve(Eq, 1/tau_obs)
+      tau_rate = 1/k_rate
+
+      return tau_rate
+
+def parse_matrix(mat_str: np.ndarray, tau_rate: np.ndarray) -> np.ndarray:
     '''
     Parse user supplied rate equation matrix
 
     Args:
      mat_str: user supplied rate equation (lower triangular matrix)
-     tau: life time constants (inverse of rate constant)
+     tau_rate: time constants for rate equation parameter (1/ki)
     
     Return:
      parsed rate equation matrix.
+     the value of lifetime 
+     parameters (1/ki) used to define rate equation matrix
     
     Note:
      Every entry in the rate equation matrix should be
      '0', '1*ki', '-x.xxx*ki', 'x.xxx*ki' or '-(x.xxx*ki+y.yyy*kj+...)'
+     Number of non zero diagonal elements and size of tau should be same
+     Number of parameter used to define rate equation and size of tau should 
+     be same.
     '''
 
     L = np.zeros_like(mat_str, dtype=float)
@@ -61,20 +100,17 @@ def parse_matrix(mat_str: np.ndarray, tau: np.ndarray) -> np.ndarray:
             k_lst = tmp.split('+')
             for k in k_lst:
                 k_pair = k.split('*')
-                red_L[i] = red_L[i] - float(k_pair[0])/tau[int(k_pair[1][1:])-1]
+                red_L[i] = red_L[i] - float(k_pair[0])/tau_rate[int(k_pair[1][1:])-1]
         else:
             tmp_pair = tmp.split('*')
-            red_L[i] = float(tmp_pair[0])/tau[int(tmp_pair[1][1:])-1]
+            red_L[i] = float(tmp_pair[0])/tau_rate[int(tmp_pair[1][1:])-1]
     
     L[mask] = red_L
     
     return L
 
 def plot_StaticResult(result: StaticResult,
-                      x_min: Optional[float] = None, x_max: Optional[float] = None, save_fig: Optional[str] = None, 
-                      e: Optional[np.ndarray] = None, 
-                      data: Optional[np.ndarray] = None,
-                      eps: Optional[np.ndarray] = None):
+                      x_min: Optional[float] = None, x_max: Optional[float] = None, save_fig: Optional[str] = None):
       '''
       plot static fitting Result
 
@@ -95,17 +131,18 @@ def plot_StaticResult(result: StaticResult,
       plt.suptitle(title)
       sub1 = fig.add_subplot(211)
       sub1.set_title(subtitle)
-      sub1.errorbar(e, data, eps, marker='o', mfc='none', label=f'expt {title}', linestyle='none')
-      sub1.plot(e, result['fit'], label=f'fit {title}')
+      sub1.errorbar(result['e'], result['data'], result['eps'], 
+      marker='o', mfc='none', label=f'expt {title}', linestyle='none')
+      sub1.plot(result['e'], result['fit'], label=f'fit {title}')
       for i in range(result['n_voigt']):
-            sub1.plot(e, result['fit_comp'][i, :], label=f'{i}th voigt component', linestyle='dashed')
+            sub1.plot(result['e'], result['fit_comp'][i, :], label=f'{i}th voigt component', linestyle='dashed')
       if result['edge'] is not None:
-            sub1.plot(e, result['fit_comp'][-1, :], label=f"{result['edge']} type edge", linestyle='dashed')
+            sub1.plot(result['e'], result['fit_comp'][-1, :], label=f"{result['edge']} type edge", linestyle='dashed')
       if result['base_order'] is not None:
-        sub1.plot(e, result['base'], label=f"base [order {result['base_order']}]", linestyle='dashed')
+        sub1.plot(result['e'], result['base'], label=f"base [order {result['base_order']}]", linestyle='dashed')
       sub1.legend()
       sub2 = fig.add_subplot(212)
-      sub2.errorbar(e, result['res'], eps, 
+      sub2.errorbar(result['e'], result['res'], result['eps'], 
       marker='o', mfc='none', label=f'res {title}', linestyle='none')
       sub2.legend()
       
@@ -118,49 +155,45 @@ def plot_StaticResult(result: StaticResult,
             plt.show()
       return
 
-def plot_DriverResult(result: DriverResult, name_of_dset: Optional[Sequence[str]] = None,
-                      x_min: Optional[float] = None, x_max: Optional[float] = None, save_fig: Optional[str] = None, 
-                      t: Optional[Sequence[np.ndarray]] = None, 
-                      data: Optional[Sequence[np.ndarray]] = None,
-                      eps: Optional[Sequence[np.ndarray]] = None):
+def plot_DriverResult(result: DriverResult,
+                      x_min: Optional[float] = None, x_max: Optional[float] = None, save_fig: Optional[str] = None):
       '''
       plot fitting Result
 
       Args:
        result: fitting result
-       name_of_dset: name of each dataset
        x_min: minimum x range
        x_max: maximum x range
        save_fig: prefix of saved png plots. If `save_fig` is `None`, plots are displayed istead of being saved.
-       t: sequence of scan range of each dataset
-       data: sequence of datasets for time delay scan (it should not contain time scan range)
-       eps: sequence of estimated errors of each dataset
       '''
-      if name_of_dset is None:
-            name_of_dset = list(range(1, len(t)+1))
       
       start = 0
-      for i in range(len(t)):
-            for j in range(data[i].shape[1]):
+      for i in range(len(result['t'])):
+            for j in range(result['data'][i].shape[1]):
                   fig = plt.figure(start+j)
-                  title = f'{name_of_dset[i]} scan #{j+1}'
+                  title = f'{result["name_of_dset"][i]} scan #{j+1}'
                   subtitle = f"Chi squared: {result['red_chi2_ind'][i][j]: .2f}"
                   plt.suptitle(title)
                   sub1 = fig.add_subplot(211)
                   sub1.set_title(subtitle)
-                  sub1.errorbar(t[i], data[i][:, j], eps[i][:, j], marker='o', mfc='none',
+                  sub1.errorbar(result['t'][i], result['data'][i][:, j], result['eps'][i][:, j], marker='o', mfc='none',
                   label=f'expt {title}', linestyle='none')
-                  sub1.plot(t[i], result['fit'][i][:, j], label=f'fit {title}')
+                  sub1.plot(result['t'][i], result['fit'][i][:, j], label=f'fit {title}')
                   sub1.legend()
                   sub2 = fig.add_subplot(212)
-                  sub2.errorbar(t[i], result['res'][i][:, j], 
-                  eps[i][:, j], marker='o', mfc='none', label=f'res {title}', linestyle='none')
+                  if result['model'] in ['decay', 'osc']:
+                        sub2.errorbar(result['t'][i], result['res'][i][:, j], 
+                        result['eps'][i][:, j], marker='o', mfc='none', label=f'res {title}', linestyle='none')
+                  else:
+                        sub2.errorbar(result['t'][i], result['data'][i][:, j]-result['fit_decay'][i][:, j], 
+                        result['eps'][i][:, j], marker='o', mfc='none', label=f'expt osc {title}', linestyle='none')
+                        sub2.plot(result['t'][i], result['fit_osc'][i][:, j], label=f'fit osc {title}')
                   sub2.legend()
                   if x_min is not None and x_max is not None:
                         sub1.set_xlim(x_min, x_max)
                         sub2.set_xlim(x_min, x_max)
                   if save_fig is not None:
-                        plt.savefig(f'{save_fig}_{name_of_dset[i]}_{j+1}.png')
+                        plt.savefig(f'{save_fig}_{result["name_of_dset"][i]}_{j+1}.png')
       if save_fig is None:
             plt.show()
       return

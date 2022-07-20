@@ -9,7 +9,7 @@
 
 import argparse
 import numpy as np
-from ..driver import print_DriverResult, save_DriverResult
+from ..driver import save_DriverResult
 from ..driver import fit_transient_exp, fit_transient_dmp_osc, fit_transient_both
 from .misc import read_data, plot_DriverResult
 
@@ -46,7 +46,7 @@ epilog = '''
 
 7. The number of tau_osc, period_osc and phase_osc parameter should be same
 
-8. phase_osc should be confined in [-pi/2, pi/2] (pi ~ 3.14)
+8. phase_osc should be confined in [0, pi] (pi ~ 3.14)
 
 9. If you set `mode=both` then you should set `tau`, `tau_osc`, `period_osc` and `phase_osc`. However the number of `tau` and `tau_osc` need not to be same.
 '''
@@ -103,7 +103,7 @@ def fit_tscan():
                         'It will read prefix_i.txt')
     parser.add_argument('--num_file', type=int, nargs='+',
                          help='number of scan file corresponding to each prefix')
-    parser.add_argument('-t0_init', '--time_zeros', type=float, nargs='+',
+    parser.add_argument('-t0', '--time_zeros', type=float, nargs='+',
                         help='time zeros for each tscan')
     parser.add_argument('-t0f', '--time_zeros_file',
                         help='filename for time zeros of each tscan')
@@ -209,10 +209,10 @@ def fit_tscan():
 
     
     result = FITDRIVER[args.mode](irf, fwhm_init, t0_init, *dargs, method_glb=args.method_glb, 
-    bound_fwhm=bound_fwhm, bound_t0=bound_t0, t=t, data=data, eps=eps)
+    bound_fwhm=bound_fwhm, bound_t0=bound_t0, name_of_dset=prefix, t=t, data=data, eps=eps)
 
-    print(print_DriverResult(result, prefix))
-    plot_DriverResult(result, name_of_dset=prefix, t=t, data=data, eps=eps)
-    save_DriverResult(result, args.outdir, name_of_dset=prefix, t=t, eps=eps)
+    save_DriverResult(result, args.outdir)
+    print(result)
+    plot_DriverResult(result)
 
     return

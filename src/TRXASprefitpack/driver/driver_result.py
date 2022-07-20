@@ -15,8 +15,13 @@ class DriverResult(dict):
               `dmp_osc`: sum of the convolution of damped oscillation and instrumental response function
 
               `both`: sum of `decay` and `dmp_osc` model
-
+       name_of_dset (sequence of str): name of each dataset
+       t (sequence of np.ndarray): time range for each dataset
+       data (sequence of np.ndarray): sequence of datasets for time delay scan (it should not contain time scan range)
+       eps (sequence of np.ndarray): sequence of datasets for estimated error of time delay scan
        fit (sequence of np.ndarray): fitting curve for each data set
+       fit_decay (sequence of np.ndarray): decay part of fitting curve for each data set [model = 'both']
+       fit_osc (sequence of np.ndarray): oscillation part of fitting curve for each data set [model = 'both']
        res (sequence of np.ndarray): residual curve (data-fit) for each data set
        irf ({'g', 'c', 'pv'}): shape of instrument response function
 
@@ -62,6 +67,33 @@ class DriverResult(dict):
 
                      `-1` : least square optimization process is failed
       '''
+      def __init__(self):
+            self.model = None
+            self.fit = None; self.fit_decay = None; self.fit_osc = None
+            self.name_of_dset = None
+            self.t = None; self.data = None; self.eps = None
+            self.res = None; self.irf = None; self.eta = None
+            self.param_name = None; self.n_decay = None
+            self.n_osc = None; self.x = None; self.bounds = None
+            self.base = None; self.c = None
+            self.chi2 = None; self.aic = None; self.bic = None
+            self.chi2_ind = None
+            self.red_chi2 = None; self.red_chi2_ind = None
+            self.nfev = None
+            self.n_param = None; self.n_param_ind = None
+            self.num_pts = None
+            self.jac = None
+            self.cov = None
+            self.cov_scaled = None
+            self.corr = None
+            self.x_eps = None
+            self.method_glb = None
+            self.message_glb = None
+            self.method_lsq = None
+            self.success_lsq = None
+            self.message_lsq = None
+            self.status = None
+
       def __getattr__(self, name):
             try:
                   return self[name]
@@ -73,105 +105,123 @@ class DriverResult(dict):
       
       def __dir__(self):
             return list(self.keys())
-
-def print_DriverResult(result: DriverResult, name_of_dset: Optional[Sequence[str]] = None, corr_tol: float =1e-1) -> str:
-      '''
-      print pretty docstring of DriverResult class
-
-      Args:
-       result: DriverResult class instance which has fitting result
-       name_of_dset: name of each data sets
-       corr_tol: parameter correlation greather `corr_tol` would be reported
       
-      Returns:
-       string which reports fitting results
-      '''
+      def __str__(self, corr_tol: float = 1e-1):
+            '''
+            Report DriverResult class
 
-      if name_of_dset is None:
-            name_of_dset = list(range(1, 1+len(result['red_chi2_ind'])))
+            Args:
+            result: DriverResult class instance which has fitting result
+            corr_tol: parameter correlation greather `corr_tol` would be reported
+      
+            Returns:
+             string which reports fitting results
+            '''
 
-      doc_lst = []
-      doc_lst.append("[Model information]")
-      doc_lst.append(f"    model : {result['model']}")
-      doc_lst.append(f"    irf: {result['irf']}")
-      doc_lst.append(f"    eta: {result['eta']}")
-      doc_lst.append(f"    base: {result['base']}")
-      doc_lst.append(' ')
-      doc_lst.append("[Optimization Method]")
-      doc_lst.append(f"    global: {result['method_glb']}")
-      doc_lst.append(f"    leastsq: {result['method_lsq']}")
-      doc_lst.append(' ')
-      doc_lst.append("[Optimization Status]")
-      doc_lst.append(f"    nfev: {result['nfev']}")
-      doc_lst.append(f"    status: {result['status']}")
-      doc_lst.append(f"    global_opt msg: {result['message_glb']}")
-      doc_lst.append(f"    leastsq_opt msg: {result['message_lsq']}")
-      doc_lst.append(' ')
-      doc_lst.append("[Optimization Results]")
-      doc_lst.append(f"    Number of effective parameters: {result['n_param']}")
-      doc_lst.append(f"    Degree of Freedom: {result['num_pts']-result['n_param']}")
-      doc_lst.append(f"    Chi squared: {result['chi2']: .4f}".rstrip('0').rstrip('.'))
-      doc_lst.append(f"    Reduced chi squared: {result['red_chi2']: .4f}".rstrip('0').rstrip('.'))
-      doc_lst.append(f"    AIC (Akaike Information Criterion statistic): {result['aic']: .4f}".rstrip('0').rstrip('.'))
-      doc_lst.append(f"    BIC (Bayesian Information Criterion statistic): {result['bic']: .4f}".rstrip('0').rstrip('.'))
-      doc_lst.append(' ')
-      doc_lst.append("[Parameters]")
-      for pn, pv, p_err in zip(result['param_name'], result['x'], result['x_eps']):
-            doc_lst.append(f"    {pn}: {pv: .8f} +/- {p_err: .8f} ({100*np.abs(p_err/pv): .2f}%)".rstrip('0').rstrip('.'))
-      doc_lst.append(' ')
-      doc_lst.append("[Parameter Bound]")
-      for pn, pv, bd in zip(result['param_name'], result['x'], result['bounds']):
-            doc_lst.append(f"    {pn}: {bd[0]: .8f}".rstrip('0').rstrip('.')+f" <= {pv: .8f} <= {bd[1]: .8f}".rstrip('0').rstrip('.'))
-      doc_lst.append(' ')
+            doc_lst = []
+            doc_lst.append("[Model information]")
+            doc_lst.append(f"    model : {self['model']}")
+            doc_lst.append(f"    irf: {self['irf']}")
+            doc_lst.append(f"    eta: {self['eta']}")
+            doc_lst.append(f"    base: {self['base']}")
+            doc_lst.append(' ')
+            doc_lst.append("[Optimization Method]")
+            doc_lst.append(f"    global: {self['method_glb']}")
+            doc_lst.append(f"    leastsq: {self['method_lsq']}")
+            doc_lst.append(' ')
+            doc_lst.append("[Optimization Status]")
+            doc_lst.append(f"    nfev: {self['nfev']}")
+            doc_lst.append(f"    status: {self['status']}")
+            doc_lst.append(f"    global_opt msg: {self['message_glb']}")
+            doc_lst.append(f"    leastsq_opt msg: {self['message_lsq']}")
+            doc_lst.append(' ')
+            doc_lst.append("[Optimization Results]")
+            doc_lst.append(f"    Total Data points: {self['num_pts']}")
+            doc_lst.append(f"    Number of effective parameters: {self['n_param']}")
+            doc_lst.append(f"    Degree of Freedom: {self['num_pts']-self['n_param']}")
+            doc_lst.append(f"    Chi squared: {self['chi2']: .4f}".rstrip('0').rstrip('.'))
+            doc_lst.append(f"    Reduced chi squared: {self['red_chi2']: .4f}".rstrip('0').rstrip('.'))
+            doc_lst.append(f"    AIC (Akaike Information Criterion statistic): {self['aic']: .4f}".rstrip('0').rstrip('.'))
+            doc_lst.append(f"    BIC (Bayesian Information Criterion statistic): {self['bic']: .4f}".rstrip('0').rstrip('.'))
+            doc_lst.append(' ')
+            doc_lst.append("[Parameters]")
+            for pn, pv, p_err in zip(self['param_name'], self['x'], self['x_eps']):
+                  doc_lst.append(f"    {pn}: {pv: .8f} +/- {p_err: .8f} ({100*np.abs(p_err/pv): .2f}%)".rstrip('0').rstrip('.'))
+            doc_lst.append(' ')
+            doc_lst.append("[Parameter Bound]")
+            for pn, pv, bd in zip(self['param_name'], self['x'], self['bounds']):
+                  doc_lst.append(f"    {pn}: {bd[0]: .8f}".rstrip('0').rstrip('.')+f" <= {pv: .8f} <= {bd[1]: .8f}".rstrip('0').rstrip('.'))
+            doc_lst.append(' ')
 
-      doc_lst.append("[Component Contribution]")
-      for i in range(len(result['c'])):
-            doc_lst.append(f"    DataSet {name_of_dset[i]}:")
-            row = ['     #tscan']
-            coeff_abs = np.abs(result['c'][i])
-            coeff_sum = np.sum(coeff_abs, axis=0)
-            coeff_contrib = np.einsum('j,ij->ij', 100/coeff_sum, result['c'][i])
-            for j in range(coeff_contrib.shape[1]):
-                  row.append(f'tscan_{j+1}')
-            doc_lst.append('\t'.join(row))
-            for d in range(result['n_decay']-1):
-                  row = [f"     decay {d+1}"]
-                  for l in range(coeff_contrib.shape[1]):
+            doc_lst.append("[Component Contribution]")
+            for i in range(len(self['c'])):
+                  doc_lst.append(f"    DataSet {self['name_of_dset'][i]}:")
+                  row = ['     #tscan']
+                  coeff_abs = np.abs(self['c'][i])
+                  coeff_sum = np.sum(coeff_abs, axis=0)
+                  coeff_contrib = np.einsum('j,ij->ij', 100/coeff_sum, self['c'][i])
+                  for j in range(coeff_contrib.shape[1]):
+                      row.append(f'tscan_{j+1}')
+                  doc_lst.append('\t'.join(row))
+                  for d in range(self['n_decay']-1):
+                      row = [f"     decay {d+1}"]
+                      for l in range(coeff_contrib.shape[1]):
                         row.append(f'{coeff_contrib[d, l]: .2f}%')
-                  doc_lst.append('\t'.join(row))
-            if result['base']:
-                  row = [f'     base']
-            else:
-                  row = [f"     decay {result['n_decay']}"]
-            if result['n_decay'] > 0:
-                  for l in range(coeff_contrib.shape[1]):
-                        row.append(f"{coeff_contrib[result['n_decay']-1,l]: .2f}%")
-                  doc_lst.append('\t'.join(row))
-            for o in range(result['n_decay'], result['n_decay']+result['n_osc']):
-                  row =[f"    dmp_osc {o+1-result['n_decay']}"]
-                  for l in range(coeff_contrib.shape[1]):
-                        row.append(f'{coeff_contrib[o, l]: .2f}%')
-                  doc_lst.append('\t'.join(row))
-      doc_lst.append(' ')
+                      doc_lst.append('\t'.join(row))
+                  if self['base']:
+                        row = [f'     base']
+                  else:
+                        row = [f"     decay {self['n_decay']}"]
+                  if self['n_decay'] > 0:
+                        for l in range(coeff_contrib.shape[1]):
+                              row.append(f"{coeff_contrib[self['n_decay']-1,l]: .2f}%")
+                        doc_lst.append('\t'.join(row))
+                  for o in range(self['n_decay'], self['n_decay']+self['n_osc']):
+                        row =[f"    dmp_osc {o+1-self['n_decay']}"]
+                        for l in range(coeff_contrib.shape[1]):
+                              row.append(f'{coeff_contrib[o, l]: .2f}%')
+                        doc_lst.append('\t'.join(row))
+            doc_lst.append(' ')
+            doc_lst.append("[Parameter Correlation]")
+            doc_lst.append(f"    Parameter Correlations > {corr_tol: .3f}".rstrip('0').rstrip('.') + " are reported.")
 
-      doc_lst.append("[Parameter Correlation]")
-      doc_lst.append(f"    Parameter Correlations > {corr_tol: .3f}".rstrip('0').rstrip('.') + " are reported.")
+            A = np.empty((len(self['x']), len(self['x'])), dtype=object)
+            for i in range(len(self['x'])):
+                  for j in range(len(self['x'])):
+                        A[i,j] = (i,j)
+            
+            mask = (np.abs(self['corr']) > corr_tol)
 
-      A = np.empty((len(result['x']), len(result['x'])), dtype=object)
-      for i in range(len(result['x'])):
-            for j in range(len(result['x'])):
-                  A[i,j] = (i,j)
-      mask = (np.abs(result['corr']) > corr_tol)
+            for pair in A[mask]:
+                  if pair[0] > pair[1]:
+                        tmp_str_lst = [f"    ({self['param_name'][pair[0]]},"]
+                        tmp_str_lst.append(f"{self['param_name'][pair[1]]}")
+                        tmp_str_lst.append('=')
+                        tmp_str_lst.append(f"{self['corr'][pair]: .3f}".rstrip('0').rstrip('.'))
+                        doc_lst.append(' '.join(tmp_str_lst))
 
-      for pair in A[mask]:
-            if pair[0] > pair[1]:
-                  doc_lst.append(f"    ({result['param_name'][pair[0]]}, {result['param_name'][pair[1]]}) = {result['corr'][pair] : .3f}".rstrip('0').rstrip('.'))
+            return '\n'.join(doc_lst)
+      
+      def __repr__(self):
+            '''
+            Print structure of DriverResult instance
+            '''
+            doc_lst = []
+            print(self.items())
+            for k,v in self.items():
+                  if v is None:
+                        doc_lst.append(f"{k}: None")
+                  elif isinstance(v, (int, float, str)):
+                        doc_lst.append(f"{k}: {v}")
+                  elif len(v) == 1 and isinstance(v[0], (int, float, str)):
+                        doc_lst.append(f"{k}: {v[0]}")
+                  elif len(v) == 2 and isinstance(v[0], (int, float)) and isinstance(v[1], (int, float)):
+                        doc_lst.append(f"{k}: ({v[0], v[1]})")
+                  elif isinstance(v, np.ndarray):
+                        doc_lst.append(f"{k}: numpy ndarray with datatype: {type(v[0,0])}, shape: {v.shape}")
+            return '\n'.join(doc_lst)
 
-      return '\n'.join(doc_lst)
-
-def save_DriverResult(result: DriverResult, dirname: str, name_of_dset: Optional[Sequence[str]] = None,
-                      t: Optional[Sequence[np.ndarray]] = None,
-                      eps: Optional[Sequence[np.ndarray]] = None):
+def save_DriverResult(result: DriverResult, dirname: str):
       '''
       save fitting result to the text file
 
@@ -186,6 +236,8 @@ def save_DriverResult(result: DriverResult, dirname: str, name_of_dset: Optional
        `fit_summary.txt`: Summary for the fitting result
        `weight_{name_of_dset[i]}.txt`: Weight of each model component of i th dataset
        `fit_{name_of_dset[i]}.txt`: fitting curve for i th dataset
+       `fit_osc_{name_of_dset[i]}.txt`: oscillation part of fitting curve for i th dataset [model = 'both']
+       `fit_decay_{name_of_dset[i]}.txt`: decay part of fitting curve for i th dataset [model = 'both']
        `res_{name_f_dset[i]}_j.txt`: residual (fit-data) curve for j th scan of i th data
                                      The format of text file is (t, res, eps)
 
@@ -195,32 +247,34 @@ def save_DriverResult(result: DriverResult, dirname: str, name_of_dset: Optional
       '''
       if not (Path.cwd()/dirname).exists():
             os.mkdir(dirname)
-
-      if name_of_dset is None:
-            name_of_dset = list(range(1, 1+len(t)))
       
       with open(f'{dirname}/fit_summary.txt', 'w') as f:
-            f.write(print_DriverResult(result, name_of_dset))
+            f.write(str(result))
       
-      for i in range(len(t)):
-            coeff_fmt = eps[i].shape[1]*['%.8e']
-            fit_fmt = (1+eps[i].shape[1])*['%.8e']
+      for i in range(len(result['t'])):
+            coeff_fmt = result['eps'][i].shape[1]*['%.8e']
+            fit_fmt = (1+result['eps'][i].shape[1])*['%.8e']
             coeff_header_lst = []
             fit_header_lst = ['time_delay']
-            for j in range(eps[i].shape[1]):
-                  res_save = np.vstack((t[i], result['res'][i][:,j], eps[i][:,j])).T
-                  np.savetxt(f'{dirname}/res_{name_of_dset[i]}_{j+1}.txt', res_save,
+            for j in range(result['eps'][i].shape[1]):
+                  res_save = np.vstack((result['t'][i], result['res'][i][:,j], result['eps'][i][:,j])).T
+                  np.savetxt(f"{dirname}/res_{result['name_of_dset'][i]}_{j+1}.txt", res_save,
                   fmt=['%.8e', '%.8e', '%.8e'], 
-                  header=f'time_delay \t res_{name_of_dset[i]}_{j+1} \t eps')
-                  fit_header_lst.append(f'fit_{name_of_dset[i]}_{j+1}')
-                  coeff_header_lst.append(f'tscan_{name_of_dset[i]}_{j+1}')
+                  header=f"time_delay \t res_{result['name_of_dset'][i]}_{j+1} \t eps")
+                  fit_header_lst.append(f"fit_{result['name_of_dset'][i]}_{j+1}")
+                  coeff_header_lst.append(f"tscan_{result['name_of_dset'][i]}_{j+1}")
             
             fit_header = '\t'.join(fit_header_lst)
             coeff_header = '\t'.join(coeff_header_lst)
 
-            np.savetxt(f'{dirname}/weight_{name_of_dset[i]}.txt', result['c'][i], fmt=coeff_fmt,
+            np.savetxt(f"{dirname}/weight_{result['name_of_dset'][i]}.txt", result['c'][i], fmt=coeff_fmt,
             header=coeff_header)
-            fit_save = np.vstack((t[i], result['fit'][i].T)).T
-            np.savetxt(f'{dirname}/fit_{name_of_dset[i]}.txt', fit_save, fmt=fit_fmt, header=fit_header)
-      
+            fit_save = np.vstack((result['t'][i], result['fit'][i].T)).T
+            np.savetxt(f"{dirname}/fit_{result['name_of_dset'][i]}.txt", fit_save, fmt=fit_fmt, header=fit_header)
+            if result['model'] == 'both':
+                  fit_decay_save = np.vstack((result['t'][i], result['fit_decay'][i].T)).T
+                  np.savetxt(f"{dirname}/fit_decay_{result['name_of_dset'][i]}.txt", fit_decay_save, fmt=fit_fmt, header=fit_header)
+                  fit_osc_save = np.vstack((result['t'][i], result['fit_osc'][i].T)).T
+                  np.savetxt(f"{dirname}/fit_osc_{result['name_of_dset'][i]}.txt", fit_osc_save, fmt=fit_fmt, header=fit_header)
+
       return

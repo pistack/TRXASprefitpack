@@ -29,6 +29,7 @@ def fit_transient_exp(irf: str, fwhm_init: Union[float, np.ndarray],
                       bound_fwhm: Optional[Sequence[Tuple[float, float]]] = None, 
                       bound_t0: Optional[Sequence[Tuple[float, float]]] = None, 
                       bound_tau: Optional[Sequence[Tuple[float, float]]] = None,
+                      name_of_dset: Optional[Sequence[str]] = None,
                       t: Optional[Sequence[np.ndarray]] = None, 
                       data: Optional[Sequence[np.ndarray]] = None,
                       eps: Optional[Sequence[np.ndarray]] = None) -> DriverResult:
@@ -89,6 +90,7 @@ def fit_transient_exp(irf: str, fwhm_init: Union[float, np.ndarray],
         If `bound_t0` is `None`, the upper and lower bound are given as `(t0-2*fwhm_init, t0+2*fwhm_init)`.
        bound_tau (sequence of tuple): boundary for lifetime constant for decay component, 
         if `bound_tau` is `None`, the upper and lower bound are given by ``set_bound_tau``.
+       name_of_dset (sequence of str): name of each dataset
        t (sequence of np.narray): time scan range for each datasets
        data (sequence of np.ndarray): sequence of datasets for time delay scan (it should not contain time scan range)
        eps (sequence of np.ndarray): sequence of estimated errors of each dataset
@@ -252,6 +254,14 @@ def fit_transient_exp(irf: str, fwhm_init: Union[float, np.ndarray],
       else:
             result['eta'] = calc_eta(fwhm_opt[0], fwhm_opt[1])
       
+      # save experimental fitting data
+      if name_of_dset is None:
+            name_of_dset = np.empty(len(t), dtype=object)
+            for i in range(len(t)):
+                  name_of_dset[i] = f'dataset_{i+1}'
+      result['name_of_dset'] = name_of_dset; result['t'] = t
+      result['data'] = data; result['eps'] = eps
+
       result['param_name'] = param_name; result['x'] = param_opt
       result['bounds'] = bound; result['base'] = base; result['c'] = c
       result['chi2'] = chi2; result['chi2_ind'] = chi2_ind

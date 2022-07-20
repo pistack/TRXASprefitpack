@@ -1,4 +1,3 @@
-from typing import Optional, Sequence
 import os
 from pathlib import Path
 import numpy as np
@@ -13,7 +12,9 @@ class StaticResult(dict):
               `voigt`: sum of voigt function, edge function and base funtion
 
               `thy`: sum of voigt broadened theoretical lineshape spectrum, edge function and base function
-
+       e (np.ndarray): energy range
+       data (np.ndarray): static spectrum
+       eps (np.ndarray): estimated error of static spectrum
        fit (np.ndarray): fitting curve for data (n,)
        fit_comp (np.ndarray): curve for each voigt component and edge
        base (np.ndaray): fitting curve for baseline
@@ -57,6 +58,38 @@ class StaticResult(dict):
 
                      `-1` : least square optimization process is failed
       '''
+      def __init__(self):
+            self.model = None
+            self.fit = None; self.fit_comp = None
+            self.base = None
+            self.e = None; self.data = None; self.eps = None
+            self.res = None
+            self.edge = None
+            self.base_order = None
+            self.param_name = None
+            self.n_voigt = None
+            self.x = None
+            self.bounds = None
+            self.c = None
+            self.chi2 = None
+            self.aic = None
+            self.bic = None
+            self.red_chi2 = None
+            self.nfev = None
+            self.n_param = None
+            self.num_pts = None
+            self.jac = None
+            self.cov = None
+            self.cov_scaled = None
+            self.corr = None
+            self.x_eps = None
+            self.method_glb = None
+            self.message_glb = None
+            self.method_lsq = None
+            self.success_lsq = None
+            self.message_lsq = None
+            self.status = None
+
       def __getattr__(self, name):
             try:
                   return self[name]
@@ -68,92 +101,110 @@ class StaticResult(dict):
       
       def __dir__(self):
             return list(self.keys())
-
-def print_StaticResult(result: StaticResult, corr_tol: float =1e-1) -> str:
-      '''
-      print pretty docstring of StaticResult class
-
-      Args:
-       result: StaticResult class instance which has fitting result
-       corr_tol: parameter correlation greather `corr_tol` would be reported
       
-      Returns:
-       string which reports fitting results
-      '''
+      def __str__(self, corr_tol: float = 1e-1):
+            '''
+            Report StaticResult
+            Args:
+            corr_tol: parameter correlation greather than `corr_tol` would be reported
+            '''
+            doc_lst = []
+            doc_lst.append("[Model information]")
+            doc_lst.append(f"    model : {self['model']}")
+            if self['edge'] is not None:
+                  doc_lst.append(f"    edge: {self['edge']}")
+            if self['base_order'] is not None:
+                  doc_lst.append(f"    base_order: {self['base_order']}")
+            doc_lst.append(' ')
+            doc_lst.append("[Optimization Method]")
+            doc_lst.append(f"    global: {self['method_glb']}")
+            doc_lst.append(f"    leastsq: {self['method_lsq']}")
+            doc_lst.append(' ')
+            doc_lst.append("[Optimization Status]")
+            doc_lst.append(f"    nfev: {self['nfev']}")
+            doc_lst.append(f"    status: {self['status']}")
+            doc_lst.append(f"    global_opt msg: {self['message_glb']}")
+            doc_lst.append(f"    leastsq_opt msg: {self['message_lsq']}")
+            doc_lst.append(' ')
+            doc_lst.append("[Optimization Results]")
+            doc_lst.append(f"    Data points: {self['num_pts']}")
+            doc_lst.append(f"    Number of effective parameters: {self['n_param']}")
+            doc_lst.append(f"    Degree of Freedom: {self['num_pts']-self['n_param']}")
+            doc_lst.append(f"    Chi squared: {self['chi2']: .4f}".rstrip('0').rstrip('.'))
+            doc_lst.append(f"    Reduced chi squared: {self['red_chi2']: .4f}".rstrip('0').rstrip('.'))
+            doc_lst.append(f"    AIC (Akaike Information Criterion statistic): {self['aic']: .4f}".rstrip('0').rstrip('.'))
+            doc_lst.append(f"    BIC (Bayesian Information Criterion statistic): {self['bic']: .4f}".rstrip('0').rstrip('.'))
+            doc_lst.append(' ')
+            doc_lst.append("[Parameters]")
+            for pn, pv, p_err in zip(self['param_name'], self['x'], self['x_eps']):
+                  doc_lst.append(f"    {pn}: {pv: .8f} +/- {p_err: .8f} ({100*np.abs(p_err/pv): .2f}%)".rstrip('0').rstrip('.'))
+            doc_lst.append(' ')
+            doc_lst.append("[Parameter Bound]")
+            for pn, pv, bd in zip(self['param_name'], self['x'], self['bounds']):
+                  doc_lst.append(f"    {pn}: {bd[0]: .8f}".rstrip('0').rstrip('.')+f" <= {pv: .8f} <= {bd[1]: .8f}".rstrip('0').rstrip('.'))
+            doc_lst.append(' ')
 
-      doc_lst = []
-      doc_lst.append("[Model information]")
-      doc_lst.append(f"    model : {result['model']}")
-      if result['edge'] is not None:
-            doc_lst.append(f"    edge: {result['edge']}")
-      if result['base_order'] is not None:
-            doc_lst.append(f"    base_order: {result['base_order']}")
-      doc_lst.append(' ')
-      doc_lst.append("[Optimization Method]")
-      doc_lst.append(f"    global: {result['method_glb']}")
-      doc_lst.append(f"    leastsq: {result['method_lsq']}")
-      doc_lst.append(' ')
-      doc_lst.append("[Optimization Status]")
-      doc_lst.append(f"    nfev: {result['nfev']}")
-      doc_lst.append(f"    status: {result['status']}")
-      doc_lst.append(f"    global_opt msg: {result['message_glb']}")
-      doc_lst.append(f"    leastsq_opt msg: {result['message_lsq']}")
-      doc_lst.append(' ')
-      doc_lst.append("[Optimization Results]")
-      doc_lst.append(f"    Number of effective parameters: {result['n_param']}")
-      doc_lst.append(f"    Degree of Freedom: {result['num_pts']-result['n_param']}")
-      doc_lst.append(f"    Chi squared: {result['chi2']: .4f}".rstrip('0').rstrip('.'))
-      doc_lst.append(f"    Reduced chi squared: {result['red_chi2']: .4f}".rstrip('0').rstrip('.'))
-      doc_lst.append(f"    AIC (Akaike Information Criterion statistic): {result['aic']: .4f}".rstrip('0').rstrip('.'))
-      doc_lst.append(f"    BIC (Bayesian Information Criterion statistic): {result['bic']: .4f}".rstrip('0').rstrip('.'))
-      doc_lst.append(' ')
-      doc_lst.append("[Parameters]")
-      for pn, pv, p_err in zip(result['param_name'], result['x'], result['x_eps']):
-            doc_lst.append(f"    {pn}: {pv: .8f} +/- {p_err: .8f} ({100*np.abs(p_err/pv): .2f}%)".rstrip('0').rstrip('.'))
-      doc_lst.append(' ')
-      doc_lst.append("[Parameter Bound]")
-      for pn, pv, bd in zip(result['param_name'], result['x'], result['bounds']):
-            doc_lst.append(f"    {pn}: {bd[0]: .8f}".rstrip('0').rstrip('.')+f" <= {pv: .8f} <= {bd[1]: .8f}".rstrip('0').rstrip('.'))
-      doc_lst.append(' ')
+            doc_lst.append("[Component Contribution]")
+            doc_lst.append(f"    Static spectrum")
+            if self['base_order'] is None:
+                  coeff_abs = np.abs(self['c'])
+                  coeff_contrib = 100*self['c']
+            else:
+                  coeff_abs = np.abs(self['c'][:-self['base_order']-1])
+                  coeff_contrib = 100*self['c'][:-self['base_order']-1]
+            coeff_sum = np.sum(coeff_abs)
+            coeff_contrib = coeff_contrib/coeff_sum
+            for v in range(self['n_voigt']):
+                  row = [f"     {self['model']} {v+1}:"]
+                  row.append(f'{coeff_contrib[v]: .2f}%')
+                  doc_lst.append(' '.join(row))
+            if self['edge'] is not None:
+                  row = [f"     {self['edge']} type edge:"]
+                  row.append(f"{coeff_contrib[self['n_voigt']]: .2f}%")
+                  doc_lst.append(' '.join(row))
+            doc_lst.append(' ')
 
-      doc_lst.append("[Component Contribution]")
-      doc_lst.append(f"    Static spectrum")
-      if result['base_order'] is None:
-            coeff_abs = np.abs(result['c'])
-            coeff_contrib = 100*result['c']
-      else:
-            coeff_abs = np.abs(result['c'][:-result['base_order']-1])
-            coeff_contrib = 100*result['c'][:-result['base_order']-1]
-      coeff_sum = np.sum(coeff_abs)
-      coeff_contrib = coeff_contrib/coeff_sum
-      for v in range(result['n_voigt']):
-            row = [f"     voigt {v+1}"]
-            row.append(f'{coeff_contrib[v]: .2f}%')
-            doc_lst.append('\t'.join(row))
-      if result['edge'] is not None:
-            row = [f"     {result['edge']} type edge"]
-            row.append(f"{coeff_contrib[result['n_voigt']]: .2f}%")
-            doc_lst.append('\t'.join(row))
-      doc_lst.append(' ')
+            doc_lst.append("[Parameter Correlation]")
+            doc_lst.append(f"    Parameter Correlations > {corr_tol: .3f}".rstrip('0').rstrip('.') + " are reported.")
 
-      doc_lst.append("[Parameter Correlation]")
-      doc_lst.append(f"    Parameter Correlations > {corr_tol: .3f}".rstrip('0').rstrip('.') + " are reported.")
+            A = np.empty((len(self['x']), len(self['x'])), dtype=object)
+            for i in range(len(self['x'])):
+                  for j in range(len(self['x'])):
+                        A[i,j] = (i,j)
+            
+            mask = (np.abs(self['corr']) > corr_tol)
 
-      A = np.empty((len(result['x']), len(result['x'])), dtype=object)
-      for i in range(len(result['x'])):
-            for j in range(len(result['x'])):
-                  A[i,j] = (i,j)
-      mask = (np.abs(result['corr']) > corr_tol)
+            for pair in A[mask]:
+                  if pair[0] > pair[1]:
+                        tmp_str_lst = [f"    ({self['param_name'][pair[0]]},"]
+                        tmp_str_lst.append(f"{self['param_name'][pair[1]]}")
+                        tmp_str_lst.append('=')
+                        tmp_str_lst.append(f"{self['corr'][pair]: .3f}".rstrip('0').rstrip('.'))
+                        doc_lst.append(' '.join(tmp_str_lst))
 
-      for pair in A[mask]:
-            if pair[0] > pair[1]:
-                  doc_lst.append(f"    ({result['param_name'][pair[0]]}, {result['param_name'][pair[1]]}) = {result['corr'][pair] : .3f}".rstrip('0').rstrip('.'))
+            return '\n'.join(doc_lst)
+      
+      def __repr__(self):
+            '''
+            Print structure of StaticResult instance
+            '''
+            doc_lst = []
+            print(self.items())
+            for k,v in self.items():
+                  if v is None:
+                        doc_lst.append(f"{k}: None")
+                  elif isinstance(v, (int, float, str)):
+                        doc_lst.append(f"{k}: {v}")
+                  elif len(v) == 1 and isinstance(v[0], (int, float, str)):
+                        doc_lst.append(f"{k}: {v[0]}")
+                  elif len(v) == 2 and isinstance(v[0], (int, float)) and isinstance(v[1], (int, float)):
+                        doc_lst.append(f"{k}: ({v[0], v[1]})")
+                  elif isinstance(v, np.ndarray):
+                        doc_lst.append(f"{k}: numpy ndarray with datatype: {type(v[0,0])}, shape: {v.shape}")
+            return '\n'.join(doc_lst)
 
-      return '\n'.join(doc_lst)
 
-def save_StaticResult(result: StaticResult, dirname: str, name_of_dset: Optional[Sequence[str]] = None,
-                      e: Optional[Sequence[np.ndarray]] = None,
-                      eps: Optional[Sequence[np.ndarray]] = None):
+def save_StaticResult(result: StaticResult, dirname: str):
       '''
       save static fitting result to the text file
 
@@ -176,7 +227,7 @@ def save_StaticResult(result: StaticResult, dirname: str, name_of_dset: Optional
             os.mkdir(dirname)
       
       with open(f'{dirname}/fit_summary.txt', 'w') as f:
-            f.write(print_StaticResult(result))
+            f.write(str(result))
 
       tot_comp = result['n_voigt']
       if result['edge'] is not None:
@@ -192,10 +243,10 @@ def save_StaticResult(result: StaticResult, dirname: str, name_of_dset: Optional
             fit_header_lst.append(f"{result['edge']}_type_edge")
       if result['base'] is not None:
             fit_header_lst.append("base")
-            fit_save = np.vstack((e, result['fit'], result['fit_comp'], result['base'])).T
+            fit_save = np.vstack((result['e'], result['fit'], result['fit_comp'], result['base'])).T
       else:
-            fit_save = np.vstack((e, result['fit'], result['fit_comp'])).T
-      res_save = np.vstack((e, result['res'], eps)).T
+            fit_save = np.vstack((result['e'], result['fit'], result['fit_comp'])).T
+      res_save = np.vstack((result['e'], result['res'], result['eps'])).T
       np.savetxt(f'{dirname}/res.txt', res_save, fmt=['%.8e', '%.8e', '%.8e'], 
       header=f'energy \t res \t eps')
       fit_header = '\t'.join(fit_header_lst)

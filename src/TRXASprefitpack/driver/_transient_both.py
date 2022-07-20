@@ -35,6 +35,7 @@ def fit_transient_both(irf: str, fwhm_init: Union[float, np.ndarray],
                       bound_tau_osc: Optional[Sequence[Tuple[float, float]]] = None,
                       bound_period_osc: Optional[Sequence[Tuple[float, float]]] = None,
                       bound_phase_osc: Optional[Sequence[Tuple[float, float]]] = None,
+                      name_of_dset: Optional[Sequence[str]] = None,
                       t: Optional[Sequence[np.ndarray]] = None, 
                       data: Optional[Sequence[np.ndarray]] = None,
                       eps: Optional[Sequence[np.ndarray]] = None) -> DriverResult:
@@ -211,12 +212,15 @@ def fit_transient_both(irf: str, fwhm_init: Union[float, np.ndarray],
       period_osc_opt = param_opt[osc_start+tau_osc_init.size:osc_start+2*tau_osc_init.size]
       phase_osc_opt = param_opt[osc_start+2*tau_osc_init.size:]
       
-      fit = np.empty(len(t), dtype=object); res = np.empty(len(t), dtype=object)
+      fit = np.empty(len(t), dtype=object); fit_osc = np.empty(len(t), dtype=object)
+      fit_decay = np.empty(len(t), dtype=object)
+      res = np.empty(len(t), dtype=object)
       
       num_tot_scan = 0
       for i in range(len(t)):
             num_tot_scan = num_tot_scan + data[i].shape[1]
             fit[i] = np.empty(data[i].shape)
+            fit_osc[i] = np.empty(data[i].shape); fit_decay[i] = np.empty(data[i].shape)
             res[i] = np.empty(data[i].shape)
 
     # Calc individual chi2
@@ -262,6 +266,8 @@ def fit_transient_both(irf: str, fwhm_init: Union[float, np.ndarray],
 
                   c[i][:, j] = fact_anal_A(A, data[i][:, j], eps[i][:, j])
                   fit[i][:, j] = c[i][:, j] @ A
+                  fit_decay[i][:, j] = c[i][:tau_init.size+1*base, j] @ A[:tau_init.size+1*base, :]
+                  fit_osc[i][:, j] = c[i][tau_init.size+1*base:, j] @ A[tau_init.size+1*base:, :]
                   param_name[t0_idx] = f't_0_{i+1}_{j+1}'
                   t0_idx = t0_idx + 1
             
@@ -288,8 +294,18 @@ def fit_transient_both(irf: str, fwhm_init: Union[float, np.ndarray],
       corr[mask_2d] = corr[mask_2d]/weight[mask_2d]
 
       result = DriverResult()
+
+      # save experimental fitting data
+      if name_of_dset is None:
+            name_of_dset = np.empty(len(t), dtype=object)
+            for i in range(len(t)):
+                  name_of_dset[i] = f'dataset_{i+1}'
+      result['name_of_dset'] = name_of_dset; result['t'] = t
+      result['data'] = data; result['eps'] = eps
+
       result['model'] = 'both'
-      result['fit'] = fit; result['res'] = res; result['irf'] = irf
+      result['fit'] = fit; result['fit_osc'] = fit_osc; result['fit_decay'] = fit_decay
+      result['res'] = res; result['irf'] = irf
 
       if irf == 'g':
             result['eta'] = 0

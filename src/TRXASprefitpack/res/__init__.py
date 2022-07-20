@@ -1,11 +1,7 @@
 '''
 res:
 subpackage for resdiual function for
-convolution of 
-1. sum of exponential decay 
-2. sum of damped oscillation 
-3. sum of 1 and 2
-and instrumental response function 
+fitting time delay scan data or static spectrum data
 
 :copyright: 2021-2022 by pistack (Junho Lee).
 :license: LGPL3.
@@ -21,6 +17,8 @@ from .res_both import residual_both
 from .res_both import jac_res_both
 from .res_voigt import residual_voigt
 from .res_voigt import jac_res_voigt
+from .res_thy import residual_thy
+from .res_thy import jac_res_thy
 
 __all__ = ['set_bound_t0', 'set_bound_tau',
            'res_lmfit', 'jac_lmfit',
@@ -28,4 +26,5 @@ __all__ = ['set_bound_t0', 'set_bound_tau',
            'residual_decay', 'jac_res_decay',
            'residual_dmp_osc', 'jac_res_dmp_osc',
            'residual_both', 'jac_res_both',
-           'residual_voigt', 'jac_res_voigt']
+           'residual_voigt', 'jac_res_voigt',
+           'residual_thy', 'jac_res_thy']

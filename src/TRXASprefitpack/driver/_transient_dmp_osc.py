@@ -32,6 +32,7 @@ def fit_transient_dmp_osc(irf: str, fwhm_init: Union[float, np.ndarray],
                           bound_tau: Optional[Sequence[Tuple[float, float]]] = None,
                           bound_period: Optional[Sequence[Tuple[float, float]]] = None,
                           bound_phase: Optional[Sequence[Tuple[float, float]]] = None,
+                          name_of_dset: Optional[Sequence[str]] = None,
                           t: Optional[Sequence[np.ndarray]] = None, 
                           data: Optional[Sequence[np.ndarray]] = None,
                           eps: Optional[Sequence[np.ndarray]] = None) -> DriverResult:
@@ -97,6 +98,7 @@ def fit_transient_dmp_osc(irf: str, fwhm_init: Union[float, np.ndarray],
         if `bound_period` is `None`, the upper and lower bound are given by ``set_bound_tau``.
        bound_phase (sequence of tuple): boundary for phase factor of damped oscillation component,
         if `bound_phase` is `None`, the upper and lower bound are given as (-np.pi, np.pi).
+       name_of_dset (sequence of str): name of each dataset
        t (sequence of np.narray): time scan range for each datasets
        data (sequence of np.ndarray): sequence of datasets for time delay scan (it should not contain time scan range)
        eps (sequence of np.ndarray): sequence of estimated errors of each dataset
@@ -201,7 +203,6 @@ def fit_transient_dmp_osc(irf: str, fwhm_init: Union[float, np.ndarray],
             fit[i] = np.empty(data[i].shape)
             res[i] = np.empty(data[i].shape)
 
-
     # Calc individual chi2
       chi = res_lsq['fun']
       num_param_tot = num_tot_scan*num_comp+num_param-np.sum(fix_param_idx)
@@ -261,6 +262,15 @@ def fit_transient_dmp_osc(irf: str, fwhm_init: Union[float, np.ndarray],
       corr[mask_2d] = corr[mask_2d]/weight[mask_2d]
 
       result = DriverResult()
+      # save experimental fitting data
+      if name_of_dset is None:
+            name_of_dset = np.empty(len(t), dtype=object)
+            for i in range(len(t)):
+                  name_of_dset[i] = f'dataset_{i+1}'
+                  
+      result['name_of_dset'] = name_of_dset; result['t'] = t
+      result['data'] = data; result['eps'] = eps
+
       result['model'] = 'dmp_osc'
       result['fit'] = fit; result['res'] = res; result['irf'] = irf
 

@@ -1,53 +1,55 @@
 '''
-_static_voigt:
+_static_thy:
 submodule for static spectrum with the
-sum of voigt function, edge function and baseline function
+sum of voigt broadend theoretical spectrum, edge function and baseline function
 
 :copyright: 2021-2022 by pistack (Junho Lee).
 :license: LGPL3.
 '''
 
-from typing import Optional, Sequence, Tuple
+from typing import Optional, Tuple
 import numpy as np
 from .static_result import StaticResult
 from ._ampgo import ampgo
 from scipy.optimize import basinhopping
 from scipy.optimize import least_squares
-from ..mathfun.peak_shape import voigt, edge_gaussian, edge_lorenzian
+from ..mathfun.peak_shape import voigt, edge_gaussian, edge_lorenzian, voigt_thy
 from ..mathfun.A_matrix import fact_anal_A
-from ..res.parm_bound import set_bound_t0
 from ..res.res_gen import residual_scalar, grad_res_scalar
-from ..res.res_voigt import residual_voigt, jac_res_voigt
+from ..res.res_thy import residual_thy, jac_res_thy
 
 GLOBAL_OPTS = {'ampgo': ampgo, 'basinhopping': basinhopping}
 
-def fit_static_voigt(e0_init: np.ndarray, fwhm_G_init: np.ndarray, fwhm_L_init: np.ndarray,
-                     edge: Optional[str] = None, 
-                     edge_pos_init: Optional[float] = None,
-                     edge_fwhm_init: Optional[float] = None,
-                     base_order: Optional[int] = None,
-                     method_glb: Optional[str] = 'basinhopping', 
-                     method_lsq: Optional[str] = 'trf',
-                     kwargs_glb: Optional[dict] = None, 
-                     kwargs_lsq: Optional[dict] = None,
-                     bound_e0: Optional[Sequence[Tuple[float, float]]] = None, 
-                     bound_fwhm_G: Optional[Sequence[Tuple[float, float]]] = None, 
-                     bound_fwhm_L: Optional[Sequence[Tuple[float, float]]] = None,
-                     bound_edge_pos: Optional[Tuple[float, float]] = None,
-                     bound_edge_fwhm: Optional[Tuple[float, float]] = None,
-                      e: Optional[np.ndarray] = None, 
-                      data: Optional[np.ndarray] = None,
-                      eps: Optional[np.ndarray] = None) -> StaticResult:
+def fit_static_thy(thy_peak: np.ndarray, fwhm_G_init: np.ndarray, fwhm_L_init: np.ndarray,
+                   policy: str, peak_shift: Optional[float] = None,
+                   peak_scale: Optional[float] = None,
+                   edge: Optional[str] = None, 
+                   edge_pos_init: Optional[float] = None,
+                   edge_fwhm_init: Optional[float] = None,
+                   base_order: Optional[int] = None,
+                   method_glb: Optional[str] = 'basinhopping', 
+                   method_lsq: Optional[str] = 'trf',
+                   kwargs_glb: Optional[dict] = None, 
+                   kwargs_lsq: Optional[dict] = None,
+                   bound_fwhm_G: Optional[Tuple[float, float]] = None, 
+                   bound_fwhm_L: Optional[Tuple[float, float]] = None,
+                   bound_peak_shift: Optional[Tuple[float, float]] = None,
+                   bound_peak_scale: Optional[Tuple[float, float]] = None,
+                   bound_edge_pos: Optional[Tuple[float, float]] = None,
+                   bound_edge_fwhm: Optional[Tuple[float, float]] = None,
+                   e: Optional[np.ndarray] = None, 
+                   data: Optional[np.ndarray] = None,
+                   eps: Optional[np.ndarray] = None) -> StaticResult:
                       
       '''
-      driver routine for fitting static spectrum with sum of voigt component, edge and 
-      polynomial baseline.
+      driver routine for fitting static spectrum with sum of voigt broadend thoretical spectrum,
+      edge and polynomial base line.
 
       This driver using two step algorithm to search best parameter, its covariance and
       estimated parameter error.
 
-      Model: sum of voigt function, edge function and base function
-      :math:`\\sum_{i=1}^n c_i y_i(e-e_0_i, {fwhm}_{(G, i)}, {fwhm}_{(L, i)}) + c_{n+1}{edge} + {base}`
+      Model: sum of voigt broadened theoretical spectrum, edge function and base function
+      :math:`c_{0} y(e, {fwhm}_{(G, i)}, {fwhm}_{(L, i), {peak_factor}}) + c_{1}{edge} + {base}`
       
       Objective function: chi squared
       :math:`\\chi^2 = \sum_i \\left(\\frac{model-data_i}{eps_i}\\right)^2`
@@ -67,9 +69,12 @@ def fit_static_voigt(e0_init: np.ndarray, fwhm_G_init: np.ndarray, fwhm_L_init: 
       our objective function is ,simply, :math:`\\frac{\\partial \\chi^2}{\\partial {param}_i}`. 
       
       Args:
-       e0_init (np.ndarray): initial peak position of each voigt component
-       fwhm_G_init (np.ndarray): initial gaussian part of fwhm parameter of each voigt component
-       fwhm_L_init (np.ndarray): initial lorenzian part of fwhm parameter of each voigt component
+       thy_peak (np.ndarray): peak position and intensity for theoretically calculated spectrum
+       fwhm_G_init (float): initial gaussian part of fwhm parameter
+       fwhm_L_init (float): initial lorenzian part of fwhm parameter
+       policy ({'shift', 'scale', 'both'}): policy to match discrepancy between thoretical spectrum and experimental one 
+       peak_shift (float): peak shift parameter
+       peak_scale (float): peak scale parameter
        edge ({'g', 'l'}): type of edge function. If edge is not set, edge feature is not included.
        edge_pos_init: initial edge position
        edge_fwhm_init: initial fwhm parameter of edge
@@ -79,13 +84,14 @@ def fit_static_voigt(e0_init: np.ndarray, fwhm_G_init: np.ndarray, fwhm_L_init: 
                                              minimization (refinement of global optimization solution)
        kwargs_glb: keyward arguments for global optimization solver
        kwargs_lsq: keyward arguments for least square optimization solver
-       bound_e0 (sequence of tuple): boundary for each voigt componet. If upper and lower bound are same, 
-        driver assumes that the parameter is fixed during optimization. If `bound_fwhm` is `None`, 
-        the upper and lower bound are given as `(e0-2*fwhm_(init,i), 2*fwhm_(init,i))`.
        bound_fwhm_G (sequence of tuple): boundary for fwhm_G parameter. 
         If `bound_fwhm_G` is `None`, the upper and lower bound are given as `(fwhm_G/2, 2*fwhm_G)`.
        bound_fwhm_L (sequence of tuple): boundary for fwhm_L parameter. 
         If `bound_fwhm_L` is `None`, the upper and lower bound are given as `(fwhm_L/2, 2*fwhm_L)`.
+       bound_peak_shift (tuple): boundary for peak shift parameter. If `bound_peak_shift` is `None`, the upper and lower bound are
+        given as `(-2*|peak_shift|,2*|peak_shift|)`.
+       bound_peak_scale (tuple): boundary for peak scale parameter. If `bound_peak_scale` is `None`, the upper and lower bound are
+        given as `(0.9*peak_scale, 1.1*peak_scale)`.
        bound_edge_pos (tuple): boundary for edge position, 
         if `bound_edge_pos` is `None` and `edge` is set, the upper and lower bound are given as `(0.99*edge_pos, 1.01*edge_pos)`.
        bound_edge_fwhm (tuple): boundary for fwhm parameter of edge feature. 
@@ -100,13 +106,8 @@ def fit_static_voigt(e0_init: np.ndarray, fwhm_G_init: np.ndarray, fwhm_L_init: 
         if initial fwhm_G is zero then such voigt component is treated as lorenzian component
         if initial fwhm_L is zero then such voigt component is treated as gaussian component
       '''
-
-      if e0_init is None:
-            num_voigt = 0
-            num_param = 0
-      else:
-            num_voigt = e0_init.size
-            num_param = 3*num_voigt
+      num_voigt = 1
+      num_param = 3 + 1*(policy == 'both')
 
       num_comp = num_voigt
       if edge is not None:
@@ -119,35 +120,47 @@ def fit_static_voigt(e0_init: np.ndarray, fwhm_G_init: np.ndarray, fwhm_L_init: 
       param = np.empty(num_param, dtype=float)
       fix_param_idx = np.empty(num_param, dtype=bool)
 
-      param[:num_voigt] = e0_init
-      param[num_voigt:2*num_voigt] = fwhm_G_init
-      param[2*num_voigt:3*num_voigt] = fwhm_L_init
+      param[0] = fwhm_G_init
+      param[1] = fwhm_L_init
+      if policy == 'shift':
+            param[2] = peak_shift
+      elif policy == 'scale':
+            param[2] = peak_scale
+      elif policy == 'both':
+            param[2] = peak_shift
+            param[3] = peak_scale
       if edge is not None:
             param[-2] = edge_pos_init
             param[-1] = edge_fwhm_init
       
       bound = num_param*[None]
 
-      if bound_e0 is None:
-            tmp = np.empty(2)
-            for i in range(num_voigt):
-                  tmp[0] = fwhm_G_init[i]
-                  tmp[1] = fwhm_L_init[i]
-                  bound[i] = set_bound_t0(e0_init[i], tmp)
-      else:
-            bound[:num_voigt] = bound_e0
-                      
       if bound_fwhm_G is None:
-            for i in range(num_voigt):
-                  bound[i+num_voigt] = (fwhm_G_init[i]/2, 2*fwhm_G_init[i])
+            bound[0] = (fwhm_G_init/2, 2*fwhm_G_init)
       else:
-            bound[num_voigt: 2*num_voigt] = bound_fwhm_G
-      
+            bound[0] = bound_fwhm_G
+
       if bound_fwhm_L is None:
-            for i in range(num_voigt):
-                  bound[i+2*num_voigt] = (fwhm_L_init[i]/2, 2*fwhm_L_init[i])
+            bound[1] = (fwhm_L_init/2, 2*fwhm_L_init)
       else:
-            bound[2*num_voigt:3*num_voigt] = bound_fwhm_L
+            bound[1] = bound_fwhm_G
+      
+      if policy in ['shift', 'both']:
+            if bound_peak_shift is None:
+                  bound[2] = (-2*np.abs(peak_shift), 2*np.abs(peak_shift))
+            else:
+                  bound[2] = bound_peak_shift
+      elif policy == 'scale':
+            if bound_peak_scale is None:
+                  bound[2] = (0.9*peak_scale, 1.1*peak_scale)
+            else:
+                  bound[2] = bound_peak_scale
+      
+      if policy == 'both':
+            if bound_peak_scale is None:
+                  bound[3] = (0.9*peak_scale, 1.1*peak_scale)
+            else:
+                  bound[3] = bound_peak_scale
       
       if edge is not None:
             if bound_edge_pos is None:
@@ -162,7 +175,7 @@ def fit_static_voigt(e0_init: np.ndarray, fwhm_G_init: np.ndarray, fwhm_L_init: 
       for i in range(num_param):
             fix_param_idx[i] = (bound[i][0] == bound[i][1])
       
-      go_args = (residual_voigt, jac_res_voigt, num_voigt, edge, base_order, fix_param_idx, e, data, eps)
+      go_args = (residual_thy, jac_res_thy, policy, thy_peak, edge, base_order, fix_param_idx, e, data, eps)
       min_go_kwargs = {'args': go_args, 'jac': grad_res_scalar, 'bounds': bound}
       if kwargs_glb is not None:
             minimizer_kwargs = kwargs_glb.pop('minimizer_kwargs', None)
@@ -192,12 +205,24 @@ def fit_static_voigt(e0_init: np.ndarray, fwhm_G_init: np.ndarray, fwhm_L_init: 
                   else:
                         bound_tuple[1][i] = bound[i][1]*(1-1e-4)+1e-8
       
-      res_lsq = least_squares(residual_voigt, param_gopt, method=method_lsq, jac=jac_res_voigt, bounds=bound_tuple, **kwargs_lsq)
+      res_lsq = least_squares(residual_thy, param_gopt, method=method_lsq, jac=jac_res_thy, bounds=bound_tuple, **kwargs_lsq)
       param_opt = res_lsq['x']
 
-      e0_opt = param_opt[:num_voigt]
-      fwhm_G_opt = param_opt[num_voigt:2*num_voigt]
-      fwhm_L_opt = param_opt[2*num_voigt:3*num_voigt]
+      param_name = np.empty(param_opt.size, dtype=object)
+      param_name[0] = 'fwhm_G'
+      param_name[1] = 'fwhm_L'
+      fwhm_G_opt = param_opt[0]
+      fwhm_L_opt = param_opt[1]
+      if policy in ['scale', 'shift']:
+            peak_factor_opt = param_opt[2]
+            if policy == 'scale':
+                  param_name[2] = 'peak_scale'
+            else:
+                  param_name[2] = 'peak_shift'
+      elif policy == 'both':
+            peak_factor_opt = np.ndarray([param_opt[2], param_opt[3]])
+            param_name[2] = 'peak_shift'
+            param_name[3] = 'peak_scale'
 
 
     # Calc individual chi2
@@ -205,12 +230,6 @@ def fit_static_voigt(e0_init: np.ndarray, fwhm_G_init: np.ndarray, fwhm_L_init: 
       num_param_tot = num_comp+num_param-np.sum(fix_param_idx)
       chi2 = 2*res_lsq['cost']
       red_chi2 = chi2/(chi.size-num_param_tot)
-
-      param_name = np.empty(param_opt.size, dtype=object)
-      for i in range(num_voigt):
-            param_name[i] = f'e0_{i+1}'
-            param_name[num_voigt+i] = f'fwhm_(G, {i+1})'
-            param_name[2*num_voigt+i] = f'fwhm_(L, {i+1})'
       
       if edge is not None:
             param_name[-2] = f'E0_{edge}'
@@ -220,35 +239,27 @@ def fit_static_voigt(e0_init: np.ndarray, fwhm_G_init: np.ndarray, fwhm_L_init: 
                   param_name[-1] = 'fwhm_(L, edge)'
       
       A = np.empty((num_comp, e.size))
-      
-      for i in range(num_voigt):
-            A[i, :] = voigt(e-e0_opt[i], fwhm_G_opt[i], fwhm_L_opt[i])
-      
-      base_start = num_voigt
-      
+      A[0, :] = voigt_thy(e, thy_peak, fwhm_G_opt, fwhm_L_opt, peak_factor_opt, policy)      
+      base_start = 1
       if edge is not None:
             base_start = base_start+1
             if edge == 'g':
-                  A[num_voigt, :] = edge_gaussian(e-param_opt[-2], param_opt[-1])
+                  A[1, :] = edge_gaussian(e-param_opt[-2], param_opt[-1])
             elif edge == 'l':
-                  A[num_voigt,:] = edge_lorenzian(e-param_opt[-2], param_opt[-1])
+                  A[1, :] = edge_lorenzian(e-param_opt[-2], param_opt[-1])
     
       if base_order is not None:
             A[base_start, :] = np.ones(e.size)
             for i in range(base_order):
-                  A[base_start+i] = e*A[base_start+i-1]
+                  A[base_start+i+1] = e*A[base_start+i]
       
       c = fact_anal_A(A, data, eps)
 
       fit = c@A
 
-      if edge is not None:
-            fit_comp = np.einsum('i,ij->ij', c[:num_voigt+1], A[:num_voigt+1,:])
-      else:
-            fit_comp = np.einsum('i,ij->ij', c[:num_voigt], A[:num_voigt, :])
+      fit_comp = np.einsum('i,ij->ij', c[:base_start], A[:base_start,:])
       
       base = None
-
       if base_order is not None:
             base = c[base_start:]@A[base_start:,:]
             
@@ -267,7 +278,7 @@ def fit_static_voigt(e0_init: np.ndarray, fwhm_G_init: np.ndarray, fwhm_L_init: 
       corr[mask_2d] = corr[mask_2d]/weight[mask_2d]
 
       result = StaticResult()
-      result['model'] = 'voigt'
+      result['model'] = 'thy'
       result['e'] = e; result['data'] = data; result['eps'] = eps
       result['fit'] = fit; result['fit_comp'] = fit_comp 
       result['res'] = res; result['base_order'] = base_order
