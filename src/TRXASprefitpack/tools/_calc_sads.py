@@ -153,7 +153,8 @@ def calc_sads():
         L_mat = parse_matrix(rate_eq_mat_str, tau)
         eigval, V, c = solve_l_model(L_mat, y0)
     
-    ads, ads_eps, fit = sads(escan_time-time_zero, fwhm, eigval, V, c, exclude, irf, data=escan_data[:,1:], eps=escan_err)
+    ads, ads_eps, fit = sads(escan_time-time_zero, fwhm, eigval, V, c, exclude, irf, 
+    intensity=escan_data[:,1:], eps=escan_err)
 
     e = escan_data[:,0]
 

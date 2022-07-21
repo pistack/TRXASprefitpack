@@ -5,7 +5,6 @@ import os
 from pathlib import Path
 from typing import Optional, Tuple
 import numpy as np
-import matplotlib
 import matplotlib.pyplot as plt
 from ..driver import StaticResult, TransientResult
 

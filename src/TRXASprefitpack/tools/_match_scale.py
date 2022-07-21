@@ -124,7 +124,7 @@ def match_scale():
     e_ref_idx = np.argwhere(e == ref_tscan_energy)[0][0]
 
     c = fact_anal_exp_conv(ref_tscan_data[:,0]-time_zero, fwhm, tau, base, irf,
-    data=ref_tscan_data[:, 1], eps=ref_tscan_data[:, 2])
+    intensity=ref_tscan_data[:, 1], eps=ref_tscan_data[:, 2])
     A_slec = make_A_matrix_exp(escan_time-time_zero, fwhm, tau, base, irf)
     fit_slec = c@A_slec
     sample_e = escan_data[e_ref_idx, :]
