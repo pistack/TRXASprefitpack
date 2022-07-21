@@ -77,10 +77,9 @@ full width at half maximum for cauchy shape
 It would not be used when you did not set irf or use gaussian irf function
 '''
 
-method_glb_help='''
-Global optimization Method
- 'ampgo': Adapted Memory Programming for Global Optimization Algorithm
- 'basinhopping'
+do_glb_help='''
+Whether or not use Global optimization Method.
+When do_glb option is set then `basinhopping` global optimization algorithm will be used.
 '''
 
 
@@ -121,8 +120,8 @@ def fit_tscan():
     help='fix irf parameter (fwhm_G, fwhm_L) during fitting process')
     parser.add_argument('--fix_t0', action='store_true',
     help='fix time zero parameter during fitting process.')
-    parser.add_argument('--method_glb', default='ampgo', choices=['ampgo', 'basinhopping'],
-    help=method_glb_help)
+    parser.add_argument('--do_glb', action='store_true',
+    help=do_glb_help)
     parser.add_argument('-o', '--outdir', default='out',
                         help='name of directory to store output files')
     args = parser.parse_args()
@@ -161,14 +160,14 @@ def fit_tscan():
         t0_init = np.array(args.time_zeros)
 
     t = np.empty(prefix.size, dtype=object)
-    data = np.empty(prefix.size, dtype=object)
+    intensity = np.empty(prefix.size, dtype=object)
     eps = np.empty(prefix.size, dtype=object)
     num_scan = np.sum(num_file)
 
     for i in range(prefix.size):
         t[i] = np.genfromtxt(f'{prefix[i]}_1.txt')[:, 0]
         num_data_pts = t[i].size
-        data[i], eps[i] = read_data(prefix[i], num_file[i], num_data_pts, 10)
+        intensity[i], eps[i] = read_data(prefix[i], num_file[i], num_data_pts, 10)
 
     print(f'fitting with total {num_scan} data set!\n')
 
@@ -208,8 +207,8 @@ def fit_tscan():
         dargs.append(base)
 
     
-    result = FITDRIVER[args.mode](irf, fwhm_init, t0_init, *dargs, method_glb=args.method_glb, 
-    bound_fwhm=bound_fwhm, bound_t0=bound_t0, name_of_dset=prefix, t=t, data=data, eps=eps)
+    result = FITDRIVER[args.mode](irf, fwhm_init, t0_init, *dargs, do_glb=args.do_glb, 
+    bound_fwhm=bound_fwhm, bound_t0=bound_t0, name_of_dset=prefix, t=t, intensity=intensity, eps=eps)
 
     save_TransientResult(result, args.outdir)
     save_TransientResult_txt(result, args.outdir)

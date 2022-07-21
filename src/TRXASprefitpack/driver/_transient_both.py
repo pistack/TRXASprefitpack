@@ -10,7 +10,6 @@ from typing import Optional, Union, Sequence, Tuple
 import numpy as np
 from ..mathfun.irf import calc_eta
 from .transient_result import TransientResult
-from ._ampgo import ampgo
 from scipy.optimize import basinhopping
 from scipy.optimize import least_squares
 from ..mathfun.A_matrix import make_A_matrix_exp, make_A_matrix_dmp_osc, fact_anal_A
@@ -18,14 +17,12 @@ from ..res.parm_bound import set_bound_t0, set_bound_tau
 from ..res.res_gen import residual_scalar, grad_res_scalar
 from ..res.res_both import residual_both, jac_res_both
 
-GLOBAL_OPTS = {'ampgo': ampgo, 'basinhopping': basinhopping}
-
 def fit_transient_both(irf: str, fwhm_init: Union[float, np.ndarray], 
                       t0_init: np.ndarray, tau_init: np.ndarray,
                       tau_osc_init: np.ndarray, period_osc_init: np.ndarray,
                       phase_osc_init: np.ndarray, 
                       base: bool, 
-                      method_glb: Optional[str] = 'ampgo', 
+                      do_glb: Optional[bool] = False, 
                       method_lsq: Optional[str] = 'trf',
                       kwargs_glb: Optional[dict] = None, 
                       kwargs_lsq: Optional[dict] = None,
@@ -37,7 +34,7 @@ def fit_transient_both(irf: str, fwhm_init: Union[float, np.ndarray],
                       bound_phase_osc: Optional[Sequence[Tuple[float, float]]] = None,
                       name_of_dset: Optional[Sequence[str]] = None,
                       t: Optional[Sequence[np.ndarray]] = None, 
-                      data: Optional[Sequence[np.ndarray]] = None,
+                      intensity: Optional[Sequence[np.ndarray]] = None,
                       eps: Optional[Sequence[np.ndarray]] = None) -> TransientResult:
                       
       '''
@@ -88,8 +85,7 @@ def fit_transient_both(irf: str, fwhm_init: Union[float, np.ndarray],
        period_init (np.ndarray): period of each oscillation component
        phase_init (np.ndarray): phase factor of each oscillation component
        base (bool): Whether or not include baseline feature (i.e. very long lifetime constant)
-       method_glb ({'ampgo', 'basinhopping'}): 
-        method of global optimization used in fitting process
+       do_glb (bool): Whether or not use global optimization algorithm. If True then basinhopping algorithm is used.
        method_lsq ({'trf', 'dogbox', 'lm'}): method of local optimization for least_squares
                                              minimization (refinement of global optimization solution)
        kwargs_glb: keyward arguments for global optimization solver
@@ -108,7 +104,8 @@ def fit_transient_both(irf: str, fwhm_init: Union[float, np.ndarray],
        bound_phase_osc (sequence of tuple): boundary for phase factor of damped oscillation component,
         if `bound_phase_osc` is `None`, the upper and lower bound are gien as (-np.pi, np.pi).
        t (sequence of np.narray): time scan range for each datasets
-       data (sequence of np.ndarray): sequence of datasets for time delay scan (it should not contain time scan range)
+       intensity (sequence of np.ndarray): sequence of intensity of datasets 
+        for time delay scan
        eps (sequence of np.ndarray): sequence of estimated errors of each dataset
 
        Returns:
@@ -167,28 +164,40 @@ def fit_transient_both(irf: str, fwhm_init: Union[float, np.ndarray],
       
       for i in range(num_param):
             fix_param_idx[i] = (bound[i][0] == bound[i][1])
-      
-      go_args = (residual_both, jac_res_both, tau_init.size, tau_osc_init.size, base, irf, fix_param_idx, t, data, eps)
-      min_go_kwargs = {'args': go_args, 'jac': grad_res_scalar, 'bounds': bound}
-      if irf == 'pv' and not (fix_param_idx[0] and fix_param_idx[1]):
-            min_go_kwargs['jac'] = None
-      if kwargs_glb is not None:
-            minimizer_kwargs = kwargs_glb.pop('minimizer_kwargs', None)
-            if minimizer_kwargs is None:
-                  kwargs_glb['minimizer_kwargs'] = min_go_kwargs
+
+      if do_glb:
+            go_args = (residual_both, jac_res_both, tau_init.size, tau_osc_init.size, 
+            base, irf, fix_param_idx, t, intensity, eps)
+            min_go_kwargs = {'args': go_args, 'jac': grad_res_scalar, 'bounds': bound}
+            if irf == 'pv' and not (fix_param_idx[0] and fix_param_idx[1]):
+                  min_go_kwargs['jac'] = None
+            if kwargs_glb is not None:
+                  minimizer_kwargs = kwargs_glb.pop('minimizer_kwargs', None)
+                  if minimizer_kwargs is None:
+                        kwargs_glb['minimizer_kwargs'] = min_go_kwargs
+                  else:
+                        minimizer_kwargs['args'] = min_go_kwargs['args']
+                        minimizer_kwargs['jac'] = min_go_kwargs['jac']
+                        minimizer_kwargs['bounds'] = min_go_kwargs['bounds']
+                        kwargs_glb['minimizer_kwargs'] = minimizer_kwargs
             else:
-                  kwargs_glb['minimizer_kwargs'] = minimizer_kwargs.update(min_go_kwargs)
+                  kwargs_glb = {'minimizer_kwargs' : min_go_kwargs}
+            res_go = basinhopping(residual_scalar, param, **kwargs_glb)
       else:
-            kwargs_glb = {'minimizer_kwargs' : min_go_kwargs}
-      res_go = GLOBAL_OPTS[method_glb](residual_scalar, param, **kwargs_glb)
+            res_go = dict()
+            res_go['x'] = param
+            res_go['message'] = None
+            res_go['nfev'] = 0
+
       param_gopt = res_go['x']
+      args_lsq = (tau_init.size, tau_osc_init.size, base, irf, fix_param_idx, t, intensity, eps)
 
       if kwargs_lsq is not None:
             _ = kwargs_lsq.pop('args', None)
             _ = kwargs_lsq.pop('kwargs', None)
-            kwargs_lsq['args'] = tuple(go_args[2:])
+            kwargs_lsq['args'] = args_lsq
       else:
-            kwargs_lsq = {'args' : tuple(go_args[2:])}
+            kwargs_lsq = {'args' : args_lsq}
 
       bound_tuple = (num_param*[None], num_param*[None])
       for i in range(num_param):
@@ -218,10 +227,10 @@ def fit_transient_both(irf: str, fwhm_init: Union[float, np.ndarray],
       
       num_tot_scan = 0
       for i in range(len(t)):
-            num_tot_scan = num_tot_scan + data[i].shape[1]
-            fit[i] = np.empty(data[i].shape)
-            fit_osc[i] = np.empty(data[i].shape); fit_decay[i] = np.empty(data[i].shape)
-            res[i] = np.empty(data[i].shape)
+            num_tot_scan = num_tot_scan + intensity[i].shape[1]
+            fit[i] = np.empty(intensity[i].shape)
+            fit_osc[i] = np.empty(intensity[i].shape); fit_decay[i] = np.empty(intensity[i].shape)
+            res[i] = np.empty(intensity[i].shape)
 
     # Calc individual chi2
       chi = res_lsq['fun']
@@ -234,10 +243,10 @@ def fit_transient_both(irf: str, fwhm_init: Union[float, np.ndarray],
       num_param_ind = 2*tau_opt.size+4*tau_osc_opt.size+1*base+2+1*(irf == 'pv')
 
       for i in range(len(t)):
-            end = start + data[i].size
-            chi_aux = chi[start:end].reshape(data[i].shape)
+            end = start + intensity[i].size
+            chi_aux = chi[start:end].reshape(intensity[i].shape)
             chi2_ind[i] = np.sum(chi_aux**2, axis=0)
-            red_chi2_ind[i] = chi2_ind[i]/(data[i].shape[0]-num_param_ind)
+            red_chi2_ind[i] = chi2_ind[i]/(intensity[i].shape[0]-num_param_ind)
             start = end
 
       param_name = np.empty(param_opt.size, dtype=object)
@@ -255,23 +264,23 @@ def fit_transient_both(irf: str, fwhm_init: Union[float, np.ndarray],
       for i in range(len(t)):
             A = np.empty((tau_init.size+1*base+tau_osc_init.size, t[i].size))
             if base:
-                  c[i] = np.empty((tau_init.size+1+tau_osc_init.size, data[i].shape[1]))
+                  c[i] = np.empty((tau_init.size+1+tau_osc_init.size, intensity[i].shape[1]))
             else:
-                  c[i] = np.empty((tau_init.size+tau_osc_init.size, data[i].shape[1]))
+                  c[i] = np.empty((tau_init.size+tau_osc_init.size, intensity[i].shape[1]))
             
-            for j in range(data[i].shape[1]):
+            for j in range(intensity[i].shape[1]):
                   A[:tau_init.size+1*base, :] = make_A_matrix_exp(t[i]-param_opt[t0_idx], fwhm_opt, tau_opt, base, irf)
                   A[tau_init.size+1*base:, :] = make_A_matrix_dmp_osc(t[i]-param_opt[t0_idx], fwhm_opt, 
                   tau_osc_opt, period_osc_opt, phase_osc_opt, irf)
 
-                  c[i][:, j] = fact_anal_A(A, data[i][:, j], eps[i][:, j])
+                  c[i][:, j] = fact_anal_A(A, intensity[i][:, j], eps[i][:, j])
                   fit[i][:, j] = c[i][:, j] @ A
                   fit_decay[i][:, j] = c[i][:tau_init.size+1*base, j] @ A[:tau_init.size+1*base, :]
                   fit_osc[i][:, j] = c[i][tau_init.size+1*base:, j] @ A[tau_init.size+1*base:, :]
                   param_name[t0_idx] = f't_0_{i+1}_{j+1}'
                   t0_idx = t0_idx + 1
             
-            res[i] = data[i] - fit[i]
+            res[i] = intensity[i] - fit[i]
       
       for i in range(tau_init.size):
             param_name[num_irf+t0_init.size+i] = f'tau_{i+1}'
@@ -301,7 +310,7 @@ def fit_transient_both(irf: str, fwhm_init: Union[float, np.ndarray],
             for i in range(len(t)):
                   name_of_dset[i] = f'dataset_{i+1}'
       result['name_of_dset'] = name_of_dset; result['t'] = t
-      result['data'] = data; result['eps'] = eps
+      result['intensity'] = intensity; result['eps'] = eps
 
       result['model'] = 'both'
       result['fit'] = fit; result['fit_osc'] = fit_osc; result['fit_decay'] = fit_decay
@@ -325,6 +334,8 @@ def fit_transient_both(irf: str, fwhm_init: Union[float, np.ndarray],
       result['num_pts'] = chi.size; result['jac'] = jac
       result['cov'] = cov; result['corr'] = corr; result['cov_scaled'] = cov_scaled
       result['x_eps'] = param_eps
+      result['method_lsq'] = method_lsq
+      result['message_lsq'] = res_lsq['message']
       result['success_lsq'] = res_lsq['success']
 
       if result['success_lsq']:
@@ -332,13 +343,13 @@ def fit_transient_both(irf: str, fwhm_init: Union[float, np.ndarray],
       else:
             result['status'] = -1
       
-      result['method_glb'] = method_glb
-      result['method_lsq'] = method_lsq
-      if method_glb == 'ampgo':
-            result['message_glb'] = res_go['message']
-      elif method_glb == 'basinhopping':
-            result['message_glb'] = res_go['message'][0]           
-      result['message_lsq'] = res_lsq['message']
+      if do_glb:
+            result['method_glb'] = 'basinhopping'
+            result['message_glb'] = res_go['message'][0]  
+      else:
+            result['method_glb'] = None
+            result['message_glb'] = None
+
       result['n_osc'] = tau_osc_init.size
       result['n_decay'] = tau_init.size + 1*base
 

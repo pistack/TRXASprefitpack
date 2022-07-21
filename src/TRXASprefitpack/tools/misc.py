@@ -5,6 +5,7 @@ import os
 from pathlib import Path
 from typing import Optional, Tuple
 import numpy as np
+import matplotlib
 import matplotlib.pyplot as plt
 from ..driver import StaticResult, TransientResult
 
@@ -162,8 +163,7 @@ def save_StaticResult_txt(result: StaticResult, dirname: str):
       
       return
 
-def plot_StaticResult(result: StaticResult,
-                      x_min: Optional[float] = None, x_max: Optional[float] = None, save_fig: Optional[str] = None):
+def plot_StaticResult(result: StaticResult):
       '''
       plot static fitting Result
 
@@ -184,11 +184,11 @@ def plot_StaticResult(result: StaticResult,
       plt.suptitle(title)
       sub1 = fig.add_subplot(211)
       sub1.set_title(subtitle)
-      sub1.errorbar(result['e'], result['data'], result['eps'], 
+      sub1.errorbar(result['e'], result['intensity'], result['eps'], 
       marker='o', mfc='none', label=f'expt {title}', linestyle='none')
       sub1.plot(result['e'], result['fit'], label=f'fit {title}')
       for i in range(result['n_voigt']):
-            sub1.plot(result['e'], result['fit_comp'][i, :], label=f'{i}th voigt component', linestyle='dashed')
+            sub1.plot(result['e'], result['fit_comp'][i, :], label=f'{i+1}th voigt component', linestyle='dashed')
       if result['edge'] is not None:
             sub1.plot(result['e'], result['fit_comp'][-1, :], label=f"{result['edge']} type edge", linestyle='dashed')
       if result['base_order'] is not None:
@@ -198,14 +198,7 @@ def plot_StaticResult(result: StaticResult,
       sub2.errorbar(result['e'], result['res'], result['eps'], 
       marker='o', mfc='none', label=f'res {title}', linestyle='none')
       sub2.legend()
-      
-      if x_min is not None and x_max is not None:
-            sub1.set_xlim(x_min, x_max)
-            sub2.set_xlim(x_min, x_max)
-      if save_fig is not None:
-            plt.savefig(f'{save_fig}_Static.png')
-      if save_fig is None:
-            plt.show()
+      plt.show()
       return
 
 def save_TransientResult_txt(result: TransientResult, dirname: str):
@@ -280,14 +273,14 @@ def plot_TransientResult(result: TransientResult,
       
       start = 0
       for i in range(len(result['t'])):
-            for j in range(result['data'][i].shape[1]):
-                  fig = plt.figure(start+j)
+            for j in range(result['intensity'][i].shape[1]):
+                  fig = plt.figure(start+j+1)
                   title = f'{result["name_of_dset"][i]} scan #{j+1}'
                   subtitle = f"Chi squared: {result['red_chi2_ind'][i][j]: .2f}"
                   plt.suptitle(title)
                   sub1 = fig.add_subplot(211)
                   sub1.set_title(subtitle)
-                  sub1.errorbar(result['t'][i], result['data'][i][:, j], result['eps'][i][:, j], marker='o', mfc='none',
+                  sub1.errorbar(result['t'][i], result['intensity'][i][:, j], result['eps'][i][:, j], marker='o', mfc='none',
                   label=f'expt {title}', linestyle='none')
                   sub1.plot(result['t'][i], result['fit'][i][:, j], label=f'fit {title}')
                   sub1.legend()
@@ -296,7 +289,7 @@ def plot_TransientResult(result: TransientResult,
                         sub2.errorbar(result['t'][i], result['res'][i][:, j], 
                         result['eps'][i][:, j], marker='o', mfc='none', label=f'res {title}', linestyle='none')
                   else:
-                        sub2.errorbar(result['t'][i], result['data'][i][:, j]-result['fit_decay'][i][:, j], 
+                        sub2.errorbar(result['t'][i], result['intensity'][i][:, j]-result['fit_decay'][i][:, j], 
                         result['eps'][i][:, j], marker='o', mfc='none', label=f'expt osc {title}', linestyle='none')
                         sub2.plot(result['t'][i], result['fit_osc'][i][:, j], label=f'fit osc {title}')
                   sub2.legend()
@@ -305,7 +298,7 @@ def plot_TransientResult(result: TransientResult,
                         sub2.set_xlim(x_min, x_max)
                   if save_fig is not None:
                         plt.savefig(f'{save_fig}_{result["name_of_dset"][i]}_{j+1}.png')
-            start = start + result['data'][i].shape[1]
+            start = start + result['intensity'][i].shape[1]
       if save_fig is None:
             plt.show()
       return

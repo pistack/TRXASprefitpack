@@ -246,14 +246,14 @@ fwhm: Union[float, np.ndarray], irf: Optional[str] = 'g', eta: Optional[float] =
   return (c * V) @ A
 
 def fact_anal_model(model: np.ndarray, exclude: Optional[str] = None, 
-data: Optional[np.ndarray] = None, eps: Optional[np.ndarray] = None):
+intensity: Optional[np.ndarray] = None, eps: Optional[np.ndarray] = None):
 
   abs = np.zeros(model.shape[0])
 
   if eps is None:
-    eps = np.ones_like(data)
+    eps = np.ones_like(intensity)
   
-  y = data/eps
+  y = intensity/eps
 
   if exclude == 'first':
     B = np.einsum('j,ij->ij', 1/eps, model[1:, :])

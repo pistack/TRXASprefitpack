@@ -10,7 +10,6 @@ from typing import Optional, Union, Sequence, Tuple
 import numpy as np
 from ..mathfun.irf import calc_eta
 from .transient_result import TransientResult
-from ._ampgo import ampgo
 from scipy.optimize import basinhopping
 from scipy.optimize import least_squares
 from ..mathfun.A_matrix import make_A_matrix_dmp_osc, fact_anal_A
@@ -18,12 +17,10 @@ from ..res.parm_bound import set_bound_t0, set_bound_tau
 from ..res.res_gen import residual_scalar, grad_res_scalar
 from ..res.res_osc import residual_dmp_osc, jac_res_dmp_osc
 
-GLOBAL_OPTS = {'ampgo': ampgo, 'basinhopping': basinhopping}
-
 def fit_transient_dmp_osc(irf: str, fwhm_init: Union[float, np.ndarray], 
                           t0_init: np.ndarray, tau_init: np.ndarray, period_init: np.ndarray,
                           phase_init: np.ndarray,
-                          method_glb: Optional[str] = 'ampgo', 
+                          do_glb: Optional[bool] = False, 
                           method_lsq: Optional[str] = 'trf',
                           kwargs_glb: Optional[dict] = None, 
                           kwargs_lsq: Optional[dict] = None,
@@ -34,7 +31,7 @@ def fit_transient_dmp_osc(irf: str, fwhm_init: Union[float, np.ndarray],
                           bound_phase: Optional[Sequence[Tuple[float, float]]] = None,
                           name_of_dset: Optional[Sequence[str]] = None,
                           t: Optional[Sequence[np.ndarray]] = None, 
-                          data: Optional[Sequence[np.ndarray]] = None,
+                          intensity: Optional[Sequence[np.ndarray]] = None,
                           eps: Optional[Sequence[np.ndarray]] = None) -> TransientResult:
                       
       '''
@@ -81,8 +78,7 @@ def fit_transient_dmp_osc(irf: str, fwhm_init: Union[float, np.ndarray],
        tau_init (np.ndarray): lifetime constant for each damped oscillation component
        period_init (np.ndarray): period of each oscillation component
        phase_init (np.ndarray): phase factor of each oscillation component
-       method_glb ({'ampgo', 'basinhopping'}): 
-        method of global optimization used in fitting process
+       do_glb (bool): Whether or not use global optimization algorithm. If True then basinhopping algorithm is used.
        method_lsq ({'trf', 'dogbox', 'lm'}): method of local optimization for least_squares
                                              minimization (refinement of global optimization solution)
        kwargs_glb: keyward arguments for global optimization solver
@@ -100,7 +96,7 @@ def fit_transient_dmp_osc(irf: str, fwhm_init: Union[float, np.ndarray],
         if `bound_phase` is `None`, the upper and lower bound are given as (-np.pi, np.pi).
        name_of_dset (sequence of str): name of each dataset
        t (sequence of np.narray): time scan range for each datasets
-       data (sequence of np.ndarray): sequence of datasets for time delay scan (it should not contain time scan range)
+       intensity (sequence of np.ndarray): sequence of intensity pf datasets for time delay scan (it should not contain time scan range)
        eps (sequence of np.ndarray): sequence of estimated errors of each dataset
 
        Returns:
@@ -151,28 +147,40 @@ def fit_transient_dmp_osc(irf: str, fwhm_init: Union[float, np.ndarray],
 
       for i in range(num_param):
             fix_param_idx[i] = (bound[i][0] == bound[i][1])
-      
-      go_args = (residual_dmp_osc, jac_res_dmp_osc, num_comp, irf, fix_param_idx, t, data, eps)
-      min_go_kwargs = {'args': go_args, 'jac': grad_res_scalar, 'bounds': bound}
-      if irf == 'pv' and not (fix_param_idx[0] and fix_param_idx[1]):
-            min_go_kwargs['jac'] = None
-      if kwargs_glb is not None:
-            minimizer_kwargs = kwargs_glb.pop('minimizer_kwargs', None)
-            if minimizer_kwargs is None:
-                  kwargs_glb['minimizer_kwargs'] = min_go_kwargs
+
+      if do_glb:
+            go_args = (residual_dmp_osc, jac_res_dmp_osc, num_comp, irf, fix_param_idx, 
+            t, intensity, eps)
+            min_go_kwargs = {'args': go_args, 'jac': grad_res_scalar, 'bounds': bound}
+            if irf == 'pv' and not (fix_param_idx[0] and fix_param_idx[1]):
+                  min_go_kwargs['jac'] = None
+            if kwargs_glb is not None:
+                  minimizer_kwargs = kwargs_glb.pop('minimizer_kwargs', None)
+                  if minimizer_kwargs is None:
+                        kwargs_glb['minimizer_kwargs'] = min_go_kwargs
+                  else:
+                        minimizer_kwargs['args'] = min_go_kwargs['args']
+                        minimizer_kwargs['jac'] = min_go_kwargs['jac']
+                        minimizer_kwargs['bounds'] = min_go_kwargs['bounds']
+                        kwargs_glb['minimizer_kwargs'] = minimizer_kwargs
             else:
-                  kwargs_glb['minimizer_kwargs'] = minimizer_kwargs.update(min_go_kwargs)
+                  kwargs_glb = {'minimizer_kwargs' : min_go_kwargs}
+            res_go = basinhopping(residual_scalar, param, **kwargs_glb)
       else:
-            kwargs_glb = {'minimizer_kwargs' : min_go_kwargs}
-      res_go = GLOBAL_OPTS[method_glb](residual_scalar, param, **kwargs_glb)
+            res_go = dict()
+            res_go['x'] = param
+            res_go['message'] = None
+            res_go['nfev'] = 0
+
       param_gopt = res_go['x']
+      args_lsq = (num_comp, irf, fix_param_idx, t, intensity, eps)
 
       if kwargs_lsq is not None:
             _ = kwargs_lsq.pop('args', None)
             _ = kwargs_lsq.pop('kwargs', None)
-            kwargs_lsq['args'] = tuple(go_args[2:])
+            kwargs_lsq['args'] = args_lsq
       else:
-            kwargs_lsq = {'args' : tuple(go_args[2:])}
+            kwargs_lsq = {'args' : args_lsq}
 
       bound_tuple = (num_param*[None], num_param*[None])
       for i in range(num_param):
@@ -199,9 +207,9 @@ def fit_transient_dmp_osc(irf: str, fwhm_init: Union[float, np.ndarray],
       
       num_tot_scan = 0
       for i in range(len(t)):
-            num_tot_scan = num_tot_scan + data[i].shape[1]
-            fit[i] = np.empty(data[i].shape)
-            res[i] = np.empty(data[i].shape)
+            num_tot_scan = num_tot_scan + intensity[i].shape[1]
+            fit[i] = np.empty(intensity[i].shape)
+            res[i] = np.empty(intensity[i].shape)
 
     # Calc individual chi2
       chi = res_lsq['fun']
@@ -214,10 +222,10 @@ def fit_transient_dmp_osc(irf: str, fwhm_init: Union[float, np.ndarray],
       num_param_ind = 4*num_comp+2+1*(irf == 'pv')
 
       for i in range(len(t)):
-            end = start + data[i].size
-            chi_aux = chi[start:end].reshape(data[i].shape)
+            end = start + intensity[i].size
+            chi_aux = chi[start:end].reshape(intensity[i].shape)
             chi2_ind[i] = np.sum(chi_aux**2, axis=0)
-            red_chi2_ind[i] = chi2_ind[i]/(data[i].shape[0]-num_param_ind)
+            red_chi2_ind[i] = chi2_ind[i]/(intensity[i].shape[0]-num_param_ind)
             start = end
 
       param_name = np.empty(param_opt.size, dtype=object)
@@ -233,16 +241,16 @@ def fit_transient_dmp_osc(irf: str, fwhm_init: Union[float, np.ndarray],
             param_name[1] = 'fwhm_L'
 
       for i in range(len(t)):
-            c[i] = np.empty((num_comp, data[i].shape[1]))
+            c[i] = np.empty((num_comp, intensity[i].shape[1]))
             
-            for j in range(data[i].shape[1]):
+            for j in range(intensity[i].shape[1]):
                   A = make_A_matrix_dmp_osc(t[i]-param_opt[t0_idx], fwhm_opt, tau_opt, period_opt, phase_opt, irf)
-                  c[i][:, j] = fact_anal_A(A, data[i][:, j], eps[i][:, j])
+                  c[i][:, j] = fact_anal_A(A, intensity[i][:, j], eps[i][:, j])
                   fit[i][:, j] = c[i][:, j] @ A
                   param_name[t0_idx] = f't_0_{i+1}_{j+1}'
                   t0_idx = t0_idx + 1
             
-            res[i] = data[i] - fit[i]
+            res[i] = intensity[i] - fit[i]
       
       for i in range(num_comp):
             param_name[num_irf+t0_init.size+i] = f'tau_{i+1}'
@@ -269,7 +277,7 @@ def fit_transient_dmp_osc(irf: str, fwhm_init: Union[float, np.ndarray],
                   name_of_dset[i] = f'dataset_{i+1}'
                   
       result['name_of_dset'] = name_of_dset; result['t'] = t
-      result['data'] = data; result['eps'] = eps
+      result['intensity'] = intensity; result['eps'] = eps
 
       result['model'] = 'dmp_osc'
       result['fit'] = fit; result['res'] = res; result['irf'] = irf
@@ -292,6 +300,8 @@ def fit_transient_dmp_osc(irf: str, fwhm_init: Union[float, np.ndarray],
       result['num_pts'] = chi.size; result['jac'] = jac
       result['cov'] = cov; result['corr'] = corr; result['cov_scaled'] = cov_scaled
       result['x_eps'] = param_eps
+      result['method_lsq'] = method_lsq
+      result['message_lsq'] = res_lsq['message']
       result['success_lsq'] = res_lsq['success']
 
       if result['success_lsq']:
@@ -299,13 +309,13 @@ def fit_transient_dmp_osc(irf: str, fwhm_init: Union[float, np.ndarray],
       else:
             result['status'] = -1
       
-      result['method_glb'] = method_glb
-      result['method_lsq'] = method_lsq
-      if method_glb == 'ampgo':
-            result['message_glb'] = res_go['message']
-      elif method_glb == 'basinhopping':
-            result['message_glb'] = res_go['message'][0]           
-      result['message_lsq'] = res_lsq['message']
+      if do_glb:
+            result['method_glb'] = 'basinhopping'
+            result['message_glb'] = res_go['message'][0]  
+      else:
+            result['method_glb'] = None
+            result['message_glb'] = None
+
       result['n_osc'] = tau_init.size
       result['n_decay'] = 0
 

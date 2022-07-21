@@ -17,7 +17,7 @@ def residual_thy(params: np.ndarray, policy: str, thy_peak: np.ndarray, edge: Op
                  base_order: Optional[int] = None, 
                  fix_param_idx: Optional[np.ndarray] = None,
                  e: np.ndarray = None, 
-                 data: np.ndarray = None, eps: np.ndarray = None) -> np.ndarray:
+                 intensity: np.ndarray = None, eps: np.ndarray = None) -> np.ndarray:
     '''
     residual_thy
     scipy.optimize.least_squares compatible vector residual function for fitting static spectrum with the 
@@ -54,7 +54,7 @@ def residual_thy(params: np.ndarray, policy: str, thy_peak: np.ndarray, edge: Op
                              if base_order is not set, it does not include baseline function.
      fix_param_idx: idx for fixed parameter (masked array for `params`)
      e: 1d array of energy points of data (n,)
-     data: static data (n,)
+     intensity: intensity of static data (n,)
      eps: estimated error of data (n,)
 
     Returns:
@@ -97,9 +97,9 @@ def residual_thy(params: np.ndarray, policy: str, thy_peak: np.ndarray, edge: Op
         tmp = np.eye(base_order+1)
         A[base_start:, :] = legval(e_norm, tmp, tensor=True)
     
-    c = fact_anal_A(A, data, eps)
+    c = fact_anal_A(A, intensity, eps)
 
-    chi = (data - c@A)/eps
+    chi = (intensity - c@A)/eps
 
     return chi
 
@@ -107,7 +107,7 @@ def jac_res_thy(params: np.ndarray, policy: str, thy_peak: np.ndarray, edge: Opt
                 base_order: Optional[int] = None, 
                 fix_param_idx: Optional[np.ndarray] = None,
                 e: np.ndarray = None, 
-                data: np.ndarray = None, eps: np.ndarray = None) -> np.ndarray:
+                intensity: np.ndarray = None, eps: np.ndarray = None) -> np.ndarray:
     '''
     jac_res_thy
     scipy.optimize.least_squares compatible vector residual function for fitting static spectrum with the 
@@ -144,7 +144,7 @@ def jac_res_thy(params: np.ndarray, policy: str, thy_peak: np.ndarray, edge: Opt
                              if base_order is not set, it does not include baseline function.
      fix_param_idx: idx for fixed parameter (masked array for `params`)
      e: 1d array of energy points of data (n,)
-     data: static data (n,)
+     intensity: intensity of static data (n,)
      eps: estimated error of data (n,)
 
     Returns:
@@ -187,9 +187,9 @@ def jac_res_thy(params: np.ndarray, policy: str, thy_peak: np.ndarray, edge: Opt
         tmp = np.eye(base_order+1)
         A[base_start:, :] = legval(e_norm, tmp, tensor=True)
     
-    c = fact_anal_A(A, data, eps)
+    c = fact_anal_A(A, intensity, eps)
 
-    df = np.empty((data.size, params.size))
+    df = np.empty((intensity.size, params.size))
 
     deriv_thy = c[0]*deriv_voigt_thy(e, thy_peak, params[0], params[1], peak_factor, policy)
     df[:, :2] = deriv_thy[:2, :].T

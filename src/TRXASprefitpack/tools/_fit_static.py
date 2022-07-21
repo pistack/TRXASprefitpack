@@ -20,10 +20,9 @@ epilog = '''
  If fwhm_L of voigt component is zero then this voigt component is treated as gaussian
 '''
 
-method_glb_help='''
-Global optimization Method
- 'ampgo': Adapted Memory Programming for Global Optimization Algorithm
- 'basinhopping'
+do_glb_help='''
+Whether or not use Global optimization Method.
+When do_glb option is set then `basinhopping` global optimization algorithm will be used.
 '''
 
 edge_help = '''
@@ -80,8 +79,7 @@ def fit_static():
     parse.add_argument('--base_order', type=int,
     help ='Order of polynomial to correct baseline feature. If it is not set then baseline is not corrected')
     parse.add_argument('-o', '--outdir', default='out', help='directory to store output file')
-    parse.add_argument('--method_glb', default='basinhopping', choices=['ampgo', 'basinhopping'],
-    help=method_glb_help)
+    parse.add_argument('--do_glb', action='store_true', help=do_glb_help)
 
     args = parse.parse_args()
 
@@ -103,25 +101,24 @@ def fit_static():
     e0_edge_init = args.e0_edge
     fwhm_edge_init = args.fwhm_edge
     base_order = args.base_order
-    method_glb = args.method_glb
     outdir = args.outdir
 
     tmp = np.genfromtxt(filename)
     e = tmp[:, 0]
-    data = tmp[:, 1]
+    intensity = tmp[:, 1]
     if tmp.shape[1] == 2:
-        eps = np.max(np.abs(data))/1000*np.ones_like(e)
+        eps = np.max(np.abs(intensity))/1000*np.ones_like(e)
     else:
         eps = tmp[:, 2]
     
     if args.mode == 'voigt':
         result = fit_static_voigt(e0_init, fwhm_G_init, fwhm_L_init, edge, e0_edge_init, fwhm_edge_init,
-        base_order, method_glb, e=e, data=data, eps=eps)
+        base_order, args.do_glb, e=e, intensity=intensity, eps=eps)
     
     elif args.mode == 'thy':
         result = fit_static_thy(thy_peak, fwhm_G_init, fwhm_L_init, args.policy, args.peak_shift, args.peak_scale,
         edge, e0_edge_init, fwhm_edge_init,
-        base_order, method_glb, e=e, data=data, eps=eps)
+        base_order, args.do_glb, e=e, intensity=intensity, eps=eps)
 
     save_StaticResult_txt(result, outdir)
     save_StaticResult(result, outdir)

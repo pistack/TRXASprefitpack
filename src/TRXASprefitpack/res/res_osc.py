@@ -18,7 +18,7 @@ from ..mathfun.exp_conv_irf import deriv_dmp_osc_sum_conv_gau, deriv_dmp_osc_sum
 def residual_dmp_osc(params: np.ndarray, num_comp: int, irf: str, 
                     fix_param_idx: Optional[np.ndarray] = None,
                     t: Optional[Sequence[np.ndarray]] = None, 
-                    data: Optional[Sequence[np.ndarray]] = None, eps: Optional[Sequence[np.ndarray]] = None) -> np.ndarray:
+                    intensity: Optional[Sequence[np.ndarray]] = None, eps: Optional[Sequence[np.ndarray]] = None) -> np.ndarray:
     '''
     residual_dmp_osc
     scipy.optimize.least_squares compatible gradient of vector residual function for fitting multiple set of time delay scan with the
@@ -54,7 +54,7 @@ def residual_dmp_osc(params: np.ndarray, num_comp: int, irf: str,
           For pseudo voigt profile, the mixing parameter eta is calculated by calc_eta routine
      fix_param_idx: index for fixed parameter (masked array for `params`)
      t: time points for each data set
-     data: sequence of datasets
+     intensity: sequence of intensity of datasets
      eps: sequence of estimated error of datasets
     
     Returns:
@@ -76,7 +76,7 @@ def residual_dmp_osc(params: np.ndarray, num_comp: int, irf: str,
             eta = calc_eta(params[0], params[1])
 
     num_t0 = 0; sum = 0
-    for d in data:
+    for d in intensity:
         num_t0 = d.shape[1] + num_t0
         sum = sum + d.size
     
@@ -87,7 +87,7 @@ def residual_dmp_osc(params: np.ndarray, num_comp: int, irf: str,
     phase = params[num_irf+num_t0+2*num_comp:num_irf+num_t0+3*num_comp]
 
     end = 0; t0_idx = num_irf
-    for ti,d,e in zip(t,data,eps):
+    for ti,d,e in zip(t,intensity,eps):
         for j in range(d.shape[1]):
             t0 = params[t0_idx]
             A = make_A_matrix_dmp_osc(ti-t0, fwhm, 1/tau, period, phase, irf, eta)
@@ -102,7 +102,7 @@ def residual_dmp_osc(params: np.ndarray, num_comp: int, irf: str,
 def jac_res_dmp_osc(params: np.ndarray, num_comp: int, irf: str, 
                     fix_param_idx: Optional[np.ndarray] = None,
                     t: Optional[Sequence[np.ndarray]] = None, 
-                    data: Optional[Sequence[np.ndarray]] = None, eps: Optional[Sequence[np.ndarray]] = None) -> np.ndarray:
+                    intensity: Optional[Sequence[np.ndarray]] = None, eps: Optional[Sequence[np.ndarray]] = None) -> np.ndarray:
     '''
     jac_res_dmp_osc
     scipy.optimize.least_squares compatible gradient of vector residual function for fitting multiple set of time delay scan with the
@@ -138,7 +138,7 @@ def jac_res_dmp_osc(params: np.ndarray, num_comp: int, irf: str,
           For pseudo voigt profile, the mixing parameter eta is calculated by calc_eta routine
      fix_param_idx: index for fixed parameter (masked array for `params`)
      t: time points for each data set
-     data: sequence of datasets
+     intensity: sequence of intensity of datasets
      eps: sequence of estimated error of datasets
 
     Returns:
@@ -160,7 +160,7 @@ def jac_res_dmp_osc(params: np.ndarray, num_comp: int, irf: str,
         eta = calc_eta(fwhm[0], fwhm[1])
 
     num_t0 = 0; sum = 0
-    for d in data:
+    for d in intensity:
         num_t0 = num_t0 + d.shape[1]
         sum = sum + d.size
 
@@ -174,7 +174,7 @@ def jac_res_dmp_osc(params: np.ndarray, num_comp: int, irf: str,
 
     end = 0; t0_idx = num_irf; tau_start = num_t0 + t0_idx
 
-    for ti,d,e in zip(t, data, eps):
+    for ti,d,e in zip(t, intensity, eps):
         step = d.shape[0]
         for j in range(d.shape[1]):
             t0 = params[t0_idx]

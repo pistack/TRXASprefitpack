@@ -15,7 +15,7 @@ class TransientResult(dict):
               `both`: sum of `decay` and `dmp_osc` model
        name_of_dset (sequence of str): name of each dataset
        t (sequence of np.ndarray): time range for each dataset
-       data (sequence of np.ndarray): sequence of datasets for time delay scan (it should not contain time scan range)
+       intensity (sequence of np.ndarray): sequence of datasets of intensity of time delay scan
        eps (sequence of np.ndarray): sequence of datasets for estimated error of time delay scan
        fit (sequence of np.ndarray): fitting curve for each data set
        fit_decay (sequence of np.ndarray): decay part of fitting curve for each data set [model = 'both']
@@ -52,7 +52,7 @@ class TransientResult(dict):
        corr (np.ndarray): parameter correlation matrix
        x_eps (np.ndarray): estimated error of parameter
         (i.e. square root of diagonal element of `conv_scaled`)
-       method_glb ({'ampgo', 'basinhopping'}): 
+       method_glb ({'basinhopping'}): 
         method of global optimization used in fitting process
        message_glb (str): messages from global optimization process
        method_lsq ({'trf', 'dogbox', 'lm'}): method of local optimization for least_squares
@@ -98,13 +98,15 @@ class TransientResult(dict):
             doc_lst.append(f"    base: {self['base']}")
             doc_lst.append(' ')
             doc_lst.append("[Optimization Method]")
-            doc_lst.append(f"    global: {self['method_glb']}")
+            if self['method_glb'] is not None:
+                  doc_lst.append(f"    global: {self['method_glb']}")
             doc_lst.append(f"    leastsq: {self['method_lsq']}")
             doc_lst.append(' ')
             doc_lst.append("[Optimization Status]")
             doc_lst.append(f"    nfev: {self['nfev']}")
             doc_lst.append(f"    status: {self['status']}")
-            doc_lst.append(f"    global_opt msg: {self['message_glb']}")
+            if self['method_glb'] is not None:
+                  doc_lst.append(f"    global_opt msg: {self['message_glb']}")
             doc_lst.append(f"    leastsq_opt msg: {self['message_lsq']}")
             doc_lst.append(' ')
             doc_lst.append("[Optimization Results]")
@@ -186,10 +188,10 @@ def save_TransientResult(result: TransientResult, filename: str):
 
       model_key_lst = ['model', 'irf', 'eta', 'n_decay', 'n_osc',
       'base', 'chi2', 'n_param', 'n_param_ind', 'num_pts', 'red_chi2',
-      'aic', 'bic', 'nfev', 'method_glb', 'message_glb',
+      'aic', 'bic', 'nfev', 
       'method_lsq', 'success_lsq', 'message_lsq', 'status']
 
-      exp_key_lst = ['t', 'data', 'eps'] 
+      exp_key_lst = ['t', 'intensity', 'eps'] 
       fit_key_lst = ['fit', 'res', 'c', 'chi2_ind', 'red_chi2_ind']
       exp_dir_lst = ['time_delay', 'intensity', 'error']
       fit_dir_lst = ['fit', 'res', 'weight', 'chi2_ind', 'red_chi2_ind']
@@ -214,6 +216,11 @@ def save_TransientResult(result: TransientResult, filename: str):
 
             for k in model_key_lst:
                   fit_res.attrs[k] = result[k]
+            if result['method_glb'] is None:
+                  fit_res.attrs['method_glb'] = 'no'
+            else:
+                  fit_res.attrs['method_glb'] = result['method_glb']
+                  fit_res.attrs['message_glb'] = result['message_glb']
 
             fit_res_param = fit_res.create_group("parameter")
             fit_res_param.create_dataset("param_opt", data=result['x'])
@@ -238,10 +245,9 @@ def load_TransientResult(filename: str) -> TransientResult:
 
       model_key_lst = ['model', 'irf', 'eta', 'n_decay', 'n_osc',
       'base', 'chi2', 'n_param', 'n_param_ind', 'num_pts', 'red_chi2',
-      'aic', 'bic', 'nfev', 'method_glb', 'message_glb',
-      'method_lsq', 'success_lsq', 'message_lsq', 'status']
+      'aic', 'bic', 'nfev', 'method_lsq', 'success_lsq', 'message_lsq', 'status']
 
-      exp_key_lst = ['data', 'eps'] 
+      exp_key_lst = ['intensity', 'eps'] 
       fit_key_lst = ['fit', 'res', 'c', 'chi2_ind', 'red_chi2_ind']
       exp_dir_lst = ['intensity', 'error']
       fit_dir_lst = ['fit', 'res', 'weight', 'chi2_ind', 'red_chi2_ind']
@@ -255,6 +261,13 @@ def load_TransientResult(filename: str) -> TransientResult:
 
             for k in model_key_lst:
                   result[k] = fit_res.attrs[k]
+            
+            if fit_res.attrs['method_glb'] == 'no':
+                  result['method_glb'] = None
+                  result['message_glb'] = None
+            else:
+                  result['method_glb'] = fit_res.attrs['method_glb']
+                  result['message_glb'] = fit_res.attrs['message_glb']
 
             result['name_of_dset'] = np.atleast_1d(f['name_of_time_delay_scan_datasets'])
 

@@ -12,7 +12,7 @@ class StaticResult(dict):
 
               `thy`: sum of voigt broadened theoretical lineshape spectrum, edge function and base function
        e (np.ndarray): energy range
-       data (np.ndarray): static spectrum
+       intensity (np.ndarray): intensity of static spectrum
        eps (np.ndarray): estimated error of static spectrum
        fit (np.ndarray): fitting curve for data (n,)
        fit_comp (np.ndarray): curve for each voigt component and edge
@@ -44,7 +44,7 @@ class StaticResult(dict):
        corr (np.ndarray): parameter correlation matrix
        x_eps (np.ndarray): estimated error of parameter
         (i.e. square root of diagonal element of `conv_scaled`)
-       method_glb ({'ampgo', 'basinhopping'}): 
+       method_glb ({'basinhopping'}): 
         method of global optimization used in fitting process
        message_glb (str): messages from global optimization process
        method_lsq ({'trf', 'dogbox', 'lm'}): method of local optimization for least_squares
@@ -85,13 +85,15 @@ class StaticResult(dict):
                   doc_lst.append(f"    base_order: {self['base_order']}")
             doc_lst.append(' ')
             doc_lst.append("[Optimization Method]")
-            doc_lst.append(f"    global: {self['method_glb']}")
+            if self['method_glb'] is not None:
+                  doc_lst.append(f"    global: {self['method_glb']}")
             doc_lst.append(f"    leastsq: {self['method_lsq']}")
             doc_lst.append(' ')
             doc_lst.append("[Optimization Status]")
             doc_lst.append(f"    nfev: {self['nfev']}")
             doc_lst.append(f"    status: {self['status']}")
-            doc_lst.append(f"    global_opt msg: {self['message_glb']}")
+            if self['method_glb'] is not None:
+                  doc_lst.append(f"    global_opt msg: {self['message_glb']}")
             doc_lst.append(f"    leastsq_opt msg: {self['message_lsq']}")
             doc_lst.append(' ')
             doc_lst.append("[Optimization Results]")
@@ -163,14 +165,13 @@ def save_StaticResult(result: StaticResult, filename: str):
        h5 file which stores result
       '''
       model_key_lst = ['chi2', 'n_param', 'num_pts', 'red_chi2',
-      'aic', 'bic', 'nfev', 'method_glb', 'message_glb',
-      'method_lsq', 'success_lsq', 'message_lsq', 'status']
+      'aic', 'bic', 'nfev', 'method_lsq', 'success_lsq', 'message_lsq', 'status']
 
       with h5.File(f'{filename}.h5', 'w') as f:
             expt = f.create_group("experiment")
             fit_res = f.create_group("fitting_result")
             expt.create_dataset("energy", data=result['e'])
-            expt.create_dataset("intensity", data=result['data'])
+            expt.create_dataset("intensity", data=result['intensity'])
             expt.create_dataset("error", data=result['eps'])
             fit_res.attrs['model'] = result['model']
             fit_res.attrs['n_voigt'] = result['n_voigt']
@@ -182,6 +183,11 @@ def save_StaticResult(result: StaticResult, filename: str):
                   fit_res.attrs['base_order'] = result['base_order']
             else:
                   fit_res.attrs['base_order'] = 'no'
+            if result['method_glb'] is not None:
+                  fit_res.attrs['method_glb'] = result['method_glb']
+                  fit_res.attrs['message_glb'] = result['message_glb']
+            else:
+                  fit_res.attrs['method_glb'] = 'no'
 
             for k in model_key_lst:
                   fit_res.attrs[k] = result[k]
@@ -214,7 +220,7 @@ def load_StaticResult(filename: str) -> StaticResult:
        loaded StaticResult instance
       '''
       model_key_lst = ['chi2', 'n_param', 'num_pts', 'red_chi2',
-      'aic', 'bic', 'nfev', 'method_glb', 'message_glb',
+      'aic', 'bic', 'nfev',
       'method_lsq', 'success_lsq', 'message_lsq', 'status']
 
       result = StaticResult()
@@ -235,6 +241,14 @@ def load_StaticResult(filename: str) -> StaticResult:
                   result['base_order'] = fit_res.attrs['base_order']
             else:
                   result['base_order'] = None
+            
+            if fit_res.attrs['method_glb'] == 'no':
+                  result['method_glb'] = None
+                  result['message_glb'] = None
+            else:
+                  result['method_glb'] = fit_res.attrs['method_glb']
+                  result['message_glb'] = fit_res.attrs['message_glb']
+
 
             for k in model_key_lst:
                   result[k] = fit_res.attrs[k]

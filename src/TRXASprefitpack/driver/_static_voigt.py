@@ -11,7 +11,6 @@ from typing import Optional, Sequence, Tuple
 import numpy as np
 from numpy.polynomial.legendre import legval
 from .static_result import StaticResult
-from ._ampgo import ampgo
 from scipy.optimize import basinhopping
 from scipy.optimize import least_squares
 from ..mathfun.peak_shape import voigt, edge_gaussian, edge_lorenzian
@@ -20,14 +19,12 @@ from ..res.parm_bound import set_bound_t0
 from ..res.res_gen import residual_scalar, grad_res_scalar
 from ..res.res_voigt import residual_voigt, jac_res_voigt
 
-GLOBAL_OPTS = {'ampgo': ampgo, 'basinhopping': basinhopping}
-
 def fit_static_voigt(e0_init: np.ndarray, fwhm_G_init: np.ndarray, fwhm_L_init: np.ndarray,
                      edge: Optional[str] = None, 
                      edge_pos_init: Optional[float] = None,
                      edge_fwhm_init: Optional[float] = None,
                      base_order: Optional[int] = None,
-                     method_glb: Optional[str] = 'basinhopping', 
+                     do_glb: Optional[bool] = False, 
                      method_lsq: Optional[str] = 'trf',
                      kwargs_glb: Optional[dict] = None, 
                      kwargs_lsq: Optional[dict] = None,
@@ -37,7 +34,7 @@ def fit_static_voigt(e0_init: np.ndarray, fwhm_G_init: np.ndarray, fwhm_L_init: 
                      bound_edge_pos: Optional[Tuple[float, float]] = None,
                      bound_edge_fwhm: Optional[Tuple[float, float]] = None,
                       e: Optional[np.ndarray] = None, 
-                      data: Optional[np.ndarray] = None,
+                      intensity: Optional[np.ndarray] = None,
                       eps: Optional[np.ndarray] = None) -> StaticResult:
                       
       '''
@@ -54,7 +51,7 @@ def fit_static_voigt(e0_init: np.ndarray, fwhm_G_init: np.ndarray, fwhm_L_init: 
       :math:`\\chi^2 = \sum_i \\left(\\frac{model-data_i}{eps_i}\\right)^2`
                     
 
-      Step 1. (method_glb)
+      Step 1. (basinhopping)
       Use global optimization to find rough global minimum of our objective function
 
       Step 2. (method_lsq)
@@ -74,8 +71,7 @@ def fit_static_voigt(e0_init: np.ndarray, fwhm_G_init: np.ndarray, fwhm_L_init: 
        edge ({'g', 'l'}): type of edge function. If edge is not set, edge feature is not included.
        edge_pos_init: initial edge position
        edge_fwhm_init: initial fwhm parameter of edge
-       method_glb ({'ampgo', 'basinhopping'}): 
-        method of global optimization used in fitting process
+       do_glb (bool): Whether or not use global optimization algorithm. If True then basinhopping algorithm is used.
        method_lsq ({'trf', 'dogbox', 'lm'}): method of local optimization for least_squares
                                              minimization (refinement of global optimization solution)
        kwargs_glb: keyward arguments for global optimization solver
@@ -88,11 +84,11 @@ def fit_static_voigt(e0_init: np.ndarray, fwhm_G_init: np.ndarray, fwhm_L_init: 
        bound_fwhm_L (sequence of tuple): boundary for fwhm_L parameter. 
         If `bound_fwhm_L` is `None`, the upper and lower bound are given as `(fwhm_L/2, 2*fwhm_L)`.
        bound_edge_pos (tuple): boundary for edge position, 
-        if `bound_edge_pos` is `None` and `edge` is set, the upper and lower bound are given as `(0.99*edge_pos, 1.01*edge_pos)`.
+        if `bound_edge_pos` is `None` and `edge` is set, the upper and lower bound are given by `set_bound_t0`.
        bound_edge_fwhm (tuple): boundary for fwhm parameter of edge feature. 
         If `bound_edge_fwhm` is `None`, the upper and lower bound are given as `(edge_fwhm/2, 2*edge_fwhm)`.
        e (np.narray): energy range for data
-       data (np.ndarray): static spectrum data (it should not contain energy scan range)
+       intensity (np.ndarray): intensity of static spectrum data
        eps (np.ndarray): estimated errors of static spectrum data
 
        Returns:
@@ -152,7 +148,7 @@ def fit_static_voigt(e0_init: np.ndarray, fwhm_G_init: np.ndarray, fwhm_L_init: 
       
       if edge is not None:
             if bound_edge_pos is None:
-                  bound[-2] = (0.999*edge_pos_init, 1.001*edge_pos_init)
+                  bound[-2] = set_bound_t0(edge_pos_init, edge_fwhm_init)
             else:
                   bound[-2] = bound_edge_pos
             if bound_edge_fwhm is None:
@@ -163,25 +159,38 @@ def fit_static_voigt(e0_init: np.ndarray, fwhm_G_init: np.ndarray, fwhm_L_init: 
       for i in range(num_param):
             fix_param_idx[i] = (bound[i][0] == bound[i][1])
       
-      go_args = (residual_voigt, jac_res_voigt, num_voigt, edge, base_order, fix_param_idx, e, data, eps)
-      min_go_kwargs = {'args': go_args, 'jac': grad_res_scalar, 'bounds': bound}
-      if kwargs_glb is not None:
-            minimizer_kwargs = kwargs_glb.pop('minimizer_kwargs', None)
-            if minimizer_kwargs is None:
-                  kwargs_glb['minimizer_kwargs'] = min_go_kwargs
+      if do_glb:
+            go_args = (residual_voigt, jac_res_voigt, num_voigt, edge, base_order, fix_param_idx, 
+            e, intensity, eps)
+            min_go_kwargs = {'args': go_args, 'jac': grad_res_scalar, 'bounds': bound}
+            if kwargs_glb is not None:
+                  minimizer_kwargs = kwargs_glb.pop('minimizer_kwargs', None)
+                  if minimizer_kwargs is None:
+                        kwargs_glb['minimizer_kwargs'] = min_go_kwargs
+                  else:
+                        minimizer_kwargs['args'] = go_args
+                        minimizer_kwargs['jac'] = grad_res_scalar
+                        minimizer_kwargs['bouns'] = bound
+                        kwargs_glb['minimizer_kwargs'] = minimizer_kwargs
             else:
-                  kwargs_glb['minimizer_kwargs'] = minimizer_kwargs.update(min_go_kwargs)
+                  kwargs_glb = {'minimizer_kwargs' : min_go_kwargs}
+            res_go = basinhopping(residual_scalar, param, **kwargs_glb)
       else:
-            kwargs_glb = {'minimizer_kwargs' : min_go_kwargs}
-      res_go = GLOBAL_OPTS[method_glb](residual_scalar, param, **kwargs_glb)
+            res_go = dict()
+            res_go['x'] = param
+            res_go['message'] = None
+            res_go['nfev'] = 0
+
       param_gopt = res_go['x']
+
+      lsq_args = (num_voigt, edge, base_order, fix_param_idx, e, intensity, eps)
 
       if kwargs_lsq is not None:
             _ = kwargs_lsq.pop('args', None)
             _ = kwargs_lsq.pop('kwargs', None)
-            kwargs_lsq['args'] = tuple(go_args[2:])
+            kwargs_lsq['args'] = lsq_args
       else:
-            kwargs_lsq = {'args' : tuple(go_args[2:])}
+            kwargs_lsq = {'args' : lsq_args}
 
       bound_tuple = (num_param*[None], num_param*[None])
       for i in range(num_param):
@@ -240,7 +249,7 @@ def fit_static_voigt(e0_init: np.ndarray, fwhm_G_init: np.ndarray, fwhm_L_init: 
             tmp = np.eye(base_order+1)
             A[base_start:, :] = legval(e_norm, tmp, tensor=True)
       
-      c = fact_anal_A(A, data, eps)
+      c = fact_anal_A(A, intensity, eps)
 
       fit = c@A
 
@@ -254,7 +263,7 @@ def fit_static_voigt(e0_init: np.ndarray, fwhm_G_init: np.ndarray, fwhm_L_init: 
       if base_order is not None:
             base = c[base_start:]@A[base_start:,:]
             
-      res = data - fit
+      res = intensity - fit
       
       jac = res_lsq['jac']
       hes = jac.T @ jac
@@ -270,7 +279,7 @@ def fit_static_voigt(e0_init: np.ndarray, fwhm_G_init: np.ndarray, fwhm_L_init: 
 
       result = StaticResult()
       result['model'] = 'voigt'
-      result['e'] = e; result['data'] = data; result['eps'] = eps
+      result['e'] = e; result['intensity'] = intensity; result['eps'] = eps
       result['fit'] = fit; result['fit_comp'] = fit_comp 
       result['res'] = res; result['base_order'] = base_order
       result['edge'] = edge; result['n_voigt'] = num_voigt
@@ -285,6 +294,8 @@ def fit_static_voigt(e0_init: np.ndarray, fwhm_G_init: np.ndarray, fwhm_L_init: 
       result['num_pts'] = chi.size; result['jac'] = jac
       result['cov'] = cov; result['corr'] = corr; result['cov_scaled'] = cov_scaled
       result['x_eps'] = param_eps
+      result['method_lsq'] = method_lsq
+      result['message_lsq'] = res_lsq['message']
       result['success_lsq'] = res_lsq['success']
 
       if result['success_lsq']:
@@ -292,12 +303,11 @@ def fit_static_voigt(e0_init: np.ndarray, fwhm_G_init: np.ndarray, fwhm_L_init: 
       else:
             result['status'] = -1
       
-      result['method_glb'] = method_glb
-      result['method_lsq'] = method_lsq
-      if method_glb == 'ampgo':
-            result['message_glb'] = res_go['message']
-      elif method_glb == 'basinhopping':
-            result['message_glb'] = res_go['message'][0]           
-      result['message_lsq'] = res_lsq['message']
+      if do_glb:
+            result['method_glb'] = 'basinhopping'
+            result['message_glb'] = res_go['message'][0]  
+      else:
+            result['method_glb'] = None
+            result['message_glb'] = None
 
       return result

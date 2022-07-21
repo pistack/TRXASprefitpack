@@ -78,7 +78,7 @@ def fact_anal_exp_conv(t: np.ndarray,
                        base: Optional[bool] = True,
                        irf: Optional[str] = 'g',
                        eta: Optional[float] = None,
-                       data: Optional[np.ndarray] = None,
+                       intensity: Optional[np.ndarray] = None,
                        eps: Optional[np.ndarray] = None
                        ) -> np.ndarray:
 
@@ -113,7 +113,7 @@ def fact_anal_exp_conv(t: np.ndarray,
             (only needed for pseudo voigt profile,
             default value is guessed according to
             Journal of Applied Crystallography. 33 (6): 1311–1316.)
-       data: time scan data to fit
+       intensity: intensity of time scan data to fit
        eps: standard error of data
 
     Returns:
@@ -121,27 +121,22 @@ def fact_anal_exp_conv(t: np.ndarray,
      size of coefficient is `num_comp + 1`, otherwise is `num_comp`.
 
     Note:
-     data should not contain time range and
-     the dimension of the data must be one.
+     the dimension of the intensity must be one.
     '''
 
     A = make_A_matrix_exp(t, fwhm, tau, base, irf, eta)
     if eps is None:
-        eps = np.ones_like(data)
+        eps = np.ones_like(intensity)
     
-    y = data/eps
+    y = intensity/eps
     A = np.einsum('j,ij->ij', 1/eps, A)
     c, _, _, _ = LA.lstsq(A.T, y, cond=1e-2)
 
     return c
 
-def rate_eq_conv(t: np.ndarray,
-                      fwhm: Union[float, np.ndarray],
-                      abs: np.ndarray,
-                      eigval: np.ndarray, V: np.ndarray, c: np.ndarray, 
-                      irf: Optional[str] = 'g',
-                      eta: Optional[float] = None
-                      ) -> np.ndarray:
+def rate_eq_conv(t: np.ndarray, fwhm: Union[float, np.ndarray],
+abs: np.ndarray, eigval: np.ndarray, V: np.ndarray, c: np.ndarray, 
+irf: Optional[str] = 'g', eta: Optional[float] = None) -> np.ndarray:
 
     '''
     Constructs signal model rate equation with
@@ -192,7 +187,7 @@ def rate_eq_conv(t: np.ndarray,
 def fact_anal_rate_eq_conv(t: np.ndarray, fwhm: Union[float, np.ndarray],
 eigval: np.ndarray, V: np.ndarray, c: np.ndarray, 
 exclude: Optional[str] = None, irf: Optional[str] = 'g',
-eta: Optional[float] = None, data: Optional[np.ndarray] = None, 
+eta: Optional[float] = None, intensity: Optional[np.ndarray] = None, 
 eps: Optional[np.ndarray] = None) -> np.ndarray:
 
     '''
@@ -227,7 +222,7 @@ eps: Optional[np.ndarray] = None) -> np.ndarray:
             (only needed for pseudo voigt profile,
             default value is guessed according to
             Journal of Applied Crystallography. 33 (6): 1311–1316.)
-       data: time scan data to fit
+       intensity: intensity of time scan data to fit
        eps: standard error of data
 
     Returns:
@@ -235,7 +230,7 @@ eps: Optional[np.ndarray] = None) -> np.ndarray:
 
     Note:
      1. eigval, V, c should be obtained from solve_model
-     2. data should not contain time range and the dimension of the data must be one.
+     2. The dimension of the intensity should be one.
     '''
 
     A = compute_signal_irf(t, eigval, V, c, fwhm, irf, eta)
@@ -243,9 +238,9 @@ eps: Optional[np.ndarray] = None) -> np.ndarray:
     abs = np.zeros(A.shape[0])
 
     if eps is None:
-        eps = np.ones_like(data)
+        eps = np.ones_like(intensity)
     
-    y = data/eps
+    y = intensity/eps
     
     if exclude == 'first_and_last':
         B = np.einsum('j,ij->ij', 1/eps, A[1:-1,:])
@@ -330,7 +325,7 @@ def fact_anal_dmp_osc_conv(t: np.ndarray,
                        tau: np.ndarray, T: np.ndarray, phase: np.ndarray,
                        irf: Optional[str] = 'g',
                        eta: Optional[float] = None,
-                       data: Optional[np.ndarray] = None,
+                       intensity: Optional[np.ndarray] = None,
                        eps: Optional[np.ndarray] = None
                        ) -> np.ndarray:
 
@@ -360,23 +355,22 @@ def fact_anal_dmp_osc_conv(t: np.ndarray,
             (only needed for pseudo voigt profile,
             default value is guessed according to
             Journal of Applied Crystallography. 33 (6): 1311–1316.)
-       data: time scan data to fit
+       intensity: intensity of time scan data to fit
        eps: standard error of data
 
     Returns:
      Best coefficient for given damped oscillation component.
 
     Note:
-     data should not contain time range and
-     the dimension of the data must be one.
+     the dimension of the intensity should be one.
     '''
     
     A = make_A_matrix_dmp_osc(t, fwhm, tau, T, phase, irf, eta)
 
     if eps is None:
-        eps = np.ones_like(data)
+        eps = np.ones_like(intensity)
     
-    y = data/eps
+    y = intensity/eps
     A = np.einsum('j,ij->ij', 1/eps, A)
     c, _, _, _ = LA.lstsq(A.T, y, cond=1e-2)
 

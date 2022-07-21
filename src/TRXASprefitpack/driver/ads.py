@@ -14,7 +14,7 @@ from ..mathfun.rate_eq import compute_signal_irf
 
 def dads(escan_time: np.ndarray, fwhm: Union[float, np.ndarray], tau: np.ndarray, base: Optional[bool] = True,
 irf: Optional[str] = 'g', eta: Optional[float] = None,
-data: Optional[np.ndarray] = None, eps: Optional[np.ndarray] = None) -> Tuple[np.ndarray, np.ndarray, np.ndarray]:
+intensity: Optional[np.ndarray] = None, eps: Optional[np.ndarray] = None) -> Tuple[np.ndarray, np.ndarray, np.ndarray]:
     '''
     Calculate decay associated difference spectrum from experimental energy scan data
 
@@ -30,12 +30,12 @@ data: Optional[np.ndarray] = None, eps: Optional[np.ndarray] = None) -> Tuple[np
       eta: mixing parameter for pseudo voigt profile
            (only needed for pseudo voigt profile, default value is guessed according to
            Journal of Applied Crystallography. 33 (6): 1311–1316.)
-      data: energy scan data
-      eps: standard error of data 
+      intensity: intensity of energy scan dataset
+      eps: standard error of dataset
     
     Returns:
      Tuple of calculated decay associated difference spectrum of each component, estimated error and
-     retrieved energy scan from dads and decay components
+     retrieved energy scan intensity from dads and decay components
     
     Note:
      To calculate decay associated difference spectrum of n component exponential decay, you should measure at least n+1
@@ -43,23 +43,23 @@ data: Optional[np.ndarray] = None, eps: Optional[np.ndarray] = None) -> Tuple[np
     '''
     # initialization
     if base:
-      c = np.empty((tau.size+1, data.shape[0]))
+      c = np.empty((tau.size+1, intensity.shape[0]))
       dof = escan_time.size - (tau.size+1)
     else:
-      c = np.empty((tau.size, data.shape[0]))
+      c = np.empty((tau.size, intensity.shape[0]))
       dof = escan_time.size - (tau.size)
 
     if eps is None:
-      eps = np.ones_like(data)
+      eps = np.ones_like(intensity)
     
     c_eps = np.empty_like(c)
     
     A = make_A_matrix_exp(escan_time, fwhm, tau, base, irf, eta)
-    data_scaled = data/eps
+    data_scaled = intensity/eps
 
     # evaluates dads
     cond = 1e-2
-    for i in range(data.shape[0]):
+    for i in range(intensity.shape[0]):
       A_scaled = np.einsum('j,ij->ij', 1/eps[i,:], A)
       U, s, Vh = svd(A_scaled.T, full_matrices= False)
       mask = s > cond*s[0]
@@ -75,7 +75,7 @@ data: Optional[np.ndarray] = None, eps: Optional[np.ndarray] = None) -> Tuple[np
 
 def sads(escan_time: np.ndarray, fwhm: Union[float, np.ndarray], eigval: np.ndarray, V: np.ndarray, c: np.ndarray,
 exclude: Optional[str] = None, irf: Optional[str] = 'g', eta: Optional[float] = None,
-data: Optional[np.ndarray] = None, eps: Optional[np.ndarray] = None) -> Tuple[np.ndarray, np.ndarray, np.ndarray]:
+intensity: Optional[np.ndarray] = None, eps: Optional[np.ndarray] = None) -> Tuple[np.ndarray, np.ndarray, np.ndarray]:
     '''
     Calculate species associated difference spectrum from experimental energy scan data
 
@@ -96,12 +96,12 @@ data: Optional[np.ndarray] = None, eps: Optional[np.ndarray] = None) -> Tuple[np
            * 'pv': pseudo voigt profile :math:`(1-\\eta)g + \\eta c`
       eta: mixing parameter for pseudo voigt profile (only needed for pseudo voigt profile,
            default value is guessed according to Journal of Applied Crystallography. 33 (6): 1311–1316.)
-      data: energy scan data
+      intensity: intensity of energy scan dataset
       eps: standard error of data 
     
     Returns:
      Tuple of calculated species associated difference spectrum of each component, estimated error and
-     retrieved energy scan from dads and model excited state components
+     retrieved intensity of energy scan from sads and model excited state components
     
     Note:
      1. eigval, V, c should be obtained from solve_model
@@ -110,17 +110,17 @@ data: Optional[np.ndarray] = None, eps: Optional[np.ndarray] = None) -> Tuple[np
     '''
     # initialization
     if exclude is None:
-      abs = np.empty((eigval.size, data.shape[0]))
+      abs = np.empty((eigval.size, intensity.shape[0]))
       dof = escan_time.size - eigval.size
     elif exclude in ['first', 'last']:
-      abs = np.empty((eigval.size-1, data.shape[0]))
+      abs = np.empty((eigval.size-1, intensity.shape[0]))
       dof = escan_time.size - (eigval.size-1)
     else:
-      abs = np.empty((eigval.size-2, data.shape[0]))
+      abs = np.empty((eigval.size-2, intensity.shape[0]))
       dof = escan_time.size - (eigval.size-2)
 
     if eps is None:
-      eps = np.ones_like(data)
+      eps = np.ones_like(intensity)
     
     abs_eps = np.empty_like(abs)
     
@@ -134,11 +134,11 @@ data: Optional[np.ndarray] = None, eps: Optional[np.ndarray] = None) -> Tuple[np
     else:
       B = A
 
-    data_scaled = data/eps
+    data_scaled = intensity/eps
 
     # evaluates sads
     cond = 1e-2
-    for i in range(data.shape[0]):
+    for i in range(intensity.shape[0]):
       A_scaled = np.einsum('j,ij->ij', 1/eps[i,:], B)
       U, s, Vh = svd(A_scaled.T, full_matrices= False)
       mask = s > cond*s[0]
