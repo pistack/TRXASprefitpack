@@ -1,8 +1,7 @@
-import os
-from pathlib import Path
+import h5py as h5
 import numpy as np
 
-class DriverResult(dict):
+class TransientResult(dict):
       '''
       Represent results for fitting driver routine
 
@@ -81,10 +80,10 @@ class DriverResult(dict):
       
       def __str__(self, corr_tol: float = 1e-1):
             '''
-            Report DriverResult class
+            Report TransientResult class
 
             Args:
-            result: DriverResult class instance which has fitting result
+            result: TransientResult class instance which has fitting result
             corr_tol: parameter correlation greather `corr_tol` would be reported
       
             Returns:
@@ -168,86 +167,135 @@ class DriverResult(dict):
             for pair in A[mask]:
                   if pair[0] > pair[1]:
                         tmp_str_lst = [f"    ({self['param_name'][pair[0]]},"]
-                        tmp_str_lst.append(f"{self['param_name'][pair[1]]}")
+                        tmp_str_lst.append(f"{self['param_name'][pair[1]]})")
                         tmp_str_lst.append('=')
                         tmp_str_lst.append(f"{self['corr'][pair]: .3f}".rstrip('0').rstrip('.'))
                         doc_lst.append(' '.join(tmp_str_lst))
 
             return '\n'.join(doc_lst)
-      
-      def __repr__(self):
-            '''
-            Print structure of DriverResult instance
-            '''
-            doc_lst = []
-            print(self.items())
-            for k,v in self.items():
-                  if v is None:
-                        doc_lst.append(f"{k}: None")
-                  elif isinstance(v, (int, float, str)):
-                        doc_lst.append(f"{k}: {v}")
-                  elif len(v) == 1 and isinstance(v[0], (int, float, str)):
-                        doc_lst.append(f"{k}: {v[0]}")
-                  elif len(v) == 2 and isinstance(v[0], (int, float)) and isinstance(v[1], (int, float)):
-                        doc_lst.append(f"{k}: ({v[0], v[1]})")
-                  elif isinstance(v, np.ndarray):
-                        doc_lst.append(f"{k}: numpy ndarray with datatype: {type(v[0,0])}, shape: {v.shape}")
-            return '\n'.join(doc_lst)
 
-def save_DriverResult(result: DriverResult, dirname: str):
+def save_TransientResult(result: TransientResult, filename: str):
       '''
-      save fitting result to the text file
-
+      save transient fitting result to the h5 file
       Args:
-       result: fitting result
-       dirname: name of the directory in which text files for fitting result are saved.
-       name_of_dset: name of each data sets. If `name_of_dset` is None then it is set to [1,2,3,....]
-       t: sequence of scan range
-       eps: sequence of estimated error of each datasets
-      
+       result: transient fitting result
+       filename: filename to store result. It will store result to filename.h5
       Returns:
-       `fit_summary.txt`: Summary for the fitting result
-       `weight_{name_of_dset[i]}.txt`: Weight of each model component of i th dataset
-       `fit_{name_of_dset[i]}.txt`: fitting curve for i th dataset
-       `fit_osc_{name_of_dset[i]}.txt`: oscillation part of fitting curve for i th dataset [model = 'both']
-       `fit_decay_{name_of_dset[i]}.txt`: decay part of fitting curve for i th dataset [model = 'both']
-       `res_{name_f_dset[i]}_j.txt`: residual (fit-data) curve for j th scan of i th data
-                                     The format of text file is (t, res, eps)
-
-      
-      Note:
-       If `dirname` directory is not exists, it creates `dirname` directory.
+       h5 file which stores result
       '''
-      if not (Path.cwd()/dirname).exists():
-            os.mkdir(dirname)
-      
-      with open(f'{dirname}/fit_summary.txt', 'w') as f:
-            f.write(str(result))
-      
-      for i in range(len(result['t'])):
-            coeff_fmt = result['eps'][i].shape[1]*['%.8e']
-            fit_fmt = (1+result['eps'][i].shape[1])*['%.8e']
-            coeff_header_lst = []
-            fit_header_lst = ['time_delay']
-            for j in range(result['eps'][i].shape[1]):
-                  res_save = np.vstack((result['t'][i], result['res'][i][:,j], result['eps'][i][:,j])).T
-                  np.savetxt(f"{dirname}/res_{result['name_of_dset'][i]}_{j+1}.txt", res_save,
-                  fmt=['%.8e', '%.8e', '%.8e'], 
-                  header=f"time_delay \t res_{result['name_of_dset'][i]}_{j+1} \t eps")
-                  fit_header_lst.append(f"fit_{result['name_of_dset'][i]}_{j+1}")
-                  coeff_header_lst.append(f"tscan_{result['name_of_dset'][i]}_{j+1}")
-            
-            fit_header = '\t'.join(fit_header_lst)
-            coeff_header = '\t'.join(coeff_header_lst)
 
-            np.savetxt(f"{dirname}/weight_{result['name_of_dset'][i]}.txt", result['c'][i], fmt=coeff_fmt,
-            header=coeff_header)
-            fit_save = np.vstack((result['t'][i], result['fit'][i].T)).T
-            np.savetxt(f"{dirname}/fit_{result['name_of_dset'][i]}.txt", fit_save, fmt=fit_fmt, header=fit_header)
-            if result['model'] == 'both':
-                  fit_decay_save = np.vstack((result['t'][i], result['fit_decay'][i].T)).T
-                  np.savetxt(f"{dirname}/fit_decay_{result['name_of_dset'][i]}.txt", fit_decay_save, fmt=fit_fmt, header=fit_header)
-                  fit_osc_save = np.vstack((result['t'][i], result['fit_osc'][i].T)).T
-                  np.savetxt(f"{dirname}/fit_osc_{result['name_of_dset'][i]}.txt", fit_osc_save, fmt=fit_fmt, header=fit_header)
+      model_key_lst = ['model', 'irf', 'eta', 'n_decay', 'n_osc',
+      'base', 'chi2', 'n_param', 'n_param_ind', 'num_pts', 'red_chi2',
+      'aic', 'bic', 'nfev', 'method_glb', 'message_glb',
+      'method_lsq', 'success_lsq', 'message_lsq', 'status']
 
+      exp_key_lst = ['t', 'data', 'eps'] 
+      fit_key_lst = ['fit', 'res', 'c', 'chi2_ind', 'red_chi2_ind']
+      exp_dir_lst = ['time_delay', 'intensity', 'error']
+      fit_dir_lst = ['fit', 'res', 'weight', 'chi2_ind', 'red_chi2_ind']
+
+      name_of_dset = result['name_of_dset']
+
+      with h5.File(f'{filename}.h5', 'w') as f:
+
+            f.create_dataset("name_of_time_delay_scan_datasets", data=name_of_dset.astype('S100'), dtype='S100')
+            expt = f.create_group("experiment")
+            fit_res = f.create_group("fitting_result")
+            for i in range(len(name_of_dset)):
+                  expt_dset = expt.create_group(name_of_dset[i])
+                  fit_res_dset = fit_res.create_group(name_of_dset[i])
+                  for k, d in zip(exp_key_lst, exp_dir_lst):
+                        expt_dset.create_dataset(d, data=result[k][i])
+                  for k, d in zip(fit_key_lst, fit_dir_lst):
+                        fit_res_dset.create_dataset(d, data=result[k][i])
+                  if result['model'] == 'both':
+                        fit_res_dset.create_dataset("fit_osc", data=result['fit_osc'][i])
+                        fit_res_dset.create_dataset("fit_decay", data=result['fit_decay'][i])
+
+            for k in model_key_lst:
+                  fit_res.attrs[k] = result[k]
+
+            fit_res_param = fit_res.create_group("parameter")
+            fit_res_param.create_dataset("param_opt", data=result['x'])
+            fit_res_param.create_dataset("param_eps", data=result['x_eps'])
+            fit_res_param.create_dataset("param_name", data=result['param_name'].astype("S100"), dtype='S100')
+            fit_res_param.create_dataset("param_bounds", data=result['bounds'])
+            fit_res_param.create_dataset("correlation", data=result['corr'])
+            fit_res_mis = fit_res.create_group("miscellaneous")
+            fit_res_mis.create_dataset("jac", data=result['jac'])
+            fit_res_mis.create_dataset('cov', data=result['cov'])
+            fit_res_mis.create_dataset('cov_scaled', data=result['cov_scaled'])
       return
+
+def load_TransientResult(filename: str) -> TransientResult:
+      '''
+      load transient fitting result from h5 file
+      Args:
+       filename: filename to load result. It will load filename.h5
+      Returns:
+       transient fitting result loaded from h5 file
+      '''
+
+      model_key_lst = ['model', 'irf', 'eta', 'n_decay', 'n_osc',
+      'base', 'chi2', 'n_param', 'n_param_ind', 'num_pts', 'red_chi2',
+      'aic', 'bic', 'nfev', 'method_glb', 'message_glb',
+      'method_lsq', 'success_lsq', 'message_lsq', 'status']
+
+      exp_key_lst = ['data', 'eps'] 
+      fit_key_lst = ['fit', 'res', 'c', 'chi2_ind', 'red_chi2_ind']
+      exp_dir_lst = ['intensity', 'error']
+      fit_dir_lst = ['fit', 'res', 'weight', 'chi2_ind', 'red_chi2_ind']
+
+      result = TransientResult()
+
+      with h5.File(f'{filename}.h5', 'r') as f:
+
+            expt = f['experiment']
+            fit_res = f['fitting_result']
+
+            for k in model_key_lst:
+                  result[k] = fit_res.attrs[k]
+
+            result['name_of_dset'] = np.atleast_1d(f['name_of_time_delay_scan_datasets'])
+
+            result['t'] = np.empty(len(result['name_of_dset']), dtype=object)
+
+            for k in exp_key_lst:
+                  result[k] = np.empty(len(result['name_of_dset']), dtype=object)
+            
+            for k in fit_key_lst:
+                  result[k] = np.empty(len(result['name_of_dset']), dtype=object)
+            
+            if result['model'] == 'both':
+                  result['fit_osc'] = np.empty(len(result['name_of_dset']), dtype=object)
+                  result['fit_decay'] = np.empty(len(result['name_of_dset']), dtype=object)
+            
+            for i in range(len(result['name_of_dset'])):
+                  expt_dset = expt[result['name_of_dset'][i]]
+                  fit_res_dset = fit_res[result['name_of_dset'][i]]
+                  result['t'][i] = np.atleast_1d(expt_dset['time_delay'])
+                  for k, d in zip(exp_key_lst, exp_dir_lst):
+                        result[k][i] = np.atleast_2d(expt_dset[d])
+                  for k,d in zip(fit_key_lst, fit_dir_lst):
+                        result[k][i] = np.atleast_2d(fit_res_dset[d])
+                  if result['model'] == 'both':
+                        result['fit_osc'][i] = fit_res_dset['fit_osc']
+                        result['fit_decay'][i] = fit_res_dset['fit_decay']
+
+            fit_res_param = fit_res['parameter']
+            result['x'] = np.atleast_1d(fit_res_param['param_opt'])
+            result['x_eps'] = np.atleast_1d(fit_res_param['param_eps'])
+            result['param_name'] = np.atleast_1d(fit_res_param['param_name'])
+            tmp = np.atleast_2d(fit_res_param['param_bounds'])
+            lst = tmp.shape[0]*[None]
+            for i in range(tmp.shape[0]):
+                  lst[i] = (tmp[i,0], tmp[i, 1])
+            result['bounds'] = lst
+            result['corr'] = np.atleast_2d(fit_res_param['correlation'])
+
+            fit_res_mis = fit_res['miscellaneous']
+            result['jac'] = np.atleast_2d(fit_res_mis['jac'])
+            result['cov'] = np.atleast_2d(fit_res_mis['cov'])
+            result['cov_scaled'] = np.atleast_2d(fit_res_mis['cov_scaled'])
+
+      return result

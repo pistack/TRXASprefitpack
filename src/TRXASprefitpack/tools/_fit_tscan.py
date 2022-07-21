@@ -9,9 +9,9 @@
 
 import argparse
 import numpy as np
-from ..driver import save_DriverResult
+from ..driver import save_TransientResult
 from ..driver import fit_transient_exp, fit_transient_dmp_osc, fit_transient_both
-from .misc import read_data, plot_DriverResult
+from .misc import read_data, plot_TransientResult, save_TransientResult_txt
 
 FITDRIVER = {'decay': fit_transient_exp, 'osc': fit_transient_dmp_osc, 'both': fit_transient_both}
 
@@ -211,8 +211,9 @@ def fit_tscan():
     result = FITDRIVER[args.mode](irf, fwhm_init, t0_init, *dargs, method_glb=args.method_glb, 
     bound_fwhm=bound_fwhm, bound_t0=bound_t0, name_of_dset=prefix, t=t, data=data, eps=eps)
 
-    save_DriverResult(result, args.outdir)
+    save_TransientResult(result, args.outdir)
+    save_TransientResult_txt(result, args.outdir)
     print(result)
-    plot_DriverResult(result)
+    plot_TransientResult(result)
 
     return

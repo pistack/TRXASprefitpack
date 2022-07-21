@@ -1,6 +1,5 @@
-import os
-from pathlib import Path
 import numpy as np
+import h5py as h5
 
 class StaticResult(dict):
       '''
@@ -18,13 +17,13 @@ class StaticResult(dict):
        fit (np.ndarray): fitting curve for data (n,)
        fit_comp (np.ndarray): curve for each voigt component and edge
        base (np.ndaray): fitting curve for baseline
-       res (np.ndarray): residual curve (data-fit) for each data (n,)
-       edge ({'gaussian', 'lorenzian'}): type of edge function, if edge is None then edge function is not
-       included in the fitting model
+       res (np.ndarray): residual curve (data-fit) for static spectrum (n,)
+       edge ({'g', 'l'}): type of edge function, if edge is None then edge function is not
+        included in the fitting model
 
-            'gaussian': gaussian type edge function
+            'g': gaussian type edge function
 
-            'lorenzian': lorenzian type edge function
+            'l': lorenzian type edge function
        base_order (int): order of baseline function
                          if base_order is None then baseline is not included in the fitting model
        param_name (np.ndarray): name of parameter
@@ -146,82 +145,123 @@ class StaticResult(dict):
             for pair in A[mask]:
                   if pair[0] > pair[1]:
                         tmp_str_lst = [f"    ({self['param_name'][pair[0]]},"]
-                        tmp_str_lst.append(f"{self['param_name'][pair[1]]}")
+                        tmp_str_lst.append(f"{self['param_name'][pair[1]]})")
                         tmp_str_lst.append('=')
                         tmp_str_lst.append(f"{self['corr'][pair]: .3f}".rstrip('0').rstrip('.'))
                         doc_lst.append(' '.join(tmp_str_lst))
 
             return '\n'.join(doc_lst)
-      
-      def __repr__(self):
-            '''
-            Print structure of StaticResult instance
-            '''
-            doc_lst = []
-            print(self.items())
-            for k,v in self.items():
-                  if v is None:
-                        doc_lst.append(f"{k}: None")
-                  elif isinstance(v, (int, float, str)):
-                        doc_lst.append(f"{k}: {v}")
-                  elif len(v) == 1 and isinstance(v[0], (int, float, str)):
-                        doc_lst.append(f"{k}: {v[0]}")
-                  elif len(v) == 2 and isinstance(v[0], (int, float)) and isinstance(v[1], (int, float)):
-                        doc_lst.append(f"{k}: ({v[0], v[1]})")
-                  elif isinstance(v, np.ndarray):
-                        doc_lst.append(f"{k}: numpy ndarray with datatype: {type(v[0,0])}, shape: {v.shape}")
-            return '\n'.join(doc_lst)
 
 
-def save_StaticResult(result: StaticResult, dirname: str):
+def save_StaticResult(result: StaticResult, filename: str):
       '''
-      save static fitting result to the text file
-
+      save static fitting result to the h5 file
       Args:
        result: static fitting result
-       dirname: name of the directory in which text files for fitting result are saved.
-       e: energy range of static spectrum
-       eps: estimated error of static spectrum
-      
+       filename: filename to store result. It will store result to filename.h5
       Returns:
-       `fit_summary.txt`: Summary for the fitting result
-       `weight.txt`: Weight of each voigt and edge component
-       `fit.txt`: fitting, each voigt, edge and baseline curve for static spectrum
-       `res.txt`: residual (fit-data) curve for static spectrum
-
-      Note:
-       If `dirname` directory is not exists, it creates `dirname` directory.
+       h5 file which stores result
       '''
-      if not (Path.cwd()/dirname).exists():
-            os.mkdir(dirname)
-      
-      with open(f'{dirname}/fit_summary.txt', 'w') as f:
-            f.write(str(result))
+      model_key_lst = ['chi2', 'n_param', 'num_pts', 'red_chi2',
+      'aic', 'bic', 'nfev', 'method_glb', 'message_glb',
+      'method_lsq', 'success_lsq', 'message_lsq', 'status']
 
-      tot_comp = result['n_voigt']
-      if result['edge'] is not None:
-            tot_comp = tot_comp+1
-      if result['base_order'] is not None:
-            tot_comp = tot_comp+1
-      coeff_fmt = ['%.8e']
-      fit_fmt = (2+tot_comp)*['%.8e']
-      fit_header_lst = ['energy', 'fit']
-      for i in range(result['n_voigt']):
-            fit_header_lst.append(f'voigt_{i}')
-      if result['edge'] is not None:
-            fit_header_lst.append(f"{result['edge']}_type_edge")
-      if result['base'] is not None:
-            fit_header_lst.append("base")
-            fit_save = np.vstack((result['e'], result['fit'], result['fit_comp'], result['base'])).T
-      else:
-            fit_save = np.vstack((result['e'], result['fit'], result['fit_comp'])).T
-      res_save = np.vstack((result['e'], result['res'], result['eps'])).T
-      np.savetxt(f'{dirname}/res.txt', res_save, fmt=['%.8e', '%.8e', '%.8e'], 
-      header=f'energy \t res \t eps')
-      fit_header = '\t'.join(fit_header_lst)
-      coeff_header = 'static'
+      with h5.File(f'{filename}.h5', 'w') as f:
+            expt = f.create_group("experiment")
+            fit_res = f.create_group("fitting_result")
+            expt.create_dataset("energy", data=result['e'])
+            expt.create_dataset("intensity", data=result['data'])
+            expt.create_dataset("error", data=result['eps'])
+            fit_res.attrs['model'] = result['model']
+            fit_res.attrs['n_voigt'] = result['n_voigt']
+            if result['edge'] is not None:
+                  fit_res.attrs['edge'] = result['edge']
+            else:
+                  fit_res.attrs['edge'] = 'no'
+            if result['base_order'] is not None:
+                  fit_res.attrs['base_order'] = result['base_order']
+            else:
+                  fit_res.attrs['base_order'] = 'no'
 
-      np.savetxt(f'{dirname}/weight.txt', result['c'], fmt=coeff_fmt, header=coeff_header)
-      np.savetxt(f'{dirname}/fit.txt', fit_save, fmt=fit_fmt, header=fit_header)
-      
+            for k in model_key_lst:
+                  fit_res.attrs[k] = result[k]
+
+            fit_res_curve = fit_res.create_group("fit_curve")
+            fit_res_curve.create_dataset("fit", data=result['fit'])
+            fit_res_curve.create_dataset("fit_comp", data=result['fit_comp'])
+            fit_res_curve.create_dataset("weight", data=result['c'])
+            if result['base_order'] is not None:
+                  fit_res_curve.create_dataset("base", data=result['base'])
+            fit_res_curve.create_dataset("res", data=result['res'])
+            fit_res_param = fit_res.create_group("parameter")
+            fit_res_param.create_dataset("param_opt", data=result['x'])
+            fit_res_param.create_dataset("param_eps", data=result['x_eps'])
+            fit_res_param.create_dataset("param_name", data=result['param_name'].astype("S100"), dtype='S100')
+            fit_res_param.create_dataset("param_bounds", data=result['bounds'])
+            fit_res_param.create_dataset("correlation", data=result['corr'])
+            fit_res_mis = fit_res.create_group("miscellaneous")
+            fit_res_mis.create_dataset("jac", data=result['jac'])
+            fit_res_mis.create_dataset('cov', data=result['cov'])
+            fit_res_mis.create_dataset('cov_scaled', data=result['cov_scaled'])
       return
+
+def load_StaticResult(filename: str) -> StaticResult:
+      '''
+      load static fitting result from h5 file
+      Args:
+       filename: filename to load result. It will load result to filename.h5
+      Returns:
+       loaded StaticResult instance
+      '''
+      model_key_lst = ['chi2', 'n_param', 'num_pts', 'red_chi2',
+      'aic', 'bic', 'nfev', 'method_glb', 'message_glb',
+      'method_lsq', 'success_lsq', 'message_lsq', 'status']
+
+      result = StaticResult()
+
+      with h5.File(f'{filename}.h5', 'r') as f:
+            expt = f['experiment']
+            fit_res = f['fitting_result']
+            result['e'] = np.atleast_1d(expt['energy'])
+            result['data'] = np.atleast_1d(expt['intensity'])
+            result['eps'] = np.atleast_1d(expt['error'])
+            result['model'] = fit_res.attrs['model']
+            result['n_voigt'] = fit_res.attrs['n_voigt']
+            if fit_res.attrs['edge'] != 'no':
+                  result['edge'] = fit_res.attrs['edge']
+            else:
+                  result['edge'] = None
+            if fit_res.attrs['base_order'] != 'no':
+                  result['base_order'] = fit_res.attrs['base_order']
+            else:
+                  result['base_order'] = None
+
+            for k in model_key_lst:
+                  result[k] = fit_res.attrs[k]
+            fit_res_curve = fit_res['fit_curve']
+
+            result['fit'] = np.atleast_1d(fit_res_curve['fit'])
+            result['fit_comp'] = np.atleast_1d(fit_res_curve['fit_comp'])
+            result['c'] = np.atleast_1d(fit_res_curve['weight'])
+            if result['base_order'] is not None:
+                  result['base'] = np.atleast_1d(fit_res_curve['base'])
+            else:
+                  result['base'] = None
+            result['res'] = np.atleast_1d(fit_res_curve['res'])
+
+            fit_res_param = fit_res['parameter']
+            result['x'] = np.atleast_1d(fit_res_param['param_opt'])
+            result['x_eps'] = np.atleast_1d(fit_res_param['param_eps'])
+            result['param_name'] = np.atleast_1d(fit_res_param['param_name'])
+            tmp = np.atleast_2d(fit_res_param['param_bounds'])
+            lst = tmp.shape[0]*[None]
+            for i in range(tmp.shape[0]):
+                  lst[i] = (tmp[i,0], tmp[i, 1])
+            result['bounds'] = lst
+            result['corr'] = np.atleast_2d(fit_res_param['correlation'])
+
+            fit_res_mis = fit_res['miscellaneous']
+            result['jac'] = np.atleast_2d(fit_res_mis['jac'])
+            result['cov'] = np.atleast_2d(fit_res_mis['cov'])
+            result['cov_scaled'] = np.atleast_2d(fit_res_mis['cov_scaled'])
+      return result

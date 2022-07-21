@@ -1,11 +1,12 @@
 # misc
 # submodule for miscellaneous function of
 # tools subpackage
-
+import os
+from pathlib import Path
 from typing import Optional, Tuple
 import numpy as np
 import matplotlib.pyplot as plt
-from ..driver import StaticResult, DriverResult
+from ..driver import StaticResult, TransientResult
 
 def read_data(prefix: str, num_scan: int, num_data_pts: int, default_SN: float) -> Tuple[np.ndarray, np.ndarray]:
     '''
@@ -108,6 +109,59 @@ def parse_matrix(mat_str: np.ndarray, tau_rate: np.ndarray) -> np.ndarray:
     
     return L
 
+def save_StaticResult_txt(result: StaticResult, dirname: str):
+      '''
+      save static fitting result to the text file
+
+      Args:
+       result: static fitting result
+       dirname: name of the directory in which text files for fitting result are saved.
+       e: energy range of static spectrum
+       eps: estimated error of static spectrum
+      
+      Returns:
+       `fit_summary.txt`: Summary for the fitting result
+       `weight.txt`: Weight of each voigt and edge component
+       `fit.txt`: fitting, each voigt, edge and baseline curve for static spectrum
+       `res.txt`: residual (fit-data) curve for static spectrum
+
+      Note:
+       If `dirname` directory is not exists, it creates `dirname` directory.
+      '''
+      if not (Path.cwd()/dirname).exists():
+            os.mkdir(dirname)
+      
+      with open(f'{dirname}/fit_summary.txt', 'w') as f:
+            f.write(str(result))
+
+      tot_comp = result['n_voigt']
+      if result['edge'] is not None:
+            tot_comp = tot_comp+1
+      if result['base_order'] is not None:
+            tot_comp = tot_comp+1
+      coeff_fmt = ['%.8e']
+      fit_fmt = (2+tot_comp)*['%.8e']
+      fit_header_lst = ['energy', 'fit']
+      for i in range(result['n_voigt']):
+            fit_header_lst.append(f'voigt_{i}')
+      if result['edge'] is not None:
+            fit_header_lst.append(f"{result['edge']}_type_edge")
+      if result['base'] is not None:
+            fit_header_lst.append("base")
+            fit_save = np.vstack((result['e'], result['fit'], result['fit_comp'], result['base'])).T
+      else:
+            fit_save = np.vstack((result['e'], result['fit'], result['fit_comp'])).T
+      res_save = np.vstack((result['e'], result['res'], result['eps'])).T
+      np.savetxt(f'{dirname}/res.txt', res_save, fmt=['%.8e', '%.8e', '%.8e'], 
+      header=f'energy \t res \t eps')
+      fit_header = '\t'.join(fit_header_lst)
+      coeff_header = 'static'
+
+      np.savetxt(f'{dirname}/weight.txt', result['c'], fmt=coeff_fmt, header=coeff_header)
+      np.savetxt(f'{dirname}/fit.txt', fit_save, fmt=fit_fmt, header=fit_header)
+      
+      return
+
 def plot_StaticResult(result: StaticResult,
                       x_min: Optional[float] = None, x_max: Optional[float] = None, save_fig: Optional[str] = None):
       '''
@@ -154,7 +208,65 @@ def plot_StaticResult(result: StaticResult,
             plt.show()
       return
 
-def plot_DriverResult(result: DriverResult,
+def save_TransientResult_txt(result: TransientResult, dirname: str):
+      '''
+      save fitting result to the text file
+
+      Args:
+       result: fitting result
+       dirname: name of the directory in which text files for fitting result are saved.
+       name_of_dset: name of each data sets. If `name_of_dset` is None then it is set to [1,2,3,....]
+       t: sequence of scan range
+       eps: sequence of estimated error of each datasets
+      
+      Returns:
+       `fit_summary.txt`: Summary for the fitting result
+       `weight_{name_of_dset[i]}.txt`: Weight of each model component of i th dataset
+       `fit_{name_of_dset[i]}.txt`: fitting curve for i th dataset
+       `fit_osc_{name_of_dset[i]}.txt`: oscillation part of fitting curve for i th dataset [model = 'both']
+       `fit_decay_{name_of_dset[i]}.txt`: decay part of fitting curve for i th dataset [model = 'both']
+       `res_{name_f_dset[i]}_j.txt`: residual (fit-data) curve for j th scan of i th data
+                                     The format of text file is (t, res, eps)
+
+      
+      Note:
+       If `dirname` directory is not exists, it creates `dirname` directory.
+      '''
+      if not (Path.cwd()/dirname).exists():
+            os.mkdir(dirname)
+      
+      with open(f'{dirname}/fit_summary.txt', 'w') as f:
+            f.write(str(result))
+      
+      for i in range(len(result['t'])):
+            coeff_fmt = result['eps'][i].shape[1]*['%.8e']
+            fit_fmt = (1+result['eps'][i].shape[1])*['%.8e']
+            coeff_header_lst = []
+            fit_header_lst = ['time_delay']
+            for j in range(result['eps'][i].shape[1]):
+                  res_save = np.vstack((result['t'][i], result['res'][i][:,j], result['eps'][i][:,j])).T
+                  np.savetxt(f"{dirname}/res_{result['name_of_dset'][i]}_{j+1}.txt", res_save,
+                  fmt=['%.8e', '%.8e', '%.8e'], 
+                  header=f"time_delay \t res_{result['name_of_dset'][i]}_{j+1} \t eps")
+                  fit_header_lst.append(f"fit_{result['name_of_dset'][i]}_{j+1}")
+                  coeff_header_lst.append(f"tscan_{result['name_of_dset'][i]}_{j+1}")
+            
+            fit_header = '\t'.join(fit_header_lst)
+            coeff_header = '\t'.join(coeff_header_lst)
+
+            np.savetxt(f"{dirname}/weight_{result['name_of_dset'][i]}.txt", result['c'][i], fmt=coeff_fmt,
+            header=coeff_header)
+            fit_save = np.vstack((result['t'][i], result['fit'][i].T)).T
+            np.savetxt(f"{dirname}/fit_{result['name_of_dset'][i]}.txt", fit_save, fmt=fit_fmt, header=fit_header)
+            if result['model'] == 'both':
+                  fit_decay_save = np.vstack((result['t'][i], result['fit_decay'][i].T)).T
+                  np.savetxt(f"{dirname}/fit_decay_{result['name_of_dset'][i]}.txt", fit_decay_save, fmt=fit_fmt, header=fit_header)
+                  fit_osc_save = np.vstack((result['t'][i], result['fit_osc'][i].T)).T
+                  np.savetxt(f"{dirname}/fit_osc_{result['name_of_dset'][i]}.txt", fit_osc_save, fmt=fit_fmt, header=fit_header)
+
+      return
+
+def plot_TransientResult(result: TransientResult,
                       x_min: Optional[float] = None, x_max: Optional[float] = None, save_fig: Optional[str] = None):
       '''
       plot fitting Result
@@ -193,6 +305,7 @@ def plot_DriverResult(result: DriverResult,
                         sub2.set_xlim(x_min, x_max)
                   if save_fig is not None:
                         plt.savefig(f'{save_fig}_{result["name_of_dset"][i]}_{j+1}.png')
+            start = start + result['data'][i].shape[1]
       if save_fig is None:
             plt.show()
       return

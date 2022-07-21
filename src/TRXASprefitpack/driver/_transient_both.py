@@ -9,7 +9,7 @@ convolution of sum of exponential decay and instrumental response function
 from typing import Optional, Union, Sequence, Tuple
 import numpy as np
 from ..mathfun.irf import calc_eta
-from .driver_result import DriverResult
+from .transient_result import TransientResult
 from ._ampgo import ampgo
 from scipy.optimize import basinhopping
 from scipy.optimize import least_squares
@@ -38,7 +38,7 @@ def fit_transient_both(irf: str, fwhm_init: Union[float, np.ndarray],
                       name_of_dset: Optional[Sequence[str]] = None,
                       t: Optional[Sequence[np.ndarray]] = None, 
                       data: Optional[Sequence[np.ndarray]] = None,
-                      eps: Optional[Sequence[np.ndarray]] = None) -> DriverResult:
+                      eps: Optional[Sequence[np.ndarray]] = None) -> TransientResult:
                       
       '''
       driver routine for fitting multiple data set of time delay scan data with
@@ -112,7 +112,7 @@ def fit_transient_both(irf: str, fwhm_init: Union[float, np.ndarray],
        eps (sequence of np.ndarray): sequence of estimated errors of each dataset
 
        Returns:
-        DriverResult class object
+        TransientResult class object
       '''
       
       num_irf = 1*(irf in ['g', 'c'])+2*(irf == 'pv')
@@ -293,7 +293,7 @@ def fit_transient_both(irf: str, fwhm_init: Union[float, np.ndarray],
       weight = np.einsum('i,j->ij', param_eps, param_eps)
       corr[mask_2d] = corr[mask_2d]/weight[mask_2d]
 
-      result = DriverResult()
+      result = TransientResult()
 
       # save experimental fitting data
       if name_of_dset is None:
@@ -334,7 +334,10 @@ def fit_transient_both(irf: str, fwhm_init: Union[float, np.ndarray],
       
       result['method_glb'] = method_glb
       result['method_lsq'] = method_lsq
-      result['message_glb'] = res_go['message']
+      if method_glb == 'ampgo':
+            result['message_glb'] = res_go['message']
+      elif method_glb == 'basinhopping':
+            result['message_glb'] = res_go['message'][0]           
       result['message_lsq'] = res_lsq['message']
       result['n_osc'] = tau_osc_init.size
       result['n_decay'] = tau_init.size + 1*base

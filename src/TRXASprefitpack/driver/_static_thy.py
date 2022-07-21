@@ -303,9 +303,13 @@ def fit_static_thy(thy_peak: np.ndarray, fwhm_G_init: np.ndarray, fwhm_L_init: n
       else:
             result['status'] = -1
       
+
       result['method_glb'] = method_glb
       result['method_lsq'] = method_lsq
-      result['message_glb'] = res_go['message']
+      if method_glb == 'ampgo':
+            result['message_glb'] = res_go['message']
+      elif method_glb == 'basinhopping':
+            result['message_glb'] = res_go['message'][0]           
       result['message_lsq'] = res_lsq['message']
 
       return result

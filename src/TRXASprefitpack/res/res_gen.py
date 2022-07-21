@@ -48,6 +48,56 @@ def grad_res_scalar(params: np.ndarray, *args) -> np.ndarray:
         fargs = tuple(args[2:])
     return func(params, *fargs) @ jac(params, *fargs)
 
+def res_scan(p, *args) -> float:
+    '''
+    res_scan
+    Scans residual function though ith parameter
+
+    Args:
+     p: value of ith parameter
+     args: arguments
+           args[0]: i, index of parameter to scan
+           args[1]: objective function
+           args[2]: jacobian of objective function
+           args[3]: params
+           args[3:]: arguments for both objective and jocobian
+    
+    Returns:
+     residual value at params[i] = p
+    '''
+    idx = args[0]
+    params = np.atleast_1d(args[3])
+    fargs = ()
+    if len(args)>3:
+        fargs = tuple(args[3:])
+    params[idx] = p
+    return residual_scalar(params, *fargs)                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                             
+
+def jac_scan(p, *args) -> float:
+    '''
+    jac_scan
+    partial derivative of residual .w.r.t. ith parameter
+
+    Args:
+     p: value of ith parameter
+     args: arguments
+           args[0]: i, index of parameter to scan
+           args[1]: objective function
+           args[2]: jacobian of objective function
+           args[3]: params
+           args[3:]: arguments for both objective and jocobian
+    
+    Returns:
+     residual value at params[i] = p
+    '''
+    idx = args[0]
+    params = np.atleast_1d(args[3])
+    fargs = ()
+    if len(args)>3:
+        fargs = tuple(args[3:])
+    params[idx] = p
+    return grad_res_scalar(params, *fargs)[idx]
+
 def res_lmfit(params, *args) -> np.ndarray:
     '''
     res_lmfit

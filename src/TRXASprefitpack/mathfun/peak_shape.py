@@ -278,7 +278,7 @@ def deriv_voigt_thy(e: np.ndarray, thy_peak: np.ndarray,
         4th row: df/d(peak_factor[1]), peak_factor[1]: scale factor
     '''
 
-    deriv_voigt_matrix = np.zeros((thy_peak.shape[0], 3, e.size))
+    deriv_voigt_tensor = np.zeros((thy_peak.shape[0], 3, e.size))
     peak_copy = np.copy(thy_peak[:, 0])
     if policy == 'shift':
       peak_copy = peak_copy - peak_factor
@@ -287,9 +287,9 @@ def deriv_voigt_thy(e: np.ndarray, thy_peak: np.ndarray,
     else:
         peak_copy = peak_factor[1]*peak_copy - peak_factor[0]
     for i in range(peak_copy.size):
-        deriv_voigt_matrix[i, :, :] = deriv_voigt(e-peak_copy[i], fwhm_G, fwhm_L)
+        deriv_voigt_tensor[i, :, :] = deriv_voigt(e-peak_copy[i], fwhm_G, fwhm_L)
     
-    grad_tmp = np.einsum('i,ijk->jk', thy_peak[:, 1], deriv_voigt_matrix)
+    grad_tmp = np.tensordot(thy_peak[:, 1], deriv_voigt_tensor, axes=1)
 
     if policy in ['shift', 'scale']:
         grad = np.empty((3, e.size))

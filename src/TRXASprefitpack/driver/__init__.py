@@ -8,8 +8,8 @@ convolution of sum of exponential decay and instrumental response function
 '''
 from ._ampgo import ampgo
 from .ads import sads, dads
-from .driver_result import DriverResult, save_DriverResult
-from .static_result import StaticResult, save_StaticResult
+from .transient_result import TransientResult, save_TransientResult, load_TransientResult
+from .static_result import StaticResult, save_StaticResult, load_StaticResult
 from ._transient_exp import fit_transient_exp
 from ._transient_dmp_osc import fit_transient_dmp_osc
 from ._transient_both import fit_transient_both
@@ -17,7 +17,7 @@ from ._static_voigt import fit_static_voigt
 from ._static_thy import fit_static_thy
 
 __all__ = ['ampgo', 'sads', 'dads',
-           'DriverResult', 'save_DriverResult',
-           'StaticResult', 'save_StaticResult',
+           'TransientResult', 'save_TransientResult', 'load_TransientResult',
+           'StaticResult', 'save_StaticResult', 'load_StaticResult',
            'fit_transient_exp', 'fit_transient_dmp_osc', 'fit_transient_both',
            'fit_static_voigt', 'fit_static_thy']

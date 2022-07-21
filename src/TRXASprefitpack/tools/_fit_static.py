@@ -5,7 +5,7 @@ import argparse
 import numpy as np
 from ..driver import save_StaticResult
 from ..driver import fit_static_voigt, fit_static_thy
-from .misc import plot_StaticResult
+from .misc import plot_StaticResult, save_StaticResult_txt
 
 description = '''
 fit static: fitting static spectrum with 
@@ -123,6 +123,7 @@ def fit_static():
         edge, e0_edge_init, fwhm_edge_init,
         base_order, method_glb, e=e, data=data, eps=eps)
 
+    save_StaticResult_txt(result, outdir)
     save_StaticResult(result, outdir)
     print(result)
     plot_StaticResult(result)
