@@ -1,3 +1,11 @@
+'''
+transient_result:
+submodule for reporting fitting process of time scan result
+
+:copyright: 2021-2022 by pistack (Junho Lee).
+:license: LGPL3.
+'''
+
 import h5py as h5
 import numpy as np
 
@@ -30,7 +38,7 @@ class TransientResult(dict):
             'pv': pseudo voigt instrumental response function (linear combination of gaussian and lorenzian function)
        eta (float): mixing parameter ((1-eta)*g+eta*c)
        param_name (np.ndarray): name of parameter
-       n_decay (int): number of decay components (including baseline feature)
+       n_decay (int): number of decay components (except baseline feature)
        n_osc (int): number of damped oscillation components
        x (np.ndarray): best parameter
        bounds (sequence of tuple): boundary of each parameter
@@ -137,20 +145,20 @@ class TransientResult(dict):
                   for j in range(coeff_contrib.shape[1]):
                       row.append(f'tscan_{j+1}')
                   doc_lst.append('\t'.join(row))
-                  for d in range(self['n_decay']-1):
+                  for d in range(self['n_decay']):
                       row = [f"     decay {d+1}"]
                       for l in range(coeff_contrib.shape[1]):
                         row.append(f'{coeff_contrib[d, l]: .2f}%')
                       doc_lst.append('\t'.join(row))
                   if self['base']:
+                        tot_decay = self['n_decay']+1
                         row = [f'     base']
-                  else:
-                        row = [f"     decay {self['n_decay']}"]
-                  if self['n_decay'] > 0:
                         for l in range(coeff_contrib.shape[1]):
-                              row.append(f"{coeff_contrib[self['n_decay']-1,l]: .2f}%")
+                              row.append(f"{coeff_contrib[self['n_decay'],l]: .2f}%")
                         doc_lst.append('\t'.join(row))
-                  for o in range(self['n_decay'], self['n_decay']+self['n_osc']):
+                  else:
+                        tot_decay = self['n_decay']
+                  for o in range(tot_decay, tot_decay+self['n_osc']):
                         row =[f"    dmp_osc {o+1-self['n_decay']}"]
                         for l in range(coeff_contrib.shape[1]):
                               row.append(f'{coeff_contrib[o, l]: .2f}%')

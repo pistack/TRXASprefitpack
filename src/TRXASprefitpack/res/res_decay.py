@@ -176,6 +176,7 @@ def jac_res_decay(params: np.ndarray, num_comp: int, base: bool, irf: str,
                 grad = grad_gau + eta*(grad_cauchy-grad_gau)
    
             grad = np.einsum('j,ij->ij', 1/e[:, j], grad)
+
             df[end:end+step, tau_start:] = np.einsum('i,ij->ij', -1/tau**2, grad[2:,:]).T
             df[end:end+step, t0_idx] = -grad[0, :]
             df[end:end+step, 0] = grad[1, :]

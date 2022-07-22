@@ -1,7 +1,8 @@
 '''
-transient:
+_transient_both:
 submodule for fitting time delay scan with the
-convolution of sum of exponential decay and instrumental response function 
+convolution of sum of (exponential decay and damped oscillation) 
+and instrumental response function 
 
 :copyright: 2021-2022 by pistack (Junho Lee).
 :license: LGPL3.
@@ -351,6 +352,6 @@ def fit_transient_both(irf: str, fwhm_init: Union[float, np.ndarray],
             result['message_glb'] = None
 
       result['n_osc'] = tau_osc_init.size
-      result['n_decay'] = tau_init.size + 1*base
+      result['n_decay'] = tau_init.size
 
       return result

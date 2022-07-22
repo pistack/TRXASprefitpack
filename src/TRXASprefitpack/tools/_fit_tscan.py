@@ -132,28 +132,25 @@ def fit_tscan():
     irf = args.irf
     if irf == 'g':
         if args.fwhm_G is None:
-            print('You are using gaussian irf, so you should set fwhm_G!\n')
-            return
+            raise Exception('You are using gaussian irf, so you should set fwhm_G!\n')
         else:
             fwhm_init = args.fwhm_G
     elif irf == 'c':
         if args.fwhm_L is None:
-            print('You are using cauchy/lorenzian irf,' +
-                  'so you should set fwhm_L!\n')
-            return
+            raise Exception('You are using cauchy/lorenzian irf,' +
+            'so you should set fwhm_L!\n')
         else:
             fwhm_init = args.fwhm_L
     else:
         if (args.fwhm_G is None) or (args.fwhm_L is None):
-            print('You are using pseudo voigt irf,' +
-                  'so you should set both fwhm_G and fwhm_L!\n')
-            return
+            raise Exception('You are using pseudo voigt irf,' +
+            'so you should set both fwhm_G and fwhm_L!\n')
         else:
             fwhm_init = np.array([args.fwhm_G, args.fwhm_L])
 
     if (args.time_zeros is None) and (args.time_zeros_file is None):
-        print('You should set either time_zeros or time_zeros_file!\n')
-        return
+        raise Exception('You should set either time_zeros or time_zeros_file!\n')
+
     elif args.time_zeros is None:
         t0_init = np.genfromtxt(args.time_zeros_file)
     else:
@@ -163,6 +160,9 @@ def fit_tscan():
     intensity = np.empty(prefix.size, dtype=object)
     eps = np.empty(prefix.size, dtype=object)
     num_scan = np.sum(num_file)
+
+    if num_scan != t0_init.size:
+        raise Exception('Number of initial time zero parameter should be same as num_file parameter')
 
     for i in range(prefix.size):
         t[i] = np.genfromtxt(f'{prefix[i]}_1.txt')[:, 0]

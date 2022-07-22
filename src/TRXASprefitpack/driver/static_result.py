@@ -1,3 +1,11 @@
+'''
+static_result:
+submodule for reporting fitting process of static spectrum result
+
+:copyright: 2021-2022 by pistack (Junho Lee).
+:license: LGPL3.
+'''
+
 import numpy as np
 import h5py as h5
 
@@ -11,6 +19,9 @@ class StaticResult(dict):
               `voigt`: sum of voigt function, edge function and base funtion
 
               `thy`: sum of voigt broadened theoretical lineshape spectrum, edge function and base function
+       thy_peak (np.ndarray): theoretical calculated peak position and intensity [model: `thy`]
+       policy ({'shift', 'scale', 'both'}): policy to match discrepancy between theoretical spectrum and
+        experimental static spectrum.
        e (np.ndarray): energy range
        intensity (np.ndarray): intensity of static spectrum
        eps (np.ndarray): estimated error of static spectrum
@@ -79,6 +90,8 @@ class StaticResult(dict):
             doc_lst = []
             doc_lst.append("[Model information]")
             doc_lst.append(f"    model : {self['model']}")
+            if self['model'] == 'thy':
+                  doc_lst.append(f"    policy: {self['policy']}")
             if self['edge'] is not None:
                   doc_lst.append(f"    edge: {self['edge']}")
             if self['base_order'] is not None:
@@ -170,6 +183,9 @@ def save_StaticResult(result: StaticResult, filename: str):
       with h5.File(f'{filename}.h5', 'w') as f:
             expt = f.create_group("experiment")
             fit_res = f.create_group("fitting_result")
+            if result['model'] == 'thy':
+                  f.create_dataset("theoretical_peaks", data=result['thy_peak'])
+                  fit_res.attrs['policy'] = result['policy']
             expt.create_dataset("energy", data=result['e'])
             expt.create_dataset("intensity", data=result['intensity'])
             expt.create_dataset("error", data=result['eps'])
@@ -232,6 +248,9 @@ def load_StaticResult(filename: str) -> StaticResult:
             result['data'] = np.atleast_1d(expt['intensity'])
             result['eps'] = np.atleast_1d(expt['error'])
             result['model'] = fit_res.attrs['model']
+            if result['model'] == 'thy':
+                  result['thy_peak'] = np.atleast_2d(f['theoretical_peaks'])
+                  result['policy'] = fit_res.attrs['policy']
             result['n_voigt'] = fit_res.attrs['n_voigt']
             if fit_res.attrs['edge'] != 'no':
                   result['edge'] = fit_res.attrs['edge']

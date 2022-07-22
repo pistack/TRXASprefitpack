@@ -290,6 +290,8 @@ def fit_static_thy(thy_peak: np.ndarray, fwhm_G_init: np.ndarray, fwhm_L_init: n
 
       result = StaticResult()
       result['model'] = 'thy'
+      result['policy'] = policy
+      result['thy_peak'] = thy_peak
       result['e'] = e; result['intensity'] = intensity; result['eps'] = eps
       result['fit'] = fit; result['fit_comp'] = fit_comp 
       result['res'] = res; result['base_order'] = base_order
