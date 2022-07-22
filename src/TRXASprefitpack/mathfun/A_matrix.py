@@ -124,13 +124,13 @@ def make_A_matrix_dmp_osc(t: np.ndarray, fwhm: Union[float, np.ndarray],
 
     return A
 
-def fact_anal_A(A: np.ndarray, data: Optional[np.ndarray] = None, eps: Optional[np.ndarray] = None) -> np.ndarray:
+def fact_anal_A(A: np.ndarray, intensity: Optional[np.ndarray] = None, eps: Optional[np.ndarray] = None) -> np.ndarray:
 
     if eps is None:
-        eps = np.ones_like(data)
+        eps = np.ones_like(intensity)
     
     B = np.einsum('j,ij->ij', 1/eps, A)
-    y = data/eps
+    y = intensity/eps
     
     c, _, _, _ = lstsq(B.T, y, cond=1e-2)
     return c

@@ -1,6 +1,6 @@
 import argparse
 import numpy as np
-from ..mathfun import gen_theory_data
+from ..mathfun import voigt_thy
 
 
 def calc_broad():
@@ -30,7 +30,7 @@ def calc_broad():
     parser.add_argument('-o', '--out', help='prefix for output files')
     args = parser.parse_args()
 
-    peak = np.genfromtxt(args.peak)
+    peak = np.genfromtxt(args.peak)[:,:2]
     if args.out is None:
         out = args.prefix
     else:
@@ -48,7 +48,7 @@ def calc_broad():
         policy = 'shift' 
     e = np.linspace(e_min, e_max, int((e_max-e_min)/e_step)+1)
 
-    broadened_thy = gen_theory_data(e, peak, A, fwhm_G, fwhm_L, peak_factor, policy)
+    broadened_thy = A*voigt_thy(e, peak, fwhm_G, fwhm_L, peak_factor, policy)
 
     rescaled_stk = peak
     if policy == 'scale':
@@ -56,9 +56,9 @@ def calc_broad():
     else:
         rescaled_stk[:, 0] = rescaled_stk[:, 0] - peak_factor
     rescaled_stk[:, 1] = A*rescaled_stk[:, 1]
-    spec_thy = np.vstack((e, broadened_thy))
+    spec_thy = np.vstack((e, broadened_thy)).T
 
-    np.savetxt(f'{out}_thy_stk.txt', rescaled_stk, fmt=['%.5e', '%.8e'])
-    np.savetxt(f'{out}_thy.txt', spec_thy.T, fmt=['%.5e', '%.8e'])
+    np.savetxt(f'{out}_thy_stk.txt', rescaled_stk, fmt=['%.8e', '%.8e'])
+    np.savetxt(f'{out}_thy.txt', spec_thy, fmt=['%.8e', '%.8e'])
 
     return

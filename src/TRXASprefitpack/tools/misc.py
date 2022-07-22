@@ -1,41 +1,12 @@
 # misc
 # submodule for miscellaneous function of
 # tools subpackage
-
-from typing import Tuple, Union, Optional
+import os
+from pathlib import Path
+from typing import Optional, Tuple
 import numpy as np
 import matplotlib.pyplot as plt
-
-def set_bound_tau(tau: float):
-    '''
-    Setting bound for lifetime constant
-
-    Args:
-      tau: lifetime constant
-
-    Returns:
-     list of upper bound and lower bound of tau
-    '''
-    bound = [tau/2, 1]
-    if 0.1 < tau <= 1:
-        bound = [0.05, 10]
-    elif 1 < tau <= 10:
-        bound = [0.5, 50]
-    elif 10 < tau <= 100:
-        bound = [5, 500]
-    elif 100 < tau <= 1000:
-        bound = [50, 2000]
-    elif 1000 < tau <= 5000:
-        bound = [500, 10000]
-    elif 5000 < tau <= 50000:
-        bound = [2500, 100000]
-    elif 50000 < tau <= 500000:
-        bound = [25000, 1000000]
-    elif 500000 < tau <= 1000000:
-        bound = [250000, 2000000]
-    elif 1000000 < tau:
-        bound = [tau/4, 4*tau]
-    return bound
+from ..driver import StaticResult, TransientResult
 
 def read_data(prefix: str, num_scan: int, num_data_pts: int, default_SN: float) -> Tuple[np.ndarray, np.ndarray]:
     '''
@@ -62,109 +33,58 @@ def read_data(prefix: str, num_scan: int, num_data_pts: int, default_SN: float) 
             eps[:, i] = A[:, 2]
     return data, eps
 
-def plot_result(scan_name: str, num_scan: int, chi2_ind: Union[list, np.ndarray],
-data: np.ndarray, eps: np.ndarray, fit: np.ndarray, res: Optional[np.ndarray] = None):
-    '''
-    Plot fitting result
+def calc_param_rate_eq(mat_str: np.ndarray, tau_obs: np.ndarray) -> np.ndarray:
+      '''
+      Deduce rate equation parameter from observed time constants 
+       Args:
+        mat_str: user supplied rate equation
+        tau_obs: observed time constants (time constant of each decay component)
+       Returns:
+        tau_rate: time constants for rate equation parameter 
+       Note:
+        Every entry in the rate equation matrix should be
+        '0', '1*ki', '-x.xxx*ki', 'x.xxx*ki' or '-(x.xxx*ki+y.yyy*kj+...)'
+        Number of non zero diagonal elements and size of tau should be same
+        Number of parameter used to define rate equation and size of tau should 
+        be same.
+      '''
+      mat_str_diag = np.diag(mat_str)
+      mat_str_diag_reduced = mat_str_diag[mat_str_diag != '0']
+      Eq = np.zeros((tau_obs.size, tau_obs.size), dtype=float)
 
-    Args:
-     scan_name: name of scan
-     num_scan: the number of scans
-     chi2_ind: list or array of the chi squared value of each indivisual scan
-     data: exprimental data
-     eps: error or data quality of experimental data
-     fit: fitting result
-     res: residual of fitting (data-fit)
+      # Deduce rate equation parameter k
+      for i in range(mat_str_diag_reduced.size):
+            tmp = mat_str_diag_reduced[i]
+            tmp.strip('-').strip('(').strip(')')
+            k_lst = tmp.split('+')
+            for k in k_lst:
+                  k_pair = k.split('*')
+                  Eq[i, int(k_pair[1][1:])-1] = float(k_pair[0])
+      
+      k_rate = np.linalg.solve(Eq, 1/tau_obs)
+      tau_rate = 1/k_rate
 
-    Note:
-     1. the first column of fit array should be time range
-     2. data array should not contain time range
-    '''
-    t = fit[:, 0]
-    if res is not None:
-        for i in range(num_scan):
-            fig = plt.figure(i+1)
-            title = f'Chi squared: {chi2_ind[i]:.2f}'
-            plt.suptitle(title)
-            sub1 = fig.add_subplot(211)
-            sub1.errorbar(t, data[:, i],
-            eps[:, i], marker='o', mfc='none',
-            label=f'expt {scan_name} {i+1}',
-            linestyle='none')
-            sub1.plot(t, fit[:, i+1],
-            label=f'fit {scan_name} {i+1}')
-            sub1.legend()
-            sub2 = fig.add_subplot(212)
-            sub2.errorbar(t, res[:, i+1],
-            eps[:, i], marker='o', mfc='none',
-            label=f'{scan_name} res {i+1}',
-            linestyle='none')
-            sub2.legend()
+      return tau_rate
 
-    else:
-        for i in range(num_scan):
-            plt.figure(i+1)
-            title = f'Chi squared: {chi2_ind[i]:.2f}'
-            plt.title(title)
-            plt.errorbar(t, data[:, i],
-            eps[:, i], marker='o', mfc='none',
-            label=f'expt {scan_name} {i+1}',
-            linestyle='none')
-            plt.plot(t, fit[:, i+1],
-            label=f'fit {scan_name} {i+1}')
-            plt.legend()
-    plt.show()
-    return
-
-def contribution_table(scan_name: str, table_title: str, num_scan: int, num_comp: int, coeff: np.ndarray) -> str:
-    '''
-    Draw contribution table (row: num_comp, col: num_scan)
-
-    Args:
-     scan_name: name of scan
-     table_title: title of table
-     num_scan: the number of scan
-     num_comp: the number of component
-     coeff: coefficient matrix
-     
-    Return:
-     contribution table
-    '''
-    # calculate contribution
-    coeff_abs = np.abs(coeff)
-    coeff_sum = np.sum(coeff_abs, axis=0)
-    coeff_contrib = np.zeros_like(coeff)
-    for i in range(num_scan):
-        coeff_contrib[:, i] = coeff[:, i]/coeff_sum[i]*100
-
-    # draw table
-    cont_table = '    '
-    for i in range(num_scan):
-        cont_table = cont_table + f'{scan_name} {i+1} |'
-    cont_table = cont_table + '\n'
-    for i in range(num_comp):
-        cont_table = cont_table + '    '
-        for j in range(num_scan):
-            cont_table = cont_table + f'{coeff_contrib[i, j]:.2f} % |'
-        cont_table = cont_table + '\n'
-    
-    cont_table = f'[[{table_title}]]' + '\n' + cont_table
-    return cont_table
-
-def parse_matrix(mat_str: np.ndarray, tau: np.ndarray) -> np.ndarray:
+def parse_matrix(mat_str: np.ndarray, tau_rate: np.ndarray) -> np.ndarray:
     '''
     Parse user supplied rate equation matrix
 
     Args:
      mat_str: user supplied rate equation (lower triangular matrix)
-     tau: life time constants (inverse of rate constant)
+     tau_rate: time constants for rate equation parameter (1/ki)
     
     Return:
      parsed rate equation matrix.
+     the value of lifetime 
+     parameters (1/ki) used to define rate equation matrix
     
     Note:
      Every entry in the rate equation matrix should be
      '0', '1*ki', '-x.xxx*ki', 'x.xxx*ki' or '-(x.xxx*ki+y.yyy*kj+...)'
+     Number of non zero diagonal elements and size of tau should be same
+     Number of parameter used to define rate equation and size of tau should 
+     be same.
     '''
 
     L = np.zeros_like(mat_str, dtype=float)
@@ -180,11 +100,204 @@ def parse_matrix(mat_str: np.ndarray, tau: np.ndarray) -> np.ndarray:
             k_lst = tmp.split('+')
             for k in k_lst:
                 k_pair = k.split('*')
-                red_L[i] = red_L[i] - float(k_pair[0])/tau[int(k_pair[1][1:])-1]
+                red_L[i] = red_L[i] - float(k_pair[0])/tau_rate[int(k_pair[1][1:])-1]
         else:
             tmp_pair = tmp.split('*')
-            red_L[i] = float(tmp_pair[0])/tau[int(tmp_pair[1][1:])-1]
+            red_L[i] = float(tmp_pair[0])/tau_rate[int(tmp_pair[1][1:])-1]
     
     L[mask] = red_L
     
     return L
+
+def save_StaticResult_txt(result: StaticResult, dirname: str):
+      '''
+      save static fitting result to the text file
+
+      Args:
+       result: static fitting result
+       dirname: name of the directory in which text files for fitting result are saved.
+       e: energy range of static spectrum
+       eps: estimated error of static spectrum
+      
+      Returns:
+       `fit_summary.txt`: Summary for the fitting result
+       `weight.txt`: Weight of each voigt and edge component
+       `fit.txt`: fitting, each voigt, edge and baseline curve for static spectrum
+       `res.txt`: residual (fit-data) curve for static spectrum
+
+      Note:
+       If `dirname` directory is not exists, it creates `dirname` directory.
+      '''
+      if not (Path.cwd()/dirname).exists():
+            os.mkdir(dirname)
+      
+      with open(f'{dirname}/fit_summary.txt', 'w') as f:
+            f.write(str(result))
+
+      tot_comp = result['n_voigt']
+      if result['edge'] is not None:
+            tot_comp = tot_comp+1
+      if result['base_order'] is not None:
+            tot_comp = tot_comp+1
+      coeff_fmt = ['%.8e']
+      fit_fmt = (2+tot_comp)*['%.8e']
+      fit_header_lst = ['energy', 'fit']
+      for i in range(result['n_voigt']):
+            fit_header_lst.append(f'voigt_{i}')
+      if result['edge'] is not None:
+            fit_header_lst.append(f"{result['edge']}_type_edge")
+      if result['base'] is not None:
+            fit_header_lst.append("base")
+            fit_save = np.vstack((result['e'], result['fit'], result['fit_comp'], result['base'])).T
+      else:
+            fit_save = np.vstack((result['e'], result['fit'], result['fit_comp'])).T
+      res_save = np.vstack((result['e'], result['res'], result['eps'])).T
+      np.savetxt(f'{dirname}/res.txt', res_save, fmt=['%.8e', '%.8e', '%.8e'], 
+      header=f'energy \t res \t eps')
+      fit_header = '\t'.join(fit_header_lst)
+      coeff_header = 'static'
+
+      np.savetxt(f'{dirname}/weight.txt', result['c'], fmt=coeff_fmt, header=coeff_header)
+      np.savetxt(f'{dirname}/fit.txt', fit_save, fmt=fit_fmt, header=fit_header)
+      
+      return
+
+def plot_StaticResult(result: StaticResult):
+      '''
+      plot static fitting Result
+
+      Args:
+       result: static fitting result
+       name_of_dset: name of each dataset
+       x_min: minimum x range
+       x_max: maximum x range
+       save_fig: prefix of saved png plots. If `save_fig` is `None`, plots are displayed istead of being saved.
+       e: scan range of data
+       data: static spectrum (it should not contain energy scan range)
+       eps: estimated errors of static spectrum
+      '''
+      
+      fig = plt.figure(0)
+      title = 'Static Spectrum'
+      subtitle = f"Chi squared: {result['red_chi2']: .2f}"
+      plt.suptitle(title)
+      sub1 = fig.add_subplot(211)
+      sub1.set_title(subtitle)
+      sub1.errorbar(result['e'], result['intensity'], result['eps'], 
+      marker='o', mfc='none', label=f'expt {title}', linestyle='none')
+      sub1.plot(result['e'], result['fit'], label=f'fit {title}')
+      for i in range(result['n_voigt']):
+            sub1.plot(result['e'], result['fit_comp'][i, :], label=f'{i+1}th voigt component', linestyle='dashed')
+      if result['edge'] is not None:
+            sub1.plot(result['e'], result['fit_comp'][-1, :], label=f"{result['edge']} type edge", linestyle='dashed')
+      if result['base_order'] is not None:
+        sub1.plot(result['e'], result['base'], label=f"base [order {result['base_order']}]", linestyle='dashed')
+      sub1.legend()
+      sub2 = fig.add_subplot(212)
+      sub2.errorbar(result['e'], result['res'], result['eps'], 
+      marker='o', mfc='none', label=f'res {title}', linestyle='none')
+      sub2.legend()
+      plt.show()
+      return
+
+def save_TransientResult_txt(result: TransientResult, dirname: str):
+      '''
+      save fitting result to the text file
+
+      Args:
+       result: fitting result
+       dirname: name of the directory in which text files for fitting result are saved.
+       name_of_dset: name of each data sets. If `name_of_dset` is None then it is set to [1,2,3,....]
+       t: sequence of scan range
+       eps: sequence of estimated error of each datasets
+      
+      Returns:
+       `fit_summary.txt`: Summary for the fitting result
+       `weight_{name_of_dset[i]}.txt`: Weight of each model component of i th dataset
+       `fit_{name_of_dset[i]}.txt`: fitting curve for i th dataset
+       `fit_osc_{name_of_dset[i]}.txt`: oscillation part of fitting curve for i th dataset [model = 'both']
+       `fit_decay_{name_of_dset[i]}.txt`: decay part of fitting curve for i th dataset [model = 'both']
+       `res_{name_f_dset[i]}_j.txt`: residual (fit-data) curve for j th scan of i th data
+                                     The format of text file is (t, res, eps)
+
+      
+      Note:
+       If `dirname` directory is not exists, it creates `dirname` directory.
+      '''
+      if not (Path.cwd()/dirname).exists():
+            os.mkdir(dirname)
+      
+      with open(f'{dirname}/fit_summary.txt', 'w') as f:
+            f.write(str(result))
+      
+      for i in range(len(result['t'])):
+            coeff_fmt = result['eps'][i].shape[1]*['%.8e']
+            fit_fmt = (1+result['eps'][i].shape[1])*['%.8e']
+            coeff_header_lst = []
+            fit_header_lst = ['time_delay']
+            for j in range(result['eps'][i].shape[1]):
+                  res_save = np.vstack((result['t'][i], result['res'][i][:,j], result['eps'][i][:,j])).T
+                  np.savetxt(f"{dirname}/res_{result['name_of_dset'][i]}_{j+1}.txt", res_save,
+                  fmt=['%.8e', '%.8e', '%.8e'], 
+                  header=f"time_delay \t res_{result['name_of_dset'][i]}_{j+1} \t eps")
+                  fit_header_lst.append(f"fit_{result['name_of_dset'][i]}_{j+1}")
+                  coeff_header_lst.append(f"tscan_{result['name_of_dset'][i]}_{j+1}")
+            
+            fit_header = '\t'.join(fit_header_lst)
+            coeff_header = '\t'.join(coeff_header_lst)
+
+            np.savetxt(f"{dirname}/weight_{result['name_of_dset'][i]}.txt", result['c'][i], fmt=coeff_fmt,
+            header=coeff_header)
+            fit_save = np.vstack((result['t'][i], result['fit'][i].T)).T
+            np.savetxt(f"{dirname}/fit_{result['name_of_dset'][i]}.txt", fit_save, fmt=fit_fmt, header=fit_header)
+            if result['model'] == 'both':
+                  fit_decay_save = np.vstack((result['t'][i], result['fit_decay'][i].T)).T
+                  np.savetxt(f"{dirname}/fit_decay_{result['name_of_dset'][i]}.txt", fit_decay_save, fmt=fit_fmt, header=fit_header)
+                  fit_osc_save = np.vstack((result['t'][i], result['fit_osc'][i].T)).T
+                  np.savetxt(f"{dirname}/fit_osc_{result['name_of_dset'][i]}.txt", fit_osc_save, fmt=fit_fmt, header=fit_header)
+
+      return
+
+def plot_TransientResult(result: TransientResult,
+                      x_min: Optional[float] = None, x_max: Optional[float] = None, save_fig: Optional[str] = None):
+      '''
+      plot fitting Result
+
+      Args:
+       result: fitting result
+       x_min: minimum x range
+       x_max: maximum x range
+       save_fig: prefix of saved png plots. If `save_fig` is `None`, plots are displayed istead of being saved.
+      '''
+      
+      start = 0
+      for i in range(len(result['t'])):
+            for j in range(result['intensity'][i].shape[1]):
+                  fig = plt.figure(start+j+1)
+                  title = f'{result["name_of_dset"][i]} scan #{j+1}'
+                  subtitle = f"Chi squared: {result['red_chi2_ind'][i][j]: .2f}"
+                  plt.suptitle(title)
+                  sub1 = fig.add_subplot(211)
+                  sub1.set_title(subtitle)
+                  sub1.errorbar(result['t'][i], result['intensity'][i][:, j], result['eps'][i][:, j], marker='o', mfc='none',
+                  label=f'expt {title}', linestyle='none')
+                  sub1.plot(result['t'][i], result['fit'][i][:, j], label=f'fit {title}')
+                  sub1.legend()
+                  sub2 = fig.add_subplot(212)
+                  if result['model'] in ['decay', 'osc']:
+                        sub2.errorbar(result['t'][i], result['res'][i][:, j], 
+                        result['eps'][i][:, j], marker='o', mfc='none', label=f'res {title}', linestyle='none')
+                  else:
+                        sub2.errorbar(result['t'][i], result['intensity'][i][:, j]-result['fit_decay'][i][:, j], 
+                        result['eps'][i][:, j], marker='o', mfc='none', label=f'expt osc {title}', linestyle='none')
+                        sub2.plot(result['t'][i], result['fit_osc'][i][:, j], label=f'fit osc {title}')
+                  sub2.legend()
+                  if x_min is not None and x_max is not None:
+                        sub1.set_xlim(x_min, x_max)
+                        sub2.set_xlim(x_min, x_max)
+                  if save_fig is not None:
+                        plt.savefig(f'{save_fig}_{result["name_of_dset"][i]}_{j+1}.png')
+            start = start + result['intensity'][i].shape[1]
+      if save_fig is None:
+            plt.show()
+      return

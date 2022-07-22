@@ -59,4 +59,40 @@ Then we can model observed population $\mathbf{y}_{obs}(t)$ as
 (f *_h g)(t) = \int_{0}^{\infty} f(x)g(t-x) \mathrm{d} x
 \end{equation*}
 
-Experimental time delay signal is the linear combination of $(y_{obs})_i(t)$. Thus, experimental time delay signal is also represented by the sum of $\{(\exp*_h {IRF})(\lambda_i t)\}$.
+## Relation between observed exponential component and species in rate equation
+
+Suppose that the rate equation matrix $A$ is lower triangular and assume that each diagonal element of $A$ is different.
+Then $A$ is diagonalizable and its eigenvalue $\lambda_i = A_{(i,i)}.$
+Define observed exponential component as
+
+\begin{equation*}
+\mathbf{exp}_{(obs, i)} = (\exp *_h {IRF})(A_{(i,i)} t)
+\end{equation*}
+
+Next define scaled eigen matrix $V'$ of rate equation matrix $A$ as
+
+\begin{equation*}
+V' = [c_j V_{(i,j)}]_{(i,j)}
+\end{equation*}
+
+Then observed exponential component $\mathbf{exp}_{obs}$ and population of species in rate equation $\mathbf{y}_{obs}$ satisfy following relation.
+
+\begin{align*}
+\mathbf{y}_{obs} &= V' \mathbf{exp}_{obs} \\
+\mathbf{exp}_{obs} &= V'^{-1} \mathbf{y}_{obs}
+\end{align*}
+
+So, if one finds weigh vector $\mathbf{w}$ from time delay scan fitting,
+
+\begin{align*}
+{signal}(t) &= \sum_{i} w_i \mathbf{exp}_{(obs, i)} \\
+&= \mathbf{w}^T \mathbf{exp}_{obs}
+\end{align*}
+
+Then one can deduce chemical or physically meaningful difference absorption coefficient $\Delta \mathbf{A}$ as
+
+\begin{equation*}
+\Delta \mathbf{A} = V'^{-1} \mathbf{w}
+\end{equation*}
+
+Above equation only holds when number of observed exponential decay component and excited species in rate equation are same. 

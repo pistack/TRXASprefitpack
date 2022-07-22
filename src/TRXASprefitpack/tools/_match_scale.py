@@ -124,7 +124,7 @@ def match_scale():
     e_ref_idx = np.argwhere(e == ref_tscan_energy)[0][0]
 
     c = fact_anal_exp_conv(ref_tscan_data[:,0]-time_zero, fwhm, tau, base, irf,
-    data=ref_tscan_data[:, 1], eps=ref_tscan_data[:, 2])
+    intensity=ref_tscan_data[:, 1], eps=ref_tscan_data[:, 2])
     A_slec = make_A_matrix_exp(escan_time-time_zero, fwhm, tau, base, irf)
     fit_slec = c@A_slec
     sample_e = escan_data[e_ref_idx, :]
@@ -132,8 +132,11 @@ def match_scale():
     escan_data_scaled[:, 1:] = np.einsum('j,ij->ij', scale_factor, escan_data)
     escan_eps_scaled = np.einsum('j,ij->ij', scale_factor, escan_eps)
 
-    np.savetxt(f'{out_prefix}_escan_scaled.txt', escan_data_scaled)
-    np.savetxt(f'{out_prefix}_eps_scaled.txt', escan_eps_scaled)
+    header_escan = '\t'.join(list(map(str,escan_time)))
+    
+
+    np.savetxt(f'{out_prefix}_escan_scaled.txt', escan_data_scaled, header='energy \t'+header_escan)
+    np.savetxt(f'{out_prefix}_eps_scaled.txt', escan_eps_scaled, fmt=len(escan_time)*['%.8e'], header=header_escan)
     np.savetxt(f'{out_prefix}_escan_time.txt', escan_time)
 
     return

@@ -69,14 +69,12 @@ def solve_l_model(equation: np.ndarray,
 
     return eigval, V, c
 
-def solve_seq_model(tau: np.ndarray):
+def solve_seq_model(tau: np.ndarray, y0: np.ndarray):
     '''
     Solve sequential decay model
     
     sequential decay model: 
       0 -> 1 -> 2 -> 3 -> ... -> n 
-    initial condition:
-     y0 = [1, 0, 0, ..., 0] 
 
     Args:
       tau: liftime constants for each decay
@@ -99,7 +97,7 @@ def solve_seq_model(tau: np.ndarray):
     
     c[0] = 1
     for i in range(1, eigval.size):
-      c[i] = -np.dot(c[:i], V[i,:i])
+      c[i] = y0[i]-np.dot(c[:i], V[i,:i])
     return eigval, V, c
 
 def compute_model(t: np.ndarray,
@@ -248,14 +246,14 @@ fwhm: Union[float, np.ndarray], irf: Optional[str] = 'g', eta: Optional[float] =
   return (c * V) @ A
 
 def fact_anal_model(model: np.ndarray, exclude: Optional[str] = None, 
-data: Optional[np.ndarray] = None, eps: Optional[np.ndarray] = None):
+intensity: Optional[np.ndarray] = None, eps: Optional[np.ndarray] = None):
 
   abs = np.zeros(model.shape[0])
 
   if eps is None:
-    eps = np.ones_like(data)
+    eps = np.ones_like(intensity)
   
-  y = data/eps
+  y = intensity/eps
 
   if exclude == 'first':
     B = np.einsum('j,ij->ij', 1/eps, model[1:, :])

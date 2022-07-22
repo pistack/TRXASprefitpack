@@ -300,6 +300,42 @@ def deriv_exp_sum_conv_cauchy(t: np.ndarray, fwhm: float,
 
     return grad
 
+def exp_mod_gau_cplx(t: Union[float, np.ndarray], sigma: float,
+                     kr: float, ki: float) -> Union[complex, np.ndarray]:
+    '''
+    Complex version of exponentially (exp(-krt+i*kit)) modified gaussian function
+
+    Args:
+     t: time
+     sigma: deviation of gaussian distribution
+     kr: real part of decay constant
+     ki: imag part of decay constant
+    
+    Returns:
+     complex version of exponentially modified gaussian distribution with mean = 0
+    '''
+
+    isigmak_cplx = complex(ki*sigma, kr*sigma)
+    iz = isigmak_cplx - complex(0,1)*t/sigma
+
+    if not isinstance(t, np.ndarray):
+        if iz.imag > 0:
+            ans = 1/2*np.exp(-(t/sigma)**2/2) * \
+                wofz(iz/np.sqrt(2))
+        else:
+            ans = np.exp(isigmak_cplx**2/2-isigmak_cplx*iz) - \
+                1/2*np.exp(-(t/sigma)**2/2)*wofz(-iz/np.sqrt(2)) 
+    else:
+        mask = iz.imag > 0
+        inv_mask = np.invert(mask)
+        ans = np.empty(t.size, dtype=np.complex128)
+        ans[mask] = 1/2*np.exp(-(t[mask]/sigma)**2/2) * \
+            wofz(iz[mask]/np.sqrt(2))
+        ans[inv_mask] = np.exp(isigmak_cplx**2/2-isigmak_cplx*iz[inv_mask]) - \
+            1/2*np.exp(-(t[inv_mask]/sigma)**2/2)*wofz(-iz[inv_mask]/np.sqrt(2))
+
+    return ans
+
 def dmp_osc_conv_gau(t: Union[float, np.ndarray], fwhm: float,
 k: float, T: float, phase: float) -> Union[float, np.ndarray]:
 
@@ -320,26 +356,7 @@ k: float, T: float, phase: float) -> Union[float, np.ndarray]:
     '''
 
     sigma = fwhm/(2*np.sqrt(2*np.log(2)))
-    sigmak_cplx = complex(k*sigma, -2*np.pi*sigma/T)
-    z = sigmak_cplx - t/sigma
-
-    if not isinstance(t, np.ndarray):
-        if z.real > 0:
-            ans = 1/2*np.exp(-(t/sigma)**2/2) * \
-                wofz(z/complex(0, -np.sqrt(2)))
-        else:
-            ans = np.exp(sigmak_cplx*z-sigmak_cplx**2/2) - \
-                1/2*np.exp(-(t/sigma)**2/2)*wofz(z/complex(0, np.sqrt(2))) 
-    else:
-        mask = z.real > 0
-        inv_mask = np.invert(mask)
-        ans = np.empty(t.size, dtype=np.complex128)
-        ans[mask] = 1/2*np.exp(-(t[mask]/sigma)**2/2) * \
-            wofz(z[mask]/complex(0, -np.sqrt(2)))
-        ans[inv_mask] = np.exp(sigmak_cplx*z[inv_mask]-sigmak_cplx**2/2) - \
-            1/2*np.exp(-(t[inv_mask]/sigma)**2/2)*wofz(z[inv_mask]/complex(0, np.sqrt(2)))
-    
-    ans = (complex(np.cos(phase), np.sin(phase)))*ans
+    ans = (complex(np.cos(phase), np.sin(phase)))*exp_mod_gau_cplx(t, sigma, k, 2*np.pi/T)
 
     return ans.real
 
@@ -365,36 +382,12 @@ k: float, T: float, phase: float) -> Union[float, np.ndarray]:
     gamma = fwhm/2; omega = 2*np.pi/T 
     z1 = (-k*t-omega*gamma) + complex(0,1)*(-k*gamma+omega*t)
     z2 = (-k*t+omega*gamma) + complex(0,-1)*(k*gamma+omega*t)
-    
-    if not isinstance(t, np.ndarray):
-        if np.abs(z1.real) < 200:
-            ans1 = np.exp(z1.real)*complex(np.cos(z1.imag+phase), np.sin(z1.imag+phase))*\
-                (exp1(z1)+complex(0, 2*np.pi*np.heaviside(z1.imag, 1)))
-        else:
-            ans1 = exp1x_asymp(-1/z1)*complex(-np.cos(phase), -np.sin(phase))
-        if np.abs(z2.real) < 200:
-            ans2 =  np.exp(z2.real)*complex(np.cos(z2.imag-phase), np.sin(z1.imag-phase))*\
-                exp1(z2)
-        else:
-            ans2 = exp1x_asymp(-1/z2)*complex(-np.cos(phase), np.sin(phase))
-    
-    else:
-        ans1 = np.empty(t.size, dtype=np.complex128)
-        ans2 = np.empty(t.size, dtype=np.complex128)
-        mask1 = np.abs(z1.real) < 200; inv_mask1 = np.invert(mask1)
-        mask2 = np.abs(z2.real) < 200; inv_mask2 = np.invert(mask2)
 
-        ans1[mask1] = np.exp(z1[mask1].real)*(np.cos(z1[mask1].imag+phase)+complex(0, 1)*np.sin(z1[mask1].imag+phase))*\
-            (exp1(z1[mask1])+complex(0, 2*np.pi)*np.heaviside(z1[mask1].imag, 1))
-        ans1[inv_mask1] = exp1x_asymp(-1/z1[inv_mask1])*complex(-np.cos(phase), -np.sin(phase))
+    ans = complex(np.cos(phase), np.sin(phase))*exp1x(z1)+complex(np.cos(phase), -np.sin(phase))*exp1x(z2)
+    ans = ans/(2*np.pi)+np.exp(z1.real)*(-np.sin(z1.imag+phase)+complex(0,1)*np.cos(z1.imag+phase))*\
+        np.heaviside(z1.imag, 1)
 
-        ans2[mask2] = np.exp(z2[mask2].real)*(np.cos(z2[mask2].imag-phase)+complex(0, 1)*np.sin(z2[mask2].imag-phase))*\
-            exp1(z2[mask2])
-        ans2[inv_mask2] = exp1x_asymp(-1/z2[inv_mask2])*complex(-np.cos(phase), np.sin(phase))
-        
-    ans = (ans1.imag + ans2.imag)/(2*np.pi)
-
-    return ans
+    return ans.imag
 
 def dmp_osc_conv_pvoigt(t: Union[float, np.ndarray], fwhm_G: float, fwhm_L: float, eta: float,
 k: float, T: float, phase: float) -> Union[float, np.ndarray]:
@@ -426,5 +419,220 @@ k: float, T: float, phase: float) -> Union[float, np.ndarray]:
     v = dmp_osc_conv_cauchy(t, fwhm_L, k, T, phase)
 
     return u + eta*(v-u)
+
+def deriv_dmp_osc_conv_gau(t: Union[float, np.ndarray], fwhm: float,
+k: float, T: float, phase: float) -> np.ndarray:
+
+    '''
+    Compute derivative of the convolution of damped oscillation and 
+    normalized gaussian distribution
+
+    Args:
+      t: time
+      fwhm: full width at half maximum of gaussian distribution
+      k: damping constant (inverse of life time)
+      T: period of vibration 
+      phase: phase factor
+
+    Returns:
+     Derivative of Convolution of normalized gaussian distribution and 
+     damped oscillation :math:`(\\exp(-kt)cos(2\\pi t/T+phase))`.
+    
+    Note:
+     1st row: df/dt
+     2nd row: df/d(fwhm)
+     3rd row: df/dk
+     4th row: df/dT
+     5th row: df/d(phase)
+    '''
+
+    sigma = fwhm/(2*np.sqrt(2*np.log(2))); omega = 2*np.pi/T
+    z = omega*sigma + complex(0,1)*(k*sigma-t/sigma)
+    f = (complex(np.cos(phase), np.sin(phase)))*exp_mod_gau_cplx(t, sigma, k, omega)
+    deriv_f_z = complex(0, np.sqrt(2/np.pi))*complex(np.cos(phase), np.sin(phase))*np.exp(-(t/sigma)**2/2)-z*f
+    grad_t = -t/sigma**2*f.real + deriv_f_z.imag/sigma
+    grad_fwhm = ((t/sigma)**2/sigma*f.real + omega*deriv_f_z.real - (k+t/sigma**2)*deriv_f_z.imag)/(2*np.sqrt(2*np.log(2)))
+    grad_k = -sigma*deriv_f_z.imag
+    grad_T = -omega/T*sigma*deriv_f_z.real
+    grad_phase = -f.imag
+
+    if not isinstance(t, np.ndarray):
+        grad = np.empty(5)
+        grad[0] = grad_t
+        grad[1] = grad_fwhm
+        grad[2] = grad_k
+        grad[3] = grad_T
+        grad[4] = grad_phase
+    else:
+        grad = np.empty((5, t.size))
+        grad[0, :] = grad_t
+        grad[1, :] = grad_fwhm
+        grad[2, :] = grad_k
+        grad[3, :] = grad_T
+        grad[4, :] = grad_phase
+    
+    return grad
+
+def deriv_dmp_osc_conv_cauchy(t: Union[float, np.ndarray], fwhm: float,
+k: float, T: float, phase: float) -> Union[float, np.ndarray]:
+
+    '''
+    Compute derivative of convolution of damped oscillation and normalized cauchy
+    distribution
+
+    Args:
+      t: time
+      fwhm: full width at half maximum of cauchy distribution
+      k: damping constant (inverse of life time)
+      T: period of vibration 
+      phase: phase factor
+
+    Returns:
+     Gradient of Convolution of normalized cauchy distribution and 
+     damped oscillation :math:`(\\exp(-kt)cos(2\\pi t/T+phase))`.
+
+    Note:
+     1st raw: df/dt
+     2nd raw: df/d(fwhm)
+     3rd raw: df/dk
+     4th raw: df/dT
+     5th raw: df/d(phase)
+    '''
+
+    gamma = fwhm/2; omega = 2*np.pi/T 
+    z1 = (-k*t-omega*gamma) + complex(0,1)*(-k*gamma+omega*t)
+    z2 = (-k*t+omega*gamma) + complex(0,-1)*(k*gamma+omega*t)
+
+    f1 = complex(np.cos(phase), np.sin(phase))*exp1x(z1)/(2*np.pi)+np.exp(z1.real)*(-np.sin(z1.imag+phase)+complex(0,1)*np.cos(z1.imag+phase))*\
+        np.heaviside(z1.imag, 1)
+    f2 = complex(np.cos(phase), -np.sin(phase))*exp1x(z2)
+
+    grad_z1 = f1 - complex(np.cos(phase), np.sin(phase))/(2*np.pi*z1)
+    grad_z2 = (f2 - complex(np.cos(phase), -np.sin(phase))/z2)/(2*np.pi)
+    sum = grad_z1 + grad_z2; diff = grad_z1 - grad_z2
+    grad_t = -k*sum.imag + omega*diff.real
+    grad_fwhm = -(omega*diff.imag+k*sum.real)/2
+    grad_k = -(t*sum.imag+gamma*sum.real)
+    grad_T = omega/T*(gamma*diff.imag-t*diff.real)
+    grad_phase = f1.real-f2.real/(2*np.pi)
+
+    if not isinstance(t, np.ndarray):
+        grad = np.empty(5)
+        grad[0] = grad_t
+        grad[1] = grad_fwhm
+        grad[2] = grad_k
+        grad[3] = grad_T
+        grad[4] = grad_phase
+    else:
+        grad = np.empty((5, t.size))
+        grad[0, :] = grad_t
+        grad[1, :] = grad_fwhm
+        grad[2, :] = grad_k
+        grad[3, :] = grad_T
+        grad[4, :] = grad_phase
+    
+    return grad
+
+def deriv_dmp_osc_sum_conv_gau(t: np.ndarray, fwhm: float,
+k: np.ndarray, T: np.ndarray, phase: np.ndarray, c: np.ndarray) -> np.ndarray:
+
+    '''
+    Compute derivative of sum of damped oscillation function convolved with normalized gaussian
+    distribution
+
+    Args:
+      t: time
+      fwhm: full width at half maximum of gaussian distribution
+      k: rate constant (inverse of life time)
+      T: period
+      phase: phase factor
+      c: coefficient
+
+    Returns:
+     Derivative of Convolution of normalized gaussian distribution and 
+     damped oscillation :math:`(\\exp(-kt)cos(2\\pi t/T+phase))`.
+    Note:
+     1st row: df/dt
+     2nd row: df/d(fwhm)
+     2+i th row: df/dk_i (1 <= i <= num_comp)
+     2+num_comp+i th row: df/dT_i (1 <= i <= num_comp)
+     2+2*num_comp+i th row: df/d(phase_i)
+    '''
+    grad = np.zeros((2+3*k.size, t.size))
+    for i in range(k.size):
+        grad_i = deriv_dmp_osc_conv_gau(t, fwhm, k[i], T[i], phase[i])
+        grad[0, :] = grad[0, :] + c[i]*grad_i[0, :]
+        grad[1, :] = grad[1, :] + c[i]*grad_i[1, :]
+        grad[2+i, :] = c[i]*grad_i[2, :]
+        grad[2+k.size+i, :] = c[i]*grad_i[3, :]
+        grad[2+2*k.size+i, :] = c[i]*grad_i[4, :]
+
+    return grad
+
+def deriv_dmp_osc_sum_conv_cauchy(t: np.ndarray, fwhm: float,
+k: np.ndarray, T: np.ndarray, phase: np.ndarray, c: np.ndarray) -> np.ndarray:
+
+    '''
+    Compute derivative of sum of damped oscillation function convolved with normalized cauchy
+    distribution
+
+    Args:
+      t: time
+      fwhm: full width at half maximum of cauchy distribution
+      k: rate constant (inverse of life time)
+      T: period
+      phase: phase factor
+      c: coefficient
+
+    Returns:
+     Derivative of Convolution of normalized cauchy distribution and 
+     damped oscillation :math:`(\\exp(-kt)cos(2\\pi t/T+phase))`.
+    Note:
+     1st row: df/dt
+     2nd row: df/d(fwhm)
+     2+i th row: df/dk_i (1 <= i <= num_comp)
+     2+num_comp+i th row: df/dT_i (1 <= i <= num_comp)
+     2+2*num_comp+i th row: df/d(phase_i)
+    '''
+    grad = np.zeros((2+3*k.size, t.size))
+    for i in range(k.size):
+        grad_i = deriv_dmp_osc_conv_cauchy(t, fwhm, k[i], T[i], phase[i])
+        grad[0, :] = grad[0, :] + c[i]*grad_i[0, :]
+        grad[1, :] = grad[1, :] + c[i]*grad_i[1, :]
+        grad[2+i, :] = c[i]*grad_i[2, :]
+        grad[2+k.size+i, :] = c[i]*grad_i[3, :]
+        grad[2+2*k.size+i, :] = c[i]*grad_i[4, :]
+
+    return grad
+
+def test_num_deriv(func: callable, *args, eps=1e-5):
+    '''
+    Test implementation of derivative via finite difference
+    '''
+    n = len(args)
+    if isinstance(args[0], np.ndarray):
+        num_grad = np.empty((n, args[0].size))
+        for i in range(n):
+            f_args = list(args)
+            b_args = list(args)
+            f_args[i] = f_args[i]+eps
+            b_args[i] = b_args[i]-eps
+            f_args = tuple(f_args)
+            b_args = tuple(b_args)
+            num_grad[i, :] = (func(*f_args)-func(*b_args))/(2*eps)
+    else:
+        num_grad = np.empty(n)
+        for i in range(n):
+            f_args = list(args)
+            b_args = list(args)
+            f_args[i] = f_args[i]+eps
+            b_args[i] = b_args[i]-eps
+            f_args = tuple(f_args)
+            b_args = tuple(b_args)
+            num_grad[i] = (func(*f_args)-func(*b_args))/(2*eps)
+    
+    return num_grad
+
+
 
 
