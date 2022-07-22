@@ -38,28 +38,31 @@ def fit_transient_dmp_osc(irf: str, fwhm_init: Union[float, np.ndarray],
       driver routine for fitting multiple data set of time delay scan data with
       sum of the convolution of dmped oscillation and instrumental response function.
 
-      This driver using two step algorithm to search best parameter, its covariance and
-      estimated parameter error.
+      It separates linear and non-linear part of the optimization problem to solve non linear least sequare
+      optimization problem efficiently.
+
+      Finding weight :math:`c_i` which minimizes :math:`\\chi^2` when any other parameters are given is linear problem, 
+      this problem is solved before the each iteration of non linear problem.
+      Since :math:`\\frac{\\partial \\chi^2}{\\partial c_i} = 0` is satisfied, the gradient for
+      our scalar residual function is ,simply, :math:`\\frac{\\partial \\chi^2}{\\partial {param}_i}`. 
 
       Model: sum of convolution of damped oscillation and instrumental response function
       :math:`\\sum_{i=1}^n c_i y_i(t-t_0, {fwhm}, 1/\\tau_i)`
       
       Objective function: chi squared
       :math:`\\chi^2 = \sum_i \\left(\\frac{model-data_i}{eps_i}\\right)^2`
-                    
+
+      Moreover, this driver uses two step algorithm to search best parameter, its covariance and
+      estimated parameter error.
 
       Step 1. (method_glb)
-      Use global optimization to find rough global minimum of our objective function
+      Use global optimization to find rough global minimum of our objective function.
+      In this stage, it use analytic gradient for scalar residual function.
 
       Step 2. (method_lsq)
       Use least squares optimization algorithm to refine global minimum of objective function and approximate covariance matrix.
-                      
-      Moreover two solve non linear least square optimization problem efficiently, it separates linear and non-linear part of the problem.
-
-      Finding weight :math:`c_i` which minimizes :math:`\\chi^2` when any other parameters are given is linear problem, 
-      this problem is solved before the each iteration of non linear problem.
-      Since :math:`\\frac{\\partial \\chi^2}{\\partial c_i} = 0` is satisfied, the jacobian or gradient for
-      our objective function is ,simply, :math:`\\frac{\\partial \\chi^2}{\\partial {param}_i}`. 
+      Because of linear and non-linear seperation scheme, the analytic jacobian for vector residual function is hard to obtain.
+      Thus, in this stage, it uses numerical jacobian.               
       
       Args:
        irf ({'g', 'c', 'pv'}): shape of instrumental response function
@@ -188,14 +191,12 @@ def fit_transient_dmp_osc(irf: str, fwhm_init: Union[float, np.ndarray],
             bound_tuple[1][i] = bound[i][1]
             if bound[i][0] == bound[i][1]:
                   if bound[i][0] > 0:
-                        bound_tuple[1][i] = bound[i][1]*(1+1e-4)+1e-8
+                        bound_tuple[1][i] = bound[i][1]*(1+1e-8)+1e-16
                   else:
-                        bound_tuple[1][i] = bound[i][1]*(1-1e-4)+1e-8
-      
-      if irf == 'pv' and not (fix_param_idx[0] and fix_param_idx[1]):
-            res_lsq = least_squares(residual_dmp_osc, param_gopt, method=method_lsq, jac='2-point', bounds=bound_tuple, **kwargs_lsq)
-      else:
-            res_lsq = least_squares(residual_dmp_osc, param_gopt, method=method_lsq, jac=jac_res_dmp_osc, bounds=bound_tuple, **kwargs_lsq)
+                        bound_tuple[1][i] = bound[i][1]*(1-1e-8)+1e-16
+
+      # jacobian of vector residual function is inaccurate
+      res_lsq = least_squares(residual_dmp_osc, param_gopt, method=method_lsq, bounds=bound_tuple, **kwargs_lsq)
       param_opt = res_lsq['x']
 
       fwhm_opt = param_opt[:num_irf]

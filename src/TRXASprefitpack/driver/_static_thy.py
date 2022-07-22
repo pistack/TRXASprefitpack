@@ -44,28 +44,32 @@ def fit_static_thy(thy_peak: np.ndarray, fwhm_G_init: np.ndarray, fwhm_L_init: n
       driver routine for fitting static spectrum with sum of voigt broadend thoretical spectrum,
       edge and polynomial base line.
 
-      This driver using two step algorithm to search best parameter, its covariance and
-      estimated parameter error.
+      It separates linear and non-linear part of the optimization problem to solve non linear least sequare
+      optimization problem efficiently.
+
+      Finding weight :math:`c_i` which minimizes :math:`\\chi^2` when any other parameters are given is linear problem, 
+      this problem is solved before the each iteration of non linear problem.
+      Since :math:`\\frac{\\partial \\chi^2}{\\partial c_i} = 0` is satisfied, the gradient for
+      our scalar residual function is ,simply, :math:`\\frac{\\partial \\chi^2}{\\partial {param}_i}`. 
+      
 
       Model: sum of voigt broadened theoretical spectrum, edge function and base function
       :math:`c_{0} y(e, {fwhm}_{(G, i)}, {fwhm}_{(L, i), {peak_factor}}) + c_{1}{edge} + {base}`
       
       Objective function: chi squared
       :math:`\\chi^2 = \sum_i \\left(\\frac{model-data_i}{eps_i}\\right)^2`
-                    
 
-      Step 1. (basinhopping)
-      Use global optimization to find rough global minimum of our objective function
+      Moreover this driver uses two step algorithm to search best parameter, its covariance and
+      estimated parameter error.              
+
+      Step 1. (method_glb)
+      Use global optimization to find rough global minimum of our objective function.
+      In this stage, it use analytic gradient for scalar residual function.
 
       Step 2. (method_lsq)
       Use least squares optimization algorithm to refine global minimum of objective function and approximate covariance matrix.
-                      
-      Moreover two solve non linear least square optimization problem efficiently, it separates linear and non-linear part of the problem.
-
-      Finding weight :math:`c_i` which minimizes :math:`\\chi^2` when any other parameters are given is linear problem, 
-      this problem is solved before the each iteration of non linear problem.
-      Since :math:`\\frac{\\partial \\chi^2}{\\partial c_i} = 0` is satisfied, the jacobian or gradient for
-      our objective function is ,simply, :math:`\\frac{\\partial \\chi^2}{\\partial {param}_i}`. 
+      Because of linear and non-linear seperation scheme, the analytic jacobian for vector residual function is hard to optain.
+      Thus, in this stage, it uses numerical jacobian. 
       
       Args:
        thy_peak (np.ndarray): peak position and intensity for theoretically calculated spectrum
@@ -211,11 +215,12 @@ def fit_static_thy(thy_peak: np.ndarray, fwhm_G_init: np.ndarray, fwhm_L_init: n
             bound_tuple[1][i] = bound[i][1]
             if bound[i][0] == bound[i][1]:
                   if bound[i][0] > 0:
-                        bound_tuple[1][i] = bound[i][1]*(1+1e-4)+1e-8
+                        bound_tuple[1][i] = bound[i][1]*(1+1e-8)+1e-16
                   else:
-                        bound_tuple[1][i] = bound[i][1]*(1-1e-4)+1e-8
+                        bound_tuple[1][i] = bound[i][1]*(1-1e-8)+1e-16
       
-      res_lsq = least_squares(residual_thy, param_gopt, method=method_lsq, jac=jac_res_thy, bounds=bound_tuple, **kwargs_lsq)
+      # jacobian for vector residual function is inaccurate
+      res_lsq = least_squares(residual_thy, param_gopt, method=method_lsq, bounds=bound_tuple, **kwargs_lsq)
       param_opt = res_lsq['x']
 
       param_name = np.empty(param_opt.size, dtype=object)

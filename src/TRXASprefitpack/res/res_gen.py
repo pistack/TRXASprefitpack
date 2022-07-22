@@ -20,12 +20,13 @@ def residual_scalar(params: np.ndarray, *args) -> float:
 
     Returns:
      Residucal scalar(i.e. square of 2-norm of Residual Vector)
+     chi2/2
     '''
     func = args[0]
     fargs = ()
     if len(args) > 2:
         fargs = tuple(args[2:])
-    return np.sum(func(params, *fargs)**2)
+    return np.sum(func(params, *fargs)**2)/2
 
 def grad_res_scalar(params: np.ndarray, *args) -> np.ndarray:
     '''
