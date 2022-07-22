@@ -15,11 +15,11 @@ from ._transient_dmp_osc import fit_transient_dmp_osc
 from ._transient_both import fit_transient_both
 from ._static_voigt import fit_static_voigt
 from ._static_thy import fit_static_thy
-from .f_test import CIResult, is_better_model_f, confidence_interval_f
+from .f_test import CIResult, is_better_fit_f, confidence_interval_f
 
 __all__ = ['sads', 'dads',
            'TransientResult', 'save_TransientResult', 'load_TransientResult',
            'StaticResult', 'save_StaticResult', 'load_StaticResult',
            'fit_transient_exp', 'fit_transient_dmp_osc', 'fit_transient_both',
            'fit_static_voigt', 'fit_static_thy',
-           'CIResult', 'is_better_model_f', 'confidence_interval_f']
+           'CIResult', 'is_better_fit_f', 'confidence_interval_f']

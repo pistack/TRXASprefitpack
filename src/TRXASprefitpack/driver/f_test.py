@@ -28,6 +28,7 @@ class CIResult(dict):
      param_name (sequence of str): name of parameter
      x (np.ndarray): best parameter
      ci (sequence of tuple): confidence interval of each parameter at significant level alpha
+     message (str): message for confidence interval calculation
     '''
 
     def __getattr__(self, name):
@@ -45,20 +46,29 @@ class CIResult(dict):
     def __str__(self):
         doc_lst = []
         doc_lst.append("[Report for Confidence Interval]")
-        doc_lst.append(f"    Method: {self['method']})")
+        doc_lst.append(f"    Method: {self['method']}")
         doc_lst.append(f"    Significance level: {self['alpha']: 4e}")
         doc_lst.append(' ')
-        doc_lst.append("[Confidence level]")
+        doc_lst.append("[Confidence interval]")
         for pn, pv, ci in zip(self['param_name'], self['x'], self['ci']):
-            doc_lst.append(f"    {pv-ci[0]: .8f}".rstrip('0').rstrip('.')+
-            f" <= {pn} <= {pv+ci[1]: .8f}".rstrip('0').rstrip('.'))
+            if ci[0] != 0 and ci[1] != 0:
+                tmp_doc_lst = []
+                tmp_doc_lst.append(f"    {pv:.8f}".rstrip('0').rstrip('.'))
+                tmp_doc_lst.append(f"- {-ci[0]: .8f}".rstrip('0').rstrip('.'))
+                tmp_doc_lst.append(f"<= {pn} <=")
+                tmp_doc_lst.append(f"{pv: .8f}".rstrip('0').rstrip('.'))
+                tmp_doc_lst.append(f"+ {ci[1]: .8f}".rstrip('0').rstrip('.'))
+                doc_lst.append(' '.join(tmp_doc_lst))
+        doc_lst.append(' ')
+        doc_lst.append('*Note*')
+        doc_lst.append(f"{self['message']}")
         return '\n'.join(doc_lst)
 
 
 
-def is_better_model_f(result1, result2) -> float:
+def is_better_fit_f(result1, result2) -> float:
     '''
-    Compare model based on f_test
+    Compare fit based on f_test
 
     result1 ({'StaticResult', 'TransientResult'}): fitting result class
      which has more parameter than result2
@@ -98,9 +108,7 @@ def is_better_model_f(result1, result2) -> float:
 def ci_scan(p, *args):
     F_alpha, dfn, dfd, chi2_opt = args[:4]
     fargs = tuple(args[4:])
-    ans = (res_scan(p, *fargs)-chi2_opt)/dfn/(chi2_opt/dfd)-F_alpha
-    print(ans)
-    return ans
+    return (res_scan(p, *fargs)-chi2_opt)/dfn/(chi2_opt/dfd)-F_alpha
 
 def jac_ci_scan(p, *args):
     _, dfn, dfd, chi2_opt = args[:4]
@@ -125,7 +133,6 @@ def confidence_interval_f(result, alpha: float) -> CIResult:
     for i in range(params.size):
         fix_param_idx[i] = (result['bounds'][i][0] == result['bounds'][i][1])
     scan_idx = np.array(range(len(result['x'])))
-    sub_scan_idx = scan_idx[~fix_param_idx]
     ci_lst = len(result['x'])*[(0, 0)]
     num_param = result['n_param']
     num_pts = result['num_pts']
@@ -133,6 +140,22 @@ def confidence_interval_f(result, alpha: float) -> CIResult:
     chi2_opt = result['chi2']
     dfn = len(params) - 1; dfd = num_pts - num_param
     F_alpha = f.ppf(1-alpha, dfn, dfd)
+
+    if result['model'] in ['decay', 'dmp_osc', 'both']:
+        if result['irf'] in ['g', 'c']:
+            num_irf = 1
+        elif result['irf'] == 'pv':
+            num_irf = 2
+        num_t0 = 0
+        for d in result['intensity']:
+            num_t0 = num_t0 + d.shape[1]
+        if num_t0 > 1:
+            message = 'The confidence interval for non shared parameter especially time zeros are not calculated.'
+            fix_param_idx[num_irf:num_irf+num_t0] = True
+        else:
+            message = 'The confidence interval of every parameter are calculated'    
+    else:
+        message = 'The confidence interval of every parameter are calculated'
 
     if result['model'] == 'decay':
         args = [F_alpha, dfn, dfd, chi2_opt, 0, params, residual_decay, jac_res_decay, result['n_decay'],
@@ -156,7 +179,8 @@ def confidence_interval_f(result, alpha: float) -> CIResult:
         result['edge'], result['base_order'], fix_param_idx,
         result['e'], result['intensity'], result['eps']]
     
-    for idx in [0]:
+    sub_scan_idx = scan_idx[~fix_param_idx]
+    for idx in sub_scan_idx:
         p0 = params[idx]
         args[4] = idx
         fargs = tuple(args)
@@ -167,8 +191,10 @@ def confidence_interval_f(result, alpha: float) -> CIResult:
     ci_res = CIResult()
     ci_res['method'] = 'f'
     ci_res['alpha'] = alpha
+    ci_res['param_name'] = result['param_name']
     ci_res['x'] = result['x']
     ci_res['ci'] = ci_lst
+    ci_res['message'] = message
     return ci_res
 
 
