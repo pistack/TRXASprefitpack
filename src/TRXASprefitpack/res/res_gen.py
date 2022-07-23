@@ -46,7 +46,8 @@ def res_grad_scalar(params: np.ndarray, *args) -> Tuple[np.ndarray, np.ndarray]:
     fargs = ()
     if len(args) > 2:
         fargs = tuple(args[2:])
-    return np.sum(func(params, *fargs)**2)/2, func(params, *fargs) @ jac(params, *fargs)
+    ans = func(params, *fargs)
+    return np.sum(ans**2)/2, ans @ jac(params, *fargs)
 
 def res_scan(p, *args) -> float:
     '''
