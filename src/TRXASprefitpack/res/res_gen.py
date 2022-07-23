@@ -4,7 +4,6 @@ submodule which provides compatible layer of residual and radient function
 :copyright: 2021-2022 by pistack (Junho Lee).
 :license: LGPL3.
 '''
-from typing import Tuple
 import numpy as np
 
 def residual_scalar(params: np.ndarray, *args) -> float:

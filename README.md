@@ -28,7 +28,7 @@ Licence: LGPL3
   3. calc_sads: Calculates species associated difference spectrum frim experimental energy scan and 1st order rate equation model
 * Fit Utility
   1. fit_static: fitting sum of voigt component or voigt broadened experimental spectrum with experimental static spectrum
-  2. fit_tscan: Find lifetime constants or oscillation period of experimental time delay spectrum
+  2. fit_tscan: Find lifetime constants or oscillation period from experimental time delay spectrum
 
 * See source documents for stable version [Docs](https://trxasprefitpack.readthedocs.io/en/stable/)
 * See source documents for latest version [Docs](https://trxasprefitpack.readthedocs.io/en/latest/)

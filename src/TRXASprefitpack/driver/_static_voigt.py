@@ -15,7 +15,7 @@ from scipy.optimize import basinhopping
 from scipy.optimize import least_squares
 from ..mathfun.peak_shape import voigt, edge_gaussian, edge_lorenzian
 from ..mathfun.A_matrix import fact_anal_A
-from ..res.parm_bound import set_bound_t0
+from ..res.parm_bound import set_bound_e0, set_bound_t0
 from ..res.res_voigt import residual_voigt, res_grad_voigt
 
 def fit_static_voigt(e0_init: np.ndarray, fwhm_G_init: np.ndarray, fwhm_L_init: np.ndarray,
@@ -79,8 +79,8 @@ def fit_static_voigt(e0_init: np.ndarray, fwhm_G_init: np.ndarray, fwhm_L_init: 
        kwargs_glb: keyward arguments for global optimization solver
        kwargs_lsq: keyward arguments for least square optimization solver
        bound_e0 (sequence of tuple): boundary for each voigt componet. If upper and lower bound are same, 
-        driver assumes that the parameter is fixed during optimization. If `bound_fwhm` is `None`, 
-        the upper and lower bound are given as `(e0-2*fwhm_(init,i), 2*fwhm_(init,i))`.
+        driver assumes that the parameter is fixed during optimization. If `bound_e0` is `None`, 
+        the upper and lower bound are given by `set_bound_e0`.
        bound_fwhm_G (sequence of tuple): boundary for fwhm_G parameter. 
         If `bound_fwhm_G` is `None`, the upper and lower bound are given as `(fwhm_G/2, 2*fwhm_G)`.
        bound_fwhm_L (sequence of tuple): boundary for fwhm_L parameter. 
@@ -128,11 +128,8 @@ def fit_static_voigt(e0_init: np.ndarray, fwhm_G_init: np.ndarray, fwhm_L_init: 
       bound = num_param*[None]
 
       if bound_e0 is None:
-            tmp = np.empty(2)
             for i in range(num_voigt):
-                  tmp[0] = fwhm_G_init[i]
-                  tmp[1] = fwhm_L_init[i]
-                  bound[i] = set_bound_t0(e0_init[i], tmp)
+                  bound[i] = set_bound_e0(e0_init[i], fwhm_G_init[i], fwhm_L_init[i])
       else:
             bound[:num_voigt] = bound_e0
                       
