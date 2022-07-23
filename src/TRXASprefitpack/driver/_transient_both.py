@@ -15,7 +15,7 @@ from scipy.optimize import basinhopping
 from scipy.optimize import least_squares
 from ..mathfun.A_matrix import make_A_matrix_exp, make_A_matrix_dmp_osc, fact_anal_A
 from ..res.parm_bound import set_bound_t0, set_bound_tau
-from ..res.res_gen import residual_scalar, grad_res_scalar
+from ..res.res_gen import res_grad_scalar
 from ..res.res_both import residual_both, jac_res_both
 
 def fit_transient_both(irf: str, fwhm_init: Union[float, np.ndarray], 
@@ -172,7 +172,7 @@ def fit_transient_both(irf: str, fwhm_init: Union[float, np.ndarray],
       if do_glb:
             go_args = (residual_both, jac_res_both, tau_init.size, tau_osc_init.size, 
             base, irf, fix_param_idx, t, intensity, eps)
-            min_go_kwargs = {'args': go_args, 'jac': grad_res_scalar, 'bounds': bound}
+            min_go_kwargs = {'args': go_args, 'jac': True, 'bounds': bound}
             if irf == 'pv' and not (fix_param_idx[0] and fix_param_idx[1]):
                   min_go_kwargs['jac'] = None
             if kwargs_glb is not None:
@@ -186,7 +186,7 @@ def fit_transient_both(irf: str, fwhm_init: Union[float, np.ndarray],
                         kwargs_glb['minimizer_kwargs'] = minimizer_kwargs
             else:
                   kwargs_glb = {'minimizer_kwargs' : min_go_kwargs}
-            res_go = basinhopping(residual_scalar, param, **kwargs_glb)
+            res_go = basinhopping(res_grad_scalar, param, **kwargs_glb)
       else:
             res_go = dict()
             res_go['x'] = param

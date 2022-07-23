@@ -14,7 +14,7 @@ from scipy.optimize import basinhopping
 from scipy.optimize import least_squares
 from ..mathfun.A_matrix import make_A_matrix_dmp_osc, fact_anal_A
 from ..res.parm_bound import set_bound_t0, set_bound_tau
-from ..res.res_gen import residual_scalar, grad_res_scalar
+from ..res.res_gen import res_grad_scalar
 from ..res.res_osc import residual_dmp_osc, jac_res_dmp_osc
 
 def fit_transient_dmp_osc(irf: str, fwhm_init: Union[float, np.ndarray], 
@@ -154,9 +154,7 @@ def fit_transient_dmp_osc(irf: str, fwhm_init: Union[float, np.ndarray],
       if do_glb:
             go_args = (residual_dmp_osc, jac_res_dmp_osc, num_comp, irf, fix_param_idx, 
             t, intensity, eps)
-            min_go_kwargs = {'args': go_args, 'jac': grad_res_scalar, 'bounds': bound}
-            if irf == 'pv' and not (fix_param_idx[0] and fix_param_idx[1]):
-                  min_go_kwargs['jac'] = None
+            min_go_kwargs = {'args': go_args, 'jac': True, 'bounds': bound}
             if kwargs_glb is not None:
                   minimizer_kwargs = kwargs_glb.pop('minimizer_kwargs', None)
                   if minimizer_kwargs is None:
@@ -168,7 +166,7 @@ def fit_transient_dmp_osc(irf: str, fwhm_init: Union[float, np.ndarray],
                         kwargs_glb['minimizer_kwargs'] = minimizer_kwargs
             else:
                   kwargs_glb = {'minimizer_kwargs' : min_go_kwargs}
-            res_go = basinhopping(residual_scalar, param, **kwargs_glb)
+            res_go = basinhopping(res_grad_scalar, param, **kwargs_glb)
       else:
             res_go = dict()
             res_go['x'] = param

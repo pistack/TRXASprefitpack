@@ -11,11 +11,9 @@ based on f_test
 import numpy as np
 from scipy.stats import f
 from scipy.optimize import brenth
-from ..res import res_scan, jac_scan
+from ..res import res_scan
 from ..res import residual_decay, residual_dmp_osc, residual_both
 from ..res import residual_voigt, residual_thy
-from ..res import jac_res_decay, jac_res_dmp_osc, jac_res_both
-from ..res import jac_res_voigt, jac_res_thy
 
 class CIResult(dict):
     '''
@@ -108,13 +106,7 @@ def is_better_fit_f(result1, result2) -> float:
 def ci_scan(p, *args):
     F_alpha, dfn, dfd, chi2_opt = args[:4]
     fargs = tuple(args[4:])
-    return (res_scan(p, *fargs)-chi2_opt)/dfn/(chi2_opt/dfd)-F_alpha
-
-def jac_ci_scan(p, *args):
-    _, dfn, dfd, chi2_opt = args[:4]
-    fargs = tuple(args[4:])
-    return 2*jac_scan(p, *fargs)/dfn/(chi2_opt/dfd)
-
+    return (res_scan(p, *fargs)-chi2_opt/2)/dfn/(chi2_opt/(2*dfd))-F_alpha
 
 def confidence_interval_f(result, alpha: float) -> CIResult:
     '''
@@ -158,29 +150,30 @@ def confidence_interval_f(result, alpha: float) -> CIResult:
         message = 'The confidence interval of every parameter are calculated'
 
     if result['model'] == 'decay':
-        args = [F_alpha, dfn, dfd, chi2_opt, 0, params, residual_decay, jac_res_decay, result['n_decay'],
+        args = [F_alpha, dfn, dfd, chi2_opt, 0, params, residual_decay, result['n_decay'],
         result['base'], result['irf'], fix_param_idx, 
         result['t'], result['intensity'], result['eps']]
     elif result['model'] == 'dmp_osc':
-        args = [F_alpha, dfn, dfd, chi2_opt, 0, params, residual_dmp_osc, jac_res_dmp_osc,
+        args = [F_alpha, dfn, dfd, chi2_opt, 0, params, residual_dmp_osc,
         result['n_osc'], result['irf'], fix_param_idx,
         result['t'], result['intensity'], result['eps']]
     elif result['model'] == 'both':
-        args = [F_alpha, dfn, dfd, chi2_opt, 0, params, residual_both, jac_res_both,
+        args = [F_alpha, dfn, dfd, chi2_opt, 0, params, residual_both,
         result['n_decay'], result['n_osc'], result['base'], result['irf'], fix_param_idx,
         result['t'], result['intensity'], result['eps']]
     elif result['model'] == 'voigt':
-        args = [F_alpha, dfn, dfd, chi2_opt, 0, params, residual_voigt, jac_res_voigt,
+        args = [F_alpha, dfn, dfd, chi2_opt, 0, params, residual_voigt,
         result['n_voigt'], result['edge'], result['base_order'], fix_param_idx,
         result['e'], result['intensity'], result['eps']]
     elif result['model'] == 'thy':
-        args = [F_alpha, dfn, dfd, chi2_opt, 0, params, residual_thy, jac_res_thy,
+        args = [F_alpha, dfn, dfd, chi2_opt, 0, params, residual_thy,
         result['policy'], result['thy_peak'], 
         result['edge'], result['base_order'], fix_param_idx,
         result['e'], result['intensity'], result['eps']]
     
     sub_scan_idx = scan_idx[~fix_param_idx]
     for idx in sub_scan_idx:
+        print(result['param_name'][idx])
         p0 = params[idx]
         args[4] = idx
         fargs = tuple(args)

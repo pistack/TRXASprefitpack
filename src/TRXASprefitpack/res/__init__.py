@@ -8,7 +8,7 @@ fitting time delay scan data or static spectrum data
 '''
 from .parm_bound import set_bound_t0, set_bound_tau
 from .res_gen import res_scan, res_lmfit, residual_scalar
-from .res_gen import jac_scan, jac_lmfit, grad_res_scalar
+from .res_gen import jac_lmfit, res_grad_scalar
 from .res_decay import residual_decay
 from .res_decay import jac_res_decay
 from .res_osc import residual_dmp_osc
@@ -21,9 +21,8 @@ from .res_thy import residual_thy
 from .res_thy import jac_res_thy
 
 __all__ = ['set_bound_t0', 'set_bound_tau',
-           'res_scan', 'jac_scan',
-           'res_lmfit', 'jac_lmfit',
-           'residual_scalar', 'grad_res_scalar',
+           'res_scan', 'res_lmfit', 'jac_lmfit',
+           'residual_scalar', 'res_grad_scalar',
            'residual_decay', 'jac_res_decay',
            'residual_dmp_osc', 'jac_res_dmp_osc',
            'residual_both', 'jac_res_both',

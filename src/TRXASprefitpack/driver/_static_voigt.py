@@ -16,7 +16,7 @@ from scipy.optimize import least_squares
 from ..mathfun.peak_shape import voigt, edge_gaussian, edge_lorenzian
 from ..mathfun.A_matrix import fact_anal_A
 from ..res.parm_bound import set_bound_t0
-from ..res.res_gen import residual_scalar, grad_res_scalar
+from ..res.res_gen import res_grad_scalar
 from ..res.res_voigt import residual_voigt, jac_res_voigt
 
 def fit_static_voigt(e0_init: np.ndarray, fwhm_G_init: np.ndarray, fwhm_L_init: np.ndarray,
@@ -165,19 +165,19 @@ def fit_static_voigt(e0_init: np.ndarray, fwhm_G_init: np.ndarray, fwhm_L_init: 
       if do_glb:
             go_args = (residual_voigt, jac_res_voigt, num_voigt, edge, base_order, fix_param_idx, 
             e, intensity, eps)
-            min_go_kwargs = {'args': go_args, 'jac': grad_res_scalar, 'bounds': bound}
+            min_go_kwargs = {'args': go_args, 'jac': True, 'bounds': bound}
             if kwargs_glb is not None:
                   minimizer_kwargs = kwargs_glb.pop('minimizer_kwargs', None)
                   if minimizer_kwargs is None:
                         kwargs_glb['minimizer_kwargs'] = min_go_kwargs
                   else:
                         minimizer_kwargs['args'] = go_args
-                        minimizer_kwargs['jac'] = grad_res_scalar
+                        minimizer_kwargs['jac'] = True
                         minimizer_kwargs['bouns'] = bound
                         kwargs_glb['minimizer_kwargs'] = minimizer_kwargs
             else:
                   kwargs_glb = {'minimizer_kwargs' : min_go_kwargs}
-            res_go = basinhopping(residual_scalar, param, **kwargs_glb)
+            res_go = basinhopping(res_grad_scalar, param, **kwargs_glb)
       else:
             res_go = dict()
             res_go['x'] = param

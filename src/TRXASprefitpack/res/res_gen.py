@@ -4,7 +4,7 @@ submodule which provides compatible layer of residual and radient function
 :copyright: 2021-2022 by pistack (Junho Lee).
 :license: LGPL3.
 '''
-
+from typing import Tuple
 import numpy as np
 
 def residual_scalar(params: np.ndarray, *args) -> float:
@@ -15,8 +15,7 @@ def residual_scalar(params: np.ndarray, *args) -> float:
      params: parameter used for fitting
      args: arguments
              args[0]: objective function
-             args[1]: jacobian of objective function
-             args[2:]: arguments for both objective and jocobian  
+             args[1:]: arguments for both objective function
 
     Returns:
      Residucal scalar(i.e. square of 2-norm of Residual Vector)
@@ -24,11 +23,11 @@ def residual_scalar(params: np.ndarray, *args) -> float:
     '''
     func = args[0]
     fargs = ()
-    if len(args) > 2:
-        fargs = tuple(args[2:])
+    if len(args) > 1:
+        fargs = tuple(args[1:])
     return np.sum(func(params, *fargs)**2)/2
 
-def grad_res_scalar(params: np.ndarray, *args) -> np.ndarray:
+def res_grad_scalar(params: np.ndarray, *args) -> Tuple[np.ndarray, np.ndarray]:
     '''
     grad_res_scalar
     scipy.optimize.minimizer compatible gradient of scalar residual function
@@ -41,13 +40,13 @@ def grad_res_scalar(params: np.ndarray, *args) -> np.ndarray:
              args[2:]: arguments for both objective and jocobian  
 
     Returns:
-     Gradient of residucal scalar
+     pair of residual scalar and its gradient
     '''
     func, jac = args[:2]
     fargs = ()
     if len(args) > 2:
         fargs = tuple(args[2:])
-    return func(params, *fargs) @ jac(params, *fargs)
+    return np.sum(func(params, *fargs)**2)/2, func(params, *fargs) @ jac(params, *fargs)
 
 def res_scan(p, *args) -> float:
     '''
@@ -73,31 +72,6 @@ def res_scan(p, *args) -> float:
         fargs = tuple(args[2:])
     params[idx] = p
     return residual_scalar(params, *fargs)                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                             
-
-def jac_scan(p, *args) -> float:
-    '''
-    jac_scan
-    partial derivative of residual .w.r.t. ith parameter
-
-    Args:
-     p: value of ith parameter
-     args: arguments
-           args[0]: i, index of parameter to scan
-           args[1]: params
-           args[2]: objective function
-           args[3]: jacobian of objective function
-           args[3:]: arguments for both objective and jocobian
-    
-    Returns:
-     residual value at params[i] = p
-    '''
-    idx = args[0]
-    params = np.atleast_1d(args[1]).copy()
-    fargs = ()
-    if len(args)>2:
-        fargs = tuple(args[2:])
-    params[idx] = p
-    return grad_res_scalar(params, *fargs)[idx]
 
 def res_lmfit(params, *args) -> np.ndarray:
     '''

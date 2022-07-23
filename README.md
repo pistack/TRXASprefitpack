@@ -23,27 +23,15 @@ Licence: LGPL3
 * Match Utility
   1. match_scale: Match the scaling of each energy scan data to one reference time delay scan data
 * Calc Utility
-  1. calc_broad: broaden theoretically calculated line shape spectrum with voigt profile 
+  1. calc_broad: broaden theoretically calculated line shape spectrum with voigt profile
   2. calc_dads: Calculates decay associated difference spectrum from experimental energy scan and sum of exponential decay model
   3. calc_sads: Calculates species associated difference spectrum frim experimental energy scan and 1st order rate equation model
 * Fit Utility
-  1. fit_static: fitting theoretically calculated line shape spectrum with experimental spectrum
-  2. fit_irf: Find irf parameter of experimental measured irf function
-  3. fit_tscan: Find lifetime constants of experimental time trace spectrum
-  4. fit_seq: fitting experimental time trace spectrum with 1st order sequential decay dynamics 
-  5. fit_eq: fitting experimental time trace spectrum by 1st order rate equation matrix supplied from user
-  6. fit_osc: fitting residual of experimental time trace spectrum with damped oscilliaton 
+  1. fit_static: fitting sum of voigt component or voigt broadened experimental spectrum with experimental static spectrum
+  2. fit_tscan: Find lifetime constants or oscillation period of experimental time delay spectrum
 
-### libraries
-
-1. Compute convolution of exponential decay and gaussian, cauchy function analytically.
-2. Compute convolition of damped oscilliation and gaussian, cauchy function analytically.
-3. Voigt broadening line shape spectrum
-4. Solve first order rate equation (general, lower triangle, sequential decay) and analytically compute the convolution of rate equation model solution and gaussian, cauchy function.
-5. Find best coefficients for linear combination of exponential decay or damped oscilliation via solving linear least square problem.
-6. Calculates decay assicoated difference spectrum (dads) and species associated difference spectrum from experimentally measured energy scan spectrum.
-
-* See source documents [Docs](https://trxasprefitpack.readthedocs.io/en/stable/)
+* See source documents for stable version [Docs](https://trxasprefitpack.readthedocs.io/en/stable/)
+* See source documents for latest version [Docs](https://trxasprefitpack.readthedocs.io/en/latest/)
   
 ## How to get documents for TRXASprefitpack package
 

@@ -1,5 +1,5 @@
-numpy >= 1.9.0
-scipy >= 0.14.0
+numpy >= 1.10.0
+scipy >= 0.17.0
 h5py
 matplotlib
 
