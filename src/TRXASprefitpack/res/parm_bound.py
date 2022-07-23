@@ -91,6 +91,6 @@ def set_bound_tau(tau: float, fwhm: Union[float, np.ndarray]) -> Tuple[float, fl
         bound = (8192*fwhm_eff, 131072*fwhm_eff)
     elif 65536*fwhm_eff <= tau < 262144*fwhm_eff:
         bound = (32768*fwhm_eff, 524288*fwhm_eff)
-    else:
+    elif tau >= 262144*fwhm_eff:
         bound = (131072*fwhm_eff, 2*tau)
     return bound

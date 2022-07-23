@@ -30,6 +30,21 @@ Licence: LGPL3
   1. fit_static: fitting sum of voigt component or voigt broadened experimental spectrum with experimental static spectrum
   2. fit_tscan: Find lifetime constants or oscillation period from experimental time delay spectrum
 
+### Libraries
+
+* mathfun
+
+  1. provides exact function for the convolution of exponential decay or exponentially damped oscillation and instrumental response function.
+   There are three type of instrumental response function (gaussian, cauchy and pseudo voigt).
+  2. provides factor analysis routine of time delay scan data, when time zero, lifetime constant and irf parameter (i.e. fwhm)
+   are given.
+  3. Solve diagonalizable 1st order rate equation exactly with arbitrary initial condition.
+  4. Special fast solver for certain type (sequential decay and lower triangular rate equation) of 1st order rate equation
+
+* res
+
+* driver
+
 * See source documents for stable version [Docs](https://trxasprefitpack.readthedocs.io/en/stable/)
 * See source documents for latest version [Docs](https://trxasprefitpack.readthedocs.io/en/latest/)
   
