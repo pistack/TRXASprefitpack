@@ -9,8 +9,8 @@ convolution of sum of exponential decay and instrumental response function
 
 from typing import Optional, Sequence
 import numpy as np
-from ..mathfun.irf import calc_eta
-from ..mathfun.A_matrix import make_A_matrix_exp, fact_anal_A
+from ..mathfun.irf import calc_eta, deriv_calc_eta
+from ..mathfun.A_matrix import make_A_matrix_gau, make_A_matrix_cauchy, fact_anal_A
 from ..mathfun.exp_conv_irf import deriv_exp_sum_conv_gau, deriv_exp_sum_conv_cauchy
 
 # residual and gradient function for exponential decay model 
@@ -36,9 +36,6 @@ def residual_decay(params: np.ndarray, num_comp: int, base: bool, irf: str,
                 param[2:2+number of total time delay scan]: time zero of each scan
                 param[2+num_tot_scan:]: time constant (inverse of rate constant) of each decay component
 
-     fwhm: full width of half maximum of instrumental response function
-           if irf in ['g','c']: fwhm is single float
-           if irf == 'pv': fwhm = [fwhm_G, fwhm_L]
      num_comp: number of exponential decay component (except base)
      base: whether or not include baseline (i.e. very long lifetime component)
      irf: shape of instrumental response function
@@ -63,11 +60,10 @@ def residual_decay(params: np.ndarray, num_comp: int, base: bool, irf: str,
     if irf in ['g', 'c']:
         num_irf = 1
         fwhm = params[0]
-        eta = None
     else:
             num_irf = 2
-            fwhm = np.array([params[0], params[1]])
-            eta = calc_eta(params[0], params[1])
+            fwhm_G, fwhm_L = params[:2]
+            eta = calc_eta(fwhm_G, fwhm_L)
 
     num_t0 = 0; sum = 0
     for d in intensity:
@@ -76,12 +72,24 @@ def residual_decay(params: np.ndarray, num_comp: int, base: bool, irf: str,
     
     chi = np.empty(sum)
     tau = params[num_irf+num_t0:]
+    if not base:
+        k = 1/tau
+    else:
+        k = np.empty(tau.size+1)
+        k[:-1] = 1/tau; k[-1] = 0
 
     end = 0; t0_idx = num_irf
     for ti,d,e in zip(t,intensity,eps):
         for j in range(d.shape[1]):
             t0 = params[t0_idx]
-            A = make_A_matrix_exp(ti-t0, fwhm, tau, base, irf, eta)
+            if irf == 'g':
+                A = make_A_matrix_gau(ti-t0, fwhm, k)
+            elif irf == 'c':
+                A = make_A_matrix_cauchy(ti-t0, fwhm, k)
+            else:
+                A_gau = make_A_matrix_gau(ti-t0, fwhm_G, k)
+                A_cauchy = make_A_matrix_cauchy(ti-t0, fwhm_L, k)
+                A = A_gau + eta*(A_cauchy-A_gau)
             c = fact_anal_A(A, d[:,j], e[:,j])
             chi[end:end+d.shape[0]] = ((c@A) - d[:, j])/e[:, j]
 
@@ -110,10 +118,6 @@ def jac_res_decay(params: np.ndarray, num_comp: int, base: bool, irf: str,
                 param[1]: fwhm_L
                 param[2:2+number of total time delay scan]: time zero of each scan
                 param[2+num_tot_scan:]: time constant (inverse of rate constant) of each decay component
-
-     fwhm: full width of half maximum of instrumental response function
-           if irf in ['g','c']: fwhm is single float
-           if irf == 'pv': fwhm = [fwhm_G, fwhm_L]
            
      num_comp: number of exponential decay component (except base)
      base: whether or not include baseline (i.e. very long lifetime component)
@@ -139,12 +143,12 @@ def jac_res_decay(params: np.ndarray, num_comp: int, base: bool, irf: str,
     
     if irf in ['g', 'c']:
             num_irf = 1 
-            eta = None
             fwhm = params[0]
     else:
         num_irf = 2
-        fwhm = np.array([fwhm[0], fwhm[1]])
-        eta = calc_eta(fwhm[0], fwhm[1])
+        fwhm_G, fwhm_L = params[:2]
+        eta = calc_eta(fwhm_G, fwhm_L)
+        etap_fwhm_G, etap_fwhm_L = deriv_calc_eta(fwhm_G, fwhm_L)
 
     num_t0 = 0; sum = 0
     for d in intensity:
@@ -152,6 +156,12 @@ def jac_res_decay(params: np.ndarray, num_comp: int, base: bool, irf: str,
         sum = sum + d.size
 
     tau = params[num_irf+num_t0:]
+
+    if not base:
+        k = 1/tau
+    else:
+        k = np.empty(tau.size+1)
+        k[:-1] = 1/tau; k[-1] = 0
     
     num_param = num_irf+num_t0+num_comp
 
@@ -161,9 +171,19 @@ def jac_res_decay(params: np.ndarray, num_comp: int, base: bool, irf: str,
 
     for ti,d,e in zip(t, intensity, eps):
         step = d.shape[0]
+        if irf == 'pv':
+            grad = np.empty((tau.size+3, ti.size))
         for j in range(d.shape[1]):
             t0 = params[t0_idx]
-            A = make_A_matrix_exp(ti-t0, fwhm, tau, base, irf, eta)
+            if irf == 'g':
+                A = make_A_matrix_gau(ti-t0, fwhm, k)
+            elif irf == 'c':
+                A = make_A_matrix_cauchy(ti-t0, fwhm, k)
+            else:
+                A_gau = make_A_matrix_gau(ti-t0, fwhm_G, k)
+                A_cauchy = make_A_matrix_cauchy(ti-t0, fwhm_L, k)
+                diff = A_cauchy-A_gau
+                A = A_gau + eta*diff
             c = fact_anal_A(A, d[:,j], e[:,j])
                 
             if irf == 'g':
@@ -171,15 +191,22 @@ def jac_res_decay(params: np.ndarray, num_comp: int, base: bool, irf: str,
             elif irf == 'c':
                 grad = deriv_exp_sum_conv_cauchy(ti-t0, fwhm, 1/tau, c, base)
             else:
-                grad_gau = deriv_exp_sum_conv_gau(ti-t0, fwhm[0], 1/tau, c, base)
-                grad_cauchy = deriv_exp_sum_conv_cauchy(ti-t0, fwhm[1], 1/tau, c, base)
-                grad = grad_gau + eta*(grad_cauchy-grad_gau)
+                cdiff = (c@diff)
+                grad_gau = deriv_exp_sum_conv_gau(ti-t0, fwhm_G, 1/tau, c, base)
+                grad_cauchy = deriv_exp_sum_conv_cauchy(ti-t0, fwhm_L, 1/tau, c, base)
+                grad[0, :] = grad_gau[0, :] + eta*(grad_cauchy[0, :]-grad_gau[0, :])
+                grad[1, :] = (1-eta)*grad_gau[1, :]+etap_fwhm_G*cdiff
+                grad[2, :] = eta*grad_cauchy[1, :]+etap_fwhm_L*cdiff
+                grad[3:, :] = grad_gau[2:, :] + eta*(grad_cauchy[2:, :]-grad_gau[2:, :])
    
             grad = np.einsum('j,ij->ij', 1/e[:, j], grad)
-
-            df[end:end+step, tau_start:] = np.einsum('i,ij->ij', -1/tau**2, grad[2:,:]).T
+            if irf in ['g', 'c']:
+                df[end:end+step, tau_start:] = np.einsum('i,ij->ij', -1/tau**2, grad[2:,:]).T
+                df[end:end+step, 0] = grad[1, :]
+            else:
+                df[end:end+step, tau_start:] = np.einsum('i,ij->ij', -1/tau**2, grad[3:,:]).T
+                df[end:end+step, 0:2] = grad[1:3, :].T
             df[end:end+step, t0_idx] = -grad[0, :]
-            df[end:end+step, 0] = grad[1, :]
                 
             end = end + step
             t0_idx = t0_idx + 1

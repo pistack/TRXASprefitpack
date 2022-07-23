@@ -14,7 +14,7 @@ from scipy.optimize import basinhopping
 from scipy.optimize import least_squares
 from ..mathfun.A_matrix import make_A_matrix_exp, fact_anal_A
 from ..res.parm_bound import set_bound_t0, set_bound_tau
-from ..res.res_gen import residual_scalar, res_grad_scalar
+from ..res.res_gen import res_grad_scalar
 from ..res.res_decay import residual_decay, jac_res_decay
 
 def fit_transient_exp(irf: str, fwhm_init: Union[float, np.ndarray], 
