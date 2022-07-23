@@ -63,9 +63,9 @@ def fit_static():
                         help='full width at half maximum for lorenzian shape ' +
                         'It would be not used when you use gaussian line shape')
     parse.add_argument('--thy_file', type=str, help='filename which stores thoretical peak position and intensity.')
-    parse.add_argument('--fwhm_G_thy', type=float, help='gaussian part of uniform' +
+    parse.add_argument('--fwhm_G_thy', type=float, default=0, help='gaussian part of uniform' +
     ' broadening parameter for theoretical line shape spectrum')
-    parse.add_argument('--fwhm_L_thy', type=float, help='lorenzian part of uniform' +
+    parse.add_argument('--fwhm_L_thy', type=float, default=0, help='lorenzian part of uniform' +
     ' broadening parameter for theoretical line shape spectrum')
     parse.add_argument('--policy', choices=['shift', 'scale', 'both'], help=policy_help)
     parse.add_argument('--peak_scale', type=float, help='inital peak position scale parameter')
@@ -90,8 +90,18 @@ def fit_static():
         fwhm_L_init = None
     elif args.mode == 'voigt' and args.e0_voigt is not None:
         e0_init = np.array(args.e0_voigt)
-        fwhm_G_init = np.array(args.fwhm_G_voigt)
-        fwhm_L_init = np.array(args.fwhm_L_voigt)
+        if fwhm_G_init is None:
+            fwhm_G_init = np.zeros_like(e0_init)
+        else:
+            fwhm_G_init = np.array(args.fwhm_G_voigt)
+        if fwhm_L_init is None:
+            fwhm_L_init = np.zeros_like(e0_init)
+        else:
+            fwhm_L_init = np.array(args.fwhm_L_voigt)
+        if fwhm_G_init is None and fwhm_L_init is None:
+            raise Exception("Please set both initial fwhm_G and fwhm_L for each voigt component")
+        if fwhm_G_init.size != fwhm_L_init:
+            raise Exception("The number of initial fwhm_G and fwhm_L parameter should be same")
     elif args.mode == 'thy':
         fwhm_G_init = args.fwhm_G_thy
         fwhm_L_init = args.fwhm_L_thy

@@ -108,7 +108,7 @@ def residual_both(params: np.ndarray, num_comp: int, num_comp_osc:int, base: boo
                 tmp_gau = make_A_matrix_gau(ti-t0, fwhm, k); 
                 tmp_gau_osc = make_A_matrix_gau_osc(ti-t0, fwhm, 1/tau_osc, period_osc, phase_osc)
                 tmp_cauchy = make_A_matrix_cauchy(ti-t0, fwhm, k)
-                tmp_cauchy_osc = make_A_matrix_cauchy_osc(ti-t0, fwhm, k)
+                tmp_cauchy_osc = make_A_matrix_cauchy_osc(ti-t0, fwhm, 1/tau_osc, period_osc, phase_osc)
                 A[:num_comp+1*base, :] = tmp_gau + eta*(tmp_cauchy-tmp_gau)
                 A[num_comp+1*base:, :] = tmp_gau_osc + eta*(tmp_cauchy_osc-tmp_gau_osc)
 
@@ -220,7 +220,7 @@ def jac_res_both(params: np.ndarray, num_comp: int, num_comp_osc:int, base: bool
                 tmp_gau = make_A_matrix_gau(ti-t0, fwhm, k); 
                 tmp_gau_osc = make_A_matrix_gau_osc(ti-t0, fwhm, 1/tau_osc, period_osc, phase_osc)
                 tmp_cauchy = make_A_matrix_cauchy(ti-t0, fwhm, k)
-                tmp_cauchy_osc = make_A_matrix_cauchy_osc(ti-t0, fwhm, k)
+                tmp_cauchy_osc = make_A_matrix_cauchy_osc(ti-t0, fwhm, 1/tau_osc, period_osc, phase_osc)
                 diff = tmp_cauchy-tmp_gau; diff_osc = tmp_cauchy_osc-tmp_gau_osc
                 A[:num_comp+1*base, :] = tmp_gau + eta*diff
                 A[num_comp+1*base:, :] = tmp_gau_osc + eta*diff_osc
