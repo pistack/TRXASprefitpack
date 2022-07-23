@@ -14,8 +14,7 @@ from scipy.optimize import basinhopping
 from scipy.optimize import least_squares
 from ..mathfun.A_matrix import make_A_matrix_exp, fact_anal_A
 from ..res.parm_bound import set_bound_t0, set_bound_tau
-from ..res.res_gen import res_grad_scalar
-from ..res.res_decay import residual_decay, jac_res_decay
+from ..res.res_decay import residual_decay, res_grad_decay
 
 def fit_transient_exp(irf: str, fwhm_init: Union[float, np.ndarray], 
                       t0_init: np.ndarray, tau_init: np.ndarray, base: bool, 
@@ -134,7 +133,7 @@ def fit_transient_exp(irf: str, fwhm_init: Union[float, np.ndarray],
             fix_param_idx[i] = (bound[i][0] == bound[i][1])
       
       if do_glb:
-            go_args = (residual_decay, jac_res_decay, num_comp, base, irf, fix_param_idx, 
+            go_args = (num_comp, base, irf, fix_param_idx, 
             t, intensity, eps)
             min_go_kwargs = {'args': go_args, 'jac': True, 'bounds': bound}
             if kwargs_glb is not None:
@@ -148,7 +147,7 @@ def fit_transient_exp(irf: str, fwhm_init: Union[float, np.ndarray],
                         kwargs_glb['minimizer_kwargs'] = minimizer_kwargs
             else:
                   kwargs_glb = {'minimizer_kwargs' : min_go_kwargs}
-            res_go = basinhopping(res_grad_scalar, param, **kwargs_glb)
+            res_go = basinhopping(res_grad_decay, param, **kwargs_glb)
       else:
             res_go = dict()
             res_go['x'] = param
@@ -156,7 +155,7 @@ def fit_transient_exp(irf: str, fwhm_init: Union[float, np.ndarray],
             res_go['nfev'] = 0
 
       param_gopt = res_go['x']
-      args_lsq = (num_comp, base, irf, fix_param_idx, t, intensity, eps)
+      args_lsq = (base, irf, t, intensity, eps)
 
       if kwargs_lsq is not None:
             _ = kwargs_lsq.pop('args', None)

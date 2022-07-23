@@ -120,8 +120,8 @@ def deriv_edge_gaussian(e: Union[float, np.ndarray], fwhm_G: float) -> np.ndarra
      first derivative of gaussian edge function
     
     Note:
-     1st row: df/de
-     2nd row: df/d(fwhm_G)
+     1st column: df/de
+     2nd column: df/d(fwhm_G)
     '''
     tmp = np.exp(-4*np.log(2)*(e/fwhm_G)**2)/np.sqrt(np.pi)
 
@@ -129,9 +129,9 @@ def deriv_edge_gaussian(e: Union[float, np.ndarray], fwhm_G: float) -> np.ndarra
     grad_fwhm_G = -2*np.sqrt(np.log(2))*e/fwhm_G/fwhm_G*tmp
 
     if isinstance(e, np.ndarray):
-        grad = np.empty((2, e.size))
-        grad[0, :] = grad_e
-        grad[1, :] = grad_fwhm_G
+        grad = np.empty((e.size, 2))
+        grad[:, 0] = grad_e
+        grad[:, 1] = grad_fwhm_G
     else:
         grad = np.empty(2)
         grad[0] = grad_e
@@ -151,8 +151,8 @@ def deriv_edge_lorenzian(e: Union[float, np.ndarray], fwhm_L: float) -> np.ndarr
      first derivative of lorenzian type function
     
     Note:
-     1st row: df/de
-     2nd row: df/d(fwhm_L)
+     1st column: df/de
+     2nd column: df/d(fwhm_L)
     '''
     tmp = 1/np.pi/(e**2+fwhm_L**2/4)
     grad_e = fwhm_L*tmp/2
@@ -160,9 +160,9 @@ def deriv_edge_lorenzian(e: Union[float, np.ndarray], fwhm_L: float) -> np.ndarr
 
 
     if isinstance(e, np.ndarray):
-        grad = np.empty((2, e.size))
-        grad[0, :] = grad_e
-        grad[1, :] = grad_fwhm_L
+        grad = np.empty((e.size, 2))
+        grad[:, 0] = grad_e
+        grad[:, 1] = grad_fwhm_L
     else:
         grad = np.empty(2)
         grad[0] = grad_e
@@ -183,28 +183,28 @@ def deriv_voigt(e: Union[float, np.ndarray], fwhm_G: float, fwhm_L: float) -> np
      first derivative of voigt profile 
 
     Note:
-     1st row: df/de
-     2nd row: df/d(fwhm_G)
-     3rd row: df/d(fwhm_L)
+     1st column: df/de
+     2nd column: df/d(fwhm_G)
+     3rd column: df/d(fwhm_L)
      if fwhm_G is zero it returns
-     1st row: dl/de
-     2nd row: 0
-     3rd row: dL/d(fwhm_L) 
+     1st column: dl/de
+     2nd column: 0
+     3rd column: dL/d(fwhm_L) 
      L means normalized lorenzian shape with full width at half maximum parameter: fwhm_L
      if fwhm_L is zero it returns 
-     1st row: dg/de
-     2nd row: dg/d(fwhm_G)
-     3rd row: 0
+     1st column: dg/de
+     2nd column: dg/d(fwhm_G)
+     3rd column: 0
      g means normalized gaussian shape with full width at half maximum parameter: fwhm_G
     '''
 
     if fwhm_G == 0:
         tmp = fwhm_L/2/np.pi/(e**2+fwhm_L**2/4)**2
         if isinstance(e, np.ndarray):
-            grad = np.empty((3, e.size))
-            grad[0, :] = - 2*e*tmp
-            grad[1, :] = 0
-            grad[2, :] = (1/np.pi/(e**2+fwhm_L**2/4)-fwhm_L*tmp)/2
+            grad = np.empty((e.size, 3))
+            grad[:, 0] = - 2*e*tmp
+            grad[:, 1] = 0
+            grad[:, 2] = (1/np.pi/(e**2+fwhm_L**2/4)-fwhm_L*tmp)/2
         else:
             grad = np.empty(3)
             grad[0] = -2*e*tmp
@@ -216,10 +216,10 @@ def deriv_voigt(e: Union[float, np.ndarray], fwhm_G: float, fwhm_L: float) -> np
     if fwhm_L == 0:
         tmp = np.exp(-(e/sigma)**2/2)/(sigma*np.sqrt(2*np.pi))
         if isinstance(e, np.ndarray):
-            grad = np.empty((3, e.size))
-            grad[0, :] = -e/sigma**2*tmp
-            grad[1, :] = ((e/sigma)**2-1)/fwhm_G*tmp
-            grad[2, :] = 0
+            grad = np.empty((e.size, 3))
+            grad[:, 0] = -e/sigma**2*tmp
+            grad[:, 1] = ((e/sigma)**2-1)/fwhm_G*tmp
+            grad[:, 2] = 0
         else:
             grad = np.empty(3)
             grad[0] = -e/sigma**2*tmp
@@ -231,10 +231,10 @@ def deriv_voigt(e: Union[float, np.ndarray], fwhm_G: float, fwhm_L: float) -> np
     f = wofz(z)/(sigma*np.sqrt(2*np.pi))
     f_z = (complex(0, 2/np.sqrt(np.pi))-2*z*wofz(z))/(sigma*np.sqrt(2*np.pi))
     if isinstance(e, np.ndarray):
-        grad = np.empty((3, e.size))
-        grad[0, :] = f_z.real/(sigma*np.sqrt(2))
-        grad[1, :] = (-f/sigma-z/sigma*f_z).real/(2*np.sqrt(2*np.log(2)))
-        grad[2, :] = -f_z.imag/(2*np.sqrt(2)*sigma)
+        grad = np.empty((e.size, 3))
+        grad[:, 0] = f_z.real/(sigma*np.sqrt(2))
+        grad[:, 1] = (-f/sigma-z/sigma*f_z).real/(2*np.sqrt(2*np.log(2)))
+        grad[:, 2] = -f_z.imag/(2*np.sqrt(2)*sigma)
     else:
         grad = np.empty(3)
         grad[0] = f_z.real/(sigma*np.sqrt(2))
@@ -269,16 +269,16 @@ def deriv_voigt_thy(e: np.ndarray, thy_peak: np.ndarray,
       derivative of normalized voigt broadened theoritical lineshape spectrum
     
     Note:
-     1st row: df/d(fwhm_G)
-     2nd row: df/d(fwhm_L)
+     1st column: df/d(fwhm_G)
+     2nd column: df/d(fwhm_L)
      if policy in ['shift', 'scale']:
-        3rd row: df/d(peak_factor)
+        3rd column: df/d(peak_factor)
      if policy == 'both':
-        3rd row: df/d(peak_factor[0]), peak_factor[0]: shift factor
-        4th row: df/d(peak_factor[1]), peak_factor[1]: scale factor
+        3rd column: df/d(peak_factor[0]), peak_factor[0]: shift factor
+        4th column: df/d(peak_factor[1]), peak_factor[1]: scale factor
     '''
 
-    deriv_voigt_tensor = np.zeros((thy_peak.shape[0], 3, e.size))
+    deriv_voigt_tensor = np.zeros((thy_peak.shape[0], e.size, 3))
     peak_copy = np.copy(thy_peak[:, 0])
     if policy == 'shift':
       peak_copy = peak_copy - peak_factor
@@ -292,20 +292,20 @@ def deriv_voigt_thy(e: np.ndarray, thy_peak: np.ndarray,
     grad_tmp = np.tensordot(thy_peak[:, 1], deriv_voigt_tensor, axes=1)
 
     if policy in ['shift', 'scale']:
-        grad = np.empty((3, e.size))
+        grad = np.empty((e.size, 3))
     else:
-        grad = np.empty((4, e.size))
+        grad = np.empty((e.size, 4))
     
-    grad[0, :] = grad_tmp[1, :]
-    grad[1, :] = grad_tmp[2, :]
+    grad[:, 0] = grad_tmp[:, 1]
+    grad[:, 1] = grad_tmp[:, 2]
 
     if policy == 'shift':
-        grad[2, :] = -grad_tmp[0, :]
+        grad[:, 2] = -grad_tmp[:, 0]
     elif policy == 'scale':
-        grad[2, :] = np.einsum('i,i->i', thy_peak[:, 1], grad_tmp[0, :])
+        grad[:, 2] = np.einsum('i,i->i', thy_peak[:, 1], grad_tmp[:, 0])
     else:
-        grad[2, :] = -grad_tmp[0, :]
-        grad[3, :] = np.einsum('i,i->i', thy_peak[:, 1], grad_tmp[0, :])
+        grad[:, 2] = -grad_tmp[:, 0]
+        grad[:, 3] = np.einsum('i,i->i', thy_peak[:, 1], grad_tmp[:, 0])
 
     return grad/np.sum(thy_peak[:, 1])
 

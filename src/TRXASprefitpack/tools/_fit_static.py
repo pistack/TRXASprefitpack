@@ -90,22 +90,28 @@ def fit_static():
         fwhm_L_init = None
     elif args.mode == 'voigt' and args.e0_voigt is not None:
         e0_init = np.array(args.e0_voigt)
-        if fwhm_G_init is None:
+        if args.fwhm_G_voigt is None:
             fwhm_G_init = np.zeros_like(e0_init)
         else:
             fwhm_G_init = np.array(args.fwhm_G_voigt)
-        if fwhm_L_init is None:
+        if args.fwhm_L_voigt is None:
             fwhm_L_init = np.zeros_like(e0_init)
         else:
             fwhm_L_init = np.array(args.fwhm_L_voigt)
-        if fwhm_G_init is None and fwhm_L_init is None:
+        if args.fwhm_G_voigt is None and args.fwhm_L_voigt is None:
             raise Exception("Please set both initial fwhm_G and fwhm_L for each voigt component")
-        if fwhm_G_init.size != fwhm_L_init:
+        if fwhm_G_init.size != fwhm_L_init.size:
             raise Exception("The number of initial fwhm_G and fwhm_L parameter should be same")
     elif args.mode == 'thy':
         fwhm_G_init = args.fwhm_G_thy
         fwhm_L_init = args.fwhm_L_thy
-        thy_peak = np.genfromtxt(args.thy_file)[:,:2]   
+        thy_peak = np.genfromtxt(args.thy_file)[:,:2]
+        if args.policy is None:
+            raise Exception("Please set policy to solve descrepency between theoretical and experimental spectrum.")
+        if args.policy in ['shift', 'both'] and args.peak_shift is None:
+            raise Exception(f"Your policy is {args.policy}, please set initial peak_shift parameter.")
+        if args.policy in ['scale', 'both'] and args.peak_scale is None:
+            raise Exception(f"Your policy is {args.policy}, please set peak_scale parameter.")   
     
     edge = args.edge
     e0_edge_init = args.e0_edge

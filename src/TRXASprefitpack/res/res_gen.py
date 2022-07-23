@@ -27,27 +27,6 @@ def residual_scalar(params: np.ndarray, *args) -> float:
         fargs = tuple(args[1:])
     return np.sum(func(params, *fargs)**2)/2
 
-def res_grad_scalar(params: np.ndarray, *args) -> Tuple[np.ndarray, np.ndarray]:
-    '''
-    grad_res_scalar
-    scipy.optimize.minimizer compatible gradient of scalar residual function
-
-    Args:
-     params: parameter used for fitting
-     args: arguments
-             args[0]: objective function
-             args[1]: jacobian of objective function
-             args[2:]: arguments for both objective and jocobian  
-
-    Returns:
-     pair of residual scalar and its gradient
-    '''
-    func, jac = args[:2]
-    fargs = ()
-    if len(args) > 2:
-        fargs = tuple(args[2:])
-    ans = func(params, *fargs)
-    return np.sum(ans**2)/2, ans @ jac(params, *fargs)
 
 def res_scan(p, *args) -> float:
     '''
@@ -93,27 +72,3 @@ def res_lmfit(params, *args) -> np.ndarray:
     if len(args) > 2:
         fargs = tuple(args[2:])
     return func(params, *fargs)
-
-def jac_lmfit(params, *args) -> np.ndarray:
-    '''
-    jac_lmfit
-    lmfit compatible layer for jacobian of vector residual function
-
-    Args:
-     params: parameter used for fitting (lmfit.parameter class)
-     args: arguments
-             args[0]: objective function
-             args[1]: jacobian of objective function
-             args[2:]: arguments for both objective and jocobian  
-
-    Returns:
-     lmfit compatible Gradient of residucal vector
-    '''
-    mask = np.empty(len(params), dtype=bool)
-    for i in range(len(params)):
-        mask[i] = params[i].vary
-    jac = args[1]
-    fargs = ()
-    if len(args) > 2:
-        fargs = tuple(args[2:])
-    return jac(params, *fargs)[:, mask]

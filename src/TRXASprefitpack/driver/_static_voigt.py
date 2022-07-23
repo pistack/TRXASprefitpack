@@ -16,8 +16,7 @@ from scipy.optimize import least_squares
 from ..mathfun.peak_shape import voigt, edge_gaussian, edge_lorenzian
 from ..mathfun.A_matrix import fact_anal_A
 from ..res.parm_bound import set_bound_t0
-from ..res.res_gen import res_grad_scalar
-from ..res.res_voigt import residual_voigt, jac_res_voigt
+from ..res.res_voigt import residual_voigt, res_grad_voigt
 
 def fit_static_voigt(e0_init: np.ndarray, fwhm_G_init: np.ndarray, fwhm_L_init: np.ndarray,
                      edge: Optional[str] = None, 
@@ -33,9 +32,9 @@ def fit_static_voigt(e0_init: np.ndarray, fwhm_G_init: np.ndarray, fwhm_L_init: 
                      bound_fwhm_L: Optional[Sequence[Tuple[float, float]]] = None,
                      bound_edge_pos: Optional[Tuple[float, float]] = None,
                      bound_edge_fwhm: Optional[Tuple[float, float]] = None,
-                      e: Optional[np.ndarray] = None, 
-                      intensity: Optional[np.ndarray] = None,
-                      eps: Optional[np.ndarray] = None) -> StaticResult:
+                     e: Optional[np.ndarray] = None, 
+                     intensity: Optional[np.ndarray] = None,
+                     eps: Optional[np.ndarray] = None) -> StaticResult:
                       
       '''
       driver routine for fitting static spectrum with sum of voigt component, edge and 
@@ -163,7 +162,7 @@ def fit_static_voigt(e0_init: np.ndarray, fwhm_G_init: np.ndarray, fwhm_L_init: 
             fix_param_idx[i] = (bound[i][0] == bound[i][1])
       
       if do_glb:
-            go_args = (residual_voigt, jac_res_voigt, num_voigt, edge, base_order, fix_param_idx, 
+            go_args = (num_voigt, edge, base_order, fix_param_idx, 
             e, intensity, eps)
             min_go_kwargs = {'args': go_args, 'jac': True, 'bounds': bound}
             if kwargs_glb is not None:
@@ -177,7 +176,7 @@ def fit_static_voigt(e0_init: np.ndarray, fwhm_G_init: np.ndarray, fwhm_L_init: 
                         kwargs_glb['minimizer_kwargs'] = minimizer_kwargs
             else:
                   kwargs_glb = {'minimizer_kwargs' : min_go_kwargs}
-            res_go = basinhopping(res_grad_scalar, param, **kwargs_glb)
+            res_go = basinhopping(res_grad_voigt, param, **kwargs_glb)
       else:
             res_go = dict()
             res_go['x'] = param
@@ -186,7 +185,7 @@ def fit_static_voigt(e0_init: np.ndarray, fwhm_G_init: np.ndarray, fwhm_L_init: 
 
       param_gopt = res_go['x']
 
-      lsq_args = (num_voigt, edge, base_order, fix_param_idx, e, intensity, eps)
+      lsq_args = (num_voigt, edge, base_order, e, intensity, eps)
 
       if kwargs_lsq is not None:
             _ = kwargs_lsq.pop('args', None)

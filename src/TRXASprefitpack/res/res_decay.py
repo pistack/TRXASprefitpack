@@ -7,7 +7,7 @@ convolution of sum of exponential decay and instrumental response function
 :license: LGPL3.
 '''
 
-from typing import Optional, Sequence
+from typing import Optional, Sequence, Tuple
 import numpy as np
 from ..mathfun.irf import calc_eta, deriv_calc_eta
 from ..mathfun.A_matrix import make_A_matrix_gau, make_A_matrix_cauchy, fact_anal_A
@@ -15,8 +15,7 @@ from ..mathfun.exp_conv_irf import deriv_exp_sum_conv_gau, deriv_exp_sum_conv_ca
 
 # residual and gradient function for exponential decay model 
 
-def residual_decay(params: np.ndarray, num_comp: int, base: bool, irf: str, 
-                   fix_param_idx: Optional[np.ndarray] = None,
+def residual_decay(params: np.ndarray, base: bool, irf: str, 
                    t: Optional[Sequence[np.ndarray]] = None, 
                    intensity: Optional[Sequence[np.ndarray]] = None, eps: Optional[Sequence[np.ndarray]] = None) -> np.ndarray:
     '''
@@ -44,7 +43,6 @@ def residual_decay(params: np.ndarray, num_comp: int, base: bool, irf: str,
           * 'c': normalized cauchy distribution,
           * 'pv': pseudo voigt profile :math:`(1-\\eta)g + \\eta c`
           For pseudo voigt profile, the mixing parameter eta is calculated by calc_eta routine
-     fix_param_idx: idx for fixed parameter (masked array for `params`)
      t: time points for each data set
      intensity: sequence of intensity of datasets
      eps: sequence of estimated error of datasets
@@ -98,13 +96,14 @@ def residual_decay(params: np.ndarray, num_comp: int, base: bool, irf: str,
 
     return chi
     
-def jac_res_decay(params: np.ndarray, num_comp: int, base: bool, irf: str, 
+def res_grad_decay(params: np.ndarray, num_comp: int, base: bool, irf: str, 
                    fix_param_idx: Optional[np.ndarray] = None,
                    t: Optional[Sequence[np.ndarray]] = None, 
-                   intensity: Optional[Sequence[np.ndarray]]= None, eps: Optional[Sequence[np.ndarray]]=None) -> np.ndarray:
+                   intensity: Optional[Sequence[np.ndarray]]= None, 
+                   eps: Optional[Sequence[np.ndarray]]=None) -> Tuple[np.ndarray, np.ndarray]:
     '''
-    jac_res_decay
-    scipy.optimize.least_squares compatible gradient of vector residual function for fitting multiple set of time delay scan with the
+    res_grad_decay
+    scipy.optimize.minimize compatible scalar residual and its gradient function for fitting multiple set of time delay scan with the
     sum of convolution of exponential decay and instrumental response function  
 
     Args:
@@ -133,11 +132,7 @@ def jac_res_decay(params: np.ndarray, num_comp: int, base: bool, irf: str,
      eps: sequence of estimated error of datasets
 
     Returns:
-     Gradient of residual vector
-    
-    Note:
-     Gradient is implemented for gaussian and cauchy irf.
-     For pseudo voigt shape irf, gradient is implemented only when both fwhm_G and fwhm_L are fixed.
+     Tuple of scalar residual function :math:`(\\frac{1}{2}\\sum_i {res}^2_i)` and its gradient
     '''
     params = np.atleast_1d(params)
     
@@ -164,7 +159,7 @@ def jac_res_decay(params: np.ndarray, num_comp: int, base: bool, irf: str,
         k[:-1] = 1/tau; k[-1] = 0
     
     num_param = num_irf+num_t0+num_comp
-
+    chi = np.empty(sum)
     df = np.zeros((sum, num_param))
 
     end = 0; t0_idx = num_irf; tau_start = num_t0 + t0_idx
@@ -172,7 +167,7 @@ def jac_res_decay(params: np.ndarray, num_comp: int, base: bool, irf: str,
     for ti,d,e in zip(t, intensity, eps):
         step = d.shape[0]
         if irf == 'pv':
-            grad = np.empty((tau.size+3, ti.size))
+            grad = np.empty((ti.size, tau.size+3))
         for j in range(d.shape[1]):
             t0 = params[t0_idx]
             if irf == 'g':
@@ -185,6 +180,7 @@ def jac_res_decay(params: np.ndarray, num_comp: int, base: bool, irf: str,
                 diff = A_cauchy-A_gau
                 A = A_gau + eta*diff
             c = fact_anal_A(A, d[:,j], e[:,j])
+            chi[end:end+step] = (c@A-d[:,j])/e[:, j]
                 
             if irf == 'g':
                 grad = deriv_exp_sum_conv_gau(ti-t0, fwhm, 1/tau, c, base)
@@ -194,19 +190,19 @@ def jac_res_decay(params: np.ndarray, num_comp: int, base: bool, irf: str,
                 cdiff = (c@diff)
                 grad_gau = deriv_exp_sum_conv_gau(ti-t0, fwhm_G, 1/tau, c, base)
                 grad_cauchy = deriv_exp_sum_conv_cauchy(ti-t0, fwhm_L, 1/tau, c, base)
-                grad[0, :] = grad_gau[0, :] + eta*(grad_cauchy[0, :]-grad_gau[0, :])
-                grad[1, :] = (1-eta)*grad_gau[1, :]+etap_fwhm_G*cdiff
-                grad[2, :] = eta*grad_cauchy[1, :]+etap_fwhm_L*cdiff
-                grad[3:, :] = grad_gau[2:, :] + eta*(grad_cauchy[2:, :]-grad_gau[2:, :])
+                grad[:, 0] = grad_gau[:, 0] + eta*(grad_cauchy[:, 0]-grad_gau[:, 0])
+                grad[:, 1] = (1-eta)*grad_gau[:, 1]+etap_fwhm_G*cdiff
+                grad[:, 2] = eta*grad_cauchy[:, 1]+etap_fwhm_L*cdiff
+                grad[:, 3:] = grad_gau[:, 2:] + eta*(grad_cauchy[:, 2:]-grad_gau[:, 2:])
    
-            grad = np.einsum('j,ij->ij', 1/e[:, j], grad)
+            grad = np.einsum('i,ij->ij', 1/e[:,j], grad)
             if irf in ['g', 'c']:
-                df[end:end+step, tau_start:] = np.einsum('i,ij->ij', -1/tau**2, grad[2:,:]).T
-                df[end:end+step, 0] = grad[1, :]
+                df[end:end+step, tau_start:] = np.einsum('j,ij->ij', -1/tau**2, grad[:, 2:])
+                df[end:end+step, 0] = grad[:, 1]
             else:
-                df[end:end+step, tau_start:] = np.einsum('i,ij->ij', -1/tau**2, grad[3:,:]).T
-                df[end:end+step, 0:2] = grad[1:3, :].T
-            df[end:end+step, t0_idx] = -grad[0, :]
+                df[end:end+step, tau_start:] = np.einsum('j,ij->ij', -1/tau**2, grad[:, 3:])
+                df[end:end+step, :2] = grad[:, 1:3]
+            df[end:end+step, t0_idx] = -grad[:, 0]
                 
             end = end + step
             t0_idx = t0_idx + 1
@@ -214,4 +210,4 @@ def jac_res_decay(params: np.ndarray, num_comp: int, base: bool, irf: str,
     if fix_param_idx is not None:
         df[:, fix_param_idx] = 0
 
-    return df
+    return np.sum(chi**2)/2, chi@df

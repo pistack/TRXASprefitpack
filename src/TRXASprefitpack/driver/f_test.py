@@ -145,30 +145,28 @@ def confidence_interval_f(result, alpha: float) -> CIResult:
             message = 'The confidence interval for non shared parameter especially time zeros are not calculated.'
             fix_param_idx[num_irf:num_irf+num_t0] = True
         else:
-            message = 'The confidence interval of every parameter are calculated'    
+            message = 'The confidence interval of every non-fixed parameters are calculated'    
     else:
-        message = 'The confidence interval of every parameter are calculated'
+        message = 'The confidence interval of every non-fixed parameters are calculated'
 
     if result['model'] == 'decay':
-        args = [F_alpha, dfn, dfd, chi2_opt, 0, params, residual_decay, result['n_decay'],
-        result['base'], result['irf'], fix_param_idx, 
-        result['t'], result['intensity'], result['eps']]
+        args = [F_alpha, dfn, dfd, chi2_opt, 0, params, residual_decay,
+        result['base'], result['irf'], result['t'], result['intensity'], result['eps']]
     elif result['model'] == 'dmp_osc':
         args = [F_alpha, dfn, dfd, chi2_opt, 0, params, residual_dmp_osc,
-        result['n_osc'], result['irf'], fix_param_idx,
-        result['t'], result['intensity'], result['eps']]
+        result['n_osc'], result['irf'], result['t'], result['intensity'], result['eps']]
     elif result['model'] == 'both':
         args = [F_alpha, dfn, dfd, chi2_opt, 0, params, residual_both,
-        result['n_decay'], result['n_osc'], result['base'], result['irf'], fix_param_idx,
+        result['n_decay'], result['n_osc'], result['base'], result['irf'],
         result['t'], result['intensity'], result['eps']]
     elif result['model'] == 'voigt':
         args = [F_alpha, dfn, dfd, chi2_opt, 0, params, residual_voigt,
-        result['n_voigt'], result['edge'], result['base_order'], fix_param_idx,
+        result['n_voigt'], result['edge'], result['base_order'],
         result['e'], result['intensity'], result['eps']]
     elif result['model'] == 'thy':
         args = [F_alpha, dfn, dfd, chi2_opt, 0, params, residual_thy,
         result['policy'], result['thy_peak'], 
-        result['edge'], result['base_order'], fix_param_idx,
+        result['edge'], result['base_order'],
         result['e'], result['intensity'], result['eps']]
     
     sub_scan_idx = scan_idx[~fix_param_idx]

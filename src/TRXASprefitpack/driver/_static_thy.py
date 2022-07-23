@@ -16,8 +16,7 @@ from scipy.optimize import least_squares
 from ..mathfun.peak_shape import edge_gaussian, edge_lorenzian, voigt_thy
 from ..mathfun.A_matrix import fact_anal_A
 from ..res.parm_bound import set_bound_t0
-from ..res.res_gen import res_grad_scalar
-from ..res.res_thy import residual_thy, jac_res_thy
+from ..res.res_thy import residual_thy, res_grad_thy
 
 def fit_static_thy(thy_peak: np.ndarray, fwhm_G_init: np.ndarray, fwhm_L_init: np.ndarray,
                    policy: str, peak_shift: Optional[float] = None,
@@ -178,7 +177,7 @@ def fit_static_thy(thy_peak: np.ndarray, fwhm_G_init: np.ndarray, fwhm_L_init: n
             fix_param_idx[i] = (bound[i][0] == bound[i][1])
       
       if do_glb:
-            go_args = (residual_thy, jac_res_thy, policy, thy_peak, edge, base_order, fix_param_idx, 
+            go_args = (policy, thy_peak, edge, base_order, fix_param_idx, 
             e, intensity, eps)
             min_go_kwargs = {'args': go_args, 'jac': True, 'bounds': bound}
             if kwargs_glb is not None:
@@ -192,7 +191,7 @@ def fit_static_thy(thy_peak: np.ndarray, fwhm_G_init: np.ndarray, fwhm_L_init: n
                         kwargs_glb['minimizer_kwargs'] = minimizer_kwargs
             else:
                   kwargs_glb = {'minimizer_kwargs' : min_go_kwargs}
-                  res_go = basinhopping(res_grad_scalar, param, **kwargs_glb)
+                  res_go = basinhopping(res_grad_thy, param, **kwargs_glb)
       else:
             res_go = dict()
             res_go['x'] = param
@@ -201,7 +200,7 @@ def fit_static_thy(thy_peak: np.ndarray, fwhm_G_init: np.ndarray, fwhm_L_init: n
 
       param_gopt = res_go['x']
 
-      lsq_args = (policy, thy_peak, edge, base_order, fix_param_idx, e, intensity, eps)
+      lsq_args = (policy, thy_peak, edge, base_order, e, intensity, eps)
       if kwargs_lsq is not None:
             _ = kwargs_lsq.pop('args', None)
             _ = kwargs_lsq.pop('kwargs', None)

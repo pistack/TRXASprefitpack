@@ -15,7 +15,6 @@ from ..mathfun.peak_shape import deriv_voigt, deriv_edge_gaussian, deriv_edge_lo
 
 def residual_voigt(params: np.ndarray, num_voigt: int, edge: Optional[str] = None,
                     base_order: Optional[int] = None, 
-                    fix_param_idx: Optional[np.ndarray] = None,
                     e: np.ndarray = None, 
                     intensity: np.ndarray = None, eps: np.ndarray = None) -> np.ndarray:
     '''
@@ -40,7 +39,6 @@ def residual_voigt(params: np.ndarray, num_voigt: int, edge: Optional[str] = Non
                         if edge is not set, it does not include edge function.
      base_order ({0, 1, 2}): polynomial order of baseline function
                              if base_order is not set, it does not include baseline function.
-     fix_param_idx: idx for fixed parameter (masked array for `params`)
      e: 1d array of energy points of data (n,)
      intensity: intensity of static data (n,)
      eps: estimated error of data (n,)
@@ -86,18 +84,18 @@ def residual_voigt(params: np.ndarray, num_voigt: int, edge: Optional[str] = Non
     
     c = fact_anal_A(A, intensity, eps)
 
-    chi = (intensity - c@A)/eps
+    chi = (c@A-intensity)/eps
 
     return chi
 
-def jac_res_voigt(params: np.ndarray, num_voigt: int, edge: Optional[str] = None,
-                    base_order: Optional[int] = None, 
-                    fix_param_idx: Optional[np.ndarray] = None,
-                    e: np.ndarray = None, 
-                    intensity: np.ndarray = None, eps: np.ndarray = None) -> np.ndarray:
+def res_grad_voigt(params: np.ndarray, num_voigt: int, edge: Optional[str] = None,
+                   base_order: Optional[int] = None, 
+                   fix_param_idx: Optional[np.ndarray] = None,
+                   e: np.ndarray = None, 
+                   intensity: np.ndarray = None, eps: np.ndarray = None) -> np.ndarray:
     '''
-    jac_res_voigt
-    scipy.optimize.least_squares compatible dfient of vector residual function for fitting static spectrum with the 
+    res_grad_voigt
+    scipy.optimize.minimizer compatible scalar residual function and its gradient for fitting static spectrum with the 
     sum of voigt function, edge function base function
 
     Args:
@@ -123,13 +121,13 @@ def jac_res_voigt(params: np.ndarray, num_voigt: int, edge: Optional[str] = None
      eps: estimated error of data (n,)
 
     Returns:
-     Grandient of residucal vector
+     Tuple of scalar residual function :math:`(\\frac{1}{2}\\sum_i {res}^2_i)` and its gradient
     
     Note:
-     data should not contain energy range.
      If fwhm_G of ith voigt component is zero then it is treated as lorenzian function with fwhm_L
      If fwhm_L of ith voigt component is zero then it is treated as gaussian function with fwhm_G
     '''
+
     params = np.atleast_1d(params)
     tot_comp = num_voigt
 
@@ -163,13 +161,14 @@ def jac_res_voigt(params: np.ndarray, num_voigt: int, edge: Optional[str] = None
     
     c = fact_anal_A(A, intensity, eps)
 
+    chi = (c@A-intensity)/eps
     df = np.empty((intensity.size, params.size))
 
     for i in range(num_voigt):
         df_tmp = c[i]*deriv_voigt(e-e0[i], fwhm_G[i], fwhm_L[i])
-        df[:, i] = -df_tmp[0]
-        df[:, num_voigt+i] = df_tmp[1]
-        df[:, 2*num_voigt+i] = df_tmp[2]
+        df[:, i] = -df_tmp[:, 0]
+        df[:, num_voigt+i] = df_tmp[:, 1]
+        df[:, 2*num_voigt+i] = df_tmp[:, 2]
 
     if edge is not None:
         if edge == 'g':
@@ -177,11 +176,11 @@ def jac_res_voigt(params: np.ndarray, num_voigt: int, edge: Optional[str] = None
         elif edge == 'l':
             df_edge = c[num_voigt]*deriv_edge_lorenzian(e-params[-2], params[-1]) 
         
-        df[:, -2] = -df_edge[0]
-        df[:, -1] = df_edge[1]
+        df[:, -2] = -df_edge[:, 0]
+        df[:, -1] = df_edge[:, 1]
     
     df = np.einsum('i,ij->ij', 1/eps, df)
 
     df[:, fix_param_idx] = 0
 
-    return df
+    return np.sum(chi**2)/2, chi@df

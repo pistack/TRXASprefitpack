@@ -155,9 +155,9 @@ def deriv_exp_conv_gau(t: Union[float, np.ndarray], fwhm: float,
      Derivative of Convolution of normalized gaussian distribution and exponential
      decay :math:`(\\exp(-kt))`.
     Note:
-     1st row: df/dt
-     2nd row: df/d(fwhm)
-     3rd row: df/dk
+     1st column: df/dt
+     2nd column: df/d(fwhm)
+     3rd column: df/dk
     '''
 
     sigma = fwhm/(2*np.sqrt(2*np.log(2)))
@@ -170,10 +170,10 @@ def deriv_exp_conv_gau(t: Union[float, np.ndarray], fwhm: float,
         grad[1] = ((k**2*sigma)*f - (k+t/sigma**2)*g)/(2*np.sqrt(2*np.log(2)))
         grad[2] = (sigma**2*k-t)*f - sigma*g
     else:
-        grad = np.empty((3, t.size))
-        grad[0, :] = g/sigma - k*f
-        grad[1, :] = ((k**2*sigma)*f - (k+t/sigma**2)*g)/(2*np.sqrt(2*np.log(2)))
-        grad[2, :] = (sigma**2*k-t)*f - sigma*g
+        grad = np.empty((t.size, 3))
+        grad[:, 0] = g/sigma - k*f
+        grad[:, 1] = ((k**2*sigma)*f - (k+t/sigma**2)*g)/(2*np.sqrt(2*np.log(2)))
+        grad[:, 2] = (sigma**2*k-t)*f - sigma*g
 
     return grad
 
@@ -195,9 +195,9 @@ def deriv_exp_conv_cauchy(t: Union[float, np.ndarray],
       exponential decay :math:`(\\exp(-kt))`.
     
     Note:
-     1st row: df/dt
-     2nd row: df/d(fwhm)
-     3rd row: df/dk
+     1st column: df/dt
+     2nd column: df/d(fwhm)
+     3rd column: df/dk
     '''
 
     if not isinstance(t, np.ndarray):
@@ -214,18 +214,18 @@ def deriv_exp_conv_cauchy(t: Union[float, np.ndarray],
             grad[1] = tmp.real/2
             grad[2] = -(t*f.imag+fwhm*f.real/2)/np.pi
     else:
-        grad = np.empty((3, t.size))
+        grad = np.empty((t.size, 3))
         if k == 0:
-            grad[0] = 2/(np.pi*fwhm*(1+(2*t/fwhm)**2))
-            grad[1] = -t/fwhm*grad[0]
-            grad[2] = 0
+            grad[:, 0] = 2/(np.pi*fwhm*(1+(2*t/fwhm)**2))
+            grad[:, 1] = -t/fwhm*grad[:, 0]
+            grad[:, 2] = 0
         else:
             z = (t+complex(0, fwhm/2))
             f = exp1x(-k*z)
             tmp = -(k*f+1/z)/np.pi
-            grad[0, :] = tmp.imag
-            grad[1, :] = tmp.real/2
-            grad[2, :] = -(t*f.imag+fwhm*f.real/2)/np.pi
+            grad[:, 0] = tmp.imag
+            grad[:, 1] = tmp.real/2
+            grad[:, 2] = -(t*f.imag+fwhm*f.real/2)/np.pi
     return grad
 
 # calculate derivative of the convolution of sum of exponential decay and instrumental response function
@@ -248,20 +248,20 @@ def deriv_exp_sum_conv_gau(t: np.ndarray, fwhm: float,
      Derivative of Convolution of normalized gaussian distribution and sum of exponential
      decay :math:`(\\exp(-kt))`.
     Note:
-     1st row: df/dt
-     2nd row: df/d(fwhm)
-     2+i th row: df/dk_i
+     1st column: df/dt
+     2nd column: df/d(fwhm)
+     2+i th column: df/dk_i
     '''
-    grad = np.zeros((2+k.size, t.size))
+    grad = np.zeros((t.size, 2+k.size))
     for i in range(k.size):
         grad_i = deriv_exp_conv_gau(t, fwhm, k[i])
-        grad[0, :] = grad[0, :] + c[i]*grad_i[0, :]
-        grad[1, :] = grad[1, :] + c[i]*grad_i[1, :]
-        grad[2+i, :] = c[i]*grad_i[2, :]
+        grad[:, 0] = grad[:, 0] + c[i]*grad_i[:, 0]
+        grad[:, 1] = grad[:, 1] + c[i]*grad_i[:, 1]
+        grad[:, 2+i] = c[i]*grad_i[:, 2]
     if base:
         grad_i = deriv_exp_conv_gau(t, fwhm, 0)
-        grad[0, :] = grad[0, :] + c[-1]*grad_i[0, :]
-        grad[1, :] = grad[1, :] + c[-1]*grad_i[1, :]
+        grad[:, 0] = grad[:, 0] + c[-1]*grad_i[:, 0]
+        grad[:, 1] = grad[:, 1] + c[-1]*grad_i[:, 1]
 
     return grad
 
@@ -283,20 +283,20 @@ def deriv_exp_sum_conv_cauchy(t: np.ndarray, fwhm: float,
      Derivative of Convolution of normalized cauchy distribution and sum of exponential
      decay :math:`(\\exp(-kt))`.
     Note:
-     1st row: df/dt
-     2nd row: df/d(fwhm)
-     2+i th row: df/dk_i
+     1st column: df/dt
+     2nd column: df/d(fwhm)
+     2+i th column: df/dk_i
     '''
-    grad = np.zeros((2+k.size, t.size))
+    grad = np.zeros((t.size, 2+k.size))
     for i in range(k.size):
         grad_i = deriv_exp_conv_cauchy(t, fwhm, k[i])
-        grad[0, :] = grad[0, :] + c[i]*grad_i[0, :]
-        grad[1, :] = grad[1, :] + c[i]*grad_i[1, :]
-        grad[2+i, :] = c[i]*grad_i[2, :]
+        grad[:, 0] = grad[:, 0] + c[i]*grad_i[:, 0]
+        grad[:, 1] = grad[:, 1] + c[i]*grad_i[:, 1]
+        grad[:, 2+i] = c[i]*grad_i[:, 2]
     if base:
         grad_i = deriv_exp_conv_cauchy(t, fwhm, 0)
-        grad[0, :] = grad[0, :] + c[-1]*grad_i[0, :]
-        grad[1, :] = grad[1, :] + c[-1]*grad_i[1, :]
+        grad[:, 0] = grad[:, 0] + c[-1]*grad_i[:, 0]
+        grad[:, 1] = grad[:, 1] + c[-1]*grad_i[:, 1]
 
     return grad
 
@@ -439,11 +439,11 @@ k: float, T: float, phase: float) -> np.ndarray:
      damped oscillation :math:`(\\exp(-kt)cos(2\\pi t/T+phase))`.
     
     Note:
-     1st row: df/dt
-     2nd row: df/d(fwhm)
-     3rd row: df/dk
-     4th row: df/dT
-     5th row: df/d(phase)
+     1st column: df/dt
+     2nd column: df/d(fwhm)
+     3rd column: df/dk
+     4th column: df/dT
+     5th column: df/d(phase)
     '''
 
     sigma = fwhm/(2*np.sqrt(2*np.log(2))); omega = 2*np.pi/T
@@ -464,12 +464,12 @@ k: float, T: float, phase: float) -> np.ndarray:
         grad[3] = grad_T
         grad[4] = grad_phase
     else:
-        grad = np.empty((5, t.size))
-        grad[0, :] = grad_t
-        grad[1, :] = grad_fwhm
-        grad[2, :] = grad_k
-        grad[3, :] = grad_T
-        grad[4, :] = grad_phase
+        grad = np.empty((t.size, 5))
+        grad[:, 0] = grad_t
+        grad[:, 1] = grad_fwhm
+        grad[:, 2] = grad_k
+        grad[:, 3] = grad_T
+        grad[:, 4] = grad_phase
     
     return grad
 
@@ -492,11 +492,11 @@ k: float, T: float, phase: float) -> Union[float, np.ndarray]:
      damped oscillation :math:`(\\exp(-kt)cos(2\\pi t/T+phase))`.
 
     Note:
-     1st raw: df/dt
-     2nd raw: df/d(fwhm)
-     3rd raw: df/dk
-     4th raw: df/dT
-     5th raw: df/d(phase)
+     1st column: df/dt
+     2nd column: df/d(fwhm)
+     3rd column: df/dk
+     4th column: df/dT
+     5th column: df/d(phase)
     '''
 
     gamma = fwhm/2; omega = 2*np.pi/T 
@@ -524,12 +524,12 @@ k: float, T: float, phase: float) -> Union[float, np.ndarray]:
         grad[3] = grad_T
         grad[4] = grad_phase
     else:
-        grad = np.empty((5, t.size))
-        grad[0, :] = grad_t
-        grad[1, :] = grad_fwhm
-        grad[2, :] = grad_k
-        grad[3, :] = grad_T
-        grad[4, :] = grad_phase
+        grad = np.empty((t.size, 5))
+        grad[:, 0] = grad_t
+        grad[:, 1] = grad_fwhm
+        grad[:, 2] = grad_k
+        grad[:, 3] = grad_T
+        grad[:, 4] = grad_phase
     
     return grad
 
@@ -552,20 +552,20 @@ k: np.ndarray, T: np.ndarray, phase: np.ndarray, c: np.ndarray) -> np.ndarray:
      Derivative of Convolution of normalized gaussian distribution and 
      damped oscillation :math:`(\\exp(-kt)cos(2\\pi t/T+phase))`.
     Note:
-     1st row: df/dt
-     2nd row: df/d(fwhm)
-     2+i th row: df/dk_i (1 <= i <= num_comp)
-     2+num_comp+i th row: df/dT_i (1 <= i <= num_comp)
-     2+2*num_comp+i th row: df/d(phase_i)
+     1st column: df/dt
+     2nd column: df/d(fwhm)
+     2+i th column: df/dk_i (1 <= i <= num_comp)
+     2+num_comp+i th column: df/dT_i (1 <= i <= num_comp)
+     2+2*num_comp+i th column: df/d(phase_i) (1 <= i <= num_comp)
     '''
-    grad = np.zeros((2+3*k.size, t.size))
+    grad = np.zeros((t.size, 2+3*k.size))
     for i in range(k.size):
         grad_i = deriv_dmp_osc_conv_gau(t, fwhm, k[i], T[i], phase[i])
-        grad[0, :] = grad[0, :] + c[i]*grad_i[0, :]
-        grad[1, :] = grad[1, :] + c[i]*grad_i[1, :]
-        grad[2+i, :] = c[i]*grad_i[2, :]
-        grad[2+k.size+i, :] = c[i]*grad_i[3, :]
-        grad[2+2*k.size+i, :] = c[i]*grad_i[4, :]
+        grad[:, 0] = grad[:, 0] + c[i]*grad_i[:, 0]
+        grad[:, 1] = grad[:, 1] + c[i]*grad_i[:, 1]
+        grad[:, 2+i] = c[i]*grad_i[:, 2]
+        grad[:, 2+k.size+i] = c[i]*grad_i[:, 3]
+        grad[:, 2+2*k.size+i] = c[i]*grad_i[:, 4]
 
     return grad
 
@@ -588,20 +588,20 @@ k: np.ndarray, T: np.ndarray, phase: np.ndarray, c: np.ndarray) -> np.ndarray:
      Derivative of Convolution of normalized cauchy distribution and 
      damped oscillation :math:`(\\exp(-kt)cos(2\\pi t/T+phase))`.
     Note:
-     1st row: df/dt
-     2nd row: df/d(fwhm)
-     2+i th row: df/dk_i (1 <= i <= num_comp)
-     2+num_comp+i th row: df/dT_i (1 <= i <= num_comp)
-     2+2*num_comp+i th row: df/d(phase_i)
+     1st column: df/dt
+     2nd column: df/d(fwhm)
+     2+i th column: df/dk_i (1 <= i <= num_comp)
+     2+num_comp+i th column: df/dT_i (1 <= i <= num_comp)
+     2+2*num_comp+i th column: df/d(phase_i) (1 <= i <= num_comp)
     '''
     grad = np.zeros((2+3*k.size, t.size))
     for i in range(k.size):
         grad_i = deriv_dmp_osc_conv_cauchy(t, fwhm, k[i], T[i], phase[i])
-        grad[0, :] = grad[0, :] + c[i]*grad_i[0, :]
-        grad[1, :] = grad[1, :] + c[i]*grad_i[1, :]
-        grad[2+i, :] = c[i]*grad_i[2, :]
-        grad[2+k.size+i, :] = c[i]*grad_i[3, :]
-        grad[2+2*k.size+i, :] = c[i]*grad_i[4, :]
+        grad[:, 0] = grad[:, 0] + c[i]*grad_i[:, 0]
+        grad[:, 1] = grad[:, 1] + c[i]*grad_i[:, 1]
+        grad[:, 2+i] = c[i]*grad_i[:, 2]
+        grad[:, 2+k.size+i] = c[i]*grad_i[:, 3]
+        grad[:, 2+2*k.size+i] = c[i]*grad_i[:, 4]
 
     return grad
 
