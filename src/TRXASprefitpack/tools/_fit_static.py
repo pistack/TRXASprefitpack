@@ -1,11 +1,105 @@
 # fit static
 # fitting static spectrum
 
+import os
+from pathlib import Path
 import argparse
 import numpy as np
-from ..driver import save_StaticResult
+import matplotlib.pyplot as plt
+from ..driver import StaticResult, save_StaticResult
 from ..driver import fit_static_voigt, fit_static_thy
-from .misc import plot_StaticResult, save_StaticResult_txt
+
+
+def save_StaticResult_txt(result: StaticResult, dirname: str):
+      '''
+      save static fitting result to the text file
+
+      Args:
+       result: static fitting result
+       dirname: name of the directory in which text files for fitting result are saved.
+       e: energy range of static spectrum
+       eps: estimated error of static spectrum
+      
+      Returns:
+       `fit_summary.txt`: Summary for the fitting result
+       `weight.txt`: Weight of each voigt and edge component
+       `fit.txt`: fitting, each voigt, edge and baseline curve for static spectrum
+       `res.txt`: residual (fit-data) curve for static spectrum
+
+      Note:
+       If `dirname` directory is not exists, it creates `dirname` directory.
+      '''
+      if not (Path.cwd()/dirname).exists():
+            os.mkdir(dirname)
+      
+      with open(f'{dirname}/fit_summary.txt', 'w') as f:
+            f.write(str(result))
+
+      tot_comp = result['n_voigt']
+      if result['edge'] is not None:
+            tot_comp = tot_comp+1
+      if result['base_order'] is not None:
+            tot_comp = tot_comp+1
+      coeff_fmt = ['%.8e']
+      fit_fmt = (2+tot_comp)*['%.8e']
+      fit_header_lst = ['energy', 'fit']
+      for i in range(result['n_voigt']):
+            fit_header_lst.append(f'voigt_{i}')
+      if result['edge'] is not None:
+            fit_header_lst.append(f"{result['edge']}_type_edge")
+      if result['base'] is not None:
+            fit_header_lst.append("base")
+            fit_save = np.vstack((result['e'], result['fit'], result['fit_comp'], result['base'])).T
+      else:
+            fit_save = np.vstack((result['e'], result['fit'], result['fit_comp'])).T
+      res_save = np.vstack((result['e'], result['res'], result['eps'])).T
+      np.savetxt(f'{dirname}/res.txt', res_save, fmt=['%.8e', '%.8e', '%.8e'], 
+      header=f'energy \t res \t eps')
+      fit_header = '\t'.join(fit_header_lst)
+      coeff_header = 'static'
+
+      np.savetxt(f'{dirname}/weight.txt', result['c'], fmt=coeff_fmt, header=coeff_header)
+      np.savetxt(f'{dirname}/fit.txt', fit_save, fmt=fit_fmt, header=fit_header)
+      
+      return
+
+def plot_StaticResult(result: StaticResult):
+      '''
+      plot static fitting Result
+
+      Args:
+       result: static fitting result
+       name_of_dset: name of each dataset
+       x_min: minimum x range
+       x_max: maximum x range
+       save_fig: prefix of saved png plots. If `save_fig` is `None`, plots are displayed istead of being saved.
+       e: scan range of data
+       data: static spectrum (it should not contain energy scan range)
+       eps: estimated errors of static spectrum
+      '''
+      
+      fig = plt.figure(0)
+      title = 'Static Spectrum'
+      subtitle = f"Chi squared: {result['red_chi2']: .2f}"
+      plt.suptitle(title)
+      sub1 = fig.add_subplot(211)
+      sub1.set_title(subtitle)
+      sub1.errorbar(result['e'], result['intensity'], result['eps'], 
+      marker='o', mfc='none', label=f'expt {title}', linestyle='none')
+      sub1.plot(result['e'], result['fit'], label=f'fit {title}')
+      for i in range(result['n_voigt']):
+            sub1.plot(result['e'], result['fit_comp'][i, :], label=f'{i+1}th voigt component', linestyle='dashed')
+      if result['edge'] is not None:
+            sub1.plot(result['e'], result['fit_comp'][-1, :], label=f"{result['edge']} type edge", linestyle='dashed')
+      if result['base_order'] is not None:
+        sub1.plot(result['e'], result['base'], label=f"base [order {result['base_order']}]", linestyle='dashed')
+      sub1.legend()
+      sub2 = fig.add_subplot(212)
+      sub2.errorbar(result['e'], result['res'], result['eps'], 
+      marker='o', mfc='none', label=f'res {title}', linestyle='none')
+      sub2.legend()
+      plt.show()
+      return
 
 description = '''
 fit static: fitting static spectrum with 

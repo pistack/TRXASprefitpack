@@ -9,7 +9,7 @@ and instrumental response function
 '''
 from typing import Optional, Union, Sequence, Tuple
 import numpy as np
-from ..mathfun.irf import calc_eta
+from ..mathfun.irf import calc_eta, calc_fwhm
 from .transient_result import TransientResult
 from scipy.optimize import basinhopping
 from scipy.optimize import least_squares
@@ -76,7 +76,7 @@ def fit_transient_both(irf: str, fwhm_init: Union[float, np.ndarray],
         
         'c': cauchy shape
         
-        'pv': pseudo voigt shape
+        'pv': pseudo voigt shape (kind 2)
        fwhm_init (float or np.ndarray): initial full width at half maximum for instrumental response function
        
         if irf in ['g', 'c'] then fwhm_init is float
@@ -172,8 +172,6 @@ def fit_transient_both(irf: str, fwhm_init: Union[float, np.ndarray],
             go_args = (tau_init.size, tau_osc_init.size, 
             base, irf, fix_param_idx, t, intensity, eps)
             min_go_kwargs = {'args': go_args, 'jac': True, 'bounds': bound}
-            if irf == 'pv' and not (fix_param_idx[0] and fix_param_idx[1]):
-                  min_go_kwargs['jac'] = None
             if kwargs_glb is not None:
                   minimizer_kwargs = kwargs_glb.pop('minimizer_kwargs', None)
                   if minimizer_kwargs is None:
@@ -255,10 +253,16 @@ def fit_transient_both(irf: str, fwhm_init: Union[float, np.ndarray],
       t0_idx = num_irf
 
       if irf == 'g':
+            eta = 0
+            fwhm_pv = fwhm_opt[0]
             param_name[0] = 'fwhm_G'
       elif irf == 'c':
+            eta = 1
+            fwhm_pv = fwhm_opt[0]
             param_name[0] = 'fwhm_L'
       else:
+            eta = calc_eta(fwhm_opt[0], fwhm_opt[1])
+            fwhm_pv = calc_fwhm(fwhm_opt[0], fwhm_opt[1])
             param_name[0] = 'fwhm_G'
             param_name[1] = 'fwhm_L'
 
@@ -270,9 +274,9 @@ def fit_transient_both(irf: str, fwhm_init: Union[float, np.ndarray],
                   c[i] = np.empty((tau_init.size+tau_osc_init.size, intensity[i].shape[1]))
             
             for j in range(intensity[i].shape[1]):
-                  A[:tau_init.size+1*base, :] = make_A_matrix_exp(t[i]-param_opt[t0_idx], fwhm_opt, tau_opt, base, irf)
-                  A[tau_init.size+1*base:, :] = make_A_matrix_dmp_osc(t[i]-param_opt[t0_idx], fwhm_opt, 
-                  tau_osc_opt, period_osc_opt, phase_osc_opt, irf)
+                  A[:tau_init.size+1*base, :] = make_A_matrix_exp(t[i]-param_opt[t0_idx], fwhm_pv, tau_opt, base, irf, eta)
+                  A[tau_init.size+1*base:, :] = make_A_matrix_dmp_osc(t[i]-param_opt[t0_idx], fwhm_pv, 
+                  tau_osc_opt, period_osc_opt, phase_osc_opt, irf, eta)
 
                   c[i][:, j] = fact_anal_A(A, intensity[i][:, j], eps[i][:, j])
                   fit[i][:, j] = c[i][:, j] @ A
@@ -316,13 +320,7 @@ def fit_transient_both(irf: str, fwhm_init: Union[float, np.ndarray],
       result['model'] = 'both'
       result['fit'] = fit; result['fit_osc'] = fit_osc; result['fit_decay'] = fit_decay
       result['res'] = res; result['irf'] = irf
-
-      if irf == 'g':
-            result['eta'] = 0
-      elif irf == 'c':
-            result['eta'] = 1
-      else:
-            result['eta'] = calc_eta(fwhm_opt[0], fwhm_opt[1])
+      result['eta'] = eta; result['fwhm'] = fwhm_pv
       
       result['param_name'] = param_name; result['x'] = param_opt
       result['bounds'] = bound; result['base'] = base; result['c'] = c

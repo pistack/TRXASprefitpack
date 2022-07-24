@@ -8,7 +8,7 @@ convolution of sum of exponential decay and instrumental response function
 '''
 from typing import Optional, Union, Sequence, Tuple
 import numpy as np
-from ..mathfun.irf import calc_eta
+from ..mathfun.irf import calc_eta, calc_fwhm
 from .transient_result import TransientResult
 from scipy.optimize import basinhopping
 from scipy.optimize import least_squares
@@ -67,7 +67,7 @@ def fit_transient_exp(irf: str, fwhm_init: Union[float, np.ndarray],
         
         'c': cauchy shape
         
-        'pv': pseudo voigt shape
+        'pv': pseudo voigt shape (kind 2)
        fwhm_init (float or np.ndarray): initial full width at half maximum for instrumental response function
        
         if irf in ['g', 'c'] then fwhm_init is float
@@ -212,10 +212,16 @@ def fit_transient_exp(irf: str, fwhm_init: Union[float, np.ndarray],
       t0_idx = num_irf
 
       if irf == 'g':
+            eta = 0
+            fwhm_pv = fwhm_opt[0]
             param_name[0] = 'fwhm_G'
       elif irf == 'c':
+            eta = 1
+            fwhm_pv = fwhm_opt[0]
             param_name[0] = 'fwhm_L'
       else:
+            eta = calc_eta(fwhm_opt[0], fwhm_opt[1])
+            fwhm_pv = calc_fwhm(fwhm_opt[0], fwhm_opt[1])
             param_name[0] = 'fwhm_G'
             param_name[1] = 'fwhm_L'
 
@@ -223,7 +229,7 @@ def fit_transient_exp(irf: str, fwhm_init: Union[float, np.ndarray],
             c[i] = np.empty((num_comp+1*base, intensity[i].shape[1]))
             
             for j in range(intensity[i].shape[1]):
-                  A = make_A_matrix_exp(t[i]-param_opt[t0_idx], fwhm_opt, tau_opt, base, irf)
+                  A = make_A_matrix_exp(t[i]-param_opt[t0_idx], fwhm_pv, tau_opt, base, irf, eta)
                   c[i][:, j] = fact_anal_A(A, intensity[i][:, j], eps[i][:, j])
                   fit[i][:, j] = c[i][:, j] @ A
                   param_name[t0_idx] = f't_0_{i+1}_{j+1}'
@@ -249,13 +255,7 @@ def fit_transient_exp(irf: str, fwhm_init: Union[float, np.ndarray],
       result = TransientResult()
       result['model'] = 'decay'
       result['fit'] = fit; result['res'] = res; result['irf'] = irf
-
-      if irf == 'g':
-            result['eta'] = 0
-      elif irf == 'c':
-            result['eta'] = 1
-      else:
-            result['eta'] = calc_eta(fwhm_opt[0], fwhm_opt[1])
+      result['eta'] = eta; result['fwhm'] = fwhm_pv
       
       # save experimental fitting data
       if name_of_dset is None:

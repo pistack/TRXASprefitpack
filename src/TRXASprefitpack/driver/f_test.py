@@ -108,6 +108,8 @@ def ci_scan(p, *args):
     fargs = tuple(args[4:])
     return (res_scan(p, *fargs)-chi2_opt/2)/dfn/(chi2_opt/(2*dfd))-F_alpha
 
+
+# This routine should be fixed
 def confidence_interval_f(result, alpha: float) -> CIResult:
     '''
     Calculate 1d confidence interval of each parameter at significance level alpha

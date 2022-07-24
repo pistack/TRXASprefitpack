@@ -6,7 +6,7 @@ submodule for fitting data with sum of exponential decay or damped oscillation c
 :license: LGPL3.
 '''
 
-from typing import Union, Optional
+from typing import Tuple, Optional
 import numpy as np
 import scipy.linalg as LA
 
@@ -15,7 +15,7 @@ from .A_matrix import make_A_matrix_exp, make_A_matrix_dmp_osc
 
 
 def model_n_comp_conv(t: np.ndarray,
-                      fwhm: Union[float, np.ndarray],
+                      fwhm: float,
                       tau: np.ndarray,
                       c: np.ndarray,
                       base: Optional[bool] = True,
@@ -43,28 +43,17 @@ def model_n_comp_conv(t: np.ndarray,
 
               * 'g': normalized gaussian distribution,
               * 'c': normalized cauchy distribution,
-              * 'pv': pseudo voigt profile :math:`(1-\\eta)g + \\eta c`
+              * 'pv': pseudo voigt profile :math:`(1-\\eta)g(t, {fwhm}) + \\eta c(t, {fwhm})`
        eta: mixing parameter for pseudo voigt profile
-            (only needed for pseudo voigt profile,
-            default value is guessed according to
-            Journal of Applied Crystallography. 33 (6): 1311–1316.)
+            (only needed for pseudo voigt profile)
 
     Returns:
       Convolution of the sum of n exponential decays and instrumental
       response function.
 
     Note:
-     1. *fwhm* For gaussian and cauchy distribution,
-        only one value of fwhm is needed,
-        so fwhm is assumed to be float
-        However, for pseudo voigt profile,
-        it needs two value of fwhm, one for gaussian part and
-        the other for cauchy part.
-        So, in this case,
-        fwhm is assumed to be numpy.ndarray with size 2.
-     2. *c* size of c is assumed to be
-        num_comp+1 when base is set to true.
-        Otherwise, it is assumed to be num_comp.
+     Size of weight `c` is `num_comp+1` when base is set to true.
+     Otherwise, its size is `num_comp`.
     '''
     A = make_A_matrix_exp(t, fwhm, tau, base, irf, eta)
     y = c@A
@@ -73,7 +62,7 @@ def model_n_comp_conv(t: np.ndarray,
 
 
 def fact_anal_exp_conv(t: np.ndarray,
-                       fwhm: Union[float, np.ndarray],
+                       fwhm: float,
                        tau: np.ndarray,
                        base: Optional[bool] = True,
                        irf: Optional[str] = 'g',
@@ -108,11 +97,9 @@ def fact_anal_exp_conv(t: np.ndarray,
 
               * 'g': normalized gaussian distribution,
               * 'c': normalized cauchy distribution,
-              * 'pv': pseudo voigt profile :math:`(1-\\eta)g + \\eta c`
+              * 'pv': pseudo voigt profile :math:`(1-\\eta)g(t, {fwhm}) + \\eta c(t, {fwhm})`
        eta: mixing parameter for pseudo voigt profile
-            (only needed for pseudo voigt profile,
-            default value is guessed according to
-            Journal of Applied Crystallography. 33 (6): 1311–1316.)
+            (only needed for pseudo voigt profile)
        intensity: intensity of time scan data to fit
        eps: standard error of data
 
@@ -134,7 +121,7 @@ def fact_anal_exp_conv(t: np.ndarray,
 
     return c
 
-def rate_eq_conv(t: np.ndarray, fwhm: Union[float, np.ndarray],
+def rate_eq_conv(t: np.ndarray, fwhm: float,
 abs: np.ndarray, eigval: np.ndarray, V: np.ndarray, c: np.ndarray, 
 irf: Optional[str] = 'g', eta: Optional[float] = None) -> np.ndarray:
 
@@ -168,23 +155,13 @@ irf: Optional[str] = 'g', eta: Optional[float] = None) -> np.ndarray:
     Returns:
       Convolution of the solution of the rate equation and instrumental
       response function.
-
-    Note:
-        *fwhm* For gaussian and cauchy distribution,
-        only one value of fwhm is needed,
-        so fwhm is assumed to be float
-        However, for pseudo voigt profile,
-        it needs two value of fwhm, one for gaussian part and
-        the other for cauchy part.
-        So, in this case,
-        fwhm is assumed to be numpy.ndarray with size 2.
     '''
     A = compute_signal_irf(t, eigval, V, c, fwhm, irf, eta)
     y = abs@A
 
     return y
 
-def fact_anal_rate_eq_conv(t: np.ndarray, fwhm: Union[float, np.ndarray],
+def fact_anal_rate_eq_conv(t: np.ndarray, fwhm: float,
 eigval: np.ndarray, V: np.ndarray, c: np.ndarray, 
 exclude: Optional[str] = None, irf: Optional[str] = 'g',
 eta: Optional[float] = None, intensity: Optional[np.ndarray] = None, 
@@ -217,11 +194,9 @@ eps: Optional[np.ndarray] = None) -> np.ndarray:
 
               * 'g': normalized gaussian distribution,
               * 'c': normalized cauchy distribution,
-              * 'pv': pseudo voigt profile :math:`(1-\\eta)g + \\eta c`
+              * 'pv': pseudo voigt profile :math:`(1-\\eta)g(t, {fwhm}) + \\eta c(t, {fwhm})`
        eta: mixing parameter for pseudo voigt profile
-            (only needed for pseudo voigt profile,
-            default value is guessed according to
-            Journal of Applied Crystallography. 33 (6): 1311–1316.)
+            (only needed for pseudo voigt profile)
        intensity: intensity of time scan data to fit
        eps: standard error of data
 
@@ -265,7 +240,7 @@ eps: Optional[np.ndarray] = None) -> np.ndarray:
     return abs
 
 
-def dmp_osc_conv(t: np.ndarray, fwhm: Union[float, np.ndarray],
+def dmp_osc_conv(t: np.ndarray, fwhm: float,
                       tau: np.ndarray,
                       T: np.ndarray,
                       phase: np.ndarray,
@@ -295,25 +270,13 @@ def dmp_osc_conv(t: np.ndarray, fwhm: Union[float, np.ndarray],
 
               * 'g': normalized gaussian distribution,
               * 'c': normalized cauchy distribution,
-              * 'pv': pseudo voigt profile :math:`(1-\\eta)g + \\eta c`
+              * 'pv': pseudo voigt profile :math:`(1-\\eta)g(t, {fwhm}) + \\eta c(t, {fwhm})`
        eta: mixing parameter for pseudo voigt profile
-            (only needed for pseudo voigt profile,
-            default value is guessed according to
-            Journal of Applied Crystallography. 33 (6): 1311–1316.)
+            (only needed for pseudo voigt profile)
 
     Returns:
       Convolution of sum of damped oscillation and instrumental
       response function.
-
-    Note:
-        *fwhm* For gaussian and cauchy distribution,
-        only one value of fwhm is needed,
-        so fwhm is assumed to be float
-        However, for pseudo voigt profile,
-        it needs two value of fwhm, one for gaussian part and
-        the other for cauchy part.
-        So, in this case,
-        fwhm is assumed to be numpy.ndarray with size 2.
     '''
     A = make_A_matrix_dmp_osc(t, fwhm, tau, T, phase, irf, eta)
     y = c@A
@@ -321,7 +284,7 @@ def dmp_osc_conv(t: np.ndarray, fwhm: Union[float, np.ndarray],
     return y
 
 def fact_anal_dmp_osc_conv(t: np.ndarray,
-                       fwhm: Union[float, np.ndarray],
+                       fwhm: float,
                        tau: np.ndarray, T: np.ndarray, phase: np.ndarray,
                        irf: Optional[str] = 'g',
                        eta: Optional[float] = None,
@@ -350,11 +313,9 @@ def fact_anal_dmp_osc_conv(t: np.ndarray,
 
               * 'g': normalized gaussian distribution,
               * 'c': normalized cauchy distribution,
-              * 'pv': pseudo voigt profile :math:`(1-\\eta)g + \\eta c`
+              * 'pv': pseudo voigt profile :math:`(1-\\eta)g(t, {fwhm}) + \\eta c(t, {fwhm})`
        eta: mixing parameter for pseudo voigt profile
-            (only needed for pseudo voigt profile,
-            default value is guessed according to
-            Journal of Applied Crystallography. 33 (6): 1311–1316.)
+            (only needed for pseudo voigt profile)
        intensity: intensity of time scan data to fit
        eps: standard error of data
 
@@ -375,4 +336,114 @@ def fact_anal_dmp_osc_conv(t: np.ndarray,
     c, _, _, _ = LA.lstsq(A.T, y, cond=1e-2)
 
     return c
+
+def sum_exp_dmp_osc_conv(t: np.ndarray, fwhm: float,
+                         tau: np.ndarray,
+                         tau_osc: np.ndarray,
+                         T: np.ndarray,
+                         phase: np.ndarray,
+                         c: np.ndarray,
+                         c_osc: np.ndarray,
+                         base: Optional[bool] = True,
+                         irf: Optional[str] = 'g',
+                         eta: Optional[float] = None
+                         ) -> np.ndarray:
+    '''
+    Constructs convolution of sum of exponential decay and damped oscillation and
+    instrumental response function
+    Supported instrumental response function are
+
+      * g: gaussian distribution
+      * c: cauchy distribution
+      * pv: pseudo voigt profile
+
+    Args:
+       t: time
+       fwhm: full width at half maximum of instrumental response function
+       tau: lifetime of decay
+       tau_osc: lifetime of vibration
+       T: period of vibration
+       phase: phase factor
+       c: coefficient for each decay component
+       c_osc: coefficient for each vibrational component
+       base: Whether or not use baseline feature for exponential decay component [default: True]
+       irf: shape of instrumental
+            response function [default: g]
+
+              * 'g': normalized gaussian distribution,
+              * 'c': normalized cauchy distribution,
+              * 'pv': pseudo voigt profile :math:`(1-\\eta)g(t, {fwhm}) + \\eta c(t, {fwhm})`
+       eta: mixing parameter for pseudo voigt profile
+            (only needed for pseudo voigt profile)
+
+    Returns:
+      Convolution of sum of exponential decay and damped oscillation and instrumental
+      response function.
+    '''
+    A = make_A_matrix_exp(t, fwhm, tau, base, irf, eta)
+    A_osc = make_A_matrix_dmp_osc(t, fwhm, tau_osc, T, phase, irf, eta)
+    y = c@A + c_osc@A_osc
+
+    return y
+
+def fact_anal_sum_exp_dmp_osc_conv(t: np.ndarray, fwhm: float,
+                                   tau: np.ndarray, tau_osc: np.ndarray,
+                                   T: np.ndarray, phase: np.ndarray,
+                                   base: Optional[bool] = True,
+                                   irf: Optional[str] = 'g',
+                                   eta: Optional[float] = None,
+                                   intensity: Optional[np.ndarray] = None,
+                                   eps: Optional[np.ndarray] = None) -> Tuple[np.ndarray, np.ndarray]:
+    '''
+    Estimate the best coefficiets when full width at half maximum fwhm
+    , lifetime constant of decay component tau, lifetime constant of 
+    oscillation component tau_osc,
+    period of vibration T and phase factor are given
+
+    Supported instrumental response functions are 
+
+       1. 'g': gaussian distribution
+       2. 'c': cauchy distribution
+       3. 'pv': pseudo voigt profile
+
+    Args:
+       t: time
+       fwhm: full width at half maximum of instrumental response function
+       tau: life time for each decay component
+       tau_osc: life time for each vibration component
+       base: Whether or not use baseline feature for exponential decay component
+        [default: True]
+       T: period of vibration of each component
+       phase: phase factor for each component
+       irf: shape of instrumental
+            response function [default: g]
+
+              * 'g': normalized gaussian distribution,
+              * 'c': normalized cauchy distribution,
+              * 'pv': pseudo voigt profile :math:`(1-\\eta)g(t, {fwhm}) + \\eta c(t, {fwhm})`
+       eta: mixing parameter for pseudo voigt profile
+            (only needed for pseudo voigt profile)
+       intensity: intensity of time scan data to fit
+       eps: standard error of data
+
+    Returns:
+     Tuple of best coefficient for given decay and damped oscillation component.
+     (c_(decay), c_(osc))
+
+    Note:
+     the dimension of the intensity should be one.
+    '''
+
+    A = np.empty((tau.size+1*base+tau_osc.size, t.size))
+    A[:tau.size+1*base, :] = make_A_matrix_exp(t, fwhm, tau, base, irf, eta)
+    A[tau.size+1*base:, :] = make_A_matrix_dmp_osc(t, fwhm, tau_osc, T, phase, irf, eta)
+
+    if eps is None:
+        eps = np.ones_like(intensity)
+    
+    y = intensity/eps
+    A = np.einsum('j,ij->ij', 1/eps, A)
+    c, _, _, _ = LA.lstsq(A.T, y, cond=1e-2)
+
+    return c[:tau.size+1*base], c[tau.size+1*base:]
 

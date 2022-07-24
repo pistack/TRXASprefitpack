@@ -188,8 +188,7 @@ def compute_signal_cauchy(t: np.ndarray,
 
 
 def compute_signal_pvoigt(t: np.ndarray,
-                          fwhm_G: float,
-                          fwhm_L: float,
+                          fwhm: float,
                           eta: float,
                           eigval: np.ndarray,
                           V: np.ndarray,
@@ -201,15 +200,14 @@ def compute_signal_pvoigt(t: np.ndarray,
 
     .. math::
 
-       \\mathrm{pvoigt}(t) = (1-\\eta) G(t) + \\eta L(t),
+       \\mathrm{pvoigt}(t) = (1-\\eta) G(t, {fwhm}) + \\eta L(t, {fwhm}),
 
     G(t) stands for normalized gaussian,
     L(t) stands for normalized cauchy(lorenzian) distribution
 
     Args:
      t: time
-     fwhm_G: full width at half maximum of gaussian part
-     fwhm_L: full width at half maximum of cauchy part
+     fwhm: full width at half maximum of instrumental response function
      eta: mixing parameter
      eigval: eigenvalue for equation
      V: eigenvectors for equation
@@ -223,12 +221,12 @@ def compute_signal_pvoigt(t: np.ndarray,
       eigval, V, c should be obtained from solve_model.
     '''
 
-    A = make_A_matrix_pvoigt(t, fwhm_G, fwhm_L, eta, -eigval)
+    A = make_A_matrix_pvoigt(t, fwhm, eta, -eigval)
     y_signal = (c * V) @ A
     return y_signal
 
 def compute_signal_irf(t: np.ndarray, eigval: np.ndarray, V: np.ndarray, c: np.ndarray, 
-fwhm: Union[float, np.ndarray], irf: Optional[str] = 'g', eta: Optional[float] = None):
+                       fwhm: float, irf: Optional[str] = 'g', eta: Optional[float] = None):
 
   if irf == 'g':
     A = make_A_matrix_gau(t, fwhm, -eigval)
@@ -237,11 +235,7 @@ fwhm: Union[float, np.ndarray], irf: Optional[str] = 'g', eta: Optional[float] =
     A = make_A_matrix_cauchy(t, fwhm, -eigval)
 
   elif irf == 'pv':
-
-    if eta is None:
-      eta = calc_eta(fwhm[0], fwhm[1])
-
-    A = make_A_matrix_pvoigt(t, fwhm[0], fwhm[1], eta, -eigval)
+    A = make_A_matrix_pvoigt(t, fwhm, eta, -eigval)
 
   return (c * V) @ A
 

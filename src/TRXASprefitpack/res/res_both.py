@@ -7,9 +7,10 @@ convolution of sum of (sum of exponential decay and damped oscillation) and inst
 :license: LGPL3.
 '''
 
-from typing import Optional, Sequence
+from typing import Optional, Sequence, Tuple
 import numpy as np
-from ..mathfun.irf import calc_eta, deriv_calc_eta
+from ..mathfun.irf import calc_eta, deriv_eta
+from ..mathfun.irf import calc_fwhm, deriv_fwhm
 from ..mathfun.A_matrix import make_A_matrix_gau, make_A_matrix_cauchy
 from ..mathfun.A_matrix import make_A_matrix_gau_osc, make_A_matrix_cauchy_osc, fact_anal_A
 from ..mathfun.exp_conv_irf import deriv_exp_sum_conv_gau, deriv_exp_sum_conv_cauchy
@@ -19,7 +20,8 @@ from ..mathfun.exp_conv_irf import deriv_dmp_osc_sum_conv_gau, deriv_dmp_osc_sum
 
 def residual_both(params: np.ndarray, num_comp: int, num_comp_osc:int, base: bool, irf: str, 
                   t: Optional[Sequence[np.ndarray]] = None, 
-                  intensity: Optional[Sequence[np.ndarray]] = None, eps: Optional[Sequence[np.ndarray]] = None) -> np.ndarray:
+                  intensity: Optional[Sequence[np.ndarray]] = None, 
+                  eps: Optional[Sequence[np.ndarray]] = None) -> np.ndarray:
     '''
     residual_both
     scipy.optimize.least_squares compatible vector residual function for fitting multiple set of time delay scan with the
@@ -70,8 +72,8 @@ def residual_both(params: np.ndarray, num_comp: int, num_comp_osc:int, base: boo
         eta = None
     else:
             num_irf = 2
-            fwhm_G = params[0], fwhm_L = params[1]
-            eta = calc_eta(fwhm_G, fwhm_L)
+            fwhm = calc_fwhm(params[0], params[1])
+            eta = calc_eta(params[0], params[1])
 
     num_t0 = 0; sum = 0
     for d in intensity:
@@ -115,13 +117,13 @@ def residual_both(params: np.ndarray, num_comp: int, num_comp_osc:int, base: boo
 
             end = end + d.shape[0]
             t0_idx = t0_idx + 1
-
     return chi
     
 def res_grad_both(params: np.ndarray, num_comp: int, num_comp_osc:int, base: bool, irf: str, 
                    fix_param_idx: Optional[np.ndarray] = None,
                    t: Optional[Sequence[np.ndarray]] = None, 
-                   intensity: Optional[Sequence[np.ndarray]] = None, eps: Optional[Sequence[np.ndarray]] = None) -> np.ndarray:
+                   intensity: Optional[Sequence[np.ndarray]] = None, 
+                   eps: Optional[Sequence[np.ndarray]] = None) -> Tuple[np.ndarray, np.ndarray]:
     '''
     res_grad_both
     scipy.optimize.minimize compatible scalar residual and its gradient function for fitting multiple set of time delay scan with the
@@ -171,9 +173,10 @@ def res_grad_both(params: np.ndarray, num_comp: int, num_comp_osc:int, base: boo
         eta = None
     else:
             num_irf = 2
-            fwhm_G = params[0], fwhm_L = params[1]
-            eta = calc_eta(fwhm_G, fwhm_L)
-            etap_fwhm_G, etap_fwhm_L = deriv_calc_eta(fwhm_G, fwhm_L)
+            eta = calc_eta(params[0], params[1])
+            fwhm = calc_fwhm(params[0], params[1])
+            deta_G, deta_L = deriv_eta(params[0], params[1])
+            dfwhm_G, dfwhm_L = deriv_fwhm(params[0], params[1])
 
     num_t0 = 0; sum = 0
     for d in intensity:
@@ -200,9 +203,6 @@ def res_grad_both(params: np.ndarray, num_comp: int, num_comp_osc:int, base: boo
     for ti,d,e in zip(t,intensity,eps):
         step = d.shape[0]
         A = np.empty((num_comp+1*base+num_comp_osc, step))
-        if irf == 'pv':
-            grad_decay = np.empty((ti.size, 3+num_comp))
-            grad_osc = np.empty((ti.size, 3+3*num_comp_osc))
         for j in range(d.shape[1]):
             t0 = params[t0_idx]
             if irf == 'g':
@@ -230,40 +230,31 @@ def res_grad_both(params: np.ndarray, num_comp: int, num_comp_osc:int, base: boo
                 grad_decay = deriv_exp_sum_conv_cauchy(ti-t0, fwhm, 1/tau, c[:num_comp+1*base], base)
                 grad_osc = deriv_dmp_osc_sum_conv_cauchy(ti-t0, fwhm, 1/tau_osc, period_osc, phase_osc, c[num_comp+1*base:])
             else:
-                cdiff = c[:num_comp+1*base]@diff; cdiff_osc = c[num_comp+1*base:]@diff_osc
                 grad_gau_decay = deriv_exp_sum_conv_gau(ti-t0, fwhm, 1/tau, c[:num_comp+1*base], base)
                 grad_gau_osc = deriv_dmp_osc_sum_conv_gau(ti-t0, fwhm, 1/tau_osc, period_osc, phase_osc, c[num_comp+1*base:])
                 grad_cauchy_decay = deriv_exp_sum_conv_cauchy(ti-t0, fwhm, 1/tau, c[:num_comp+1*base], base)
                 grad_cauchy_osc = deriv_dmp_osc_sum_conv_cauchy(ti-t0, fwhm, 1/tau_osc, period_osc, phase_osc, c[num_comp+1*base:])
-                grad_decay[:, 0] = grad_gau_decay[:, 0] + eta*(grad_cauchy_decay[:, 0]-grad_gau_decay[:, 0])
-                grad_osc[:, 0] = grad_gau_osc[:, 0] + eta*(grad_cauchy_osc[:, 0]-grad_gau_osc[:, 0])
-                grad_decay[:, 1] = (1-eta)*grad_gau_decay[:, 1] + etap_fwhm_G*cdiff
-                grad_osc[:, 1] = (1-eta)*grad_gau_decay[:, 1] + etap_fwhm_G*cdiff_osc
-                grad_decay[:, 2] = eta*grad_cauchy_decay[:, 2] + etap_fwhm_L*cdiff
-                grad_osc[:, 2] = eta*grad_cauchy_osc[:, 2] + etap_fwhm_L*cdiff_osc
-                grad_osc[:, 3:] = grad_gau_osc[:, 3:] + eta*(grad_cauchy_osc[:, 3:]-grad_gau_osc[:, 3:])
-                grad_decay[:, 3:] = grad_gau_decay[:, 3:] + eta*(grad_cauchy_decay[:, 3:]-grad_gau_decay[:, 3:])
-                grad_osc[:, 3:] = grad_gau_osc[:, 3:] + eta*(grad_cauchy_osc[:, 3:]-grad_gau_osc[:, 3:])
+                grad_decay = grad_gau_decay + eta*(grad_cauchy_decay-grad_gau_decay)
+                grad_osc = grad_gau_osc + eta*(grad_cauchy_osc-grad_gau_osc)
             
             grad_decay = np.einsum('i,ij->ij', 1/e[:, j], grad_decay)
             grad_osc = np.einsum('i,ij->ij', 1/e[:, j], grad_osc)
+            grad_sum = grad_decay[:, :2] + grad_osc[:, :2]
 
             if irf in ['g', 'c']:
-                df[end:end+step, 0] = grad_decay[:, 1]+grad_osc[:, 1]
-                df[end:end+step, tau_start:tau_start+num_comp] = \
-                    np.einsum('j,ij->ij', -1/tau**2, grad_decay[:, 2:])
-                df[end:end+step, tau_osc_start:tau_osc_start+num_comp_osc] = \
-                    np.einsum('j,ij->ij',-1/tau_osc**2, grad_osc[:, 2:2+num_comp_osc])
-                df[end:end+step, tau_osc_start+num_comp_osc:] = grad_osc[:, 2+num_comp_osc:]
-            else:
-                df[end:end+step, :2] = grad_decay[:, 1:3]+grad_osc[:, 1:3]
-                df[end:end+step, tau_start:tau_start+num_comp] = \
-                    np.einsum('j,ij->ij', -1/tau**2, grad_decay[:, 3:])
-                df[end:end+step, tau_osc_start:tau_osc_start+num_comp_osc] = \
-                    np.einsum('j,ij->ij', -1/tau_osc**2, grad_osc[:, 3:3+num_comp_osc])
-                df[end:end+step, tau_osc_start+num_comp_osc:] = grad_osc[:, 3+num_comp_osc:]
+                df[end:end+step, 0] = grad_sum[:, 1]
 
-            df[end:end+step, t0_idx] = -grad_decay[:, 0]-grad_osc[:, 0]
+            else:
+                cdiff = (c[:num_comp+1*base]@diff + c[num_comp+1*base:]@diff_osc)/e[:, j]
+                df[end:end+step, 0] = dfwhm_G*grad_sum[:, 1]+deta_G*cdiff
+                df[end:end+step, 1] = dfwhm_L*grad_sum[:, 1]+deta_L*cdiff
+
+            df[end:end+step, t0_idx] = -grad_sum[:, 0]
+            df[end:end+step, tau_start:tau_start+num_comp] = \
+                np.einsum('j,ij->ij', -1/tau**2, grad_decay[:, 2:])
+            df[end:end+step, tau_osc_start:tau_osc_start+num_comp_osc] = \
+                np.einsum('j,ij->ij',-1/tau_osc**2, grad_osc[:, 2:2+num_comp_osc])
+            df[end:end+step, tau_osc_start+num_comp_osc:] = grad_osc[:, 2+num_comp_osc:]
 
 
             end = end + step

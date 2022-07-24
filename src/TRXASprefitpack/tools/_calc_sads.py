@@ -6,6 +6,8 @@
 import argparse
 import numpy as np
 import matplotlib.pyplot as plt
+
+from ..mathfun.irf import calc_eta, calc_fwhm
 from ..mathfun import solve_seq_model, solve_l_model
 from ..driver import sads
 from .misc import parse_matrix
@@ -56,7 +58,8 @@ g: gaussian distribution
 c: cauchy distribution
 pv: pseudo voigt profile, linear combination of gaussian distribution and cauchy distribution 
     pv = eta*c+(1-eta)*g 
-    the mixing parameter is fixed according to Journal of Applied Crystallography. 33 (6): 1311–1316. 
+    the uniform fwhm parameter and 
+    mixing parameter are determined according to Journal of Applied Crystallography. 33 (6): 1311–1316. 
 '''
 
 fwhm_G_help = '''
@@ -108,34 +111,32 @@ def calc_sads():
     irf = args.irf
     if irf == 'g':
         if args.fwhm_G is None:
-            print('You are using gaussian irf, so you should set fwhm_G!\n')
-            return
+            raise Exception('You are using gaussian irf, so you should set fwhm_G!\n')
         else:
             fwhm = args.fwhm_G
+            eta = 0
     elif irf == 'c':
         if args.fwhm_L is None:
-            print('You are using cauchy/lorenzian irf,' +
-                  'so you should set fwhm_L!\n')
-            return
+            raise Exception('You are using cauchy/lorenzian irf,' +
+            'so you should set fwhm_L!\n')
         else:
             fwhm = args.fwhm_L
+            eta = 1
     else:
         if (args.fwhm_G is None) or (args.fwhm_L is None):
-            print('You are using pseudo voigt irf,' +
-                  'so you should set both fwhm_G and fwhm_L!\n')
-            return
+            raise Exception('You are using pseudo voigt irf,' +
+            'so you should set both fwhm_G and fwhm_L!\n')
         else:
-            fwhm = np.array([args.fwhm_G, args.fwhm_L])
+            fwhm = calc_fwhm(args.fwhm_G, args.fwhm_L)
+            eta = calc_eta(args.fwhm_G, args.fwhm_L)
 
     if args.tau is None:
-        print('Please set lifetime constants for each decay')
-        return
+        raise Exception('Please set lifetime constants for each decay')
     else:
         tau = np.array(args.tau)
     
     if (args.time_zero is None):
-        print('You should set time_zero for energy scan \n')
-        return
+        raise Exception('You should set time_zero for energy scan \n')
     else:
         time_zero = args.time_zero
 
@@ -153,7 +154,7 @@ def calc_sads():
         L_mat = parse_matrix(rate_eq_mat_str, tau)
         eigval, V, c = solve_l_model(L_mat, y0)
     
-    ads, ads_eps, fit = sads(escan_time-time_zero, fwhm, eigval, V, c, exclude, irf, 
+    ads, ads_eps, fit = sads(escan_time-time_zero, fwhm, eigval, V, c, exclude, irf, eta,
     intensity=escan_data[:,1:], eps=escan_err)
 
     e = escan_data[:,0]

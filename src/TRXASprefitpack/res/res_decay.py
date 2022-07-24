@@ -9,7 +9,8 @@ convolution of sum of exponential decay and instrumental response function
 
 from typing import Optional, Sequence, Tuple
 import numpy as np
-from ..mathfun.irf import calc_eta, deriv_calc_eta
+from ..mathfun.irf import calc_eta, deriv_eta
+from ..mathfun.irf import calc_fwhm, deriv_fwhm
 from ..mathfun.A_matrix import make_A_matrix_gau, make_A_matrix_cauchy, fact_anal_A
 from ..mathfun.exp_conv_irf import deriv_exp_sum_conv_gau, deriv_exp_sum_conv_cauchy
 
@@ -60,8 +61,8 @@ def residual_decay(params: np.ndarray, base: bool, irf: str,
         fwhm = params[0]
     else:
             num_irf = 2
-            fwhm_G, fwhm_L = params[:2]
-            eta = calc_eta(fwhm_G, fwhm_L)
+            fwhm = calc_fwhm(params[0], params[1])
+            eta = calc_eta(params[0], params[1])
 
     num_t0 = 0; sum = 0
     for d in intensity:
@@ -85,8 +86,8 @@ def residual_decay(params: np.ndarray, base: bool, irf: str,
             elif irf == 'c':
                 A = make_A_matrix_cauchy(ti-t0, fwhm, k)
             else:
-                A_gau = make_A_matrix_gau(ti-t0, fwhm_G, k)
-                A_cauchy = make_A_matrix_cauchy(ti-t0, fwhm_L, k)
+                A_gau = make_A_matrix_gau(ti-t0, fwhm, k)
+                A_cauchy = make_A_matrix_cauchy(ti-t0, fwhm, k)
                 A = A_gau + eta*(A_cauchy-A_gau)
             c = fact_anal_A(A, d[:,j], e[:,j])
             chi[end:end+d.shape[0]] = ((c@A) - d[:, j])/e[:, j]
@@ -141,9 +142,10 @@ def res_grad_decay(params: np.ndarray, num_comp: int, base: bool, irf: str,
             fwhm = params[0]
     else:
         num_irf = 2
-        fwhm_G, fwhm_L = params[:2]
-        eta = calc_eta(fwhm_G, fwhm_L)
-        etap_fwhm_G, etap_fwhm_L = deriv_calc_eta(fwhm_G, fwhm_L)
+        eta = calc_eta(params[0], params[1])
+        fwhm = calc_fwhm(params[0], params[1])
+        dfwhm_G, dfwhm_L = deriv_fwhm(params[0], params[1])
+        deta_G, deta_L = deriv_eta(params[0], params[1])
 
     num_t0 = 0; sum = 0
     for d in intensity:
@@ -166,8 +168,6 @@ def res_grad_decay(params: np.ndarray, num_comp: int, base: bool, irf: str,
 
     for ti,d,e in zip(t, intensity, eps):
         step = d.shape[0]
-        if irf == 'pv':
-            grad = np.empty((ti.size, tau.size+3))
         for j in range(d.shape[1]):
             t0 = params[t0_idx]
             if irf == 'g':
@@ -175,8 +175,8 @@ def res_grad_decay(params: np.ndarray, num_comp: int, base: bool, irf: str,
             elif irf == 'c':
                 A = make_A_matrix_cauchy(ti-t0, fwhm, k)
             else:
-                A_gau = make_A_matrix_gau(ti-t0, fwhm_G, k)
-                A_cauchy = make_A_matrix_cauchy(ti-t0, fwhm_L, k)
+                A_gau = make_A_matrix_gau(ti-t0, fwhm, k)
+                A_cauchy = make_A_matrix_cauchy(ti-t0, fwhm, k)
                 diff = A_cauchy-A_gau
                 A = A_gau + eta*diff
             c = fact_anal_A(A, d[:,j], e[:,j])
@@ -187,22 +187,19 @@ def res_grad_decay(params: np.ndarray, num_comp: int, base: bool, irf: str,
             elif irf == 'c':
                 grad = deriv_exp_sum_conv_cauchy(ti-t0, fwhm, 1/tau, c, base)
             else:
-                cdiff = (c@diff)
-                grad_gau = deriv_exp_sum_conv_gau(ti-t0, fwhm_G, 1/tau, c, base)
-                grad_cauchy = deriv_exp_sum_conv_cauchy(ti-t0, fwhm_L, 1/tau, c, base)
-                grad[:, 0] = grad_gau[:, 0] + eta*(grad_cauchy[:, 0]-grad_gau[:, 0])
-                grad[:, 1] = (1-eta)*grad_gau[:, 1]+etap_fwhm_G*cdiff
-                grad[:, 2] = eta*grad_cauchy[:, 1]+etap_fwhm_L*cdiff
-                grad[:, 3:] = grad_gau[:, 2:] + eta*(grad_cauchy[:, 2:]-grad_gau[:, 2:])
+                grad_gau = deriv_exp_sum_conv_gau(ti-t0, fwhm, 1/tau, c, base)
+                grad_cauchy = deriv_exp_sum_conv_cauchy(ti-t0, fwhm, 1/tau, c, base)
+                grad = grad_gau + eta*(grad_cauchy-grad_gau)
    
             grad = np.einsum('i,ij->ij', 1/e[:,j], grad)
             if irf in ['g', 'c']:
-                df[end:end+step, tau_start:] = np.einsum('j,ij->ij', -1/tau**2, grad[:, 2:])
                 df[end:end+step, 0] = grad[:, 1]
             else:
-                df[end:end+step, tau_start:] = np.einsum('j,ij->ij', -1/tau**2, grad[:, 3:])
-                df[end:end+step, :2] = grad[:, 1:3]
+                cdiff = (c@diff)/e[:, j]
+                df[end:end+step, 0] = dfwhm_G*grad[:, 1]+deta_G*cdiff
+                df[end:end+step, 1] = dfwhm_L*grad[:, 1]+deta_L*cdiff
             df[end:end+step, t0_idx] = -grad[:, 0]
+            df[end:end+step, tau_start:] = np.einsum('j,ij->ij', -1/tau**2, grad[:, 2:])
                 
             end = end + step
             t0_idx = t0_idx + 1

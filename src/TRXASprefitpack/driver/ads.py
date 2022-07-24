@@ -6,13 +6,13 @@ submodule for driver routine of associated difference spectrum
 :license: LGPL3.
 '''
 
-from typing import Union, Optional, Tuple 
+from typing import Optional, Tuple 
 import numpy as np
 from scipy.linalg import svd
 from ..mathfun.A_matrix import make_A_matrix_exp
 from ..mathfun.rate_eq import compute_signal_irf
 
-def dads(escan_time: np.ndarray, fwhm: Union[float, np.ndarray], tau: np.ndarray, base: Optional[bool] = True,
+def dads(escan_time: np.ndarray, fwhm: float, tau: np.ndarray, base: Optional[bool] = True,
 irf: Optional[str] = 'g', eta: Optional[float] = None,
 intensity: Optional[np.ndarray] = None, eps: Optional[np.ndarray] = None) -> Tuple[np.ndarray, np.ndarray, np.ndarray]:
     '''
@@ -26,10 +26,9 @@ intensity: Optional[np.ndarray] = None, eps: Optional[np.ndarray] = None) -> Tup
       irf: shape of instrumental response function [default: g]
            * 'g': normalized gaussian distribution,
            * 'c': normalized cauchy distribution,
-           * 'pv': pseudo voigt profile :math:`(1-\\eta)g + \\eta c`
+           * 'pv': pseudo voigt profile :math:`(1-\\eta)g(t, {fwhm}) + \\eta c(t, {fwhm})`
       eta: mixing parameter for pseudo voigt profile
-           (only needed for pseudo voigt profile, default value is guessed according to
-           Journal of Applied Crystallography. 33 (6): 1311–1316.)
+           (only needed for pseudo voigt profile)
       intensity: intensity of energy scan dataset
       eps: standard error of dataset
     
@@ -73,7 +72,7 @@ intensity: Optional[np.ndarray] = None, eps: Optional[np.ndarray] = None) -> Tup
 
     return c, c_eps, c.T @ A
 
-def sads(escan_time: np.ndarray, fwhm: Union[float, np.ndarray], eigval: np.ndarray, V: np.ndarray, c: np.ndarray,
+def sads(escan_time: np.ndarray, fwhm: float, eigval: np.ndarray, V: np.ndarray, c: np.ndarray,
 exclude: Optional[str] = None, irf: Optional[str] = 'g', eta: Optional[float] = None,
 intensity: Optional[np.ndarray] = None, eps: Optional[np.ndarray] = None) -> Tuple[np.ndarray, np.ndarray, np.ndarray]:
     '''
@@ -93,9 +92,8 @@ intensity: Optional[np.ndarray] = None, eps: Optional[np.ndarray] = None) -> Tup
       irf: shape of instrumental response function [default: g]
            * 'g': normalized gaussian distribution,
            * 'c': normalized cauchy distribution,
-           * 'pv': pseudo voigt profile :math:`(1-\\eta)g + \\eta c`
-      eta: mixing parameter for pseudo voigt profile (only needed for pseudo voigt profile,
-           default value is guessed according to Journal of Applied Crystallography. 33 (6): 1311–1316.)
+           * 'pv': pseudo voigt profile :math:`(1-\\eta)g(t, {fwhm}) + \\eta c(t, {fwhm})`
+      eta: mixing parameter for pseudo voigt profile (only needed for pseudo voigt profile)
       intensity: intensity of energy scan dataset
       eps: standard error of data 
     
@@ -124,7 +122,7 @@ intensity: Optional[np.ndarray] = None, eps: Optional[np.ndarray] = None) -> Tup
     
     abs_eps = np.empty_like(abs)
     
-    A = compute_signal_irf(escan_time, eigval, V, c, fwhm, irf)
+    A = compute_signal_irf(escan_time, eigval, V, c, fwhm, irf, eta)
     if exclude == 'first':
       B = A[1:, :]
     elif exclude == 'last':

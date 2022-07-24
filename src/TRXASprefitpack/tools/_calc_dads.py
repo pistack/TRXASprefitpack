@@ -7,6 +7,7 @@ import argparse
 import numpy as np
 import matplotlib.pyplot as plt
 from ..driver import dads
+from ..mathfun.irf import calc_eta, calc_fwhm
 
 description = '''
 calc dads: Calculate decay associated difference spectrum from experimental energy scan data and
@@ -24,7 +25,8 @@ g: gaussian distribution
 c: cauchy distribution
 pv: pseudo voigt profile, linear combination of gaussian distribution and cauchy distribution 
     pv = eta*c+(1-eta)*g 
-    the mixing parameter is fixed according to Journal of Applied Crystallography. 33 (6): 1311–1316. 
+    the uniform fwhm parameter and 
+    mixing parameter are determined according to Journal of Applied Crystallography. 33 (6): 1311–1316. 
 '''
 
 fwhm_G_help = '''
@@ -70,34 +72,32 @@ def calc_dads():
     irf = args.irf
     if irf == 'g':
         if args.fwhm_G is None:
-            print('You are using gaussian irf, so you should set fwhm_G!\n')
-            return
+            raise Exception('You are using gaussian irf, so you should set fwhm_G!\n')
         else:
             fwhm = args.fwhm_G
+            eta = 0
     elif irf == 'c':
         if args.fwhm_L is None:
-            print('You are using cauchy/lorenzian irf,' +
-                  'so you should set fwhm_L!\n')
-            return
+            raise Exception('You are using cauchy/lorenzian irf,' + 
+            'so you should set fwhm_L!\n')
         else:
             fwhm = args.fwhm_L
+            eta = 1
     else:
         if (args.fwhm_G is None) or (args.fwhm_L is None):
-            print('You are using pseudo voigt irf,' +
-                  'so you should set both fwhm_G and fwhm_L!\n')
-            return
+            raise Exception('You are using pseudo voigt irf,' +
+            'so you should set both fwhm_G and fwhm_L!\n')
         else:
-            fwhm = np.array([args.fwhm_G, args.fwhm_L])
+            fwhm = calc_fwhm([args.fwhm_G, args.fwhm_L])
+            eta = calc_eta([args.fwhm_G, args.fwhm_L])
 
     if args.tau is None:
-        print('Please set lifetime constants for each decay')
-        return
+        raise Exception('Please set lifetime constants for each decay')
     else:
         tau = np.array(args.tau)
     
     if (args.time_zero is None):
-        print('You should set time_zero for energy scan \n')
-        return
+        raise Exception('You should set time_zero for energy scan \n')
     else:
         time_zero = args.time_zero
 
@@ -107,7 +107,8 @@ def calc_dads():
     out_prefix = args.out
     base = args.no_base
     
-    ads, ads_eps, fit = dads(escan_time-time_zero, fwhm, tau, base, irf, intensity=escan_data[:,1:], eps=escan_err)
+    ads, ads_eps, fit = dads(escan_time-time_zero, fwhm, tau, base, irf, eta,
+    intensity=escan_data[:,1:], eps=escan_err)
 
     e = escan_data[:,0]
 

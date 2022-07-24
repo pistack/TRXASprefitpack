@@ -106,8 +106,7 @@ def exp_conv_cauchy(t: Union[float, np.ndarray],
     return ans
 
 def exp_conv_pvoigt(t: Union[float, np.ndarray],
-                    fwhm_G: float,
-                    fwhm_L: float,
+                    fwhm: float,
                     eta: float,
                     k: float) -> Union[float, np.ndarray]:
 
@@ -116,14 +115,11 @@ def exp_conv_pvoigt(t: Union[float, np.ndarray],
     voigt profile (i.e. linear combination of normalized gaussian and
     cauchy distribution)
 
-    :math:`\\eta C(\\mathrm{fwhm}_L, t) + (1-\\eta)G(\\mathrm{fwhm}_G, t)`
+    :math:`\\eta C(\\mathrm{fwhm}, t) + (1-\\eta)G(\\mathrm{fwhm}, t)`
 
     Args:
        t: time
-       fwhm_G: full width at half maximum of gaussian part of
-               pseudo voigt profile
-       fwhm_L: full width at half maximum of cauchy part of
-               pseudo voigt profile
+       fwhm: full width at half maximum parameter for pseudo voigt irf
        eta: mixing parameter
        k: rate constant (inverse of life time)
 
@@ -132,8 +128,8 @@ def exp_conv_pvoigt(t: Union[float, np.ndarray],
        exponential decay :math:`(\\exp(-kt))`.
     '''
 
-    u = exp_conv_gau(t, fwhm_G, k)
-    v = exp_conv_cauchy(t, fwhm_L, k)
+    u = exp_conv_gau(t, fwhm, k)
+    v = exp_conv_cauchy(t, fwhm, k)
 
     return u + eta*(v-u)
 
@@ -389,7 +385,7 @@ k: float, T: float, phase: float) -> Union[float, np.ndarray]:
 
     return ans.imag
 
-def dmp_osc_conv_pvoigt(t: Union[float, np.ndarray], fwhm_G: float, fwhm_L: float, eta: float,
+def dmp_osc_conv_pvoigt(t: Union[float, np.ndarray], fwhm: float, eta: float,
 k: float, T: float, phase: float) -> Union[float, np.ndarray]:
 
     '''
@@ -397,14 +393,11 @@ k: float, T: float, phase: float) -> Union[float, np.ndarray]:
     voigt profile (i.e. linear combination of normalized gaussian and
     cauchy distribution)
 
-    :math:`\\eta C(\\mathrm{fwhm}_L, t) + (1-\\eta)G(\\mathrm{fwhm}_G, t)`
+    :math:`\\eta C(\\mathrm{fwhm}, t) + (1-\\eta)G(\\mathrm{fwhm}, t)`
 
     Args:
        t: time
-       fwhm_G: full width at half maximum of gaussian part of
-               pseudo voigt profile
-       fwhm_L: full width at half maximum of cauchy part of
-               pseudo voigt profile
+       fwhm: uniform full width at half maximum parameter
        eta: mixing parameter
        k: damping constant (inverse of life time)
        T: period of vibration 
@@ -415,8 +408,8 @@ k: float, T: float, phase: float) -> Union[float, np.ndarray]:
      damped oscillation :math:`(\\exp(-kt)cos(2\\pi t/T+phase))`.
     '''
 
-    u = dmp_osc_conv_gau(t, fwhm_G, k, T, phase)
-    v = dmp_osc_conv_cauchy(t, fwhm_L, k, T, phase)
+    u = dmp_osc_conv_gau(t, fwhm, k, T, phase)
+    v = dmp_osc_conv_cauchy(t, fwhm, k, T, phase)
 
     return u + eta*(v-u)
 
@@ -447,29 +440,25 @@ k: float, T: float, phase: float) -> np.ndarray:
     '''
 
     sigma = fwhm/(2*np.sqrt(2*np.log(2))); omega = 2*np.pi/T
-    z = omega*sigma + complex(0,1)*(k*sigma-t/sigma)
     f = (complex(np.cos(phase), np.sin(phase)))*exp_mod_gau_cplx(t, sigma, k, omega)
-    deriv_f_z = complex(0, np.sqrt(2/np.pi))*complex(np.cos(phase), np.sin(phase))*np.exp(-(t/sigma)**2/2)-z*f
-    grad_t = -t/sigma**2*f.real + deriv_f_z.imag/sigma
-    grad_fwhm = ((t/sigma)**2/sigma*f.real + omega*deriv_f_z.real - (k+t/sigma**2)*deriv_f_z.imag)/(2*np.sqrt(2*np.log(2)))
-    grad_k = -sigma*deriv_f_z.imag
-    grad_T = -omega/T*sigma*deriv_f_z.real
-    grad_phase = -f.imag
+    g = (complex(np.cos(phase), np.sin(phase)))*np.exp(-(t/sigma)**2/2)/np.sqrt(2*np.pi)
 
     if not isinstance(t, np.ndarray):
         grad = np.empty(5)
-        grad[0] = grad_t
-        grad[1] = grad_fwhm
-        grad[2] = grad_k
-        grad[3] = grad_T
-        grad[4] = grad_phase
+        grad[0] = g.real/sigma - k*f.real-omega*f.imag
+        grad[1] = (sigma*((k**2-omega**2)*f.real + 2*k*omega*f.imag) - 
+        omega*g.imag - (k+t/sigma**2)*g.real)/(2*np.sqrt(2*np.log(2)))
+        grad[2] = sigma**2*(k*f.real+omega*f.imag)-t*f.real - sigma*g.real
+        grad[3] = -omega/T*(sigma**2*(k*f.imag-omega*f.real)-t*f.imag - sigma*g.imag)
+        grad[4] = -f.imag
     else:
         grad = np.empty((t.size, 5))
-        grad[:, 0] = grad_t
-        grad[:, 1] = grad_fwhm
-        grad[:, 2] = grad_k
-        grad[:, 3] = grad_T
-        grad[:, 4] = grad_phase
+        grad[:, 0] = g.real/sigma - k*f.real-omega*f.imag
+        grad[:, 1] = (sigma*((k**2-omega**2)*f.real + 2*k*omega*f.imag) - 
+        omega*g.imag - (k+t/sigma**2)*g.real)/(2*np.sqrt(2*np.log(2)))
+        grad[:, 2] = sigma**2*(k*f.real+omega*f.imag)-t*f.real - sigma*g.real
+        grad[:, 3] = -omega/T*(sigma**2*(k*f.imag-omega*f.real)-t*f.imag - sigma*g.imag)
+        grad[:, 4] = -f.imag
     
     return grad
 
@@ -594,7 +583,7 @@ k: np.ndarray, T: np.ndarray, phase: np.ndarray, c: np.ndarray) -> np.ndarray:
      2+num_comp+i th column: df/dT_i (1 <= i <= num_comp)
      2+2*num_comp+i th column: df/d(phase_i) (1 <= i <= num_comp)
     '''
-    grad = np.zeros((2+3*k.size, t.size))
+    grad = np.zeros((t.size, 2+3*k.size))
     for i in range(k.size):
         grad_i = deriv_dmp_osc_conv_cauchy(t, fwhm, k[i], T[i], phase[i])
         grad[:, 0] = grad[:, 0] + c[i]*grad_i[:, 0]

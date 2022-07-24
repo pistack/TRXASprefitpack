@@ -36,7 +36,8 @@ class TransientResult(dict):
             'c': cauchy (lorenzian) instrumental response function
 
             'pv': pseudo voigt instrumental response function (linear combination of gaussian and lorenzian function)
-       eta (float): mixing parameter ((1-eta)*g+eta*c)
+       fwhm (float): unifrom fwhm parameter for pseudo voigt function :math:`((1-\\eta)*g(t, {fwhm})+\\eta*c{t, {fwhm}})`
+       eta (float): mixing parameter for pseudo voigt function :math:`((1-\\eta)*g(t, {fwhm})+\\eta*c{t, {fwhm}})`
        param_name (np.ndarray): name of parameter
        n_decay (int): number of decay components (except baseline feature)
        n_osc (int): number of damped oscillation components
@@ -102,7 +103,8 @@ class TransientResult(dict):
             doc_lst.append("[Model information]")
             doc_lst.append(f"    model : {self['model']}")
             doc_lst.append(f"    irf: {self['irf']}")
-            doc_lst.append(f"    eta: {self['eta']}")
+            doc_lst.append(f"    fwhm: {self['fwhm']: .4f}")
+            doc_lst.append(f"    eta: {self['eta']: .4f}")
             doc_lst.append(f"    base: {self['base']}")
             doc_lst.append(' ')
             doc_lst.append("[Optimization Method]")
@@ -194,7 +196,7 @@ def save_TransientResult(result: TransientResult, filename: str):
        h5 file which stores result
       '''
 
-      model_key_lst = ['model', 'irf', 'eta', 'n_decay', 'n_osc',
+      model_key_lst = ['model', 'irf', 'fwhm', 'eta', 'n_decay', 'n_osc',
       'base', 'chi2', 'n_param', 'n_param_ind', 'num_pts', 'red_chi2',
       'aic', 'bic', 'nfev', 
       'method_lsq', 'success_lsq', 'message_lsq', 'status']
@@ -251,7 +253,7 @@ def load_TransientResult(filename: str) -> TransientResult:
        transient fitting result loaded from h5 file
       '''
 
-      model_key_lst = ['model', 'irf', 'eta', 'n_decay', 'n_osc',
+      model_key_lst = ['model', 'irf', 'fwhm', 'eta', 'n_decay', 'n_osc',
       'base', 'chi2', 'n_param', 'n_param_ind', 'num_pts', 'red_chi2',
       'aic', 'bic', 'nfev', 'method_lsq', 'success_lsq', 'message_lsq', 'status']
 

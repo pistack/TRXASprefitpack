@@ -7,13 +7,119 @@
 # (Mixing parameter eta is fixed according to
 #  Journal of Applied Crystallography. 33 (6): 1311–1316.)
 
+from typing import Optional
+import os
+from pathlib import Path
 import argparse
 import numpy as np
-from ..driver import save_TransientResult
+import matplotlib.pyplot as plt
+from ..driver import TransientResult, save_TransientResult
 from ..driver import fit_transient_exp, fit_transient_dmp_osc, fit_transient_both
-from .misc import read_data, plot_TransientResult, save_TransientResult_txt
+from .misc import read_data
 
 FITDRIVER = {'decay': fit_transient_exp, 'osc': fit_transient_dmp_osc, 'both': fit_transient_both}
+
+def save_TransientResult_txt(result: TransientResult, dirname: str):
+      '''
+      save fitting result to the text file
+
+      Args:
+       result: fitting result
+       dirname: name of the directory in which text files for fitting result are saved.
+       name_of_dset: name of each data sets. If `name_of_dset` is None then it is set to [1,2,3,....]
+       t: sequence of scan range
+       eps: sequence of estimated error of each datasets
+      
+      Returns:
+       `fit_summary.txt`: Summary for the fitting result
+       `weight_{name_of_dset[i]}.txt`: Weight of each model component of i th dataset
+       `fit_{name_of_dset[i]}.txt`: fitting curve for i th dataset
+       `fit_osc_{name_of_dset[i]}.txt`: oscillation part of fitting curve for i th dataset [model = 'both']
+       `fit_decay_{name_of_dset[i]}.txt`: decay part of fitting curve for i th dataset [model = 'both']
+       `res_{name_f_dset[i]}_j.txt`: residual (fit-data) curve for j th scan of i th data
+                                     The format of text file is (t, res, eps)
+
+      
+      Note:
+       If `dirname` directory is not exists, it creates `dirname` directory.
+      '''
+      if not (Path.cwd()/dirname).exists():
+            os.mkdir(dirname)
+      
+      with open(f'{dirname}/fit_summary.txt', 'w') as f:
+            f.write(str(result))
+      
+      for i in range(len(result['t'])):
+            coeff_fmt = result['eps'][i].shape[1]*['%.8e']
+            fit_fmt = (1+result['eps'][i].shape[1])*['%.8e']
+            coeff_header_lst = []
+            fit_header_lst = ['time_delay']
+            for j in range(result['eps'][i].shape[1]):
+                  res_save = np.vstack((result['t'][i], result['res'][i][:,j], result['eps'][i][:,j])).T
+                  np.savetxt(f"{dirname}/res_{result['name_of_dset'][i]}_{j+1}.txt", res_save,
+                  fmt=['%.8e', '%.8e', '%.8e'], 
+                  header=f"time_delay \t res_{result['name_of_dset'][i]}_{j+1} \t eps")
+                  fit_header_lst.append(f"fit_{result['name_of_dset'][i]}_{j+1}")
+                  coeff_header_lst.append(f"tscan_{result['name_of_dset'][i]}_{j+1}")
+            
+            fit_header = '\t'.join(fit_header_lst)
+            coeff_header = '\t'.join(coeff_header_lst)
+
+            np.savetxt(f"{dirname}/weight_{result['name_of_dset'][i]}.txt", result['c'][i], fmt=coeff_fmt,
+            header=coeff_header)
+            fit_save = np.vstack((result['t'][i], result['fit'][i].T)).T
+            np.savetxt(f"{dirname}/fit_{result['name_of_dset'][i]}.txt", fit_save, fmt=fit_fmt, header=fit_header)
+            if result['model'] == 'both':
+                  fit_decay_save = np.vstack((result['t'][i], result['fit_decay'][i].T)).T
+                  np.savetxt(f"{dirname}/fit_decay_{result['name_of_dset'][i]}.txt", fit_decay_save, fmt=fit_fmt, header=fit_header)
+                  fit_osc_save = np.vstack((result['t'][i], result['fit_osc'][i].T)).T
+                  np.savetxt(f"{dirname}/fit_osc_{result['name_of_dset'][i]}.txt", fit_osc_save, fmt=fit_fmt, header=fit_header)
+
+      return
+
+def plot_TransientResult(result: TransientResult,
+                      x_min: Optional[float] = None, x_max: Optional[float] = None, save_fig: Optional[str] = None):
+      '''
+      plot fitting Result
+
+      Args:
+       result: fitting result
+       x_min: minimum x range
+       x_max: maximum x range
+       save_fig: prefix of saved png plots. If `save_fig` is `None`, plots are displayed istead of being saved.
+      '''
+      
+      start = 0
+      for i in range(len(result['t'])):
+            for j in range(result['intensity'][i].shape[1]):
+                  fig = plt.figure(start+j+1)
+                  title = f'{result["name_of_dset"][i]} scan #{j+1}'
+                  subtitle = f"Chi squared: {result['red_chi2_ind'][i][j]: .2f}"
+                  plt.suptitle(title)
+                  sub1 = fig.add_subplot(211)
+                  sub1.set_title(subtitle)
+                  sub1.errorbar(result['t'][i], result['intensity'][i][:, j], result['eps'][i][:, j], marker='o', mfc='none',
+                  label=f'expt {title}', linestyle='none')
+                  sub1.plot(result['t'][i], result['fit'][i][:, j], label=f'fit {title}')
+                  sub1.legend()
+                  sub2 = fig.add_subplot(212)
+                  if result['model'] in ['decay', 'osc']:
+                        sub2.errorbar(result['t'][i], result['res'][i][:, j], 
+                        result['eps'][i][:, j], marker='o', mfc='none', label=f'res {title}', linestyle='none')
+                  else:
+                        sub2.errorbar(result['t'][i], result['intensity'][i][:, j]-result['fit_decay'][i][:, j], 
+                        result['eps'][i][:, j], marker='o', mfc='none', label=f'expt osc {title}', linestyle='none')
+                        sub2.plot(result['t'][i], result['fit_osc'][i][:, j], label=f'fit osc {title}')
+                  sub2.legend()
+                  if x_min is not None and x_max is not None:
+                        sub1.set_xlim(x_min, x_max)
+                        sub2.set_xlim(x_min, x_max)
+                  if save_fig is not None:
+                        plt.savefig(f'{save_fig}_{result["name_of_dset"][i]}_{j+1}.png')
+            start = start + result['intensity'][i].shape[1]
+      if save_fig is None:
+            plt.show()
+      return
 
 
 description = '''
@@ -46,7 +152,7 @@ epilog = '''
 
 7. The number of tau_osc, period_osc and phase_osc parameter should be same
 
-8. phase_osc should be confined in [0, pi] (pi ~ 3.14)
+8. phase_osc should be confined in [-pi, pi] (pi ~ 3.14)
 
 9. If you set `mode=both` then you should set `tau`, `tau_osc`, `period_osc` and `phase_osc`. However the number of `tau` and `tau_osc` need not to be same.
 '''
@@ -64,7 +170,8 @@ g: gaussian distribution
 c: cauchy distribution
 pv: pseudo voigt profile, linear combination of gaussian distribution and cauchy distribution 
     pv = eta*c+(1-eta)*g 
-    the mixing parameter is fixed according to Journal of Applied Crystallography. 33 (6): 1311–1316. 
+    the uniform fwhm parameter and 
+    mixing parameter are determined according to Journal of Applied Crystallography. 33 (6): 1311–1316. 
 '''
 
 fwhm_G_help = '''

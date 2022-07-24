@@ -3,6 +3,8 @@
 
 import argparse
 import numpy as np
+
+from ..mathfun.irf import calc_fwhm, calc_eta
 from ..mathfun import fact_anal_exp_conv
 from ..mathfun.A_matrix import make_A_matrix_exp
 from .misc import read_data
@@ -30,7 +32,8 @@ g: gaussian distribution
 c: cauchy distribution
 pv: pseudo voigt profile, linear combination of gaussian distribution and cauchy distribution 
     pv = eta*c+(1-eta)*g 
-    the mixing parameter is fixed according to Journal of Applied Crystallography. 33 (6): 1311–1316. 
+    the uniform fwhm parameter and 
+    mixing parameter are determined according to Journal of Applied Crystallography. 33 (6): 1311–1316. 
 '''
 
 fwhm_G_help = '''
@@ -81,24 +84,23 @@ def match_scale():
     irf = args.irf
     if irf == 'g':
         if args.fwhm_G is None:
-            print('You are using gaussian irf, so you should set fwhm_G!\n')
-            return
+            raise Exception('You are using gaussian irf, so you should set fwhm_G!\n')
         else:
             fwhm = args.fwhm_G
+            eta = 0
     elif irf == 'c':
         if args.fwhm_L is None:
-            print('You are using cauchy/lorenzian irf,' +
-                  'so you should set fwhm_L!\n')
-            return
+            raise Exception('You are using cauchy/lorenzian irf,' + 
+            'so you should set fwhm_L!\n')
         else:
             fwhm = args.fwhm_L
     else:
         if (args.fwhm_G is None) or (args.fwhm_L is None):
-            print('You are using pseudo voigt irf,' +
-                  'so you should set both fwhm_G and fwhm_L!\n')
-            return
+            raise Exception('You are using pseudo voigt irf,' +
+            'so you should set both fwhm_G and fwhm_L!\n')
         else:
-            fwhm = np.array([args.fwhm_G, args.fwhm_L])
+            fwhm = calc_fwhm(args.fwhm_G, args.fwhm_L)
+            eta = calc_eta(args.fwhm_G, args.fwhm_L)
 
     if args.tau is None:
         base = True
@@ -123,7 +125,7 @@ def match_scale():
     escan_data_scaled[:, 0] = e
     e_ref_idx = np.argwhere(e == ref_tscan_energy)[0][0]
 
-    c = fact_anal_exp_conv(ref_tscan_data[:,0]-time_zero, fwhm, tau, base, irf,
+    c = fact_anal_exp_conv(ref_tscan_data[:,0]-time_zero, fwhm, tau, base, irf, eta,
     intensity=ref_tscan_data[:, 1], eps=ref_tscan_data[:, 2])
     A_slec = make_A_matrix_exp(escan_time-time_zero, fwhm, tau, base, irf)
     fit_slec = c@A_slec

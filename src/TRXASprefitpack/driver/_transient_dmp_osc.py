@@ -8,7 +8,7 @@ convolution of sum of damped oscillation and instrumental response function
 '''
 from typing import Optional, Union, Sequence, Tuple
 import numpy as np
-from ..mathfun.irf import calc_eta
+from ..mathfun.irf import calc_eta, calc_fwhm
 from .transient_result import TransientResult
 from scipy.optimize import basinhopping
 from scipy.optimize import least_squares
@@ -70,7 +70,7 @@ def fit_transient_dmp_osc(irf: str, fwhm_init: Union[float, np.ndarray],
         
         'c': cauchy shape
         
-        'pv': pseudo voigt shape
+        'pv': pseudo voigt shape (kind: 2)
        fwhm_init (float or np.ndarray): initial full width at half maximum for instrumental response function
        
         if irf in ['g', 'c'] then fwhm_init is float
@@ -91,11 +91,11 @@ def fit_transient_dmp_osc(irf: str, fwhm_init: Union[float, np.ndarray],
        bound_t0 (sequence of tuple): boundary for time zero parameter. 
         If `bound_t0` is `None`, the upper and lower bound are given as `(t0-2*fwhm_init, t0+2*fwhm_init)`.
        bound_tau (sequence of tuple): boundary for lifetime constant for damped oscillation component, 
-        if `bound_tau` is `None`, the upper and lower bound are given by ``set_bound_tau``.
+        if `bound_tau` is `None`, the upper and lower bound are given by `set_bound_tau`.
        bound_period (sequence of tuple): boundary for period of damped oscillation component, 
-        if `bound_period` is `None`, the upper and lower bound are given by ``set_bound_tau``.
+        if `bound_period` is `None`, the upper and lower bound are given by `set_bound_tau`.
        bound_phase (sequence of tuple): boundary for phase factor of damped oscillation component,
-        if `bound_phase` is `None`, the upper and lower bound are given as (-np.pi, np.pi).
+        if `bound_phase` is `None`, the upper and lower bound are given as `(-np.pi, np.pi)`.
        name_of_dset (sequence of str): name of each dataset
        t (sequence of np.narray): time scan range for each datasets
        intensity (sequence of np.ndarray): sequence of intensity pf datasets for time delay scan (it should not contain time scan range)
@@ -230,10 +230,16 @@ def fit_transient_dmp_osc(irf: str, fwhm_init: Union[float, np.ndarray],
       t0_idx = num_irf
 
       if irf == 'g':
+            fwhm_pv = fwhm_opt[0]
+            eta = 0
             param_name[0] = 'fwhm_G'
       elif irf == 'c':
+            fwhm_pv = fwhm_opt[0]
+            eta = 1
             param_name[0] = 'fwhm_L'
       else:
+            fwhm_pv = calc_fwhm(fwhm_opt[0], fwhm_opt[1])
+            eta = calc_eta(fwhm_opt[0], fwhm_opt[1])
             param_name[0] = 'fwhm_G'
             param_name[1] = 'fwhm_L'
 
@@ -241,7 +247,7 @@ def fit_transient_dmp_osc(irf: str, fwhm_init: Union[float, np.ndarray],
             c[i] = np.empty((num_comp, intensity[i].shape[1]))
             
             for j in range(intensity[i].shape[1]):
-                  A = make_A_matrix_dmp_osc(t[i]-param_opt[t0_idx], fwhm_opt, tau_opt, period_opt, phase_opt, irf)
+                  A = make_A_matrix_dmp_osc(t[i]-param_opt[t0_idx], fwhm_pv, tau_opt, period_opt, phase_opt, irf, eta)
                   c[i][:, j] = fact_anal_A(A, intensity[i][:, j], eps[i][:, j])
                   fit[i][:, j] = c[i][:, j] @ A
                   param_name[t0_idx] = f't_0_{i+1}_{j+1}'
@@ -278,13 +284,7 @@ def fit_transient_dmp_osc(irf: str, fwhm_init: Union[float, np.ndarray],
 
       result['model'] = 'dmp_osc'
       result['fit'] = fit; result['res'] = res; result['irf'] = irf
-
-      if irf == 'g':
-            result['eta'] = 0
-      elif irf == 'c':
-            result['eta'] = 1
-      else:
-            result['eta'] = calc_eta(fwhm_opt[0], fwhm_opt[1])
+      result['fwhm'] = fwhm_pv; result['eta'] = eta
       
       result['param_name'] = param_name; result['x'] = param_opt
       result['bounds'] = bound; result['base'] = False; result['c'] = c
