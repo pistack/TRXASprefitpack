@@ -88,8 +88,8 @@ def calc_dads():
             raise Exception('You are using pseudo voigt irf,' +
             'so you should set both fwhm_G and fwhm_L!\n')
         else:
-            fwhm = calc_fwhm([args.fwhm_G, args.fwhm_L])
-            eta = calc_eta([args.fwhm_G, args.fwhm_L])
+            fwhm = calc_fwhm(args.fwhm_G, args.fwhm_L)
+            eta = calc_eta(args.fwhm_G, args.fwhm_L)
 
     if args.tau is None:
         raise Exception('Please set lifetime constants for each decay')

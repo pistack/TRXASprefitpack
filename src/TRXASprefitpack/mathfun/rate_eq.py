@@ -7,10 +7,9 @@ the solution and signal
 :license: LGPL3.
 '''
 
-from typing import Optional, Tuple, Union
+from typing import Optional, Tuple
 import numpy as np
 import scipy.linalg as LA  # replace numpy.linalg to scipy.linalg
-from .irf import calc_eta
 from .A_matrix import make_A_matrix, make_A_matrix_cauchy
 from .A_matrix import make_A_matrix_gau, make_A_matrix_pvoigt
 
