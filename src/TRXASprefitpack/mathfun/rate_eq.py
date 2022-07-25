@@ -94,7 +94,7 @@ def solve_seq_model(tau: np.ndarray, y0: np.ndarray):
     for i in range(1, eigval.size):
       V[i, :i] = V[i-1,:i]*eigval[i-1]/(eigval[i]-eigval[:i])
     
-    c[0] = 1
+    c[0] = y0[0]
     for i in range(1, eigval.size):
       c[i] = y0[i]-np.dot(c[:i], V[i,:i])
     return eigval, V, c

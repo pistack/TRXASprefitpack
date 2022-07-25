@@ -18,7 +18,7 @@ from ..mathfun.exp_conv_irf import deriv_dmp_osc_sum_conv_gau, deriv_dmp_osc_sum
 
 # residual and gradient function for exponential decay model + damped oscillation model
 
-def residual_both(params: np.ndarray, num_comp: int, num_comp_osc:int, base: bool, irf: str, 
+def residual_both(x0: np.ndarray, num_comp: int, num_comp_osc:int, base: bool, irf: str, 
                   t: Optional[Sequence[np.ndarray]] = None, 
                   intensity: Optional[Sequence[np.ndarray]] = None, 
                   eps: Optional[Sequence[np.ndarray]] = None) -> np.ndarray:
@@ -28,22 +28,22 @@ def residual_both(params: np.ndarray, num_comp: int, num_comp_osc:int, base: boo
     sum of convolution of (sum of exponential decay damped oscillation) and instrumental response function  
 
     Args:
-     params: parameter used for fitting
+     x0: initial parameter
              if irf == 'g','c':
-                param[0]: fwhm_(G/L)
-                param[1:1+number of total time delay scan]: time zero of each scan
-                param[1+num_tot_scan:1+num_tot_scan+num_tau]: time constant (inverse of rate constant) of each decay component
-                param[1+num_tot_scan+num_tau:1+num_tot_scan+num_tau+num_tau_osc]: time constant of each damped oscillation component
-                param[1+num_tot_scan+num_tau+num_tau_osc:1+num_tot_scan+num_tau+2*num_tau_osc]: period of each damped oscillation component
-                param[1+num_tot_scan+num_tau+2*num_tau_osc:]: phase of each damped oscillation component 
+                x0[0]: fwhm_(G/L)
+                x0[1:1+number of total time delay scan]: time zero of each scan
+                x0[1+num_tot_scan:1+num_tot_scan+num_tau]: time constant (inverse of rate constant) of each decay component
+                x0[1+num_tot_scan+num_tau:1+num_tot_scan+num_tau+num_tau_osc]: time constant of each damped oscillation component
+                x0[1+num_tot_scan+num_tau+num_tau_osc:1+num_tot_scan+num_tau+2*num_tau_osc]: period of each damped oscillation component
+                x0[1+num_tot_scan+num_tau+2*num_tau_osc:]: phase of each damped oscillation component 
              if irf == 'pv'
-                param[0]: fwhm_G
-                param[1]: fwhm_L
-                param[2:2+number of total time delay scan]: time zero of each scan
-                param[2+num_tot_scan:2+num_tot_scan+num_tau]: time constant (inverse of rate constant) of each decay component
-                param[2+num_tot_scan+num_tau:2+num_tot_scan+num_tau+num_tau_osc]: time constant of each damped oscillation component
-                param[2+num_tot_scan+num_tau+num_tau_osc:2+num_tot_scan+num_tau+2*num_tau_osc]: period of each damped oscillation component
-                param[2+num_tot_scan+num_tau+2*num_tau_osc:]: phase of each damped oscillation component 
+                x0[0]: fwhm_G
+                x0[1]: fwhm_L
+                x0[2:2+number of total time delay scan]: time zero of each scan
+                x0[2+num_tot_scan:2+num_tot_scan+num_tau]: time constant (inverse of rate constant) of each decay component
+                x0[2+num_tot_scan+num_tau:2+num_tot_scan+num_tau+num_tau_osc]: time constant of each damped oscillation component
+                x0[2+num_tot_scan+num_tau+num_tau_osc:2+num_tot_scan+num_tau+2*num_tau_osc]: period of each damped oscillation component
+                x0[2+num_tot_scan+num_tau+2*num_tau_osc:]: phase of each damped oscillation component 
 
      num_comp: number of exponential decay component (except base)
      num_comp_osc: number of damped oscillation component
@@ -64,16 +64,16 @@ def residual_both(params: np.ndarray, num_comp: int, num_comp_osc:int, base: boo
     Note:
      each dataset does not contain time range
     '''
-    params = np.atleast_1d(params)
+    x0 = np.atleast_1d(x0)
     
     if irf in ['g', 'c']:
         num_irf = 1
-        fwhm = params[0]
+        fwhm = x0[0]
         eta = None
     else:
             num_irf = 2
-            fwhm = calc_fwhm(params[0], params[1])
-            eta = calc_eta(params[0], params[1])
+            fwhm = calc_fwhm(x0[0], x0[1])
+            eta = calc_eta(x0[0], x0[1])
 
     num_t0 = 0; sum = 0
     for d in intensity:
@@ -82,10 +82,10 @@ def residual_both(params: np.ndarray, num_comp: int, num_comp_osc:int, base: boo
     
     chi = np.empty(sum)
 
-    tau = params[num_irf+num_t0:num_irf+num_t0+num_comp]
-    tau_osc = params[num_irf+num_t0+num_comp:num_irf+num_t0+num_comp+num_comp_osc]
-    period_osc = params[num_irf+num_t0+num_comp+num_comp_osc:num_irf+num_t0+num_comp+2*num_comp_osc]
-    phase_osc = params[num_irf+num_t0+num_comp+2*num_comp_osc:]
+    tau = x0[num_irf+num_t0:num_irf+num_t0+num_comp]
+    tau_osc = x0[num_irf+num_t0+num_comp:num_irf+num_t0+num_comp+num_comp_osc]
+    period_osc = x0[num_irf+num_t0+num_comp+num_comp_osc:num_irf+num_t0+num_comp+2*num_comp_osc]
+    phase_osc = x0[num_irf+num_t0+num_comp+2*num_comp_osc:]
 
     if base:
         k = np.empty(tau.size+1)
@@ -97,7 +97,7 @@ def residual_both(params: np.ndarray, num_comp: int, num_comp_osc:int, base: boo
     for ti,d,e in zip(t,intensity,eps):
         A = np.empty((num_comp+1*base+num_comp_osc, d.shape[0]))
         for j in range(d.shape[1]):
-            t0 = params[t0_idx]
+            t0 = x0[t0_idx]
             if irf == 'g':
                 A[:num_comp+1*base, :] = make_A_matrix_gau(ti-t0, fwhm, k)
                 A[num_comp+1*base:, :] = make_A_matrix_gau_osc(ti-t0, fwhm, 1/tau_osc, period_osc, phase_osc)
@@ -119,7 +119,7 @@ def residual_both(params: np.ndarray, num_comp: int, num_comp_osc:int, base: boo
             t0_idx = t0_idx + 1
     return chi
     
-def res_grad_both(params: np.ndarray, num_comp: int, num_comp_osc:int, base: bool, irf: str, 
+def res_grad_both(x0: np.ndarray, num_comp: int, num_comp_osc:int, base: bool, irf: str, 
                    fix_param_idx: Optional[np.ndarray] = None,
                    t: Optional[Sequence[np.ndarray]] = None, 
                    intensity: Optional[Sequence[np.ndarray]] = None, 
@@ -130,22 +130,22 @@ def res_grad_both(params: np.ndarray, num_comp: int, num_comp_osc:int, base: boo
     sum of convolution of (sum of exponential decay damped oscillation) and instrumental response function  
 
     Args:
-     params: parameter used for fitting
+     x0: initial parameter
              if irf == 'g','c':
-                param[0]: fwhm_(G/L)
-                param[1:1+number of total time delay scan]: time zero of each scan
-                param[1+num_tot_scan:1+num_tot_scan+num_tau]: time constant (inverse of rate constant) of each decay component
-                param[1+num_tot_scan+num_tau:1+num_tot_scan+num_tau+num_tau_osc]: time constant of each damped oscillation component
-                param[1+num_tot_scan+num_tau+num_tau_osc:1+num_tot_scan+num_tau+2*num_tau_osc]: period of each damped oscillation component
-                param[1+num_tot_scan+num_tau+2*num_tau_osc:]: phase of each damped oscillation component 
+                x0[0]: fwhm_(G/L)
+                x0[1:1+number of total time delay scan]: time zero of each scan
+                x0[1+num_tot_scan:1+num_tot_scan+num_tau]: time constant (inverse of rate constant) of each decay component
+                x0[1+num_tot_scan+num_tau:1+num_tot_scan+num_tau+num_tau_osc]: time constant of each damped oscillation component
+                x0[1+num_tot_scan+num_tau+num_tau_osc:1+num_tot_scan+num_tau+2*num_tau_osc]: period of each damped oscillation component
+                x0[1+num_tot_scan+num_tau+2*num_tau_osc:]: phase of each damped oscillation component 
              if irf == 'pv'
-                param[0]: fwhm_G
-                param[1]: fwhm_L
-                param[2:2+number of total time delay scan]: time zero of each scan
-                param[2+num_tot_scan:2+num_tot_scan+num_tau]: time constant (inverse of rate constant) of each decay component
-                param[2+num_tot_scan+num_tau:2+num_tot_scan+num_tau+num_tau_osc]: time constant of each damped oscillation component
-                param[2+num_tot_scan+num_tau+num_tau_osc:2+num_tot_scan+num_tau+2*num_tau_osc]: period of each damped oscillation component
-                param[2+num_tot_scan+num_tau+2*num_tau_osc:]: phase of each damped oscillation component 
+                x0[0]: fwhm_G
+                x0[1]: fwhm_L
+                x0[2:2+number of total time delay scan]: time zero of each scan
+                x0[2+num_tot_scan:2+num_tot_scan+num_tau]: time constant (inverse of rate constant) of each decay component
+                x0[2+num_tot_scan+num_tau:2+num_tot_scan+num_tau+num_tau_osc]: time constant of each damped oscillation component
+                x0[2+num_tot_scan+num_tau+num_tau_osc:2+num_tot_scan+num_tau+2*num_tau_osc]: period of each damped oscillation component
+                x0[2+num_tot_scan+num_tau+2*num_tau_osc:]: phase of each damped oscillation component 
 
      num_comp: number of exponential decay component (except base)
      num_comp_osc: number of damped oscillation component
@@ -165,28 +165,28 @@ def res_grad_both(params: np.ndarray, num_comp: int, num_comp_osc:int, base: boo
      Tuple of scalar residual function :math:`(\\frac{1}{2}\\sum_i {res}^2_i)` and its gradient
     '''
 
-    params = np.atleast_1d(params)
+    x0 = np.atleast_1d(x0)
     
     if irf in ['g', 'c']:
         num_irf = 1
-        fwhm = params[0]
+        fwhm = x0[0]
         eta = None
     else:
             num_irf = 2
-            eta = calc_eta(params[0], params[1])
-            fwhm = calc_fwhm(params[0], params[1])
-            deta_G, deta_L = deriv_eta(params[0], params[1])
-            dfwhm_G, dfwhm_L = deriv_fwhm(params[0], params[1])
+            eta = calc_eta(x0[0], x0[1])
+            fwhm = calc_fwhm(x0[0], x0[1])
+            deta_G, deta_L = deriv_eta(x0[0], x0[1])
+            dfwhm_G, dfwhm_L = deriv_fwhm(x0[0], x0[1])
 
     num_t0 = 0; sum = 0
     for d in intensity:
         num_t0 = d.shape[1] + num_t0
         sum = sum + d.size
     
-    tau = params[num_irf+num_t0:num_irf+num_t0+num_comp]
-    tau_osc = params[num_irf+num_t0+num_comp:num_irf+num_t0+num_comp+num_comp_osc]
-    period_osc = params[num_irf+num_t0+num_comp+num_comp_osc:num_irf+num_t0+num_comp+2*num_comp_osc]
-    phase_osc = params[num_irf+num_t0+num_comp+2*num_comp_osc:]
+    tau = x0[num_irf+num_t0:num_irf+num_t0+num_comp]
+    tau_osc = x0[num_irf+num_t0+num_comp:num_irf+num_t0+num_comp+num_comp_osc]
+    period_osc = x0[num_irf+num_t0+num_comp+num_comp_osc:num_irf+num_t0+num_comp+2*num_comp_osc]
+    phase_osc = x0[num_irf+num_t0+num_comp+2*num_comp_osc:]
 
     if base:
         k = np.empty(tau.size+1)
@@ -197,14 +197,15 @@ def res_grad_both(params: np.ndarray, num_comp: int, num_comp_osc:int, base: boo
     num_param = num_irf+num_t0+num_comp+3*num_comp_osc
 
     chi = np.empty(sum)
-    df = np.zeros((sum, num_param))
+    df = np.zeros((sum, num_irf+num_comp+3*num_comp_osc))
+    grad = np.empty(num_param)
     
-    end = 0; t0_idx = num_irf; tau_start = num_t0 + t0_idx; tau_osc_start = tau_start + num_comp
+    end = 0; t0_idx = num_irf
     for ti,d,e in zip(t,intensity,eps):
         step = d.shape[0]
         A = np.empty((num_comp+1*base+num_comp_osc, step))
         for j in range(d.shape[1]):
-            t0 = params[t0_idx]
+            t0 = x0[t0_idx]
             if irf == 'g':
                 A[:num_comp+1*base, :] = make_A_matrix_gau(ti-t0, fwhm, k)
                 A[num_comp+1*base:, :] = make_A_matrix_gau_osc(ti-t0, fwhm, 1/tau_osc, period_osc, phase_osc)
@@ -249,18 +250,23 @@ def res_grad_both(params: np.ndarray, num_comp: int, num_comp_osc:int, base: boo
                 df[end:end+step, 0] = dfwhm_G*grad_sum[:, 1]+deta_G*cdiff
                 df[end:end+step, 1] = dfwhm_L*grad_sum[:, 1]+deta_L*cdiff
 
-            df[end:end+step, t0_idx] = -grad_sum[:, 0]
-            df[end:end+step, tau_start:tau_start+num_comp] = \
+            grad[t0_idx] = -chi[end:end+step]@grad_sum[:, 0]
+            df[end:end+step, num_irf:num_irf+num_comp] = \
                 np.einsum('j,ij->ij', -1/tau**2, grad_decay[:, 2:])
-            df[end:end+step, tau_osc_start:tau_osc_start+num_comp_osc] = \
+            df[end:end+step, num_irf+num_comp:num_irf+num_comp+num_comp_osc] = \
                 np.einsum('j,ij->ij',-1/tau_osc**2, grad_osc[:, 2:2+num_comp_osc])
-            df[end:end+step, tau_osc_start+num_comp_osc:] = grad_osc[:, 2+num_comp_osc:]
+            df[end:end+step, num_irf+num_comp+num_comp_osc:] = grad_osc[:, 2+num_comp_osc:]
 
 
             end = end + step
             t0_idx = t0_idx + 1
+    
+    mask = np.ones(num_param, dtype=bool)
+    mask[num_irf:num_irf+num_t0] = False
+    grad[mask] = chi@df
 
     if fix_param_idx is not None:
-        df[:, fix_param_idx] = 0
+        grad[fix_param_idx] = 0
+    
 
-    return np.sum(chi**2)/2, chi@df
+    return np.sum(chi**2)/2, grad

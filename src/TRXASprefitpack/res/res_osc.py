@@ -162,9 +162,10 @@ def res_grad_dmp_osc(params: np.ndarray, num_comp: int, irf: str,
     
     num_param = num_irf+num_t0+3*num_comp
     chi = np.empty(sum)
-    df = np.zeros((sum, num_param))
+    df = np.zeros((sum, num_irf+3*num_comp))
+    grad = np.empty(num_param)
 
-    end = 0; t0_idx = num_irf; tau_start = num_t0 + t0_idx
+    end = 0; t0_idx = num_irf
 
     for ti,d,e in zip(t, intensity, eps):
         step = d.shape[0]
@@ -183,32 +184,36 @@ def res_grad_dmp_osc(params: np.ndarray, num_comp: int, irf: str,
             chi[end:end+step] = (c@A-d[:,j])/e[:, j]
                 
             if irf == 'g':
-                grad = deriv_dmp_osc_sum_conv_gau(ti-t0, fwhm, 1/tau, period, phase, c)
+                grad_tmp = deriv_dmp_osc_sum_conv_gau(ti-t0, fwhm, 1/tau, period, phase, c)
             elif irf == 'c':
-                grad = deriv_dmp_osc_sum_conv_cauchy(ti-t0, fwhm, 1/tau, period, phase, c)
+                grad_tmp = deriv_dmp_osc_sum_conv_cauchy(ti-t0, fwhm, 1/tau, period, phase, c)
             else:
                 grad_gau = deriv_dmp_osc_sum_conv_gau(ti-t0, fwhm[0], 1/tau, period, phase, c)
                 grad_cauchy = deriv_dmp_osc_sum_conv_cauchy(ti-t0, fwhm[1], 1/tau, period, phase, c)
-                grad = grad_gau + eta*(grad_cauchy-grad_gau)
+                grad_tmp = grad_gau + eta*(grad_cauchy-grad_gau)
    
-            grad = np.einsum('i,ij->ij', 1/e[:, j], grad)
+            grad_tmp = np.einsum('i,ij->ij', 1/e[:, j], grad_tmp)
             if irf in ['g', 'c']:
-                df[end:end+step, 0] = grad[:, 1]
+                df[end:end+step, 0] = grad_tmp[:, 1]
             else:
                 cdiff = (c@diff)/e[:, j]
-                df[end:end+step, 0] = dfwhm_G*grad[:, 1]+deta_G*cdiff
-                df[end:end+step, 1] = dfwhm_L*grad[:, 1]+deta_L*cdiff
+                df[end:end+step, 0] = dfwhm_G*grad_tmp[:, 1]+deta_G*cdiff
+                df[end:end+step, 1] = dfwhm_L*grad_tmp[:, 1]+deta_L*cdiff
 
-            df[end:end+step, t0_idx] = -grad[:, 0]
-            df[end:end+step, tau_start:tau_start+num_comp] = \
-                np.einsum('j,ij->ij', -1/tau**2, grad[:, 2:2+num_comp])
-            df[end:end+step, tau_start+num_comp:] = grad[:, 2+num_comp:]
+            grad[t0_idx] = -chi[end:end+step]@grad_tmp[:, 0]
+            df[end:end+step, :num_irf+num_comp] = \
+                np.einsum('j,ij->ij', -1/tau**2, grad_tmp[:, 2:2+num_comp])
+            df[end:end+step, num_irf+num_comp:] = grad_tmp[:, 2+num_comp:]
 
                 
             end = end + step
             t0_idx = t0_idx + 1
+    
+    mask = np.ones(num_param, dtype=bool)
+    mask[num_irf:num_irf+num_t0] = False
+    grad[mask] = chi@df
 
     if fix_param_idx is not None:
         df[:, fix_param_idx] = 0
 
-    return np.sum(chi**2)/2, chi@df
+    return np.sum(chi**2)/2, grad

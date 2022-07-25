@@ -9,11 +9,56 @@ based on f_test
 :license: LGPL3.
 '''
 import numpy as np
-from scipy.stats import f
-from scipy.optimize import brenth
-from ..res import res_scan
-from ..res import residual_decay, residual_dmp_osc, residual_both
-from ..res import residual_voigt, residual_thy
+from scipy.stats import f, norm
+from scipy.optimize import brenth, minimize
+from ..res import res_grad_decay, res_grad_dmp_osc, res_grad_both
+from ..res import res_grad_voigt, res_grad_thy
+
+def res_scan_opt(p, *args) -> float:
+    '''
+    res_scan
+    Scans minimal value of residual function with constraint
+    ith value of parameter is fixed to p.
+
+    Args:
+     p: value of ith parameter
+     args: arguments
+           args[0]: i, index of parameter to scan
+           args[1]: parameter
+           args[2]: bounds
+           args[3]: objective function which also gives its gradient
+           args[4:]: arguments for objective function
+           args[-4]: fixed_param_idx
+    
+    Returns:
+     residual value at params[i] = p
+    '''
+    param = np.atleast_1d(args[1]).copy()
+    param[args[0]] = p
+    bounds = len(args[2])*[None]
+    for i in range(len(args[2])):
+        bounds[i] = args[2][i]
+    bounds[args[0]] = (p, p)
+    func = args[3]
+    fixed_param_idx = np.atleast_1d(args[-4]).copy()
+    fixed_param_idx[args[0]] = True
+    fargs_lst = (len(args)-4)*[None]
+    for i in range(4, len(args)):
+        fargs_lst[i-4] = args[i]
+    fargs_lst[-4] = fixed_param_idx
+    fargs = tuple(fargs_lst)
+    res = minimize(func, param, args=fargs, bounds=bounds, method='L-BFGS-B', jac=True)
+
+    return res['fun']
+
+def ci_scan_opt(p, *args):
+    '''
+    Confidence interval scan with ith parameter is fixed to p.
+    '''
+    F_alpha, dfn, dfd, chi2_opt = args[:4]
+    fargs = tuple(args[4:])
+    return (res_scan_opt(p, *fargs)-chi2_opt/2)/dfn/(chi2_opt/(2*dfd))-F_alpha
+
 
 class CIResult(dict):
     '''
@@ -103,11 +148,6 @@ def is_better_fit_f(result1, result2) -> float:
     p = 1- f.cdf(F_test, dfn, dfd)
     return p
 
-def ci_scan(p, *args):
-    F_alpha, dfn, dfd, chi2_opt = args[:4]
-    fargs = tuple(args[4:])
-    return (res_scan(p, *fargs)-chi2_opt/2)/dfn/(chi2_opt/(2*dfd))-F_alpha
-
 
 # This routine should be fixed
 def confidence_interval_f(result, alpha: float) -> CIResult:
@@ -126,14 +166,16 @@ def confidence_interval_f(result, alpha: float) -> CIResult:
     fix_param_idx = np.zeros(len(result['x']), dtype=bool)
     for i in range(params.size):
         fix_param_idx[i] = (result['bounds'][i][0] == result['bounds'][i][1])
+    select_idx = fix_param_idx.copy()
     scan_idx = np.array(range(len(result['x'])))
     ci_lst = len(result['x'])*[(0, 0)]
     num_param = result['n_param']
     num_pts = result['num_pts']
 
     chi2_opt = result['chi2']
-    dfn = len(params) - 1; dfd = num_pts - num_param
+    dfn = 1; dfd = num_pts - num_param
     F_alpha = f.ppf(1-alpha, dfn, dfd)
+    norm_alpha = np.ceil(norm.ppf(1-alpha/2))
 
     if result['model'] in ['decay', 'dmp_osc', 'both']:
         if result['irf'] in ['g', 'c']:
@@ -145,40 +187,55 @@ def confidence_interval_f(result, alpha: float) -> CIResult:
             num_t0 = num_t0 + d.shape[1]
         if num_t0 > 1:
             message = 'The confidence interval for non shared parameter especially time zeros are not calculated.'
-            fix_param_idx[num_irf:num_irf+num_t0] = True
+            select_idx[num_irf:num_irf+num_t0] = True
         else:
             message = 'The confidence interval of every non-fixed parameters are calculated'    
     else:
         message = 'The confidence interval of every non-fixed parameters are calculated'
 
     if result['model'] == 'decay':
-        args = [F_alpha, dfn, dfd, chi2_opt, 0, params, residual_decay,
-        result['base'], result['irf'], result['t'], result['intensity'], result['eps']]
+        args = [F_alpha, dfn, dfd, chi2_opt, 0, params, result['bounds'], 
+        res_grad_decay, result['n_decay'],
+        result['base'], result['irf'], fix_param_idx, 
+        result['t'], result['intensity'], result['eps']]
     elif result['model'] == 'dmp_osc':
-        args = [F_alpha, dfn, dfd, chi2_opt, 0, params, residual_dmp_osc,
-        result['n_osc'], result['irf'], result['t'], result['intensity'], result['eps']]
+        args = [F_alpha, dfn, dfd, chi2_opt, 0, params, result['bounds'],
+        res_grad_dmp_osc, result['n_osc'], 
+        result['irf'], fix_param_idx,
+        result['t'], result['intensity'], result['eps']]
     elif result['model'] == 'both':
-        args = [F_alpha, dfn, dfd, chi2_opt, 0, params, residual_both,
-        result['n_decay'], result['n_osc'], result['base'], result['irf'],
+        args = [F_alpha, dfn, dfd, chi2_opt, 0, params, result['bounds'],
+        res_grad_both,
+        result['n_decay'], result['n_osc'], result['base'], result['irf'], fix_param_idx,
         result['t'], result['intensity'], result['eps']]
     elif result['model'] == 'voigt':
-        args = [F_alpha, dfn, dfd, chi2_opt, 0, params, residual_voigt,
+        args = [F_alpha, dfn, dfd, chi2_opt, 0, params, result['bounds'],
+        res_grad_voigt,
         result['n_voigt'], result['edge'], result['base_order'],
         result['e'], result['intensity'], result['eps']]
     elif result['model'] == 'thy':
-        args = [F_alpha, dfn, dfd, chi2_opt, 0, params, residual_thy,
+        args = [F_alpha, dfn, dfd, chi2_opt, 0, params, result['bounds'],
+        res_grad_thy,
         result['policy'], result['thy_peak'], 
         result['edge'], result['base_order'],
         result['e'], result['intensity'], result['eps']]
     
-    sub_scan_idx = scan_idx[~fix_param_idx]
+    sub_scan_idx = scan_idx[~select_idx]
     for idx in sub_scan_idx:
-        print(result['param_name'][idx])
         p0 = params[idx]
         args[4] = idx
         fargs = tuple(args)
-        z1 = brenth(ci_scan, p0, result['bounds'][idx][1], args=fargs)
-        z2 = brenth(ci_scan, result['bounds'][idx][0], p0, args=fargs)
+        p_eps = result['x_eps'][idx]
+        p_lb = p0-norm_alpha*p_eps; p_ub = p0+norm_alpha*p_eps
+
+        while ci_scan_opt(p_lb, *fargs) < 0:
+            p_lb = p_lb - p_eps
+
+        while ci_scan_opt(p_ub, *fargs) < 0:
+            p_ub = p_ub + p_eps
+
+        z1 = brenth(ci_scan_opt, p0, p_ub, args=fargs)
+        z2 = brenth(ci_scan_opt, p_lb, p0, args=fargs)
         ci_lst[idx] = (z2-p0, z1-p0)
     
     ci_res = CIResult()

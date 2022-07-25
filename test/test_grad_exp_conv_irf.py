@@ -14,6 +14,9 @@ from TRXASprefitpack import deriv_exp_sum_conv_gau, deriv_exp_sum_conv_cauchy
 
 class TestDerivExpConvIRF(unittest.TestCase):
     def test_deriv_exp_conv_gau_1(self):
+        '''
+        Test gradient of convolution of exponenetial decay and gaussian irf (tau: 1, fwhm: 0.15)
+        '''
         tau = 1
         fwhm = 0.15
         t = np.linspace(-1, 100, 2001)
@@ -23,6 +26,9 @@ class TestDerivExpConvIRF(unittest.TestCase):
         self.assertEqual(result, True)
     
     def test_deriv_exp_sum_conv_gau_1(self):
+        '''
+        Test gradient of convolution of sum of exponenetial decay and gaussian irf (tau1: 1, tau2: 100, fwhm: 0.15, base: True)
+        '''
         tau_1 = 1
         tau_2 = 100
         k = np.array([1/tau_1, 1/tau_2])
@@ -37,6 +43,9 @@ class TestDerivExpConvIRF(unittest.TestCase):
         self.assertEqual(result, True)
 
     def test_deriv_exp_sum_conv_gau_2(self):
+        '''
+        Test gradient of convolution of sum of exponenetial decay and gaussian irf (tau1: 1, tau2: 100, fwhm: 0.15, base: False)
+        '''
         tau_1 = 1
         tau_2 = 100
         k = np.array([1/tau_1, 1/tau_2])
@@ -51,6 +60,9 @@ class TestDerivExpConvIRF(unittest.TestCase):
         self.assertEqual(result, True)
 
     def test_deriv_exp_conv_cauchy(self):
+        '''
+        Test gradient of convolution of exponenetial decay and cauchy irf (tau: 1, fwhm: 0.15)
+        '''
         tau = 1
         fwhm = 0.15
         t = np.linspace(-1, 100, 2001)
@@ -60,6 +72,9 @@ class TestDerivExpConvIRF(unittest.TestCase):
         self.assertEqual(result, True)
     
     def test_deriv_exp_sum_conv_cauchy_1(self):
+        '''
+        Test gradient of convolution of sum of exponenetial decay and cauchy irf (tau1: 1, tau2: 100, fwhm: 0.15, base: True)
+        '''
         tau_1 = 1
         tau_2 = 100
         k = np.array([1/tau_1, 1/tau_2])
@@ -75,6 +90,9 @@ class TestDerivExpConvIRF(unittest.TestCase):
         self.assertEqual(result, True)
 
     def test_deriv_exp_sum_conv_cauchy_2(self):
+        '''
+        Test gradient of convolution of sum of exponenetial decay and gaussian irf (tau1: 1, tau2: 100, fwhm: 0.15, base: False)
+        '''
         tau_1 = 1
         tau_2 = 100
         k = np.array([1/tau_1, 1/tau_2])
@@ -89,7 +107,12 @@ class TestDerivExpConvIRF(unittest.TestCase):
         result = np.allclose(tst, ref)
         self.assertEqual(result, True)
     
-    def test_deriv_exp_sum_conv_pvoigt(self):
+    def test_deriv_exp_conv_pvoigt(self):
+        '''
+        Test gradient of convolution of exponenetial decay and pseudo voigt irf (tau: 1, fwhm_G: 0.1, fwhm_L: 0.15)
+        Note.
+         Not implemented in mathfun module, check implemenetation in res_grad_decay function
+        '''
 
         def tmp_fun(t, fwhm_G, fwhm_L, k):
             fwhm = calc_fwhm(fwhm_G, fwhm_L)
@@ -119,7 +142,6 @@ class TestDerivExpConvIRF(unittest.TestCase):
 
         ref = test_num_deriv(tmp_fun, t, fwhm_G, fwhm_L, 1/tau_1)
 
-        result = np.isclose(grad, ref)
         result = np.allclose(grad, ref)
         self.assertEqual(result, True)
 

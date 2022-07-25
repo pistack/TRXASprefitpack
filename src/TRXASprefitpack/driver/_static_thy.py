@@ -52,16 +52,16 @@ def fit_static_thy(thy_peak: np.ndarray, fwhm_G_init: np.ndarray, fwhm_L_init: n
       our scalar residual function is ,simply, :math:`\\frac{\\partial \\chi^2}{\\partial {param}_i}`. 
       
 
-      Model: sum of voigt broadened theoretical spectrum, edge function and base function
+      Fitting Model is sum of voigt broadened theoretical spectrum, edge function and base function
       :math:`c_{0} y(e, {fwhm}_{(G, i)}, {fwhm}_{(L, i), {peak_factor}}) + c_{1}{edge} + {base}`
       
-      Objective function: chi squared
+      Objective function is half of chi squared value.
       :math:`\\chi^2 = \sum_i \\left(\\frac{model-data_i}{eps_i}\\right)^2`
 
       Moreover this driver uses two step algorithm to search best parameter, its covariance and
       estimated parameter error.              
 
-      Step 1. (method_glb)
+      Step 1. (basinhopping)
       Use global optimization to find rough global minimum of our objective function.
       In this stage, it use analytic gradient for scalar residual function.
 

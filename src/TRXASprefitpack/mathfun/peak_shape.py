@@ -84,10 +84,10 @@ def voigt_thy(e: np.ndarray, thy_peak: np.ndarray,
         policy {'shift', 'scale', 'both'}: Policy to match discrepency 
          between experimental data and theoretical spectrum.
 
-                 'shift' : Default option, shift peak position by peak_factor
-                 'scale' : scale peak position by peak_factor
-                 'both' : both shift and scale peak postition
-                          peak_factor = [shift_factor, scale_factor]
+        'shift' : Default option, shift peak position by peak_factor
+        'scale' : scale peak position by peak_factor
+        'both' : both shift and scale peak postition
+         peak_factor = [shift_factor, scale_factor]
 
     Returns:
       normalized voigt broadened theoritical lineshape spectrum
@@ -186,16 +186,21 @@ def deriv_voigt(e: Union[float, np.ndarray], fwhm_G: float, fwhm_L: float) -> np
      1st column: df/de
      2nd column: df/d(fwhm_G)
      3rd column: df/d(fwhm_L)
+
      if fwhm_G is zero it returns
-     1st column: dl/de
-     2nd column: 0
-     3rd column: dL/d(fwhm_L) 
-     L means normalized lorenzian shape with full width at half maximum parameter: fwhm_L
+
+      1st column: dl/de
+      2nd column: 0
+      3rd column: dL/d(fwhm_L)
+
+      L means normalized lorenzian shape with full width at half maximum parameter: fwhm_L
+
      if fwhm_L is zero it returns 
-     1st column: dg/de
-     2nd column: dg/d(fwhm_G)
-     3rd column: 0
-     g means normalized gaussian shape with full width at half maximum parameter: fwhm_G
+
+      1st column: dg/de
+      2nd column: dg/d(fwhm_G)
+      3rd column: 0
+      g means normalized gaussian shape with full width at half maximum parameter: fwhm_G
     '''
 
     if fwhm_G == 0:
@@ -270,11 +275,17 @@ def deriv_voigt_thy(e: np.ndarray, thy_peak: np.ndarray,
     
     Note:
      1st column: df/d(fwhm_G)
+
      2nd column: df/d(fwhm_L)
+
      if policy in ['shift', 'scale']:
+
         3rd column: df/d(peak_factor)
+
      if policy == 'both':
+
         3rd column: df/d(peak_factor[0]), peak_factor[0]: shift factor
+
         4th column: df/d(peak_factor[1]), peak_factor[1]: scale factor
     '''
 

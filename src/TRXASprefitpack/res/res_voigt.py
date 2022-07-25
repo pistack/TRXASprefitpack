@@ -13,7 +13,7 @@ from ..mathfun.A_matrix import fact_anal_A
 from ..mathfun.peak_shape import voigt, edge_gaussian, edge_lorenzian
 from ..mathfun.peak_shape import deriv_voigt, deriv_edge_gaussian, deriv_edge_lorenzian
 
-def residual_voigt(params: np.ndarray, num_voigt: int, edge: Optional[str] = None,
+def residual_voigt(x0: np.ndarray, num_voigt: int, edge: Optional[str] = None,
                     base_order: Optional[int] = None, 
                     e: np.ndarray = None, 
                     intensity: np.ndarray = None, eps: np.ndarray = None) -> np.ndarray:
@@ -23,17 +23,17 @@ def residual_voigt(params: np.ndarray, num_voigt: int, edge: Optional[str] = Non
     sum of voigt function, edge function base function
 
     Args:
-     params: parameter used for fitting
+     x0: initial parameter
 
-              param[i]: peak position e0_i for each voigt component
-              param[num_voigt+i]: fwhm_G of each voigt component
-              param[2*num_voigt+i]: fwhm_L of each voigt component
+              x0[i]: peak position e0_i for each voigt component
+              x0[num_voigt+i]: fwhm_G of each voigt component
+              x0[2*num_voigt+i]: fwhm_L of each voigt component
 
               if edge is not None:
 
-                 param[-2]: edge position
+                 x0[-2]: edge position
 
-                 param[-1]: fwhm of edge function
+                 x0[-1]: fwhm of edge function
      num_voigt: number of voigt component
      edge ({'g', 'l'}): type of edge shape function
                         if edge is not set, it does not include edge function.
@@ -51,12 +51,12 @@ def residual_voigt(params: np.ndarray, num_voigt: int, edge: Optional[str] = Non
      If fwhm_G of ith voigt component is zero then it is treated as lorenzian function with fwhm_L
      If fwhm_L of ith voigt component is zero then it is treated as gaussian function with fwhm_G
     '''
-    params = np.atleast_1d(params)
+    x0 = np.atleast_1d(x0)
     tot_comp = num_voigt
 
-    e0 = params[:num_voigt]
-    fwhm_G = params[num_voigt:2*num_voigt]
-    fwhm_L = params[2*num_voigt:3*num_voigt]
+    e0 = x0[:num_voigt]
+    fwhm_G = x0[num_voigt:2*num_voigt]
+    fwhm_L = x0[2*num_voigt:3*num_voigt]
     
     if edge is not None:
         tot_comp = tot_comp+1
@@ -72,9 +72,9 @@ def residual_voigt(params: np.ndarray, num_voigt: int, edge: Optional[str] = Non
     if edge is not None:
         base_start = base_start+1
         if edge == 'g':
-            A[num_voigt, :] = edge_gaussian(e-params[-2], params[-1])
+            A[num_voigt, :] = edge_gaussian(e-x0[-2], x0[-1])
         elif edge == 'l':
-            A[num_voigt,:] = edge_lorenzian(e-params[-2], params[-1])
+            A[num_voigt,:] = edge_lorenzian(e-x0[-2], x0[-1])
     
     if base_order is not None:
         e_max = np.max(e); e_min = np.min(e)
@@ -88,7 +88,7 @@ def residual_voigt(params: np.ndarray, num_voigt: int, edge: Optional[str] = Non
 
     return chi
 
-def res_grad_voigt(params: np.ndarray, num_voigt: int, edge: Optional[str] = None,
+def res_grad_voigt(x0: np.ndarray, num_voigt: int, edge: Optional[str] = None,
                    base_order: Optional[int] = None, 
                    fix_param_idx: Optional[np.ndarray] = None,
                    e: np.ndarray = None, 
@@ -99,17 +99,17 @@ def res_grad_voigt(params: np.ndarray, num_voigt: int, edge: Optional[str] = Non
     sum of voigt function, edge function base function
 
     Args:
-     params: parameter used for fitting
+     x0: initial parameter
 
-              param[i]: peak position e0_i for each voigt component
-              param[num_voigt+i]: fwhm_G of each voigt component
-              param[2*num_voigt+i]: fwhm_L of each voigt component
+              x0[i]: peak position e0_i for each voigt component
+              x0[num_voigt+i]: fwhm_G of each voigt component
+              x0[2*num_voigt+i]: fwhm_L of each voigt component
 
               if edge is not None:
 
-                 param[-2]: edge position
+                 x0[-2]: edge position
 
-                 param[-1]: fwhm of edge function
+                 x0[-1]: fwhm of edge function
      num_voigt: number of voigt component
      edge ({'g', 'l'}): type of edge shape function
                         if edge is not set, it does not include edge function.
@@ -128,12 +128,12 @@ def res_grad_voigt(params: np.ndarray, num_voigt: int, edge: Optional[str] = Non
      If fwhm_L of ith voigt component is zero then it is treated as gaussian function with fwhm_G
     '''
 
-    params = np.atleast_1d(params)
+    x0 = np.atleast_1d(x0)
     tot_comp = num_voigt
 
-    e0 = params[:num_voigt]
-    fwhm_G = params[num_voigt:2*num_voigt]
-    fwhm_L = params[2*num_voigt:3*num_voigt]
+    e0 = x0[:num_voigt]
+    fwhm_G = x0[num_voigt:2*num_voigt]
+    fwhm_L = x0[2*num_voigt:3*num_voigt]
     
     if edge is not None:
         tot_comp = tot_comp+1
@@ -149,9 +149,9 @@ def res_grad_voigt(params: np.ndarray, num_voigt: int, edge: Optional[str] = Non
     if edge is not None:
         base_start = num_voigt+1
         if edge == 'g':
-            A[num_voigt, :] = edge_gaussian(e-params[-2], params[-1])
+            A[num_voigt, :] = edge_gaussian(e-x0[-2], x0[-1])
         elif edge == 'l':
-            A[num_voigt,:] = edge_lorenzian(e-params[-2], params[-1])
+            A[num_voigt,:] = edge_lorenzian(e-x0[-2], x0[-1])
     
     if base_order is not None:
         e_max = np.max(e); e_min = np.min(e)
@@ -162,7 +162,7 @@ def res_grad_voigt(params: np.ndarray, num_voigt: int, edge: Optional[str] = Non
     c = fact_anal_A(A, intensity, eps)
 
     chi = (c@A-intensity)/eps
-    df = np.empty((intensity.size, params.size))
+    df = np.empty((intensity.size, x0.size))
 
     for i in range(num_voigt):
         df_tmp = c[i]*deriv_voigt(e-e0[i], fwhm_G[i], fwhm_L[i])
@@ -172,9 +172,9 @@ def res_grad_voigt(params: np.ndarray, num_voigt: int, edge: Optional[str] = Non
 
     if edge is not None:
         if edge == 'g':
-            df_edge = c[num_voigt]*deriv_edge_gaussian(e-params[-2], params[-1])
+            df_edge = c[num_voigt]*deriv_edge_gaussian(e-x0[-2], x0[-1])
         elif edge == 'l':
-            df_edge = c[num_voigt]*deriv_edge_lorenzian(e-params[-2], params[-1]) 
+            df_edge = c[num_voigt]*deriv_edge_lorenzian(e-x0[-2], x0[-1]) 
         
         df[:, -2] = -df_edge[:, 0]
         df[:, -1] = df_edge[:, 1]

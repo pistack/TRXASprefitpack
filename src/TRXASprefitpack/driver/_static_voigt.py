@@ -48,16 +48,16 @@ def fit_static_voigt(e0_init: np.ndarray, fwhm_G_init: np.ndarray, fwhm_L_init: 
       Since :math:`\\frac{\\partial \\chi^2}{\\partial c_i} = 0` is satisfied, the gradient for
       our scalar residual function is ,simply, :math:`\\frac{\\partial \\chi^2}{\\partial {param}_i}`. 
 
-      Model: sum of voigt function, edge function and base function
+      The fitting Model is sum of voigt function, edge function and base function
       :math:`\\sum_{i=1}^n c_i y_i(e-e_0_i, {fwhm}_{(G, i)}, {fwhm}_{(L, i)}) + c_{n+1}{edge} + {base}`
       
-      Objective function: chi squared
+      The Objective function is half of chi squared value.
       :math:`\\chi^2 = \sum_i \\left(\\frac{model-data_i}{eps_i}\\right)^2`
 
-      Moreover this driver uses two step algorithm to search best parameter, its covariance and
+      Moreover this driver uses two step method to search best parameter, its covariance and
       estimated parameter error.
                     
-      Step 1. (method_glb)
+      Step 1. (basinhopping)
       Use global optimization to find rough global minimum of our objective function.
       In this stage, it use analytic gradient for scalar residual function.
 

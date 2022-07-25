@@ -13,7 +13,7 @@ from ..mathfun.A_matrix import fact_anal_A
 from ..mathfun.peak_shape import voigt_thy, edge_gaussian, edge_lorenzian
 from ..mathfun.peak_shape import deriv_voigt_thy, deriv_edge_gaussian, deriv_edge_lorenzian
 
-def residual_thy(params: np.ndarray, policy: str, thy_peak: np.ndarray, edge: Optional[str] = None,
+def residual_thy(x0: np.ndarray, policy: str, thy_peak: np.ndarray, edge: Optional[str] = None,
                  base_order: Optional[int] = None, 
                  e: np.ndarray = None, 
                  intensity: np.ndarray = None, eps: np.ndarray = None) -> np.ndarray:
@@ -23,22 +23,22 @@ def residual_thy(params: np.ndarray, policy: str, thy_peak: np.ndarray, edge: Op
     sum of voigt broadend theoretical spectrum, edge function base function
 
     Args:
-     params: parameter used for fitting
-              param[0]: fwhm_G 
-              param[1]: fwhm_L
+     x0: initial parameter
+              x0[0]: fwhm_G 
+              x0[1]: fwhm_L
               if policy == 'scale':
-                param[2]: peak_scale
+                x0[2]: peak_scale
               if policy == 'shift':
-                param[2]: peak_shift
+                x0[2]: peak_shift
               if policy == 'both':
-                param[2]: peak_shift
-                param[3]: peak_scale
+                x0[2]: peak_shift
+                x0[3]: peak_scale
 
               if edge is not None:
 
-                 param[-2]: edge position
+                 x0[-2]: edge position
 
-                 param[-1]: fwhm of edge function
+                 x0[-1]: fwhm of edge function
      policy {'shift', 'scale', 'both'}: Policy to match discrepency 
       between experimental data and theoretical spectrum.
 
@@ -62,12 +62,12 @@ def residual_thy(params: np.ndarray, policy: str, thy_peak: np.ndarray, edge: Op
      If fwhm_G of ith voigt component is zero then it is treated as lorenzian function with fwhm_L
      If fwhm_L of ith voigt component is zero then it is treated as gaussian function with fwhm_G
     '''
-    params = np.atleast_1d(params)
+    x0 = np.atleast_1d(x0)
 
     if policy in ['scale', 'shift']:
-        peak_factor = params[2]
+        peak_factor = x0[2]
     elif policy == 'both':
-        peak_factor = np.ndarray([params[2], params[3]])
+        peak_factor = np.ndarray([x0[2], x0[3]])
     
     tot_comp = 1
     
@@ -78,15 +78,15 @@ def residual_thy(params: np.ndarray, policy: str, thy_peak: np.ndarray, edge: Op
     
     A = np.empty((tot_comp, e.size))
 
-    A[0, :] = voigt_thy(e, thy_peak, params[0], params[1], peak_factor, policy)
+    A[0, :] = voigt_thy(e, thy_peak, x0[0], x0[1], peak_factor, policy)
     
     base_start = 1
     if edge is not None:
         base_start = base_start+1
         if edge == 'g':
-            A[1, :] = edge_gaussian(e-params[-2], params[-1])
+            A[1, :] = edge_gaussian(e-x0[-2], x0[-1])
         elif edge == 'l':
-            A[1, :] = edge_lorenzian(e-params[-2], params[-1])
+            A[1, :] = edge_lorenzian(e-x0[-2], x0[-1])
     
     if base_order is not None:
         e_max = np.max(e); e_min = np.min(e)
@@ -100,7 +100,7 @@ def residual_thy(params: np.ndarray, policy: str, thy_peak: np.ndarray, edge: Op
 
     return chi
 
-def res_grad_thy(params: np.ndarray, policy: str, thy_peak: np.ndarray, edge: Optional[str] = None,
+def res_grad_thy(x0: np.ndarray, policy: str, thy_peak: np.ndarray, edge: Optional[str] = None,
                  base_order: Optional[int] = None, 
                  fix_param_idx: Optional[np.ndarray] = None,
                  e: np.ndarray = None, 
@@ -111,22 +111,22 @@ def res_grad_thy(params: np.ndarray, policy: str, thy_peak: np.ndarray, edge: Op
     sum of voigt broadend theoretical spectrum, edge function base function
 
     Args:
-     params: parameter used for fitting
-              param[0]: fwhm_G 
-              param[1]: fwhm_L
+     x0: initial parameter
+              x0[0]: fwhm_G 
+              x0[1]: fwhm_L
               if policy == 'scale':
-                param[2]: peak_scale
+                x0[2]: peak_scale
               if policy == 'shift':
-                param[2]: peak_shift
+                x0[2]: peak_shift
               if policy == 'both':
-                param[2]: peak_shift
-                param[3]: peak_scale
+                x0[2]: peak_shift
+                x0[3]: peak_scale
 
               if edge is not None:
 
-                 param[-2]: edge position
+                 x0[-2]: edge position
 
-                 param[-1]: fwhm of edge function
+                 x0[-1]: fwhm of edge function
      policy {'shift', 'scale', 'both'}: Policy to match discrepency 
       between experimental data and theoretical spectrum.
 
@@ -151,12 +151,12 @@ def res_grad_thy(params: np.ndarray, policy: str, thy_peak: np.ndarray, edge: Op
      If fwhm_G of ith voigt component is zero then it is treated as lorenzian function with fwhm_L
      If fwhm_L of ith voigt component is zero then it is treated as gaussian function with fwhm_G
     '''
-    params = np.atleast_1d(params)
+    x0 = np.atleast_1d(x0)
 
     if policy in ['scale', 'shift']:
-        peak_factor = params[2]
+        peak_factor = x0[2]
     elif policy == 'both':
-        peak_factor = np.ndarray([params[2], params[3]])
+        peak_factor = np.ndarray([x0[2], x0[3]])
     
     tot_comp = 1
     
@@ -167,15 +167,15 @@ def res_grad_thy(params: np.ndarray, policy: str, thy_peak: np.ndarray, edge: Op
     
     A = np.empty((tot_comp, e.size))
 
-    A[0, :] = voigt_thy(e, thy_peak, params[0], params[1], peak_factor, policy)
+    A[0, :] = voigt_thy(e, thy_peak, x0[0], x0[1], peak_factor, policy)
     
     base_start = 1
     if edge is not None:
         base_start = base_start+1
         if edge == 'g':
-            A[1, :] = edge_gaussian(e-params[-2], params[-1])
+            A[1, :] = edge_gaussian(e-x0[-2], x0[-1])
         elif edge == 'l':
-            A[1, :] = edge_lorenzian(e-params[-2], params[-1])
+            A[1, :] = edge_lorenzian(e-x0[-2], x0[-1])
     
     if base_order is not None:
         e_max = np.max(e); e_min = np.min(e)
@@ -185,9 +185,9 @@ def res_grad_thy(params: np.ndarray, policy: str, thy_peak: np.ndarray, edge: Op
     
     c = fact_anal_A(A, intensity, eps)
     chi = (c@A - intensity)/eps
-    df = np.empty((intensity.size, params.size))
+    df = np.empty((intensity.size, x0.size))
 
-    deriv_thy = c[0]*deriv_voigt_thy(e, thy_peak, params[0], params[1], peak_factor, policy)
+    deriv_thy = c[0]*deriv_voigt_thy(e, thy_peak, x0[0], x0[1], peak_factor, policy)
     df[:, :2] = deriv_thy[:, :2]
     if policy in ['scale', 'shift']:
         df[:, 2] = deriv_thy[:, 2]
@@ -196,9 +196,9 @@ def res_grad_thy(params: np.ndarray, policy: str, thy_peak: np.ndarray, edge: Op
 
     if edge is not None:
         if edge == 'g':
-            df_edge = c[1]*deriv_edge_gaussian(e-params[-2], params[-1])
+            df_edge = c[1]*deriv_edge_gaussian(e-x0[-2], x0[-1])
         elif edge == 'l':
-            df_edge = c[1]*deriv_edge_lorenzian(e-params[-2], params[-1]) 
+            df_edge = c[1]*deriv_edge_lorenzian(e-x0[-2], x0[-1]) 
         
         df[:, -2] = -df_edge[:, 0]
         df[:, -1] = df_edge[:, 1]

@@ -12,5 +12,3 @@ Utilites
    calc_sads
    fit_static
    fit_tscan
-   param_bound
-   pseudo_voigt

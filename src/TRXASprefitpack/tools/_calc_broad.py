@@ -2,6 +2,13 @@ import argparse
 import numpy as np
 from ..mathfun import voigt_thy
 
+policy_help = '''
+Policy to match discrepency between experimental data and theoretical spectrum.
+ 'shift': constant shift peak position
+ 'scale': constant scale peak position
+ 'both': shift and scale peak position
+'''
+
 
 def calc_broad():
     description = '''
@@ -23,11 +30,13 @@ def calc_broad():
                         help='Full Width at Half Maximum of gaussian shape')
     parser.add_argument('fwhm_L', type=float,
                         help='Full Width at Half Maximum of lorenzian shape')
-    parser.add_argument('peak_factor', type=float,
-    help='parameter to match descrepency between thoretical spectrum and experimental spectrum')
-    parser.add_argument('--scale_energy', action='store_true',
-    help='Scaling the energy of peak instead of shifting to match experimental spectrum')
+    parser.add_argument('--shift_factor', type=float,
+    help='parameter to shift peak position of thoretical spectrum')
+    parser.add_argument('--scale_factor', type=float,
+    help='paramter to scale peak position of theoretical spectrum')
     parser.add_argument('-o', '--out', help='prefix for output files')
+    parser.add_argument('--policy', choices=['shift', 'scale', 'both'], type=str,
+    help=policy_help)
     args = parser.parse_args()
 
     peak = np.genfromtxt(args.peak)[:,:2]
@@ -41,24 +50,39 @@ def calc_broad():
     A = args.A
     fwhm_G = args.fwhm_G
     fwhm_L = args.fwhm_L
-    peak_factor = args.peak_factor
-    if args.scale_energy:
-        policy = 'scale'
+    if args.policy is None:
+        policy = 'shift'
+        peak_factor = 0
     else:
-        policy = 'shift' 
+        policy = args.policy
+    
+    if policy in ['shift', 'both'] and args.peak_shift is None:
+        raise Exception(f"Your policy is {args.policy}, please set initial peak_shift parameter.")
+    if policy in ['scale', 'both'] and args.peak_scale is None:
+        raise Exception(f"Your policy is {args.policy}, please set peak_scale parameter.")
+
+    if args.policy == 'shift':
+        peak_factor = args.shift_factor
+    elif args.policy == 'scale':
+        peak_factor = args.scale_factor
+    else:
+        peak_factor = np.array([args.shift_factor, args.scale_factor])
+
     e = np.linspace(e_min, e_max, int((e_max-e_min)/e_step)+1)
 
     broadened_thy = A*voigt_thy(e, peak, fwhm_G, fwhm_L, peak_factor, policy)
 
-    rescaled_stk = peak
+    rescaled_stk = peak.copy()
     if policy == 'scale':
         rescaled_stk[:, 0] = rescaled_stk[:, 0]*peak_factor
-    else:
+    elif policy == 'shift':
         rescaled_stk[:, 0] = rescaled_stk[:, 0] - peak_factor
-    rescaled_stk[:, 1] = A*rescaled_stk[:, 1]
+    else:
+        rescaled_stk[:, 0] = peak_factor[1]*rescaled_stk[:, 0] - peak_factor[0]
+    rescaled_stk[:, 1] = A*rescaled_stk[:, 1]/np.sum(rescaled_stk[:, 1])
     spec_thy = np.vstack((e, broadened_thy)).T
 
-    np.savetxt(f'{out}_thy_stk.txt', rescaled_stk, fmt=['%.8e', '%.8e'])
-    np.savetxt(f'{out}_thy.txt', spec_thy, fmt=['%.8e', '%.8e'])
+    np.savetxt(f'{out}_thy_stk.txt', rescaled_stk, fmt=['%.8e', '%.8e'], header='energy \t abs')
+    np.savetxt(f'{out}_thy.txt', spec_thy, fmt=['%.8e', '%.8e'], header='energy \t abs')
 
     return

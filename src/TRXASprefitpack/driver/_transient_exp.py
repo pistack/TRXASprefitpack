@@ -42,16 +42,16 @@ def fit_transient_exp(irf: str, fwhm_init: Union[float, np.ndarray],
       Since :math:`\\frac{\\partial \\chi^2}{\\partial c_i} = 0` is satisfied, the gradient for
       our scalar residual function is ,simply, :math:`\\frac{\\partial \\chi^2}{\\partial {param}_i}`. 
 
-      Model: sum of convolution of exponential decay and instrumental response function
+      The fitting Model is sum of convolution of exponential decay and instrumental response function
       :math:`\\sum_{i=1}^n c_i y_i(t-t_0, {fwhm}, 1/\\tau_i) + {base}*c_{n+1} y_{n+1}(t-t0, {fwhm}, 0)`
       
-      Objective function: chi squared
+      The Objective function is half of chi squared value
       :math:`\\chi^2 = \sum_i \\left(\\frac{model-data_i}{eps_i}\\right)^2`
 
-      Moreover this driver uses two step algorithm to search best parameter, its covariance and
+      Moreover this driver uses two step method to search best parameter, its covariance and
       estimated parameter error.
 
-      Step 1. (method_glb)
+      Step 1. (basinhopping)
       Use global optimization to find rough global minimum of our objective function.
       In this stage, it use analytic gradient for scalar residual function.
 

@@ -17,6 +17,8 @@ from ..driver import TransientResult, save_TransientResult
 from ..driver import fit_transient_exp, fit_transient_dmp_osc, fit_transient_both
 from .misc import read_data
 
+plt.rcParams['figure.figsize'] = (10, 5)
+
 FITDRIVER = {'decay': fit_transient_exp, 'osc': fit_transient_dmp_osc, 'both': fit_transient_both}
 
 def save_TransientResult_txt(result: TransientResult, dirname: str):
@@ -77,16 +79,13 @@ def save_TransientResult_txt(result: TransientResult, dirname: str):
 
       return
 
-def plot_TransientResult(result: TransientResult,
-                      x_min: Optional[float] = None, x_max: Optional[float] = None, save_fig: Optional[str] = None):
+def plot_TransientResult(result: TransientResult, save_fig: Optional[str] = None):
       '''
       plot fitting Result
 
       Args:
        result: fitting result
-       x_min: minimum x range
-       x_max: maximum x range
-       save_fig: prefix of saved png plots. If `save_fig` is `None`, plots are displayed istead of being saved.
+       save_fig: prefix of saved png plots. If `save_fig` is `None`, plots are displayed instead of being saved.
       '''
       
       start = 0
@@ -96,26 +95,47 @@ def plot_TransientResult(result: TransientResult,
                   title = f'{result["name_of_dset"][i]} scan #{j+1}'
                   subtitle = f"Chi squared: {result['red_chi2_ind'][i][j]: .2f}"
                   plt.suptitle(title)
-                  sub1 = fig.add_subplot(211)
+                  sub1 = fig.add_subplot(221)
                   sub1.set_title(subtitle)
                   sub1.errorbar(result['t'][i], result['intensity'][i][:, j], result['eps'][i][:, j], marker='o', mfc='none',
-                  label=f'expt {title}', linestyle='none')
-                  sub1.plot(result['t'][i], result['fit'][i][:, j], label=f'fit {title}')
+                  label=f'expt {title}', linestyle='none', color='black')
+                  sub1.plot(result['t'][i], result['fit'][i][:, j], label=f'fit {title}', color='red')
                   sub1.legend()
-                  sub2 = fig.add_subplot(212)
-                  if result['model'] in ['decay', 'osc']:
-                        sub2.errorbar(result['t'][i], result['res'][i][:, j], 
-                        result['eps'][i][:, j], marker='o', mfc='none', label=f'res {title}', linestyle='none')
-                  else:
-                        sub2.errorbar(result['t'][i], result['intensity'][i][:, j]-result['fit_decay'][i][:, j], 
-                        result['eps'][i][:, j], marker='o', mfc='none', label=f'expt osc {title}', linestyle='none')
-                        sub2.plot(result['t'][i], result['fit_osc'][i][:, j], label=f'fit osc {title}')
+                  sub2 = fig.add_subplot(222)
+                  sub2.set_title(subtitle)
+                  sub2.errorbar(result['t'][i], result['intensity'][i][:, j], result['eps'][i][:, j], marker='o', mfc='none',
+                  label=f'expt {title}', linestyle='none', color='black')
+                  sub2.plot(result['t'][i], result['fit'][i][:, j], label=f'fit {title}', color='red')
                   sub2.legend()
-                  if x_min is not None and x_max is not None:
-                        sub1.set_xlim(x_min, x_max)
-                        sub2.set_xlim(x_min, x_max)
+                  sub2.set_xlim(-10*result['fwhm'], 20*result['fwhm'])
+                  sub3 = fig.add_subplot(223)
+                  if result['model'] in ['decay', 'osc']:
+                        sub3.errorbar(result['t'][i], result['res'][i][:, j], 
+                        result['eps'][i][:, j], marker='o', mfc='none', 
+                        label=f'res {title}', linestyle='none', color='black')
+                  else:
+                        sub3.errorbar(result['t'][i], result['intensity'][i][:, j]-result['fit_decay'][i][:, j], 
+                        result['eps'][i][:, j], marker='o', mfc='none', label=f'expt osc {title}', 
+                        linestyle='none', color='black')
+                        sub3.plot(result['t'][i], result['fit_osc'][i][:, j], 
+                        label=f'fit osc {title}', color='red')
+                  sub3.legend()
+
+                  sub4 = fig.add_subplot(224)
+                  if result['model'] in ['decay', 'osc']:
+                        sub4.errorbar(result['t'][i], result['res'][i][:, j], 
+                        result['eps'][i][:, j], marker='o', mfc='none', 
+                        label=f'res {title}', linestyle='none', color='black')
+                  else:
+                        sub4.errorbar(result['t'][i], result['intensity'][i][:, j]-result['fit_decay'][i][:, j], 
+                        result['eps'][i][:, j], marker='o', mfc='none', 
+                        label=f'expt osc {title}', linestyle='none', color='black')
+                        sub4.plot(result['t'][i], result['fit_osc'][i][:, j], 
+                        label=f'fit osc {title}', color='black')
+                  sub4.set_xlim(-10*result['fwhm'], 20*result['fwhm'])
+                  sub4.legend()
                   if save_fig is not None:
-                        plt.savefig(f'{save_fig}_{result["name_of_dset"][i]}_{j+1}.png')
+                        plt.savefig(f'./{save_fig}/{result["name_of_dset"][i]}_{j+1}.png')
             start = start + result['intensity'][i].shape[1]
       if save_fig is None:
             plt.show()
@@ -231,6 +251,8 @@ def fit_tscan():
     help=do_glb_help)
     parser.add_argument('-o', '--outdir', default='out',
                         help='name of directory to store output files')
+    parser.add_argument('--save_fig', action='store_true',
+    help='save plot instead of display')
     args = parser.parse_args()
 
     prefix = np.array(args.prefix, dtype=str)
@@ -320,6 +342,9 @@ def fit_tscan():
     save_TransientResult(result, args.outdir)
     save_TransientResult_txt(result, args.outdir)
     print(result)
-    plot_TransientResult(result)
+    if args.save_fig:
+        plot_TransientResult(result, args.outdir)
+    else:
+        plot_TransientResult(result)
 
     return
