@@ -6,6 +6,8 @@
 Welcome to TRXASprefitpack's documentation!
 ===========================================
 
+The documentation for the next release (TRXASprefitpack version 0.6.0) is under construction!
+
 .. toctree::
    :maxdepth: 4
    :caption: Contents:
@@ -13,7 +15,6 @@ Welcome to TRXASprefitpack's documentation!
    math
    utility
    utility_example
-   example
    TRXASprefitpack
 
 

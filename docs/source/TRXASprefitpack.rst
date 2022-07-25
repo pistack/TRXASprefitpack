@@ -8,6 +8,8 @@ Subpackages
    :maxdepth: 4
 
    TRXASprefitpack.mathfun
+   TRXASprefitpack.res
+   TRXASprefitpack.driver
 
 Module contents
 ---------------

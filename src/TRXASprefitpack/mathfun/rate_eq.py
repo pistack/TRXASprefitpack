@@ -7,10 +7,9 @@ the solution and signal
 :license: LGPL3.
 '''
 
-from typing import Optional, Tuple, Union
+from typing import Optional, Tuple
 import numpy as np
 import scipy.linalg as LA  # replace numpy.linalg to scipy.linalg
-from .irf import calc_eta
 from .A_matrix import make_A_matrix, make_A_matrix_cauchy
 from .A_matrix import make_A_matrix_gau, make_A_matrix_pvoigt
 
@@ -69,14 +68,12 @@ def solve_l_model(equation: np.ndarray,
 
     return eigval, V, c
 
-def solve_seq_model(tau: np.ndarray):
+def solve_seq_model(tau: np.ndarray, y0: np.ndarray):
     '''
     Solve sequential decay model
     
     sequential decay model: 
       0 -> 1 -> 2 -> 3 -> ... -> n 
-    initial condition:
-     y0 = [1, 0, 0, ..., 0] 
 
     Args:
       tau: liftime constants for each decay
@@ -97,9 +94,9 @@ def solve_seq_model(tau: np.ndarray):
     for i in range(1, eigval.size):
       V[i, :i] = V[i-1,:i]*eigval[i-1]/(eigval[i]-eigval[:i])
     
-    c[0] = 1
+    c[0] = y0[0]
     for i in range(1, eigval.size):
-      c[i] = -np.dot(c[:i], V[i,:i])
+      c[i] = y0[i]-np.dot(c[:i], V[i,:i])
     return eigval, V, c
 
 def compute_model(t: np.ndarray,
@@ -190,8 +187,7 @@ def compute_signal_cauchy(t: np.ndarray,
 
 
 def compute_signal_pvoigt(t: np.ndarray,
-                          fwhm_G: float,
-                          fwhm_L: float,
+                          fwhm: float,
                           eta: float,
                           eigval: np.ndarray,
                           V: np.ndarray,
@@ -203,15 +199,14 @@ def compute_signal_pvoigt(t: np.ndarray,
 
     .. math::
 
-       \\mathrm{pvoigt}(t) = (1-\\eta) G(t) + \\eta L(t),
+       \\mathrm{pvoigt}(t) = (1-\\eta) G(t, {fwhm}) + \\eta L(t, {fwhm}),
 
     G(t) stands for normalized gaussian,
     L(t) stands for normalized cauchy(lorenzian) distribution
 
     Args:
      t: time
-     fwhm_G: full width at half maximum of gaussian part
-     fwhm_L: full width at half maximum of cauchy part
+     fwhm: full width at half maximum of instrumental response function
      eta: mixing parameter
      eigval: eigenvalue for equation
      V: eigenvectors for equation
@@ -225,12 +220,12 @@ def compute_signal_pvoigt(t: np.ndarray,
       eigval, V, c should be obtained from solve_model.
     '''
 
-    A = make_A_matrix_pvoigt(t, fwhm_G, fwhm_L, eta, -eigval)
+    A = make_A_matrix_pvoigt(t, fwhm, eta, -eigval)
     y_signal = (c * V) @ A
     return y_signal
 
 def compute_signal_irf(t: np.ndarray, eigval: np.ndarray, V: np.ndarray, c: np.ndarray, 
-fwhm: Union[float, np.ndarray], irf: Optional[str] = 'g', eta: Optional[float] = None):
+                       fwhm: float, irf: Optional[str] = 'g', eta: Optional[float] = None):
 
   if irf == 'g':
     A = make_A_matrix_gau(t, fwhm, -eigval)
@@ -239,23 +234,19 @@ fwhm: Union[float, np.ndarray], irf: Optional[str] = 'g', eta: Optional[float] =
     A = make_A_matrix_cauchy(t, fwhm, -eigval)
 
   elif irf == 'pv':
-
-    if eta is None:
-      eta = calc_eta(fwhm[0], fwhm[1])
-
-    A = make_A_matrix_pvoigt(t, fwhm[0], fwhm[1], eta, -eigval)
+    A = make_A_matrix_pvoigt(t, fwhm, eta, -eigval)
 
   return (c * V) @ A
 
 def fact_anal_model(model: np.ndarray, exclude: Optional[str] = None, 
-data: Optional[np.ndarray] = None, eps: Optional[np.ndarray] = None):
+intensity: Optional[np.ndarray] = None, eps: Optional[np.ndarray] = None):
 
   abs = np.zeros(model.shape[0])
 
   if eps is None:
-    eps = np.ones_like(data)
+    eps = np.ones_like(intensity)
   
-  y = data/eps
+  y = intensity/eps
 
   if exclude == 'first':
     B = np.einsum('j,ij->ij', 1/eps, model[1:, :])
