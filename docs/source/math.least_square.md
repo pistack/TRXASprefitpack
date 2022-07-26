@@ -94,7 +94,7 @@ So, one can extend to definition of standard error of paramter in linear least s
 Such paramter error estimation is called, Asymptotic Standard Errors.
 However, strictly speaking, Asymptotic Standard Error estimation should not be used in non-linear least square regression.
 
-Our package `TRXASprefitpack` provides alternative error paramter estimation method based on `F-test` or `Wilk's theorem`.
+Our package `TRXASprefitpack` provides alternative error paramter estimation method based on `F-test`.
 
 ## Alternative Paramter Error Estimation
 
@@ -115,22 +115,9 @@ One can estimates confidence interval of $i$th optimal paramter $\theta_{0, i}$ 
 F_{\alpha}(1, n-p) = \frac{\chi^2_i(\theta)-\chi^2_0}{\chi^2_0/(n-p)}
 \end{equation*}
 
-### Wilks' theorem based paramter error estimation
-
-Note that Log likelihood function is $-\chi^2/2$.
-So, by Wilks' theorem
-
-\begin{equation*}
-
-D = \chi^2_i(\theta) - \chi^2_0
-
-\end{equation*}
-
-and $D$ follows $\chi^2_1$-distribution.
-
 ## Compare two different fit
 
-Assume that model 2 is the restriction of model 1. Then you can compare two model based on both f-test and Wilks' theorem.
+Assume that model 2 is the restriction of model 1. Then you can compare two model based on f-test.
 
 ## Seperation Scheme
 
@@ -175,10 +162,4 @@ Because of $\frac{\partial \mathbf{C}(\mathbf{\theta})}{\partial \mathbf{\theta}
 estimate the Asymptotic Standard Errors.
 
 However, implementing separation scheme will speed up optimization process.
-Since, it reduces dimension of optimization problem and gradient is same as original $\chi^2$ function.
-
-
-
-
-
-
+Since, it reduces dimension of optimization problem but gradient is same as original $\chi^2$ function.
