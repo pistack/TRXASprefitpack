@@ -9,7 +9,7 @@ based on f_test
 :license: LGPL3.
 '''
 import numpy as np
-from scipy.stats import f, norm
+from scipy.stats import f, norm, chi2
 from scipy.optimize import brenth, minimize
 from ..res import res_grad_decay, res_grad_dmp_osc, res_grad_both
 from ..res import res_grad_voigt, res_grad_thy
@@ -51,13 +51,21 @@ def res_scan_opt(p, *args) -> float:
 
     return res['fun']
 
-def ci_scan_opt(p, *args):
+def ci_scan_opt_f(p, *args):
     '''
-    Confidence interval scan with ith parameter is fixed to p.
+    Confidence interval scan with ith parameter is fixed to p. (for f-test based method)
     '''
     F_alpha, dfn, dfd, chi2_opt = args[:4]
     fargs = tuple(args[4:])
     return (res_scan_opt(p, *fargs)-chi2_opt/2)/dfn/(chi2_opt/(2*dfd))-F_alpha
+
+def ci_scan_opt_wilk(p, *args):
+    '''
+    Confidence interval scan with ith parameter is fixed to p. (for wilk's theorem based method)
+    '''
+    chi2_alpha, _, _, chi2_opt = args[:4]
+    fargs = tuple(args[4:])
+    return 2*res_scan_opt(p, *fargs)-chi2_opt-chi2_alpha
 
 
 class CIResult(dict):
@@ -65,8 +73,7 @@ class CIResult(dict):
     Class for represent confidence interval of each parameter
 
     Attributes:
-     method ({'f'}): method to calculate confidance interval of each parameter
-      currently only supports F-test based method.
+     method ({'f', 'wilk'}): method to calculate confidance interval of each parameter
      alpha (float): significant level
      param_name (sequence of str): name of parameter
      x (np.ndarray): best parameter
@@ -109,14 +116,17 @@ class CIResult(dict):
 
 
 
-def is_better_fit_f(result1, result2) -> float:
+def is_better_fit(result1, result2, method: str = 'f') -> float:
     '''
-    Compare fit based on f_test
+    Compare fit 
 
     result1 ({'StaticResult', 'TransientResult'}): fitting result class
      which has more parameter than result2
     result2 ({'StaticResult', 'TransientResult'}): fitting result class
      which has less parameter than result1
+    method ({'f', 'wilk'}): method to compare two fits
+     'f': f-test based method
+     'wilk': Wilk's theorem based method
 
     Returns:
      p value of test, If p is smaller than your significant level,
@@ -144,20 +154,26 @@ def is_better_fit_f(result1, result2) -> float:
     dfn = num_param_1 - num_param_2
     dfd = num_pts_1 - num_param_1
 
-    F_test = (chi2_2-chi2_1)/dfn/(chi2_1/dfd)
-    p = 1- f.cdf(F_test, dfn, dfd)
+    if method == 'f':
+        F_test = (chi2_2-chi2_1)/dfn/(chi2_1/dfd)
+        p = 1- f.cdf(F_test, dfn, dfd)
+    else:
+        D_test = (chi2_2-chi2_1)
+        p = 1 - chi2.cdf(D_test, dfn)
     return p
 
-
-# This routine should be fixed
-def confidence_interval_f(result, alpha: float) -> CIResult:
+def confidence_interval(result, alpha: float, method: str = 'f') -> CIResult:
     '''
     Calculate 1d confidence interval of each parameter at significance level alpha
-    via f-test based method
 
     Args:
      result ({'StaticResult', 'TransientResult'}): fitting result class
      alpha (float): significance level
+     method ({'f', 'wilk'}): Method to determine confidence interval of paramter [default: f]
+
+      'f': f-test based method
+
+      'wilk' : Wilk's theorem based method
     
     Returns:
      CIResult class instance
@@ -174,7 +190,10 @@ def confidence_interval_f(result, alpha: float) -> CIResult:
 
     chi2_opt = result['chi2']
     dfn = 1; dfd = num_pts - num_param
-    F_alpha = f.ppf(1-alpha, dfn, dfd)
+    if method == 'f':
+        F_alpha = f.ppf(1-alpha, dfn, dfd)
+    else:
+        F_alpha = chi2.ppf(1-alpha, dfn)
     norm_alpha = np.ceil(norm.ppf(1-alpha/2))
 
     if result['model'] in ['decay', 'dmp_osc', 'both']:
@@ -228,18 +247,28 @@ def confidence_interval_f(result, alpha: float) -> CIResult:
         p_eps = result['x_eps'][idx]
         p_lb = p0-norm_alpha*p_eps; p_ub = p0+norm_alpha*p_eps
 
-        while ci_scan_opt(p_lb, *fargs) < 0:
-            p_lb = p_lb - p_eps
-
-        while ci_scan_opt(p_ub, *fargs) < 0:
-            p_ub = p_ub + p_eps
-
-        z1 = brenth(ci_scan_opt, p0, p_ub, args=fargs)
-        z2 = brenth(ci_scan_opt, p_lb, p0, args=fargs)
+        if method == 'f':
+            while ci_scan_opt_f(p_lb, *fargs) < 0:
+                p_lb = p_lb - p_eps
+            
+            while ci_scan_opt_f(p_ub, *fargs) < 0:
+                p_ub = p_ub + p_eps
+            
+            z1 = brenth(ci_scan_opt_f, p0, p_ub, args=fargs)
+            z2 = brenth(ci_scan_opt_f, p_lb, p0, args=fargs)
+        else:
+            while ci_scan_opt_wilk(p_lb, *fargs) < 0:
+                p_lb = p_lb - p_eps
+            
+            while ci_scan_opt_wilk(p_ub, *fargs) < 0:
+                p_ub = p_ub + p_eps
+            
+            z1 = brenth(ci_scan_opt_wilk, p0, p_ub, args=fargs)
+            z2 = brenth(ci_scan_opt_wilk, p_lb, p0, args=fargs)
         ci_lst[idx] = (z2-p0, z1-p0)
     
     ci_res = CIResult()
-    ci_res['method'] = 'f'
+    ci_res['method'] = method
     ci_res['alpha'] = alpha
     ci_res['param_name'] = result['param_name']
     ci_res['x'] = result['x']
