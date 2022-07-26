@@ -59,7 +59,7 @@ def ci_scan_opt_f(p, *args):
     fargs = tuple(args[4:])
     return (res_scan_opt(p, *fargs)-chi2_opt/2)/dfn/(chi2_opt/(2*dfd))-F_alpha
 
-def ci_scan_opt_wilk(p, *args):
+def ci_scan_opt_wilks(p, *args):
     '''
     Confidence interval scan with ith parameter is fixed to p. (for wilk's theorem based method)
     '''
@@ -73,7 +73,7 @@ class CIResult(dict):
     Class for represent confidence interval of each parameter
 
     Attributes:
-     method ({'f', 'wilk'}): method to calculate confidance interval of each parameter
+     method ({'f', 'wilks'}): method to calculate confidance interval of each parameter
      alpha (float): significant level
      param_name (sequence of str): name of parameter
      x (np.ndarray): best parameter
@@ -124,7 +124,7 @@ def is_better_fit(result1, result2, method: str = 'f') -> float:
      which has more parameter than result2
     result2 ({'StaticResult', 'TransientResult'}): fitting result class
      which has less parameter than result1
-    method ({'f', 'wilk'}): method to compare two fits
+    method ({'f', 'wilks'}): method to compare two fits
      'f': f-test based method
      'wilk': Wilk's theorem based method
 
@@ -169,11 +169,11 @@ def confidence_interval(result, alpha: float, method: str = 'f') -> CIResult:
     Args:
      result ({'StaticResult', 'TransientResult'}): fitting result class
      alpha (float): significance level
-     method ({'f', 'wilk'}): Method to determine confidence interval of paramter [default: f]
+     method ({'f', 'wilks'}): Method to determine confidence interval of paramter [default: f]
 
       'f': f-test based method
 
-      'wilk' : Wilk's theorem based method
+      'wilks' : Wilks' theorem based method
     
     Returns:
      CIResult class instance
@@ -257,14 +257,14 @@ def confidence_interval(result, alpha: float, method: str = 'f') -> CIResult:
             z1 = brenth(ci_scan_opt_f, p0, p_ub, args=fargs)
             z2 = brenth(ci_scan_opt_f, p_lb, p0, args=fargs)
         else:
-            while ci_scan_opt_wilk(p_lb, *fargs) < 0:
+            while ci_scan_opt_wilks(p_lb, *fargs) < 0:
                 p_lb = p_lb - p_eps
             
-            while ci_scan_opt_wilk(p_ub, *fargs) < 0:
+            while ci_scan_opt_wilks(p_ub, *fargs) < 0:
                 p_ub = p_ub + p_eps
             
-            z1 = brenth(ci_scan_opt_wilk, p0, p_ub, args=fargs)
-            z2 = brenth(ci_scan_opt_wilk, p_lb, p0, args=fargs)
+            z1 = brenth(ci_scan_opt_wilks, p0, p_ub, args=fargs)
+            z2 = brenth(ci_scan_opt_wilks, p_lb, p0, args=fargs)
         ci_lst[idx] = (z2-p0, z1-p0)
     
     ci_res = CIResult()

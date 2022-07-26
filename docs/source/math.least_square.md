@@ -115,10 +115,10 @@ One can estimates confidence interval of $i$th optimal paramter $\theta_{0, i}$ 
 F_{\alpha}(1, n-p) = \frac{\chi^2_i(\theta)-\chi^2_0}{\chi^2_0/(n-p)}
 \end{equation*}
 
-### Wilk's theorem based paramter error estimation
+### Wilks' theorem based paramter error estimation
 
 Note that Log likelihood function is $-\chi^2/2$.
-So, by Wilk's theorem
+So, by Wilks' theorem
 
 \begin{equation*}
 
@@ -130,11 +130,11 @@ and $D$ follows $\chi^2_1$-distribution.
 
 ## Compare two different fit
 
-Assume that model 2 is the restriction of model 1. Then you can compare two model based on both f-test and Wilk's theorem.
+Assume that model 2 is the restriction of model 1. Then you can compare two model based on both f-test and Wilks' theorem.
 
 ## Seperation Scheme
 
-Suppose that 
+Suppose that
 
 \begin{equation*}
 f(t, \mathbf{\theta}_{l}, \mathbf{\theta}_{nl}) = \mathbf{\theta}_{l}^T \mathbf{g}(t, \mathbf{\theta}_{nl})

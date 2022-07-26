@@ -131,7 +131,7 @@ def plot_TransientResult(result: TransientResult, save_fig: Optional[str] = None
                         result['eps'][i][:, j], marker='o', mfc='none', 
                         label=f'expt osc {title}', linestyle='none', color='black')
                         sub4.plot(result['t'][i], result['fit_osc'][i][:, j], 
-                        label=f'fit osc {title}', color='black')
+                        label=f'fit osc {title}', color='red')
                   sub4.set_xlim(-10*result['fwhm'], 20*result['fwhm'])
                   sub4.legend()
                   if save_fig is not None:
