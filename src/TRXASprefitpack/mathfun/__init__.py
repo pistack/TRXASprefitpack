@@ -19,7 +19,7 @@ from .exp_conv_irf import deriv_dmp_osc_conv_gau, deriv_dmp_osc_conv_cauchy
 from .rate_eq import solve_model, solve_seq_model, solve_l_model, compute_model
 from .rate_eq import compute_signal_gau, compute_signal_cauchy
 from .rate_eq import compute_signal_pvoigt
-from .exp_decay_fit import model_n_comp_conv, fact_anal_exp_conv
+from .exp_decay_fit import exp_conv, fact_anal_exp_conv
 from .exp_decay_fit import rate_eq_conv, fact_anal_rate_eq_conv
 from .exp_decay_fit import dmp_osc_conv, fact_anal_dmp_osc_conv
 from .exp_decay_fit import sum_exp_dmp_osc_conv, fact_anal_sum_exp_dmp_osc_conv
@@ -38,7 +38,7 @@ __all__ = ['voigt', 'edge_gaussian', 'edge_lorenzian', 'voigt_thy',
            'deriv_dmp_osc_conv_gau', 'deriv_dmp_osc_conv_cauchy',
            'solve_model', 'solve_seq_model', 'solve_l_model', 'compute_model',
            'compute_signal_gau', 'compute_signal_cauchy', 'compute_signal_pvoigt', 
-           'model_n_comp_conv', 'fact_anal_exp_conv',
+           'exp_conv', 'fact_anal_exp_conv',
            'rate_eq_conv', 'fact_anal_rate_eq_conv',
            'dmp_osc_conv', 'fact_anal_dmp_osc_conv',
            'sum_exp_dmp_osc_conv', 'fact_anal_sum_exp_dmp_osc_conv', 

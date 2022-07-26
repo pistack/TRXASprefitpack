@@ -14,14 +14,9 @@ from .rate_eq import compute_signal_irf
 from .A_matrix import make_A_matrix_exp, make_A_matrix_dmp_osc
 
 
-def model_n_comp_conv(t: np.ndarray,
-                      fwhm: float,
-                      tau: np.ndarray,
-                      c: np.ndarray,
-                      base: Optional[bool] = True,
-                      irf: Optional[str] = 'g',
-                      eta: Optional[float] = None
-                      ) -> np.ndarray:
+def exp_conv(t: np.ndarray, fwhm: float, tau: np.ndarray,
+             c: np.ndarray, base: Optional[bool] = True,
+             irf: Optional[str] = 'g', eta: Optional[float] = None) -> np.ndarray:
 
     '''
     Constructs the model for the convolution of n exponential and
