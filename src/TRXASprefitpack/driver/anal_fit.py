@@ -233,6 +233,8 @@ def confidence_interval(result, alpha: float) -> CIResult:
             
         z1 = brenth(ci_scan_opt_f, p0, p_ub, args=fargs)
         z2 = brenth(ci_scan_opt_f, p_lb, p0, args=fargs)
+
+        ci_lst[i] = (z2-p0, z1-p0)
     
     ci_res = CIResult()
     ci_res['method'] = 'f'
