@@ -11,7 +11,5 @@ from .mathfun import *
 from .driver import *
 from .res import *
 
-__version__ = '0.6'
-
-print('Warning: it is not official release of TRXASprefitpack, please use with caution!')
+__version__ = '0.6.dev'
 
