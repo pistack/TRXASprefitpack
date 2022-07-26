@@ -21,7 +21,7 @@ def exp1x(z: Union[complex, np.ndarray]) -> Union[complex, np.ndarray]:
     
     if not isinstance(z, np.ndarray):
             if np.abs(z.real) < 200:
-                ans = np.exp(z)*exp1(z)
+                # ans = np.exp(z)*exp1(z)
                 ans = complex(np.cos(z.imag), np.sin(z.imag))*exp1(z)
                 ans = np.exp(z.real)*ans
             else:
