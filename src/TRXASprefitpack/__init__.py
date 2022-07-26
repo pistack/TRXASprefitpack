@@ -13,3 +13,5 @@ from .res import *
 
 __version__ = '0.6'
 
+print('Warning: it is not official release of TRXASprefitpack, please use with caution!')
+
