@@ -25,20 +25,20 @@ def residual_voigt(x0: np.ndarray, num_voigt: int, edge: Optional[str] = None,
     Args:
      x0: initial parameter
 
-              x0[i]: peak position e0_i for each voigt component
-              x0[num_voigt+i]: fwhm_G of each voigt component
-              x0[2*num_voigt+i]: fwhm_L of each voigt component
+         * i th: peak position e0_i for i th voigt component
+         * :math:`{num}_{voigt}+i` th: fwhm_G of i th voigt component
+         * :math:`2{num}_{voigt}+i` th: fwhm_L of i th voigt component
+         
+         if edge is not None:
+            
+         * :math:`{last}-1` th: edge position
+         * last: fwhm of edge function
 
-              if edge is not None:
-
-                 x0[-2]: edge position
-
-                 x0[-1]: fwhm of edge function
      num_voigt: number of voigt component
      edge ({'g', 'l'}): type of edge shape function
-                        if edge is not set, it does not include edge function.
-     base_order ({0, 1, 2}): polynomial order of baseline function
-                             if base_order is not set, it does not include baseline function.
+      if edge is not set, it does not include edge function.
+     base_order (int): polynomial order of baseline function
+      if base_order is not set, it does not include baseline function.
      e: 1d array of energy points of data (n,)
      intensity: intensity of static data (n,)
      eps: estimated error of data (n,)
@@ -47,9 +47,9 @@ def residual_voigt(x0: np.ndarray, num_voigt: int, edge: Optional[str] = None,
      Residucal vector
     
     Note:
-     data should not contain energy range.
-     If fwhm_G of ith voigt component is zero then it is treated as lorenzian function with fwhm_L
-     If fwhm_L of ith voigt component is zero then it is treated as gaussian function with fwhm_G
+
+     * If fwhm_G of ith voigt component is zero then it is treated as lorenzian function with fwhm_L
+     * If fwhm_L of ith voigt component is zero then it is treated as gaussian function with fwhm_G
     '''
     x0 = np.atleast_1d(x0)
     tot_comp = num_voigt
@@ -101,21 +101,21 @@ def res_grad_voigt(x0: np.ndarray, num_voigt: int, edge: Optional[str] = None,
     Args:
      x0: initial parameter
 
-              x0[i]: peak position e0_i for each voigt component
-              x0[num_voigt+i]: fwhm_G of each voigt component
-              x0[2*num_voigt+i]: fwhm_L of each voigt component
+         * i th: peak position e0_i for i th voigt component
+         * :math:`{num}_{voigt}+i` th: fwhm_G of i th voigt component
+         * :math:`2{num}_{voigt}+i` th: fwhm_L of i th voigt component
+         
+         if edge is not None:
+            
+         * :math:`{last}-1` th: edge position
+         * last: fwhm of edge function
 
-              if edge is not None:
-
-                 x0[-2]: edge position
-
-                 x0[-1]: fwhm of edge function
      num_voigt: number of voigt component
      edge ({'g', 'l'}): type of edge shape function
-                        if edge is not set, it does not include edge function.
-     base_order ({0, 1, 2}): polynomial order of baseline function
-                             if base_order is not set, it does not include baseline function.
-     fix_param_idx: idx for fixed parameter (masked array for `params`)
+      if edge is not set, it does not include edge function.
+     base_order (int): polynomial order of baseline function
+      if base_order is not set, it does not include baseline function.
+     fix_param_idx: idx for fixed parameter (masked array for `x0`)
      e: 1d array of energy points of data (n,)
      intensity: intensity of static data (n,)
      eps: estimated error of data (n,)
@@ -124,8 +124,9 @@ def res_grad_voigt(x0: np.ndarray, num_voigt: int, edge: Optional[str] = None,
      Tuple of scalar residual function :math:`(\\frac{1}{2}\\sum_i {res}^2_i)` and its gradient
     
     Note:
-     If fwhm_G of ith voigt component is zero then it is treated as lorenzian function with fwhm_L
-     If fwhm_L of ith voigt component is zero then it is treated as gaussian function with fwhm_G
+
+     * If fwhm_G of ith voigt component is zero then it is treated as lorenzian function with fwhm_L
+     * If fwhm_L of ith voigt component is zero then it is treated as gaussian function with fwhm_G
     '''
 
     x0 = np.atleast_1d(x0)

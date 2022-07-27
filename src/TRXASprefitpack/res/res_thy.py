@@ -19,38 +19,44 @@ def residual_thy(x0: np.ndarray, policy: str, thy_peak: np.ndarray, edge: Option
                  intensity: np.ndarray = None, eps: np.ndarray = None) -> np.ndarray:
     '''
     residual_thy
-    scipy.optimize.least_squares compatible vector residual function for fitting static spectrum with the 
+    `scipy.optimize.least_squares` compatible vector residual function for fitting static spectrum with the 
     sum of voigt broadend theoretical spectrum, edge function base function
 
     Args:
      x0: initial parameter
-              x0[0]: fwhm_G 
-              x0[1]: fwhm_L
-              if policy == 'scale':
-                x0[2]: peak_scale
-              if policy == 'shift':
-                x0[2]: peak_shift
-              if policy == 'both':
-                x0[2]: peak_shift
-                x0[3]: peak_scale
 
-              if edge is not None:
+      * 1st and 2nd: fwhm_G and fwhm_L
 
-                 x0[-2]: edge position
+      if policy == 'scale':
 
-                 x0[-1]: fwhm of edge function
-     policy {'shift', 'scale', 'both'}: Policy to match discrepency 
+      * 3rd: peak_scale
+
+      if policy == 'shift':
+
+      * 3rd: peak_shift
+
+      if policy == 'both':
+
+      * 3rd: peak_shift
+      * 4th: peak_scale
+
+      if edge is not None:
+      
+      * :math:`{last}-1`: edge position
+      * last: fwhm of edge
+
+     policy ({'shift', 'scale', 'both'}): Policy to match discrepency 
       between experimental data and theoretical spectrum.
 
-      'shift' : Default option, shift peak position by peak_factor
-      'scale' : scale peak position by peak_factor
-      'both' : both shift and scale peak postition
-        peak_factor = [shift_factor, scale_factor]
+      * 'shift' : Default option, shift peak position by peak_factor
+      * 'scale' : scale peak position by peak_factor
+      * 'both' : both shift and scale peak postition, peak_factor should be a tuple of `shift_factor` and `scale_factor`.
+
      thy_peak: theoretically calculated peak position and intensity
      edge ({'g', 'l'}): type of edge shape function
-                        if edge is not set, it does not include edge function.
-     base_order ({0, 1, 2}): polynomial order of baseline function
-                             if base_order is not set, it does not include baseline function.
+      if edge is not set, it does not include edge function.
+     base_order (int): polynomial order of baseline function
+      if base_order is not set, it does not include baseline function.
      e: 1d array of energy points of data (n,)
      intensity: intensity of static data (n,)
      eps: estimated error of data (n,)
@@ -59,8 +65,9 @@ def residual_thy(x0: np.ndarray, policy: str, thy_peak: np.ndarray, edge: Option
      Residucal vector
     
     Note:
-     If fwhm_G of ith voigt component is zero then it is treated as lorenzian function with fwhm_L
-     If fwhm_L of ith voigt component is zero then it is treated as gaussian function with fwhm_G
+     * If fwhm_G of ith voigt component is zero then it is treated as lorenzian function with fwhm_L
+     * If fwhm_L of ith voigt component is zero then it is treated as gaussian function with fwhm_G
+
     '''
     x0 = np.atleast_1d(x0)
 
@@ -107,39 +114,45 @@ def res_grad_thy(x0: np.ndarray, policy: str, thy_peak: np.ndarray, edge: Option
                  intensity: np.ndarray = None, eps: np.ndarray = None) -> np.ndarray:
     '''
     res_grad_thy
-    scipy.optimize.minimize compatible scalar residual function and its gradient for fitting static spectrum with the 
+    `scipy.optimize.minimize` compatible scalar residual function and its gradient for fitting static spectrum with the 
     sum of voigt broadend theoretical spectrum, edge function base function
 
     Args:
      x0: initial parameter
-              x0[0]: fwhm_G 
-              x0[1]: fwhm_L
-              if policy == 'scale':
-                x0[2]: peak_scale
-              if policy == 'shift':
-                x0[2]: peak_shift
-              if policy == 'both':
-                x0[2]: peak_shift
-                x0[3]: peak_scale
 
-              if edge is not None:
+      * 1st and 2nd: fwhm_G and fwhm_L
 
-                 x0[-2]: edge position
+      if policy == 'scale':
 
-                 x0[-1]: fwhm of edge function
-     policy {'shift', 'scale', 'both'}: Policy to match discrepency 
+      * 3rd: peak_scale
+
+      if policy == 'shift':
+
+      * 3rd: peak_shift
+
+      if policy == 'both':
+
+      * 3rd: peak_shift
+      * 4th: peak_scale
+
+      if edge is not None:
+      
+      * :math:`{last}-1`: edge position
+      * last: fwhm of edge
+
+     policy ({'shift', 'scale', 'both'}): Policy to match discrepency 
       between experimental data and theoretical spectrum.
 
-      'shift' : Default option, shift peak position by peak_factor
-      'scale' : scale peak position by peak_factor
-      'both' : both shift and scale peak postition
-        peak_factor = [shift_factor, scale_factor]
+      * 'shift' : Default option, shift peak position by peak_factor
+      * 'scale' : scale peak position by peak_factor
+      * 'both' : both shift and scale peak postition, peak_factor should be a tuple of `shift_factor` and `scale_factor`.
+
      thy_peak: theoretically calculated peak position and intensity
      edge ({'g', 'l'}): type of edge shape function
-                        if edge is not set, it does not include edge function.
-     base_order ({0, 1, 2}): polynomial order of baseline function
-                             if base_order is not set, it does not include baseline function.
-     fix_param_idx: idx for fixed parameter (masked array for `params`)
+      if edge is not set, it does not include edge function.
+     base_order (int): polynomial order of baseline function
+      if base_order is not set, it does not include baseline function.
+     fix_param_idx: idx for fixed parameter (masked array for `x0`)
      e: 1d array of energy points of data (n,)
      intensity: intensity of static data (n,)
      eps: estimated error of data (n,)
@@ -148,8 +161,9 @@ def res_grad_thy(x0: np.ndarray, policy: str, thy_peak: np.ndarray, edge: Option
      Tuple of scalar residual function :math:`(\\frac{1}{2}\\sum_i {res}^2_i)` and its gradient
     
     Note:
-     If fwhm_G of ith voigt component is zero then it is treated as lorenzian function with fwhm_L
-     If fwhm_L of ith voigt component is zero then it is treated as gaussian function with fwhm_G
+     * If fwhm_G of ith voigt component is zero then it is treated as lorenzian function with fwhm_L
+     * If fwhm_L of ith voigt component is zero then it is treated as gaussian function with fwhm_G
+
     '''
     x0 = np.atleast_1d(x0)
 

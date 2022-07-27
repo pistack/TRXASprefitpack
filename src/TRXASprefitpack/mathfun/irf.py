@@ -94,7 +94,7 @@ def pvoigt_irf(t: Union[float, np.ndarray], fwhm_G: float, fwhm_L: float) -> Uni
       fwhm_G: full width at half maximum of gaussian part
       fwhm_L: full width at half maximum of lorenzian part
     Returns:
-     pseudo voigt profile based on Journal of Applied Crystallography. 33 (6): 1311–1316.
+     pseudo voigt profile
     '''
     f = fwhm_G**5+2.69269*fwhm_G**4*fwhm_L + \
       2.42843*fwhm_G**3*fwhm_L**2 + \

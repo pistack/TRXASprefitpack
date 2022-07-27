@@ -23,12 +23,13 @@ def res_scan_opt(p, *args) -> float:
     Args:
      p: value of ith parameter
      args: arguments
-           args[0]: i, index of parameter to scan
-           args[1]: parameter
-           args[2]: bounds
-           args[3]: objective function which also gives its gradient
-           args[4:]: arguments for objective function
-           args[-4]: fixed_param_idx
+
+           * 1st: i, index of parameter to scan
+           * 2nd: parameter
+           * 3rd: bounds
+           * 4th: objective function which also gives its gradient
+           * 5th to last: arguments for objective function
+           * :math:`last-3`: fixed_param_idx
     
     Returns:
      residual value at params[i] = p
@@ -112,10 +113,11 @@ def is_better_fit(result1, result2) -> float:
     '''
     Compare fit based on f-test
 
-    result1 ({'StaticResult', 'TransientResult'}): fitting result class
-     which has more parameter than result2
-    result2 ({'StaticResult', 'TransientResult'}): fitting result class
-     which has less parameter than result1
+    Args:
+     result1 ({'StaticResult', 'TransientResult'}): fitting result class
+      which has more parameter than result2
+     result2 ({'StaticResult', 'TransientResult'}): fitting result class
+      which has less parameter than result1
 
     Returns:
      p value of test, If p is smaller than your significant level,
@@ -123,10 +125,10 @@ def is_better_fit(result1, result2) -> float:
      Otherwise, you cannot say resul1 is better fit than result2.
     
     Note:
-     The number of parameters in result1 should be greather than
-     the number of parameters in result2.
 
-     The result1 and result2 should be different model for same data. 
+     * The number of parameters in result1 should be greather than the number of parameters in result2.
+     * The result1 and result2 should be different model for same data.
+
     '''
     chi2_1 = result1['chi2']; chi2_2 = result2['chi2']
     num_param_1 = result1['n_param']; num_param_2 = result2['n_param']

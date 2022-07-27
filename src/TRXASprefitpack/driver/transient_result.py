@@ -189,9 +189,11 @@ class TransientResult(dict):
 def save_TransientResult(result: TransientResult, filename: str):
       '''
       save transient fitting result to the h5 file
+
       Args:
        result: transient fitting result
        filename: filename to store result. It will store result to filename.h5
+
       Returns:
        h5 file which stores result
       '''
@@ -247,8 +249,10 @@ def save_TransientResult(result: TransientResult, filename: str):
 def load_TransientResult(filename: str) -> TransientResult:
       '''
       load transient fitting result from h5 file
+
       Args:
        filename: filename to load result. It will load filename.h5
+       
       Returns:
        transient fitting result loaded from h5 file
       '''

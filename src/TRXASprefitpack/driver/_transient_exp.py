@@ -37,17 +37,6 @@ def fit_transient_exp(irf: str, fwhm_init: Union[float, np.ndarray],
       It separates linear and non-linear part of the optimization problem to solve non linear least sequare
       optimization problem efficiently.
 
-      Finding weight :math:`c_i` which minimizes :math:`\\chi^2` when any other parameters are given is linear problem, 
-      this problem is solved before the each iteration of non linear problem.
-      Since :math:`\\frac{\\partial \\chi^2}{\\partial c_i} = 0` is satisfied, the gradient for
-      our scalar residual function is ,simply, :math:`\\frac{\\partial \\chi^2}{\\partial {param}_i}`. 
-
-      The fitting Model is sum of convolution of exponential decay and instrumental response function
-      :math:`\\sum_{i=1}^n c_i y_i(t-t_0, {fwhm}, 1/\\tau_i) + {base}*c_{n+1} y_{n+1}(t-t0, {fwhm}, 0)`
-      
-      The Objective function is half of chi squared value
-      :math:`\\chi^2 = \sum_i \\left(\\frac{model-data_i}{eps_i}\\right)^2`
-
       Moreover this driver uses two step method to search best parameter, its covariance and
       estimated parameter error.
 
@@ -70,9 +59,9 @@ def fit_transient_exp(irf: str, fwhm_init: Union[float, np.ndarray],
         'pv': pseudo voigt shape (kind 2)
        fwhm_init (float or np.ndarray): initial full width at half maximum for instrumental response function
        
-        if irf in ['g', 'c'] then fwhm_init is float
-        
-        if irf == 'pv' then fwhm_init is the numpy.ndarray with [fwhm_G, fwhm_L]
+        * if irf in ['g', 'c'] then fwhm_init is float
+        * if irf == 'pv' then fwhm_init is the `numpy.ndarray` with [fwhm_G, fwhm_L]
+
        t0_init (np.ndarray): time zeros for each scan
        tau_init (np.ndarray): lifetime constant for each decay component
        base (bool): Whether or not include baseline feature (i.e. very long lifetime constant)

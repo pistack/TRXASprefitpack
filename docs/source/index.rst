@@ -12,6 +12,7 @@ The documentation for the next release (TRXASprefitpack version 0.6.0) is under 
    :maxdepth: 4
    :caption: Contents:
 
+   feature
    math
    utility
    utility_example

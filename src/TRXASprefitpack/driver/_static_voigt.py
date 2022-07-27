@@ -43,17 +43,6 @@ def fit_static_voigt(e0_init: np.ndarray, fwhm_G_init: np.ndarray, fwhm_L_init: 
       It separates linear and non-linear part of the optimization problem to solve non linear least sequare
       optimization problem efficiently.
 
-      Finding weight :math:`c_i` which minimizes :math:`\\chi^2` when any other parameters are given is linear problem, 
-      this problem is solved before the each iteration of non linear problem.
-      Since :math:`\\frac{\\partial \\chi^2}{\\partial c_i} = 0` is satisfied, the gradient for
-      our scalar residual function is ,simply, :math:`\\frac{\\partial \\chi^2}{\\partial {param}_i}`. 
-
-      The fitting Model is sum of voigt function, edge function and base function
-      :math:`\\sum_{i=1}^n c_i y_i(e-e_0_i, {fwhm}_{(G, i)}, {fwhm}_{(L, i)}) + c_{n+1}{edge} + {base}`
-      
-      The Objective function is half of chi squared value.
-      :math:`\\chi^2 = \sum_i \\left(\\frac{model-data_i}{eps_i}\\right)^2`
-
       Moreover this driver uses two step method to search best parameter, its covariance and
       estimated parameter error.
                     
@@ -96,8 +85,9 @@ def fit_static_voigt(e0_init: np.ndarray, fwhm_G_init: np.ndarray, fwhm_L_init: 
        Returns:
         StaticResult class object
        Note:
-        if initial fwhm_G is zero then such voigt component is treated as lorenzian component
-        if initial fwhm_L is zero then such voigt component is treated as gaussian component
+       
+        * if initial fwhm_G is zero then such voigt component is treated as lorenzian component
+        * if initial fwhm_L is zero then such voigt component is treated as gaussian component
       '''
 
       if e0_init is None:

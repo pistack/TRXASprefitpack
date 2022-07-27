@@ -151,9 +151,11 @@ def deriv_exp_conv_gau(t: Union[float, np.ndarray], fwhm: float,
      Derivative of Convolution of normalized gaussian distribution and exponential
      decay :math:`(\\exp(-kt))`.
     Note:
-     1st column: df/dt
-     2nd column: df/d(fwhm)
-     3rd column: df/dk
+
+     * 1st column: df/dt
+     * 2nd column: df/d(fwhm)
+     * 3rd column: df/dk
+
     '''
 
     sigma = fwhm/(2*np.sqrt(2*np.log(2)))
@@ -191,9 +193,10 @@ def deriv_exp_conv_cauchy(t: Union[float, np.ndarray],
       exponential decay :math:`(\\exp(-kt))`.
     
     Note:
-     1st column: df/dt
-     2nd column: df/d(fwhm)
-     3rd column: df/dk
+
+     * 1st column: df/dt
+     * 2nd column: df/d(fwhm)
+     * 3rd column: df/dk
     '''
 
     if not isinstance(t, np.ndarray):
@@ -244,9 +247,10 @@ def deriv_exp_sum_conv_gau(t: np.ndarray, fwhm: float,
      Derivative of Convolution of normalized gaussian distribution and sum of exponential
      decay :math:`(\\exp(-kt))`.
     Note:
-     1st column: df/dt
-     2nd column: df/d(fwhm)
-     2+i th column: df/dk_i
+
+     * 1st column: df/dt
+     * 2nd column: df/d(fwhm)
+     * 2+i th column: df/dk_i
     '''
     grad = np.zeros((t.size, 2+k.size))
     for i in range(k.size):
@@ -279,9 +283,10 @@ def deriv_exp_sum_conv_cauchy(t: np.ndarray, fwhm: float,
      Derivative of Convolution of normalized cauchy distribution and sum of exponential
      decay :math:`(\\exp(-kt))`.
     Note:
-     1st column: df/dt
-     2nd column: df/d(fwhm)
-     2+i th column: df/dk_i
+
+     * 1st column: df/dt
+     * 2nd column: df/d(fwhm)
+     * 2+i th column: df/dk_i
     '''
     grad = np.zeros((t.size, 2+k.size))
     for i in range(k.size):
@@ -432,11 +437,12 @@ k: float, T: float, phase: float) -> np.ndarray:
      damped oscillation :math:`(\\exp(-kt)cos(2\\pi t/T+phase))`.
     
     Note:
-     1st column: df/dt
-     2nd column: df/d(fwhm)
-     3rd column: df/dk
-     4th column: df/dT
-     5th column: df/d(phase)
+
+     * 1st column: df/dt
+     * 2nd column: df/d(fwhm)
+     * 3rd column: df/dk
+     * 4th column: df/dT
+     * 5th column: df/d(phase)
     '''
 
     sigma = fwhm/(2*np.sqrt(2*np.log(2))); omega = 2*np.pi/T
@@ -481,11 +487,12 @@ k: float, T: float, phase: float) -> Union[float, np.ndarray]:
      damped oscillation :math:`(\\exp(-kt)cos(2\\pi t/T+phase))`.
 
     Note:
-     1st column: df/dt
-     2nd column: df/d(fwhm)
-     3rd column: df/dk
-     4th column: df/dT
-     5th column: df/d(phase)
+
+     * 1st column: df/dt
+     * 2nd column: df/d(fwhm)
+     * 3rd column: df/dk
+     * 4th column: df/dT
+     * 5th column: df/d(phase)
     '''
 
     gamma = fwhm/2; omega = 2*np.pi/T 
@@ -541,11 +548,11 @@ k: np.ndarray, T: np.ndarray, phase: np.ndarray, c: np.ndarray) -> np.ndarray:
      Derivative of Convolution of normalized gaussian distribution and 
      damped oscillation :math:`(\\exp(-kt)cos(2\\pi t/T+phase))`.
     Note:
-     1st column: df/dt
-     2nd column: df/d(fwhm)
-     2+i th column: df/dk_i (1 <= i <= num_comp)
-     2+num_comp+i th column: df/dT_i (1 <= i <= num_comp)
-     2+2*num_comp+i th column: df/d(phase_i) (1 <= i <= num_comp)
+     * 1st column: df/dt
+     * 2nd column: df/d(fwhm)
+     * 2+i th column: df/dk_i :math:`(1 \\leq i \\leq {num}_{comp})`
+     * 2+num_comp+i th column: df/dT_i :math:`(1 \\leq i \\leq {num}_{comp})`
+     * :math:`2+2{num}_{comp}+i` th column: df/d(phase_i) :math:`(1 \\leq i \\leq {num}_{comp})`
     '''
     grad = np.zeros((t.size, 2+3*k.size))
     for i in range(k.size):
@@ -577,11 +584,11 @@ k: np.ndarray, T: np.ndarray, phase: np.ndarray, c: np.ndarray) -> np.ndarray:
      Derivative of Convolution of normalized cauchy distribution and 
      damped oscillation :math:`(\\exp(-kt)cos(2\\pi t/T+phase))`.
     Note:
-     1st column: df/dt
-     2nd column: df/d(fwhm)
-     2+i th column: df/dk_i (1 <= i <= num_comp)
-     2+num_comp+i th column: df/dT_i (1 <= i <= num_comp)
-     2+2*num_comp+i th column: df/d(phase_i) (1 <= i <= num_comp)
+     * 1st column: df/dt
+     * 2nd column: df/d(fwhm)
+     * 2+i th column: df/dk_i :math:`(1 \\leq i \\leq {num}_{comp})`
+     * 2+num_comp+i th column: df/dT_i :math:`(1 \\leq i \\leq {num}_{comp})`
+     * :math:`2+2{num}_{comp}+i` th column: df/d(phase_i) :math:`(1 \\leq i \\leq {num}_{comp})`
     '''
     grad = np.zeros((t.size, 2+3*k.size))
     for i in range(k.size):
