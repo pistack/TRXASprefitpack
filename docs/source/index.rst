@@ -9,13 +9,13 @@ Welcome to TRXASprefitpack's documentation!
 The documentation for the next release (TRXASprefitpack version 0.6.0) is under construction!
 
 .. toctree::
-   :maxdepth: 4
+   :maxdepth: 2
    :caption: Contents:
 
    feature
    math
+   example
    utility
-   utility_example
    TRXASprefitpack
 
 

@@ -19,8 +19,10 @@ class TestPvoigtIRF(unittest.TestCase):
         '''
         t = np.linspace(-1, 1, 201)
         fwhm_G = 0.1; fwhm_L = 0.3
+        fwhm = calc_fwhm(fwhm_G, fwhm_L)
+        eta = calc_eta(fwhm_G, fwhm_L)
         ref = voigt(t, fwhm_G, fwhm_L)
-        tst = pvoigt_irf(t, fwhm_G, fwhm_L)
+        tst = pvoigt_irf(t, fwhm, eta)
         result = np.max(np.abs(tst-ref))/np.max(ref) < 2e-2
         self.assertEqual(result, True)
 
@@ -30,8 +32,10 @@ class TestPvoigtIRF(unittest.TestCase):
         '''
         t = np.linspace(-1, 1, 201)
         fwhm_G = 0.1; fwhm_L = 0.15
+        fwhm = calc_fwhm(fwhm_G, fwhm_L)
+        eta = calc_eta(fwhm_G, fwhm_L)
         ref = voigt(t, fwhm_G, fwhm_L)
-        tst = pvoigt_irf(t, fwhm_G, fwhm_L)
+        tst = pvoigt_irf(t, fwhm, eta)
         result = np.max(np.abs(tst-ref))/np.max(ref) < 2e-2
         self.assertEqual(result, True)
 
@@ -41,8 +45,10 @@ class TestPvoigtIRF(unittest.TestCase):
         '''
         t = np.linspace(-1, 1, 201)
         fwhm_G = 0.1; fwhm_L = 0.1
+        fwhm = calc_fwhm(fwhm_G, fwhm_L)
+        eta = calc_eta(fwhm_G, fwhm_L)
         ref = voigt(t, fwhm_G, fwhm_L)
-        tst = pvoigt_irf(t, fwhm_G, fwhm_L)
+        tst = pvoigt_irf(t, fwhm, eta)
         result = np.max(np.abs(tst-ref))/np.max(ref) < 2e-2
         self.assertEqual(result, True)
 
@@ -52,8 +58,10 @@ class TestPvoigtIRF(unittest.TestCase):
         '''
         t = np.linspace(-1, 1, 201)
         fwhm_G = 0.15; fwhm_L = 0.1
+        fwhm = calc_fwhm(fwhm_G, fwhm_L)
+        eta = calc_eta(fwhm_G, fwhm_L)
         ref = voigt(t, fwhm_G, fwhm_L)
-        tst = pvoigt_irf(t, fwhm_G, fwhm_L)
+        tst = pvoigt_irf(t, fwhm, eta)
         result = np.max(np.abs(tst-ref))/np.max(ref) < 2e-2
         self.assertEqual(result, True)
 
@@ -63,8 +71,10 @@ class TestPvoigtIRF(unittest.TestCase):
         '''
         t = np.linspace(-1, 1, 201)
         fwhm_G = 0.3; fwhm_L = 0.1
+        fwhm = calc_fwhm(fwhm_G, fwhm_L)
+        eta = calc_eta(fwhm_G, fwhm_L)
         ref = voigt(t, fwhm_G, fwhm_L)
-        tst = pvoigt_irf(t, fwhm_G, fwhm_L)
+        tst = pvoigt_irf(t, fwhm, eta)
         result = np.max(np.abs(tst-ref))/np.max(ref) < 2e-2
         self.assertEqual(result, True)
     

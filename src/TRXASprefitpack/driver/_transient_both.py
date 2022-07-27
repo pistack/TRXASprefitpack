@@ -230,11 +230,14 @@ def fit_transient_both(irf: str, fwhm_init: Union[float, np.ndarray],
       num_param_ind = 2*tau_opt.size+4*tau_osc_opt.size+1*base+2+1*(irf == 'pv')
 
       for i in range(len(t)):
-            end = start + intensity[i].size
-            chi_aux = chi[start:end].reshape(intensity[i].shape)
-            chi2_ind[i] = np.sum(chi_aux**2, axis=0)
+            step = intensity[i].shape[0]
+            chi2_ind_aux = np.empty(intensity[i].shape[1], dtype=float)
+            for j in range(intensity[i].shape[1]):
+                  end = start + step
+                  chi2_ind_aux[j] = np.sum(chi[start:end]**2)
+                  start = end
+            chi2_ind[i] = chi2_ind_aux
             red_chi2_ind[i] = chi2_ind[i]/(intensity[i].shape[0]-num_param_ind)
-            start = end
 
       param_name = np.empty(param_opt.size, dtype=object)
       c = np.empty(len(t), dtype=object)

@@ -83,27 +83,18 @@ def calc_eta(fwhm_G: float, fwhm_L: float) -> float:
   eta = 1.36603*x-0.47719*x**2+0.11116*x**3
   return eta
 
-def pvoigt_irf(t: Union[float, np.ndarray], fwhm_G: float, fwhm_L: float) -> Union[float, np.ndarray]:
+def pvoigt_irf(t: Union[float, np.ndarray], fwhm: float, eta: float) -> Union[float, np.ndarray]:
     '''
     Compute pseudo voight shape irf function
     (i.e. linear combination of gaussian and lorenzian function)
-    Based on formula in Journal of Applied Crystallography. 33 (6): 1311–1316.
 
     Args:
       t: time
-      fwhm_G: full width at half maximum of gaussian part
-      fwhm_L: full width at half maximum of lorenzian part
+      fwhm: uniform full width at half paramter
+      eta: mixing paramter
     Returns:
      pseudo voigt profile
     '''
-    f = fwhm_G**5+2.69269*fwhm_G**4*fwhm_L + \
-      2.42843*fwhm_G**3*fwhm_L**2 + \
-        4.47163*fwhm_G**2*fwhm_L**3 + \
-          0.07842*fwhm_G*fwhm_L**4 + \
-            fwhm_L**5
-    fwhm = f**(1/5)
-    x = fwhm_L/fwhm
-    eta = 1.36603*x-0.47719*x**2+0.11116*x**3
     u = gau_irf(t, fwhm)
     v = cauchy_irf(t, fwhm)
 
