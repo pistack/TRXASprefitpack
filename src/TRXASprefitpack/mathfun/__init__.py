@@ -23,7 +23,6 @@ from .exp_decay_fit import exp_conv, fact_anal_exp_conv
 from .exp_decay_fit import rate_eq_conv, fact_anal_rate_eq_conv
 from .exp_decay_fit import dmp_osc_conv, fact_anal_dmp_osc_conv
 from .exp_decay_fit import sum_exp_dmp_osc_conv, fact_anal_sum_exp_dmp_osc_conv
-from .deriv_tst import test_num_deriv
 
 
 __all__ = ['voigt', 'edge_gaussian', 'edge_lorenzian', 'voigt_thy',
@@ -41,5 +40,4 @@ __all__ = ['voigt', 'edge_gaussian', 'edge_lorenzian', 'voigt_thy',
            'exp_conv', 'fact_anal_exp_conv',
            'rate_eq_conv', 'fact_anal_rate_eq_conv',
            'dmp_osc_conv', 'fact_anal_dmp_osc_conv',
-           'sum_exp_dmp_osc_conv', 'fact_anal_sum_exp_dmp_osc_conv', 
-           'test_num_deriv']
+           'sum_exp_dmp_osc_conv', 'fact_anal_sum_exp_dmp_osc_conv']

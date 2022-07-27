@@ -25,16 +25,18 @@ def residual_decay(x0: np.ndarray, base: bool, irf: str,
     sum of convolution of exponential decay and instrumental response function  
 
     Args:
-     x0: initial parameter
-             if irf == 'g','c':
-                x0[0]: fwhm_(G/L)
-                x0[1:1+number of total time delay scan]: time zero of each scan
-                x0[1+num_tot_scan:]: time constant (inverse of rate constant) of each decay component
-             if irf == 'pv'
-                x0[0]: fwhm_G
-                x0[1]: fwhm_L
-                x0[2:2+number of total time delay scan]: time zero of each scan
-                x0[2+num_tot_scan:]: time constant (inverse of rate constant) of each decay component
+     x0: initial parameter,
+      if irf == 'g','c':
+
+        * 1st: fwhm_(G/L)
+        * 2nd to :math:`2+N_{scan}`: time zero of each scan
+        * :math:`2+N_{scan}` to :math:`2+N_{scan}+N_{\\tau}`: time constant of each decay component
+
+      if irf == 'pv':
+
+        * 1st and 2nd: fwhm_G, fwhm_L
+        * 3rd to :math:`3+N_{scan}`: time zero of each scan
+        * :math:`3+N_{scan}` to :math:`3+N_{scan}+N_{\\tau}`: time constant of each decay component
 
      num_comp: number of exponential decay component (except base)
      base: whether or not include baseline (i.e. very long lifetime component)
@@ -42,8 +44,10 @@ def residual_decay(x0: np.ndarray, base: bool, irf: str,
 
           * 'g': normalized gaussian distribution,
           * 'c': normalized cauchy distribution,
-          * 'pv': pseudo voigt profile :math:`(1-\\eta)g + \\eta c`
-          For pseudo voigt profile, the mixing parameter eta is calculated by calc_eta routine
+          * 'pv': pseudo voigt profile :math:`(1-\\eta)g(f) + \\eta c(f)`
+
+        For pseudo voigt profile, the mixing parameter :math:`\\eta(f_G, f_L)` and
+        uniform fwhm paramter :math:`f(f_G, f_L)` are calculated by `calc_eta` and `calc_fwhm` routine
      t: time points for each data set
      intensity: sequence of intensity of datasets
      eps: sequence of estimated error of datasets
@@ -108,27 +112,31 @@ def res_grad_decay(x0: np.ndarray, num_comp: int, base: bool, irf: str,
     sum of convolution of exponential decay and instrumental response function  
 
     Args:
-     x0: initial parameter
-             if irf == 'g','c':
-                x0[0]: fwhm_(G/L)
-                x0[1:1+number of total time delay scan]: time zero of each scan
-                x0[1+num_tot_scan:]: time constant (inverse of rate constant) of each decay component
-             if irf == 'pv'
-                x0[0]: fwhm_G
-                x0[1]: fwhm_L
-                x0[2:2+number of total time delay scan]: time zero of each scan
-                x0[2+num_tot_scan:]: time constant (inverse of rate constant) of each decay component
-           
+     x0: initial parameter,
+      if irf == 'g','c':
+
+        * 1st: fwhm_(G/L)
+        * 2nd to :math:`2+N_{scan}`: time zero of each scan
+        * :math:`2+N_{scan}` to :math:`2+N_{scan}+N_{\\tau}`: time constant of each decay component
+
+      if irf == 'pv':
+        
+        * 1st and 2nd: fwhm_G, fwhm_L
+        * 3rd to :math:`3+N_{scan}`: time zero of each scan
+        * :math:`3+N_{scan}` to :math:`3+N_{scan}+N_{\\tau}`: time constant of each decay component
+
      num_comp: number of exponential decay component (except base)
      base: whether or not include baseline (i.e. very long lifetime component)
      irf: shape of instrumental response function
 
           * 'g': normalized gaussian distribution,
           * 'c': normalized cauchy distribution,
-          * 'pv': pseudo voigt profile :math:`(1-\\eta)g + \\eta c`
-          For pseudo voigt profile, the mixing parameter eta is calculated by calc_eta routine
-     fix_param_idx: index for fixed parameter (masked array for `params`)
+          * 'pv': pseudo voigt profile :math:`(1-\\eta)g(f) + \\eta c(f)`
+
+        For pseudo voigt profile, the mixing parameter :math:`\\eta(f_G, f_L)` and
+        uniform fwhm paramter :math:`f(f_G, f_L)` are calculated by `calc_eta` and `calc_fwhm` routine
      t: time points for each data set
+     fix_param_idx: index for fixed parameter (masked array for `x0`)
      intensity: sequence of intensity of datasets
      eps: sequence of estimated error of datasets
 

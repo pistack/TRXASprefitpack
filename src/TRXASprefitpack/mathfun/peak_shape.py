@@ -45,15 +45,15 @@ def voigt(e: Union[float, np.ndarray], fwhm_G: float, fwhm_L: float) -> Union[fl
 
     Args:
      e: energy
-     fwhm_G: full width at half maximum of gaussian part :math:(2\\sqrt{2\\log(2)}\\sigma)
-     fwhm_L: full width at half maximum of lorenzian part :math:(2\\gamma)
+     fwhm_G: full width at half maximum of gaussian part :math:`(2\\sqrt{2\\log(2)}\\sigma)`
+     fwhm_L: full width at half maximum of lorenzian part :math:`(2\\gamma)`
     
     Returns:
      voigt profile 
 
     Note:
-     if fwhm_G is zero it returns normalized lorenzian shape
-     if fwhm_L is zero it returns normalized gaussian shape
+     * if fwhm_G is zero it returns normalized lorenzian shape
+     * if fwhm_L is zero it returns normalized gaussian shape
     '''
     sigma = fwhm_G/(2*np.sqrt(2*np.log(2)))
     
@@ -81,13 +81,14 @@ def voigt_thy(e: np.ndarray, thy_peak: np.ndarray,
         fwhm_G: full width at half maximum of gaussian shape 
         fwhm_L: full width at half maximum of lorenzian shape 
         peak_factor: Peak factor, its behavior depends on policy.
-        policy {'shift', 'scale', 'both'}: Policy to match discrepency 
+        policy ({'shift', 'scale', 'both'}): Policy to match discrepency 
          between experimental data and theoretical spectrum.
 
-        'shift' : Default option, shift peak position by peak_factor
-        'scale' : scale peak position by peak_factor
-        'both' : both shift and scale peak postition
-         peak_factor = [shift_factor, scale_factor]
+         * 'shift' : Default option, shift peak position by peak_factor
+         * 'scale' : scale peak position by peak_factor
+         * 'both' : both shift and scale peak postition. 
+
+         `peak_factor` should be equal to the pair of `shift_factor` and `scale_factor`.
 
     Returns:
       normalized voigt broadened theoritical lineshape spectrum
@@ -120,8 +121,9 @@ def deriv_edge_gaussian(e: Union[float, np.ndarray], fwhm_G: float) -> np.ndarra
      first derivative of gaussian edge function
     
     Note:
-     1st column: df/de
-     2nd column: df/d(fwhm_G)
+
+     * 1st column: df/de
+     * 2nd column: df/d(fwhm_G)
     '''
     tmp = np.exp(-4*np.log(2)*(e/fwhm_G)**2)/np.sqrt(np.pi)
 
@@ -151,8 +153,9 @@ def deriv_edge_lorenzian(e: Union[float, np.ndarray], fwhm_L: float) -> np.ndarr
      first derivative of lorenzian type function
     
     Note:
-     1st column: df/de
-     2nd column: df/d(fwhm_L)
+
+     * 1st column: df/de
+     * 2nd column: df/d(fwhm_L)
     '''
     tmp = 1/np.pi/(e**2+fwhm_L**2/4)
     grad_e = fwhm_L*tmp/2
@@ -183,24 +186,26 @@ def deriv_voigt(e: Union[float, np.ndarray], fwhm_G: float, fwhm_L: float) -> np
      first derivative of voigt profile 
 
     Note:
-     1st column: df/de
-     2nd column: df/d(fwhm_G)
-     3rd column: df/d(fwhm_L)
 
-     if fwhm_G is zero it returns
+     * 1st column: df/de
+     * 2nd column: df/d(fwhm_G)
+     * 3rd column: df/d(fwhm_L)
 
-      1st column: dl/de
-      2nd column: 0
-      3rd column: dL/d(fwhm_L)
+     if `fwhm_G` is zero then,
+    
+     * 1st column: dl/de
+     * 2nd column: 0
+     * 3rd column: dL/d(fwhm_L)
+    
+     L means normalized lorenzian shape with full width at half maximum parameter: `fwhm_L`
 
-      L means normalized lorenzian shape with full width at half maximum parameter: fwhm_L
+     if `fwhm_L` is zero it returns 
 
-     if fwhm_L is zero it returns 
-
-      1st column: dg/de
-      2nd column: dg/d(fwhm_G)
-      3rd column: 0
-      g means normalized gaussian shape with full width at half maximum parameter: fwhm_G
+     * 1st column: dg/de
+     * 2nd column: dg/d(fwhm_G)
+     * 3rd column: 0
+    
+     g means normalized gaussian shape with full width at half maximum parameter: `fwhm_G`
     '''
 
     if fwhm_G == 0:
@@ -262,31 +267,30 @@ def deriv_voigt_thy(e: np.ndarray, thy_peak: np.ndarray,
         fwhm_G: full width at half maximum of gaussian shape 
         fwhm_L: full width at half maximum of lorenzian shape 
         peak_factor: Peak factor, its behavior depends on policy.
-        policy {'shift', 'scale', 'both'}: Policy to match discrepency 
+        policy ({'shift', 'scale', 'both'}): Policy to match discrepency 
          between experimental data and theoretical spectrum.
 
-                 'shift' : Default option, shift peak position by peak_factor
-                 'scale' : scale peak position by peak_factor
-                 'both' : both shift and scale peak postition
-                          peak_factor = [shift_factor, scale_factor]
+         * 'shift' : Default option, shift peak position by peak_factor
+         * 'scale' : scale peak position by peak_factor
+         * 'both' : both shift and scale peak postition. 
+
+         `peak_factor` should be equal to the pair of `shift_factor` and `scale_factor`.
 
     Returns:
       derivative of normalized voigt broadened theoritical lineshape spectrum
     
     Note:
-     1st column: df/d(fwhm_G)
+     * 1st column: df/d(fwhm_G)
+     * 2nd column: df/d(fwhm_L)
+     
+     if policy is `shift` or `scale`,
 
-     2nd column: df/d(fwhm_L)
+     * 3rd column: df/d(peak_factor)
 
-     if policy in ['shift', 'scale']:
+     if policy is `both`
 
-        3rd column: df/d(peak_factor)
-
-     if policy == 'both':
-
-        3rd column: df/d(peak_factor[0]), peak_factor[0]: shift factor
-
-        4th column: df/d(peak_factor[1]), peak_factor[1]: scale factor
+     * 3rd column: df/d(peak_factor[0]), peak_factor[0]: shift factor
+     * 4th column: df/d(peak_factor[1]), peak_factor[1]: scale factor
     '''
 
     deriv_voigt_tensor = np.zeros((thy_peak.shape[0], e.size, 3))

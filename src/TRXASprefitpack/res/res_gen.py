@@ -11,10 +11,11 @@ def residual_scalar(x0: np.ndarray, *args) -> float:
     residual_scaler
     scipy.optimize.minimize compatible scaler residual function
     Args:
-     x0: initial parameter
+     x0: initial parameter of objective function
      args: arguments
-             args[0]: objective function
-             args[1:]: arguments for both objective function
+
+      * 1st: objective function
+      * 2nd to last: arguments for objective vector residual function
 
     Returns:
      Residucal scalar(i.e. square of 2-norm of Residual Vector)
@@ -34,14 +35,15 @@ def res_lmfit(x0, *args) -> np.ndarray:
     Args:
      x0 (lmfit.Parameters): initial parameter
      args: arguments
-             args[0]: objective function
-             args[1]: jacobian of objective function
-             args[2:]: arguments for both objective and jocobian 
+
+      * 1st: objective function
+      * 2nd to last: arguments for objective function
+
     Returns:
      residucal vector
     '''
     func = args[0]
     fargs = ()
-    if len(args) > 2:
-        fargs = tuple(args[2:])
+    if len(args) > 1:
+        fargs = tuple(args[1:])
     return func(x0, *fargs)

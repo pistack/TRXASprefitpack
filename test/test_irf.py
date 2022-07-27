@@ -6,7 +6,7 @@ import numpy as np
 path = os.path.dirname(os.path.realpath(__file__))
 sys.path.append(path+"/../src/")
 
-from TRXASprefitpack import test_num_deriv
+from TRXASprefitpack.mathfun.deriv_tst import test_num_deriv
 from TRXASprefitpack import calc_eta, deriv_eta
 from TRXASprefitpack import calc_fwhm, deriv_fwhm
 from TRXASprefitpack import pvoigt_irf

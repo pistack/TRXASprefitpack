@@ -24,26 +24,28 @@ def residual_both(x0: np.ndarray, num_comp: int, num_comp_osc:int, base: bool, i
                   eps: Optional[Sequence[np.ndarray]] = None) -> np.ndarray:
     '''
     residual_both
-    scipy.optimize.least_squares compatible vector residual function for fitting multiple set of time delay scan with the
+    `scipy.optimize.least_squares` compatible vector residual function for fitting multiple set of time delay scan with the
     sum of convolution of (sum of exponential decay damped oscillation) and instrumental response function  
 
     Args:
-     x0: initial parameter
-             if irf == 'g','c':
-                x0[0]: fwhm_(G/L)
-                x0[1:1+number of total time delay scan]: time zero of each scan
-                x0[1+num_tot_scan:1+num_tot_scan+num_tau]: time constant (inverse of rate constant) of each decay component
-                x0[1+num_tot_scan+num_tau:1+num_tot_scan+num_tau+num_tau_osc]: time constant of each damped oscillation component
-                x0[1+num_tot_scan+num_tau+num_tau_osc:1+num_tot_scan+num_tau+2*num_tau_osc]: period of each damped oscillation component
-                x0[1+num_tot_scan+num_tau+2*num_tau_osc:]: phase of each damped oscillation component 
-             if irf == 'pv'
-                x0[0]: fwhm_G
-                x0[1]: fwhm_L
-                x0[2:2+number of total time delay scan]: time zero of each scan
-                x0[2+num_tot_scan:2+num_tot_scan+num_tau]: time constant (inverse of rate constant) of each decay component
-                x0[2+num_tot_scan+num_tau:2+num_tot_scan+num_tau+num_tau_osc]: time constant of each damped oscillation component
-                x0[2+num_tot_scan+num_tau+num_tau_osc:2+num_tot_scan+num_tau+2*num_tau_osc]: period of each damped oscillation component
-                x0[2+num_tot_scan+num_tau+2*num_tau_osc:]: phase of each damped oscillation component 
+     x0: initial parameter,
+      if irf == 'g','c':
+
+        * 1st: fwhm_(G/L)
+        * 2nd to :math:`2+N_{scan}`: time zero of each scan
+        * :math:`2+N_{scan}` to :math:`2+N_{scan}+N_{\\tau}`: time constant of each decay component
+        * :math:`2+N_{scan}+N_{\\tau}+i`: time constant of each damped oscillation
+        * :math:`2+N_{scan}+N_{\\tau}+N_{osc}+i`: period of each damped oscillation
+        * :math:`2+N_{scan}+N_{\\tau}+2N_{osc}+i`: phase of each damped oscillation component
+
+      if irf == 'pv':
+
+        * 1st and 2nd: fwhm_G, fwhm_L
+        * 3rd to :math:`3+N_{scan}`: time zero of each scan
+        * :math:`3+N_{scan}` to :math:`3+N_{scan}+N_{\\tau}`: time constant of each decay component
+        * :math:`3+N_{scan}+N_{\\tau}+i`: time constant of each damped oscillation
+        * :math:`3+N_{scan}+N_{\\tau}+N_{osc}+i`: period of each damped oscillation
+        * :math:`3+N_{scan}+N_{\\tau}+2N_{osc}+i`: phase of each damped oscillation component
 
      num_comp: number of exponential decay component (except base)
      num_comp_osc: number of damped oscillation component
@@ -52,8 +54,10 @@ def residual_both(x0: np.ndarray, num_comp: int, num_comp_osc:int, base: bool, i
 
           * 'g': normalized gaussian distribution,
           * 'c': normalized cauchy distribution,
-          * 'pv': pseudo voigt profile :math:`(1-\\eta)g + \\eta c`
-          For pseudo voigt profile, the mixing parameter eta is calculated by calc_eta routine
+          * 'pv': pseudo voigt profile :math:`(1-\\eta)g(f) + \\eta c(f)`
+
+        For pseudo voigt profile, the mixing parameter :math:`\\eta(f_G, f_L)` and
+        uniform fwhm paramter :math:`f(f_G, f_L)` are calculated by `calc_eta` and `calc_fwhm` routine
      t: time points for each data set
      intensity: sequence of intensity of datasets
      eps: sequence of estimated error of datasets
@@ -126,26 +130,28 @@ def res_grad_both(x0: np.ndarray, num_comp: int, num_comp_osc:int, base: bool, i
                    eps: Optional[Sequence[np.ndarray]] = None) -> Tuple[np.ndarray, np.ndarray]:
     '''
     res_grad_both
-    scipy.optimize.minimize compatible scalar residual and its gradient function for fitting multiple set of time delay scan with the
+    `scipy.optimize.minimize` compatible scalar residual and its gradient function for fitting multiple set of time delay scan with the
     sum of convolution of (sum of exponential decay damped oscillation) and instrumental response function  
 
     Args:
-     x0: initial parameter
-             if irf == 'g','c':
-                x0[0]: fwhm_(G/L)
-                x0[1:1+number of total time delay scan]: time zero of each scan
-                x0[1+num_tot_scan:1+num_tot_scan+num_tau]: time constant (inverse of rate constant) of each decay component
-                x0[1+num_tot_scan+num_tau:1+num_tot_scan+num_tau+num_tau_osc]: time constant of each damped oscillation component
-                x0[1+num_tot_scan+num_tau+num_tau_osc:1+num_tot_scan+num_tau+2*num_tau_osc]: period of each damped oscillation component
-                x0[1+num_tot_scan+num_tau+2*num_tau_osc:]: phase of each damped oscillation component 
-             if irf == 'pv'
-                x0[0]: fwhm_G
-                x0[1]: fwhm_L
-                x0[2:2+number of total time delay scan]: time zero of each scan
-                x0[2+num_tot_scan:2+num_tot_scan+num_tau]: time constant (inverse of rate constant) of each decay component
-                x0[2+num_tot_scan+num_tau:2+num_tot_scan+num_tau+num_tau_osc]: time constant of each damped oscillation component
-                x0[2+num_tot_scan+num_tau+num_tau_osc:2+num_tot_scan+num_tau+2*num_tau_osc]: period of each damped oscillation component
-                x0[2+num_tot_scan+num_tau+2*num_tau_osc:]: phase of each damped oscillation component 
+     x0: initial parameter,
+      if irf == 'g','c':
+
+        * 1st: fwhm_(G/L)
+        * 2nd to :math:`2+N_{scan}`: time zero of each scan
+        * :math:`2+N_{scan}` to :math:`2+N_{scan}+N_{\\tau}`: time constant of each decay component
+        * :math:`2+N_{scan}+N_{\\tau}+i`: time constant of each damped oscillation
+        * :math:`2+N_{scan}+N_{\\tau}+N_{osc}+i`: period of each damped oscillation
+        * :math:`2+N_{scan}+N_{\\tau}+2N_{osc}+i`: phase of each damped oscillation component
+
+      if irf == 'pv':
+
+        * 1st and 2nd: fwhm_G, fwhm_L
+        * 3rd to :math:`3+N_{scan}`: time zero of each scan
+        * :math:`3+N_{scan}` to :math:`3+N_{scan}+N_{\\tau}`: time constant of each decay component
+        * :math:`3+N_{scan}+N_{\\tau}+i`: time constant of each damped oscillation
+        * :math:`3+N_{scan}+N_{\\tau}+N_{osc}+i`: period of each damped oscillation
+        * :math:`3+N_{scan}+N_{\\tau}+2N_{osc}+i`: phase of each damped oscillation component
 
      num_comp: number of exponential decay component (except base)
      num_comp_osc: number of damped oscillation component
@@ -154,11 +160,13 @@ def res_grad_both(x0: np.ndarray, num_comp: int, num_comp_osc:int, base: bool, i
 
           * 'g': normalized gaussian distribution,
           * 'c': normalized cauchy distribution,
-          * 'pv': pseudo voigt profile :math:`(1-\\eta)g + \\eta c`
-          For pseudo voigt profile, the mixing parameter eta is calculated by calc_eta routine
-     fix_param_idx: idx for fixed parameter (masked array for `params`)
+          * 'pv': pseudo voigt profile :math:`(1-\\eta)g(f) + \\eta c(f)`
+
+        For pseudo voigt profile, the mixing parameter :math:`\\eta(f_G, f_L)` and
+        uniform fwhm paramter :math:`f(f_G, f_L)` are calculated by `calc_eta` and `calc_fwhm` routine
+     fix_param_idx: idx for fixed parameter (masked array for `x0`)
      t: time points for each data set
-     data: sequence of intensity of datasets
+     intensity: sequence of intensity of datasets
      eps: sequence of estimated error of datasets
 
     Returns:

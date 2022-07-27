@@ -5,7 +5,6 @@ Utilites
    :maxdepth: 4
    :caption: Contents:
 
-   gen_descrip
    match_scale
    calc_broad
    calc_dads

@@ -141,11 +141,9 @@ irf: Optional[str] = 'g', eta: Optional[float] = None) -> np.ndarray:
 
               * 'g': normalized gaussian distribution,
               * 'c': normalized cauchy distribution,
-              * 'pv': pseudo voigt profile :math:`(1-\\eta)g + \\eta c`
+              * 'pv': pseudo voigt profile :math:`(1-\\eta)g(t, {fwhm}) + \\eta c(t, {fwhm})`
        eta: mixing parameter for pseudo voigt profile
-            (only needed for pseudo voigt profile,
-            default value is guessed according to
-            Journal of Applied Crystallography. 33 (6): 1311–1316.)
+            (only needed for pseudo voigt profile)
 
     Returns:
       Convolution of the solution of the rate equation and instrumental

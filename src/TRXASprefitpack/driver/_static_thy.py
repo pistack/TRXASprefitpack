@@ -41,23 +41,8 @@ def fit_static_thy(thy_peak: np.ndarray, fwhm_G_init: np.ndarray, fwhm_L_init: n
                       
       '''
       driver routine for fitting static spectrum with sum of voigt broadend thoretical spectrum,
-      edge and polynomial base line.
-
-      It separates linear and non-linear part of the optimization problem to solve non linear least sequare
-      optimization problem efficiently.
-
-      Finding weight :math:`c_i` which minimizes :math:`\\chi^2` when any other parameters are given is linear problem, 
-      this problem is solved before the each iteration of non linear problem.
-      Since :math:`\\frac{\\partial \\chi^2}{\\partial c_i} = 0` is satisfied, the gradient for
-      our scalar residual function is ,simply, :math:`\\frac{\\partial \\chi^2}{\\partial {param}_i}`. 
-      
-
-      Fitting Model is sum of voigt broadened theoretical spectrum, edge function and base function
-      :math:`c_{0} y(e, {fwhm}_{(G, i)}, {fwhm}_{(L, i), {peak_factor}}) + c_{1}{edge} + {base}`
-      
-      Objective function is half of chi squared value.
-      :math:`\\chi^2 = \sum_i \\left(\\frac{model-data_i}{eps_i}\\right)^2`
-
+      edge and polynomial base line. To solve least square optimization problem efficiently, it implements
+      the seperation scheme.
       Moreover this driver uses two step algorithm to search best parameter, its covariance and
       estimated parameter error.              
 
@@ -104,8 +89,9 @@ def fit_static_thy(thy_peak: np.ndarray, fwhm_G_init: np.ndarray, fwhm_L_init: n
        Returns:
         StaticResult class object
        Note:
-        if initial fwhm_G is zero then such voigt component is treated as lorenzian component
-        if initial fwhm_L is zero then such voigt component is treated as gaussian component
+       
+        * if initial fwhm_G is zero then such voigt component is treated as lorenzian component
+        * if initial fwhm_L is zero then such voigt component is treated as gaussian component
       '''
       num_voigt = 1
       num_param = 3 + 1*(policy == 'both')

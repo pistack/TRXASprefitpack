@@ -41,17 +41,20 @@ In rate equation model, the ground state would be
 
                         first -> 2 -> 3 -> ... -> last
   * -gsi GS_INDEX, --gs_index GS_INDEX
-    * Index of ground state species.
-    1. ``first_and_last``, first and last species are both ground state
-    2. ``first``, first species is ground state
-    3. ``last``,  last species is ground state
-    4. Did not set., There is no ground state species in model rate equation.
-  * --irf {g,c,pv}        
-    * shape of instrument response functon
-    1. g: gaussian distribution
-    2. c: cauchy distribution
-    3. pv: pseudo voigt profile, linear combination of gaussian distribution and cauchy distribution pv = eta*c+(1-eta)*g 
-       the mixing parameter is fixed according to Journal of Applied Crystallography. 33 (6): 1311–1316. 
+   Index of ground state species.
+      * ``first_and_last``, first and last species are both ground state
+      * ``first``, first species is ground state
+      * ``last``,  last species is ground state
+      
+    If `--gs_index` is not set, it assumes there is no ground state species in model rate equation.
+  * --irf {g,c,pv}
+   shape of instrument response functon
+
+    * g: gaussian distribution
+    * c: cauchy distribution
+    * pv: pseudo voigt profile ${PV}(f_G, f_L) = \eta(f_G, f_L) C(f(f_G, f_L)) + (1-\eta(f_G, f_L)) G(f(f_G, f_L))$
+      The uniform fwhm parameter $f(f_G, f_L)$ and mixing parameter $\eta(f_G, f_L)$ are determined according to 
+      Journal of Applied Crystallography. 33 (6): 1311–1316. 
   * --fwhm_G FWHM_G       
                         full width at half maximum for gaussian shape
                         It would not be used when you set cauchy irf function

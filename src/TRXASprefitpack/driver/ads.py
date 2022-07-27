@@ -24,9 +24,11 @@ intensity: Optional[np.ndarray] = None, eps: Optional[np.ndarray] = None) -> Tup
       tau: life time for each component
       base: whether or not include baseline [default: True]
       irf: shape of instrumental response function [default: g]
+
            * 'g': normalized gaussian distribution,
            * 'c': normalized cauchy distribution,
            * 'pv': pseudo voigt profile :math:`(1-\\eta)g(t, {fwhm}) + \\eta c(t, {fwhm})`
+
       eta: mixing parameter for pseudo voigt profile
            (only needed for pseudo voigt profile)
       intensity: intensity of energy scan dataset
@@ -85,14 +87,18 @@ intensity: Optional[np.ndarray] = None, eps: Optional[np.ndarray] = None) -> Tup
       V: eigenvector of rate equation matrix 
       c: coefficient to match initial condition of rate equation
       exclude: exclude either 'first' or 'last' element or both 'first' and 'last' element.
+
                * 'first' : exclude first element
                * 'last' : exclude last element
                * 'first_and_last' : exclude both first and last element  
                * None : Do not exclude any element [default]
+
       irf: shape of instrumental response function [default: g]
+
            * 'g': normalized gaussian distribution,
            * 'c': normalized cauchy distribution,
            * 'pv': pseudo voigt profile :math:`(1-\\eta)g(t, {fwhm}) + \\eta c(t, {fwhm})`
+           
       eta: mixing parameter for pseudo voigt profile (only needed for pseudo voigt profile)
       intensity: intensity of energy scan dataset
       eps: standard error of data 

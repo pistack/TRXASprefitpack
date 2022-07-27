@@ -7,7 +7,7 @@ path = os.path.dirname(os.path.realpath(__file__))
 sys.path.append(path+"/../src/")
 
 from TRXASprefitpack import calc_eta, calc_fwhm, deriv_eta, deriv_fwhm
-from TRXASprefitpack import test_num_deriv
+from TRXASprefitpack.mathfun.deriv_tst import test_num_deriv
 from TRXASprefitpack import dmp_osc_conv_gau, dmp_osc_conv_cauchy
 from TRXASprefitpack import deriv_dmp_osc_conv_gau, deriv_dmp_osc_conv_cauchy
 

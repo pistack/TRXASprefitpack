@@ -171,9 +171,11 @@ class StaticResult(dict):
 def save_StaticResult(result: StaticResult, filename: str):
       '''
       save static fitting result to the h5 file
+
       Args:
        result: static fitting result
        filename: filename to store result. It will store result to filename.h5
+
       Returns:
        h5 file which stores result
       '''
@@ -230,8 +232,10 @@ def save_StaticResult(result: StaticResult, filename: str):
 def load_StaticResult(filename: str) -> StaticResult:
       '''
       load static fitting result from h5 file
+
       Args:
        filename: filename to load result. It will load result to filename.h5
+       
       Returns:
        loaded StaticResult instance
       '''
