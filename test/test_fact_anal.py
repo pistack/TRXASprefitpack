@@ -14,7 +14,7 @@ class TestFactAnal(unittest.TestCase):
 
     def test_fact_anal_exp_conv_1(self):
         '''
-        Test factor analysis routine (uniform noise lovel)
+        Test factor analysis routine (uniform noise level)
         '''
         fwhm = 0.15
         c_ref = np.array([1, -0.5, -0.25])

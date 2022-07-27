@@ -38,7 +38,7 @@ class TestDerivExpConvIRF(unittest.TestCase):
         c = np.array([1, 1, 1])
         tst = deriv_exp_sum_conv_gau(t, fwhm, k, c, base)
         ref = test_num_deriv(lambda t, fwhm, k1, k2: exp_conv_gau(t, fwhm, k1)+exp_conv_gau(t, fwhm, k2)+exp_conv_gau(t, fwhm, 0),
-        t, fwhm, 1/tau_1, 1/tau_2, eps=5e-8)
+        t, fwhm, 1/tau_1, 1/tau_2)
         result = np.allclose(tst, ref)
         self.assertEqual(result, True)
 
@@ -55,7 +55,7 @@ class TestDerivExpConvIRF(unittest.TestCase):
         c = np.array([1, 1, 1])
         tst = deriv_exp_sum_conv_gau(t, fwhm, k, c, base)
         ref = test_num_deriv(lambda t, fwhm, k1, k2: exp_conv_gau(t, fwhm, k1)+exp_conv_gau(t, fwhm, k2),
-        t, fwhm, 1/tau_1, 1/tau_2, eps=5e-8)
+        t, fwhm, 1/tau_1, 1/tau_2)
         result = np.allclose(tst, ref)
         self.assertEqual(result, True)
 
@@ -85,7 +85,7 @@ class TestDerivExpConvIRF(unittest.TestCase):
         tst = deriv_exp_sum_conv_cauchy(t, fwhm, k, c, base)
         ref = test_num_deriv(lambda t, fwhm, k1, k2: exp_conv_cauchy(t, fwhm, k1)+
         exp_conv_cauchy(t, fwhm, k2)+exp_conv_cauchy(t, fwhm, 0),
-        t, fwhm, 1/tau_1, 1/tau_2, eps=5e-8)
+        t, fwhm, 1/tau_1, 1/tau_2)
         result = np.allclose(tst, ref)
         self.assertEqual(result, True)
 
@@ -103,7 +103,7 @@ class TestDerivExpConvIRF(unittest.TestCase):
         tst = deriv_exp_sum_conv_cauchy(t, fwhm, k, c, base)
         ref = test_num_deriv(lambda t, fwhm, k1, k2: exp_conv_cauchy(t, fwhm, k1)+
         exp_conv_cauchy(t, fwhm, k2),
-        t, fwhm, 1/tau_1, 1/tau_2, eps=5e-8)
+        t, fwhm, 1/tau_1, 1/tau_2)
         result = np.allclose(tst, ref)
         self.assertEqual(result, True)
     
