@@ -2,7 +2,7 @@ Utility
 ========
 
 .. toctree::
-   :maxdepth: 4
+   :maxdepth: 1
 
    example.calc_broad
    example.fit_static
