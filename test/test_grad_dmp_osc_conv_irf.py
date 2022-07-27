@@ -22,7 +22,7 @@ class TestDerivDmpOscConvIRF(unittest.TestCase):
         phase = np.pi/4
         t = np.linspace(-1, 100, 2001)
         tst = deriv_dmp_osc_conv_gau(t, fwhm, 1/tau, period, phase)
-        ref = test_num_deriv(dmp_osc_conv_gau, t, fwhm, 1/tau, period, phase, eps=5e-8)
+        ref = test_num_deriv(dmp_osc_conv_gau, t, fwhm, 1/tau, period, phase)
         result = np.isclose(tst, ref)
         result = np.allclose(tst, ref)
         self.assertEqual(result, True)
@@ -37,7 +37,7 @@ class TestDerivDmpOscConvIRF(unittest.TestCase):
         phase = np.pi/4
         t = np.linspace(-1, 100, 2001)
         tst = deriv_dmp_osc_conv_cauchy(t, fwhm, 1/tau, period, phase)
-        ref = test_num_deriv(dmp_osc_conv_cauchy, t, fwhm, 1/tau, period, phase, eps=5e-8)
+        ref = test_num_deriv(dmp_osc_conv_cauchy, t, fwhm, 1/tau, period, phase)
         result = np.allclose(tst, ref)
         self.assertEqual(result, True)
 
