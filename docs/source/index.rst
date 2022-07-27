@@ -14,8 +14,8 @@ The documentation for the next release (TRXASprefitpack version 0.6.0) is under 
 
    feature
    math
+   example
    utility
-   utility_example
    TRXASprefitpack
 
 
