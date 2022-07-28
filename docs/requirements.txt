@@ -1,5 +1,6 @@
 myst_parser
 sphinx_automodapi
+sphinx_material
 numpy
 scipy
 h5py
