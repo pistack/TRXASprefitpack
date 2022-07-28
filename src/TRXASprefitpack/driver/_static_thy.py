@@ -18,7 +18,7 @@ from ..mathfun.A_matrix import fact_anal_A
 from ..res.parm_bound import set_bound_t0
 from ..res.res_thy import residual_thy, res_grad_thy
 
-def fit_static_thy(thy_peak: np.ndarray, fwhm_G_init: np.ndarray, fwhm_L_init: np.ndarray,
+def fit_static_thy(thy_peak: np.ndarray, fwhm_G_init: float, fwhm_L_init: float,
                    policy: str, peak_shift: Optional[float] = None,
                    peak_scale: Optional[float] = None,
                    edge: Optional[str] = None, 
