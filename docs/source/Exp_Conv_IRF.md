@@ -85,7 +85,7 @@ exp_conv_gau_anal = exp_conv_gau(t_sample, fwhm_G, 1/tau) # analytic
 %timeit convolve(gau_irf_num, decay_num, 'same')
 ```
 
-    286 µs ± 6.06 µs per loop (mean ± std. dev. of 7 runs, 1,000 loops each)
+    224 µs ± 1.66 µs per loop (mean ± std. dev. of 7 runs, 1000 loops each)
     
 
 
@@ -93,7 +93,7 @@ exp_conv_gau_anal = exp_conv_gau(t_sample, fwhm_G, 1/tau) # analytic
 %timeit exp_conv_gau(t_sample, fwhm_G, 1/tau)
 ```
 
-    39.4 µs ± 391 ns per loop (mean ± std. dev. of 7 runs, 10,000 loops each)
+    23.9 µs ± 492 ns per loop (mean ± std. dev. of 7 runs, 10000 loops each)
     
 
 Trivally, calculation of analytic one takes much less time than numerical one.
@@ -148,7 +148,7 @@ exp_conv_cauchy_anal = exp_conv_cauchy(t_sample, fwhm_L, 1/tau) # analytic
 %timeit convolve(cauchy_irf_num, decay_num, 'same')
 ```
 
-    281 µs ± 5.33 µs per loop (mean ± std. dev. of 7 runs, 1,000 loops each)
+    213 µs ± 66.5 ns per loop (mean ± std. dev. of 7 runs, 1000 loops each)
     
 
 
@@ -156,7 +156,7 @@ exp_conv_cauchy_anal = exp_conv_cauchy(t_sample, fwhm_L, 1/tau) # analytic
 %timeit exp_conv_cauchy(t_sample, fwhm_L, 1/tau)
 ```
 
-    84.7 µs ± 799 ns per loop (mean ± std. dev. of 7 runs, 10,000 loops each)
+    49.1 µs ± 264 ns per loop (mean ± std. dev. of 7 runs, 10000 loops each)
     
 
 Analytic calculation of convolution of exponential decay and cauchy instrumental response function needs about twice much time that convolution with gaussian one. Since it needs computation of special function whoose range and domain are both complex ($\mathbb{C}$)
@@ -207,7 +207,7 @@ Voigt function is much complex than gaussian and cauchy function, so it takes mu
 %timeit gau_irf(t, fwhm_G)
 ```
 
-    87 µs ± 984 ns per loop (mean ± std. dev. of 7 runs, 10,000 loops each)
+    39.9 µs ± 192 ns per loop (mean ± std. dev. of 7 runs, 10000 loops each)
     
 
 
@@ -215,7 +215,7 @@ Voigt function is much complex than gaussian and cauchy function, so it takes mu
 %timeit cauchy_irf(t, fwhm_L)
 ```
 
-    8.46 µs ± 176 ns per loop (mean ± std. dev. of 7 runs, 100,000 loops each)
+    5.96 µs ± 14.4 ns per loop (mean ± std. dev. of 7 runs, 100000 loops each)
     
 
 
@@ -223,7 +223,7 @@ Voigt function is much complex than gaussian and cauchy function, so it takes mu
 %timeit voigt(t, fwhm_G, fwhm_L)
 ```
 
-    331 µs ± 5.4 µs per loop (mean ± std. dev. of 7 runs, 1,000 loops each)
+    236 µs ± 154 ns per loop (mean ± std. dev. of 7 runs, 1000 loops each)
     
 
 
@@ -239,7 +239,7 @@ exp_conv_pvoigt_anal = exp_conv_pvoigt(t_sample, fwhm, eta, 1/tau) # analytic
 %timeit exp_conv_pvoigt(t_sample, fwhm, eta, 1/tau)
 ```
 
-    130 µs ± 1.31 µs per loop (mean ± std. dev. of 7 runs, 10,000 loops each)
+    79.1 µs ± 161 ns per loop (mean ± std. dev. of 7 runs, 10000 loops each)
     
 
 As one can expected, the computation time for `exp_conv_pvoigt` is just sum of computation time for `exp_conv_gau` and `exp_conv_cauchy`.
@@ -288,22 +288,23 @@ Assume S/N of data is 10 and use gaussian instrumental response function
 
 ```python
 fwhm = 0.15
-tau = [fwhm/20, fwhm/10, fwhm/5, fwhm/2, fwhm, 10*fwhm, 20*fwhm]
+tau = [fwhm/20, fwhm/10, fwhm/5, fwhm/2, fwhm, 2*fwhm, 5*fwhm, 10*fwhm, 20*fwhm]
 t_sample = np.linspace(-1, 1, 201)
 noise = np.random.normal(0, 1/10, t_sample.size) # define noise
-model = np.empty((t_sample.size, 7))
+model = np.empty((t_sample.size, 9))
 ```
 
 
 ```python
 # compute model
-for i in range(7):
+for i in range(9):
     model[:, i] = exp_conv_gau(t_sample, fwhm, 1/tau[i])
 ```
 
+
 ```python
 # plot model
-for i in range(7):
+for i in range(9):
     plt.plot(t_sample, model[:, i], label=f'tau: {tau[i]}, fwhm: {fwhm}')
 plt.legend()
 plt.show()
@@ -311,17 +312,17 @@ plt.show()
 
 
     
-![png](Exp_Conv_IRF_files/Exp_Conv_IRF_40_0.png)
+![png](Exp_Conv_IRF_files/Exp_Conv_IRF_39_0.png)
     
 
 
-Due to the broadening feature of gaussian instrumental response function, it is hard to detect exponential decay feature with lifetime less than full width at half maximum of irf function.
+Due to the broadening feature of gaussian instrumental response function, it is hard to detect exponential decay feature with lifetime less than half of full width at half maximum of irf function.
 
 
 ```python
 # plot model with noise
 
-for i in range(7):
+for i in range(9):
     plt.plot(t_sample, model[:, i]+noise, label=f'tau: {tau[i]}, fwhm: {fwhm}')
 plt.legend()
 plt.show()
@@ -329,7 +330,7 @@ plt.show()
 
 
     
-![png](Exp_Conv_IRF_files/Exp_Conv_IRF_42_0.png)
+![png](Exp_Conv_IRF_files/Exp_Conv_IRF_41_0.png)
     
 
 
