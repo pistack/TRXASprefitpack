@@ -1,5 +1,5 @@
 myst_parser
-sphinx_readable_theme
+sphinx_automodapi
 numpy
 scipy
 h5py
