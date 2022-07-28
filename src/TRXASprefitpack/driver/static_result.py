@@ -249,7 +249,7 @@ def load_StaticResult(filename: str) -> StaticResult:
             expt = f['experiment']
             fit_res = f['fitting_result']
             result['e'] = np.atleast_1d(expt['energy'])
-            result['data'] = np.atleast_1d(expt['intensity'])
+            result['intensity'] = np.atleast_1d(expt['intensity'])
             result['eps'] = np.atleast_1d(expt['error'])
             result['model'] = fit_res.attrs['model']
             if result['model'] == 'thy':
