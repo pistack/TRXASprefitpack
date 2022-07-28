@@ -210,13 +210,13 @@ def confidence_interval(result, alpha: float) -> CIResult:
     elif result['model'] == 'voigt':
         args = [F_alpha, dfn, dfd, chi2_opt, 0, params, result['bounds'],
         res_grad_voigt,
-        result['n_voigt'], result['edge'], result['base_order'],
+        result['n_voigt'], result['edge'], result['base_order'], fix_param_idx,
         result['e'], result['intensity'], result['eps']]
     elif result['model'] == 'thy':
         args = [F_alpha, dfn, dfd, chi2_opt, 0, params, result['bounds'],
         res_grad_thy,
         result['policy'], result['thy_peak'], 
-        result['edge'], result['base_order'],
+        result['edge'], result['base_order'], fix_param_idx,
         result['e'], result['intensity'], result['eps']]
     
     sub_scan_idx = scan_idx[~select_idx]
