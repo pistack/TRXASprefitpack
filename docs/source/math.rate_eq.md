@@ -30,7 +30,7 @@ Then we can write
 \begin{equation*}
 A = V \Lambda V^{-1}
 \end{equation*}
-, where $V$ is eigen matrix of $A$ and $\Lambda = \mathrm{diag}\left(\lambda_1,\dotsc,\lambda_n\right)$.
+, where $V$ is eigen matrix of $A$ and $\Lambda = \mathrm{Diag}\left(\lambda_1,\dotsc,\lambda_n\right)$.
 
 Then,
 
@@ -92,7 +92,7 @@ So, if one finds weigh vector $\mathbf{w}$ from time delay scan fitting,
 Then one can deduce chemical or physically meaningful difference absorption coefficient $\Delta \mathbf{A}$ as
 
 \begin{equation*}
-\Delta \mathbf{A} = V'^{-1} \mathbf{w}
+\Delta \mathbf{A} = V'^{-T} \mathbf{w}
 \end{equation*}
 
 Above equation only holds when number of observed exponential decay component and excited species in rate equation are same. 
