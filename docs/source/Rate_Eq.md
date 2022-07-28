@@ -75,7 +75,7 @@ k_1 & -k_2 & 0 \\
 
 This type of 1st order rate equation can be solved via ``solve_seq_model``. Indeed ``solve_seq_model`` can solve following type of sequential decay.
 
-```{code-block}python
+```python
 
 1 --> 2 --> 3 --> ... --> n
 ```
@@ -216,7 +216,7 @@ plt.show()
 
 
 Consider following branched decay model
-```{code-block} python
+```python
 '''
     k1     k3    
 A  ---> B ---> GS
