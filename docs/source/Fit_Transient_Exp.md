@@ -3,7 +3,7 @@
 1. Fitting with exponential decay model
 2. Save and Load fitting result
 3. Calculates species associated coefficent from fitting result
-4. Evaluates F-test baed confidence interval
+4. Evaluates F-test based confidence interval
 
 
 In this example, we only deal with gaussian irf 

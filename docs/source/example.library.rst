@@ -9,3 +9,4 @@ Library
    Dmp_Osc_Conv_IRF
    Rate_Eq
    Fit_Transient_Exp
+   Fit_Transient_Both
