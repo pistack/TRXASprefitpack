@@ -101,7 +101,7 @@ Our package `TRXASprefitpack` provides alternative error paramter estimation met
 Define $\chi^2_i(x)$ as
 
 \begin{equation*}
-\chi^2_i (\theta_0) = {arg}\,{min}_{\mathbf{\theta}, \theta_i = x} \chi^2 (\theta)
+\chi^2_i (x) = {arg}\,{min}_{\mathbf{\theta}, \theta_i = x} \chi^2 (\theta)
 \end{equation*}
 
 Then the number of paramter corresponding to $\chi^2_i$ is $P-1$.
