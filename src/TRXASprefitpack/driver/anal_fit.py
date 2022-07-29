@@ -71,7 +71,6 @@ class CIResult(dict):
      param_name (sequence of str): name of parameter
      x (np.ndarray): best parameter
      ci (sequence of tuple): confidence interval of each parameter at significant level alpha
-     message (str): message for confidence interval calculation
     '''
 
     def __getattr__(self, name):
@@ -102,9 +101,6 @@ class CIResult(dict):
                 tmp_doc_lst.append(f"{pv: .8f}".rstrip('0').rstrip('.'))
                 tmp_doc_lst.append(f"+ {ci[1]: .8f}".rstrip('0').rstrip('.'))
                 doc_lst.append(' '.join(tmp_doc_lst))
-        doc_lst.append(' ')
-        doc_lst.append('*Note*')
-        doc_lst.append(f"{self['message']}")
         return '\n'.join(doc_lst)
 
 
@@ -176,22 +172,6 @@ def confidence_interval(result, alpha: float) -> CIResult:
     F_alpha = f.ppf(1-alpha, dfn, dfd)
     norm_alpha = np.ceil(norm.ppf(1-alpha/2))
 
-    if result['model'] in ['decay', 'dmp_osc', 'both']:
-        if result['irf'] in ['g', 'c']:
-            num_irf = 1
-        elif result['irf'] == 'pv':
-            num_irf = 2
-        num_t0 = 0
-        for d in result['intensity']:
-            num_t0 = num_t0 + d.shape[1]
-        if num_t0 > 1:
-            message = 'The confidence interval for non shared parameter especially time zeros are not calculated.'
-            select_idx[num_irf:num_irf+num_t0] = True
-        else:
-            message = 'The confidence interval of every non-fixed parameters are calculated'    
-    else:
-        message = 'The confidence interval of every non-fixed parameters are calculated'
-
     if result['model'] == 'decay':
         args = [F_alpha, dfn, dfd, chi2_opt, 0, params, result['bounds'], 
         res_grad_decay, result['n_decay'],
@@ -244,7 +224,6 @@ def confidence_interval(result, alpha: float) -> CIResult:
     ci_res['param_name'] = result['param_name']
     ci_res['x'] = result['x']
     ci_res['ci'] = ci_lst
-    ci_res['message'] = message
     return ci_res
 
 
