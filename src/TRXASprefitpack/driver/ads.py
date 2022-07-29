@@ -65,11 +65,12 @@ intensity: Optional[np.ndarray] = None, eps: Optional[np.ndarray] = None) -> Tup
       U, s, Vh = svd(A_scaled.T, full_matrices= False)
       mask = s > cond*s[0]
       U_turn = U[:,mask]; s_turn = s[mask]; Vh_turn = Vh[mask, :]
-      cov = Vh_turn.T @ np.einsum('i,ij->ij', 1/s_turn**2, Vh_turn)
       c[:,i] = np.einsum('j,ij->ij', 1/s_turn, Vh_turn.T) @ (U_turn.T @ data_scaled[i,:])
       res = data_scaled[i,:] - (c[:,i] @ A_scaled)
-      red_chi2 = np.sum(res**2)/dof
-      c_eps[:,i] = np.sqrt(red_chi2*np.diag(cov))
+      if dof != 0:
+        red_chi2 = np.sum(res**2)/dof
+        cov = Vh_turn.T @ np.einsum('i,ij->ij', 1/s_turn**2, Vh_turn)
+        c_eps[:,i] = np.sqrt(red_chi2*np.diag(cov))
 
 
     return c, c_eps, c.T @ A
@@ -150,8 +151,9 @@ intensity: Optional[np.ndarray] = None, eps: Optional[np.ndarray] = None) -> Tup
       cov = Vh_turn.T @ np.einsum('i,ij->ij', 1/s_turn**2, Vh_turn)
       abs[:,i] = np.einsum('j,ij->ij', 1/s_turn, Vh_turn.T) @ (U_turn.T @ data_scaled[i,:])
       res = data_scaled[i,:] - (abs[:,i] @ A_scaled)
-      red_chi2 = np.sum(res**2)/dof
-      abs_eps[:,i] = np.sqrt(red_chi2*np.diag(cov))
+      if dof != 0:
+        red_chi2 = np.sum(res**2)/dof
+        abs_eps[:,i] = np.sqrt(red_chi2*np.diag(cov))
 
 
     return abs, abs_eps, abs.T @ B
