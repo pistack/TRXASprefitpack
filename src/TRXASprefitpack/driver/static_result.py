@@ -6,8 +6,12 @@ submodule for reporting fitting process of static spectrum result
 :license: LGPL3.
 '''
 
+from typing import Callable
 import numpy as np
+from scipy.special import erfc, wofz
 import h5py as h5
+from ..mathfun.peak_shape import voigt, \
+      edge_gaussian, edge_lorenzian
 
 class StaticResult(dict):
       '''
@@ -302,3 +306,178 @@ def load_StaticResult(filename: str) -> StaticResult:
             result['cov'] = np.atleast_2d(fit_res_mis['cov'])
             result['cov_scaled'] = np.atleast_2d(fit_res_mis['cov_scaled'])
       return result
+
+def deriv_edge_g_aux(e: np.ndarray, fwhm_G: float) -> np.ndarray:
+    '''
+    derivative of gaussian type edge
+
+    Args:
+     e: energy
+     fwhm_G: full width at half maximum
+    
+    Returns:
+     first derivative of gaussian edge function
+    '''
+    tmp = np.exp(-4*np.log(2)*(e/fwhm_G)**2)/np.sqrt(np.pi)
+
+    return 2*np.sqrt(np.log(2))/fwhm_G*tmp
+
+def dderiv_edge_g_aux(e: np.ndarray, fwhm_G: float) -> np.ndarray:
+    '''
+    2nd derivative of gaussian type edge
+
+    Args:
+     e: energy
+     fwhm_G: full width at half maximum
+    
+    Returns:
+     2nd derivative of gaussian edge function
+    '''
+    tmp = -8*np.log(2)*e*np.exp(-4*np.log(2)*(e/fwhm_G)**2)/(np.sqrt(np.pi)*fwhm_G**2)
+
+    return 2*np.sqrt(np.log(2))/fwhm_G*tmp
+
+def deriv_edge_l_aux(e: np.ndarray, fwhm_L: float) -> np.ndarray:
+    '''
+    1st derivative of lorenzian type edge
+
+    Args:
+     e: energy
+    
+    Returns:
+     first derivative of lorenzian type function
+    '''
+    tmp = 1/np.pi/(e**2+fwhm_L**2/4)
+    return fwhm_L*tmp/2
+
+def dderiv_edge_l_aux(e: np.ndarray, fwhm_L: float) -> np.ndarray:
+    '''
+    2nd derivative of lorenzian type edge
+
+    Args:
+     e: energy
+    
+    Returns:
+     second derivative of lorenzian type function
+    '''
+    tmp = -e/np.pi/(e**2+fwhm_L**2/4)**2
+    return fwhm_L*tmp
+
+def deriv_voigt_aux(e: np.ndarray, fwhm_G: float, fwhm_L: float) -> np.ndarray:
+    '''
+    1st derivative of voigt profile
+
+    Args:
+     e: energy
+     fwhm_G: full width at half maximum of gaussian part :math:(2\\sqrt{2\\log(2)}\\sigma)
+     fwhm_L: full width at half maximum of lorenzian part :math:(2\\gamma)
+    
+    Returns:
+     first derivative of voigt profile 
+    '''
+    if fwhm_G < 1e-8:
+        tmp = fwhm_L/np.pi/(e**2+fwhm_L**2/4)**2
+        return -e*tmp
+    
+    sigma = fwhm_G/(2*np.sqrt(2*np.log(2)))
+    if fwhm_L < 1e-8:
+        tmp = np.exp(-(e/sigma)**2/2)/(sigma*np.sqrt(2*np.pi))
+        return -e/sigma**2*tmp
+    
+    z = (e+complex(0,fwhm_L/2))/(sigma*np.sqrt(2))
+    return -(z*wofz(z)).real/(sigma**2*np.sqrt(np.pi))
+
+def dderiv_voigt_aux(e: np.ndarray, fwhm_G: float, fwhm_L: float) -> np.ndarray:
+    '''
+    2nd derivative of voigt profile
+
+    Args:
+     e: energy
+     fwhm_G: full width at half maximum of gaussian part :math:(2\\sqrt{2\\log(2)}\\sigma)
+     fwhm_L: full width at half maximum of lorenzian part :math:(2\\gamma)
+    
+    Returns:
+     second derivative of voigt profile 
+    '''
+
+    if fwhm_G < 1e-8:
+        tmp = fwhm_L/np.pi/(e**2+fwhm_L**2/4)**2
+        return (4*e**2/(e**2+fwhm_L**2/4)-1)*tmp
+    
+    sigma = fwhm_G/(2*np.sqrt(2*np.log(2)))
+    if fwhm_L < 1e-8:
+        tmp = np.exp(-(e/sigma)**2/2)/(sigma*np.sqrt(2*np.pi))
+        return 1/sigma**2*((e/sigma)**2-1)*tmp
+    
+    z = (e+complex(0,fwhm_L/2))/(sigma*np.sqrt(2))
+    f = wofz(z)/(sigma*np.sqrt(2*np.pi))
+    return 1/sigma**4*\
+      ((e**2-fwhm_L**2/4-sigma**2)*f.real - e*fwhm_L*f.imag + fwhm_L/(2*np.pi))
+
+def static_spectrum(e: np.ndarray, 
+                    result: StaticResult, deriv_order: int = 0) -> Callable:
+      '''
+      Evaluates static spectrum from static spectrum
+      fitting result.
+
+      Args:
+       e: energy at which evaulate static spectrum
+       result: static spectrum fitting result
+       deriv_order ({0, 1, 2}): order of derivative. [default: 0]
+      
+      Returns:
+       Evaluated static spectrum
+      
+      Note:
+
+       1. Currently, it only supports `model == voigt`.
+       2. Baseline feature is removed.
+      '''
+      if result['n_voigt'] == 0:
+            tmp = 0
+      else:
+            e0_voigt = result['x'][:result['n_voigt']]
+            fwhm_G_voigt = result['x'][result['n_voigt']:2*result['n_voigt']]
+            fwhm_L_voigt = result['x'][2*result['n_voigt']:3*result['n_voigt']]
+            V = np.empty((result['n_voigt'], e.size))
+            if deriv_order == 0:
+                  for i in range(result['n_voigt']):
+                        V[i, :] = voigt(e-e0_voigt[i], fwhm_G_voigt[i], fwhm_L_voigt[i])
+            elif deriv_order == 1:
+                  for i in range(result['n_voigt']):
+                        V[i, :] = deriv_voigt_aux(e-e0_voigt[i], fwhm_G_voigt[i],
+                        fwhm_L_voigt[i])
+            else:
+                  for i in range(result['n_voigt']):
+                        V[i, :] = dderiv_voigt_aux(e-e0_voigt[i], fwhm_G_voigt[i],
+                        fwhm_L_voigt[i])
+            tmp = (result['c'][:result['n_voigt']]@V).flatten()
+
+      if result['edge'] == 'g':
+            if deriv_order == 0:
+                  tmp = tmp + result['c'][result['n_voigt']]*\
+                        edge_gaussian(e-result['x'][-2],
+                        result['x'][-1])
+            elif deriv_order == 1:
+                  tmp = tmp + result['c'][result['n_voigt']]*\
+                        deriv_edge_g_aux(e-result['x'][-2],
+                        result['x'][-1])
+            else:
+                  tmp = tmp + result['c'][result['n_voigt']]*\
+                        dderiv_edge_g_aux(e-result['x'][-2],
+                        result['x'][-1])
+      elif result['edge'] == 'l':
+            if deriv_order == 0:
+                  tmp = tmp + result['c'][result['n_voigt']]*\
+                        edge_lorenzian(e-result['x'][-2],
+                        result['x'][-1])
+            elif deriv_order == 1:
+                  tmp = tmp + result['c'][result['n_voigt']]*\
+                        deriv_edge_l_aux(e-result['x'][0],
+                        result['x'][1])
+            else:
+                  tmp = tmp + result['c'][result['n_voigt']]*\
+                        dderiv_edge_l_aux(e-result['x'][0],
+                        result['x'][1])
+
+      return tmp
