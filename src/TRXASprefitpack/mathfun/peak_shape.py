@@ -52,15 +52,15 @@ def voigt(e: Union[float, np.ndarray], fwhm_G: float, fwhm_L: float) -> Union[fl
      voigt profile 
 
     Note:
-     * if fwhm_G is zero it returns normalized lorenzian shape
-     * if fwhm_L is zero it returns normalized gaussian shape
+     * if fwhm_G is (<1e-8) it returns normalized lorenzian shape
+     * if fwhm_L is (<1e-8) it returns normalized gaussian shape
     '''
     sigma = fwhm_G/(2*np.sqrt(2*np.log(2)))
     
-    if fwhm_G == 0:
+    if fwhm_G < 1e-8:
         return fwhm_L/2/np.pi/(e**2+fwhm_L**2/4)
 
-    if fwhm_L == 0:
+    if fwhm_L < 1e-8:
         return np.exp(-(e/sigma)**2/2)/(sigma*np.sqrt(2*np.pi))
     
     z = (e+complex(0,fwhm_L/2))/(sigma*np.sqrt(2))
@@ -191,7 +191,7 @@ def deriv_voigt(e: Union[float, np.ndarray], fwhm_G: float, fwhm_L: float) -> np
      * 2nd column: df/d(fwhm_G)
      * 3rd column: df/d(fwhm_L)
 
-     if `fwhm_G` is zero then,
+     if `fwhm_G` is (<1e-8) then,
     
      * 1st column: dl/de
      * 2nd column: 0
@@ -199,7 +199,7 @@ def deriv_voigt(e: Union[float, np.ndarray], fwhm_G: float, fwhm_L: float) -> np
     
      L means normalized lorenzian shape with full width at half maximum parameter: `fwhm_L`
 
-     if `fwhm_L` is zero it returns 
+     if `fwhm_L` is (<1e-8) it returns 
 
      * 1st column: dg/de
      * 2nd column: dg/d(fwhm_G)
@@ -208,7 +208,7 @@ def deriv_voigt(e: Union[float, np.ndarray], fwhm_G: float, fwhm_L: float) -> np
      g means normalized gaussian shape with full width at half maximum parameter: `fwhm_G`
     '''
 
-    if fwhm_G == 0:
+    if fwhm_G < 1e-8:
         tmp = fwhm_L/2/np.pi/(e**2+fwhm_L**2/4)**2
         if isinstance(e, np.ndarray):
             grad = np.empty((e.size, 3))
@@ -223,7 +223,7 @@ def deriv_voigt(e: Union[float, np.ndarray], fwhm_G: float, fwhm_L: float) -> np
         return grad
     
     sigma = fwhm_G/(2*np.sqrt(2*np.log(2)))
-    if fwhm_L == 0:
+    if fwhm_L < 1e-8:
         tmp = np.exp(-(e/sigma)**2/2)/(sigma*np.sqrt(2*np.pi))
         if isinstance(e, np.ndarray):
             grad = np.empty((e.size, 3))
