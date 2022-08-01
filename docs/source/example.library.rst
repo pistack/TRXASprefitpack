@@ -10,3 +10,4 @@ Library
    Rate_Eq
    Fit_Transient_Exp
    Fit_Transient_Both
+   Fit_Static_voigt
