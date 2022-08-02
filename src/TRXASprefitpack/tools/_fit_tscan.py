@@ -35,6 +35,7 @@ def save_TransientResult_txt(result: TransientResult, dirname: str):
       Returns:
        `fit_summary.txt`: Summary for the fitting result
        `weight_{name_of_dset[i]}.txt`: Weight of each model component of i th dataset
+       `phase_{name_of_dset[i]}.txt`: Phase factor of each oscillation component of i th dataset
        `fit_{name_of_dset[i]}.txt`: fitting curve for i th dataset
        `fit_osc_{name_of_dset[i]}.txt`: oscillation part of fitting curve for i th dataset [model = 'both']
        `fit_decay_{name_of_dset[i]}.txt`: decay part of fitting curve for i th dataset [model = 'both']
@@ -69,6 +70,9 @@ def save_TransientResult_txt(result: TransientResult, dirname: str):
 
             np.savetxt(f"{dirname}/weight_{result['name_of_dset'][i]}.txt", result['c'][i], fmt=coeff_fmt,
             header=coeff_header)
+            if result['model'] in ['dmp_osc', 'both']:
+                np.savetxt(f"{dirname}/phase_{result['name_of_dset'][i]}.txt", result['phase'][i], fmt=coeff_fmt,
+                header=coeff_header)   
             fit_save = np.vstack((result['t'][i], result['fit'][i].T)).T
             np.savetxt(f"{dirname}/fit_{result['name_of_dset'][i]}.txt", fit_save, fmt=fit_fmt, header=fit_header)
             if result['model'] == 'both':
@@ -166,15 +170,13 @@ epilog = '''
 
 4. If you did not set tau and `mode=decay` then `--no_base` option is discouraged.
 
-5. If you set `mode=decay` then any parameter whoose subscript is `osc` is discarded (i.e. tau_osc, period_osc, phase_osc).
+5. If you set `mode=decay` then any parameter whoose subscript is `osc` is discarded (i.e. tau_osc, period_osc).
 
 6. If you set `mode=osc` then `tau` parameter is discarded. Also, baseline feature is not included in fitting function.
 
-7. The number of tau_osc, period_osc and phase_osc parameter should be same
+7. The number of tau_osc and period_osc parameter should be same
 
-8. phase_osc should be confined in [-pi, pi] (pi ~ 3.14)
-
-9. If you set `mode=both` then you should set `tau`, `tau_osc`, `period_osc` and `phase_osc`. However the number of `tau` and `tau_osc` need not to be same.
+8. If you set `mode=both` then you should set `tau`, `tau_osc` and `period_osc`. However the number of `tau` and `tau_osc` need not to be same.
 '''
 
 mode_help = '''
@@ -239,8 +241,6 @@ def fit_tscan():
                         help='lifetime of each damped oscillation component [mode: osc, both]')
     parser.add_argument('--period_osc', type=float, nargs='+',
                         help='period of the vibration of each damped oscillation component [mode: osc, both]')
-    parser.add_argument('--phase_osc', type=float, nargs='+',
-    help='phase factor of each damped oscilliation component [model: osc, both]')
     parser.add_argument('--no_base', action='store_false',
                         help='exclude baseline for fitting [mode: decay, both]')
     parser.add_argument('--fix_irf', action='store_true',
@@ -327,15 +327,12 @@ def fit_tscan():
     if args.mode in ['osc', 'both']:
         tau_osc_init = np.array(args.tau_osc)
         period_osc_init = np.array(args.period_osc)
-        phase_osc_init = np.array(args.phase_osc)
         dargs.append(tau_osc_init)
         dargs.append(period_osc_init)
-        dargs.append(phase_osc_init)
     
     if args.mode == 'both':
         dargs.append(base)
 
-    
     result = FITDRIVER[args.mode](irf, fwhm_init, t0_init, *dargs, do_glb=args.do_glb, 
     bound_fwhm=bound_fwhm, bound_t0=bound_t0, name_of_dset=prefix, t=t, intensity=intensity, eps=eps)
 

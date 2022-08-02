@@ -36,7 +36,6 @@ def residual_both(x0: np.ndarray, num_comp: int, num_comp_osc:int, base: bool, i
         * :math:`2+N_{scan}` to :math:`2+N_{scan}+N_{\\tau}`: time constant of each decay component
         * :math:`2+N_{scan}+N_{\\tau}+i`: time constant of each damped oscillation
         * :math:`2+N_{scan}+N_{\\tau}+N_{osc}+i`: period of each damped oscillation
-        * :math:`2+N_{scan}+N_{\\tau}+2N_{osc}+i`: phase of each damped oscillation component
 
       if irf == 'pv':
 
@@ -45,7 +44,6 @@ def residual_both(x0: np.ndarray, num_comp: int, num_comp_osc:int, base: bool, i
         * :math:`3+N_{scan}` to :math:`3+N_{scan}+N_{\\tau}`: time constant of each decay component
         * :math:`3+N_{scan}+N_{\\tau}+i`: time constant of each damped oscillation
         * :math:`3+N_{scan}+N_{\\tau}+N_{osc}+i`: period of each damped oscillation
-        * :math:`3+N_{scan}+N_{\\tau}+2N_{osc}+i`: phase of each damped oscillation component
 
      num_comp: number of exponential decay component (except base)
      num_comp_osc: number of damped oscillation component
@@ -89,7 +87,6 @@ def residual_both(x0: np.ndarray, num_comp: int, num_comp_osc:int, base: bool, i
     tau = x0[num_irf+num_t0:num_irf+num_t0+num_comp]
     tau_osc = x0[num_irf+num_t0+num_comp:num_irf+num_t0+num_comp+num_comp_osc]
     period_osc = x0[num_irf+num_t0+num_comp+num_comp_osc:num_irf+num_t0+num_comp+2*num_comp_osc]
-    phase_osc = x0[num_irf+num_t0+num_comp+2*num_comp_osc:]
 
     if base:
         k = np.empty(tau.size+1)
@@ -99,20 +96,20 @@ def residual_both(x0: np.ndarray, num_comp: int, num_comp_osc:int, base: bool, i
     
     end = 0; t0_idx = num_irf
     for ti,d,e in zip(t,intensity,eps):
-        A = np.empty((num_comp+1*base+num_comp_osc, d.shape[0]))
+        A = np.empty((num_comp+1*base+2*num_comp_osc, d.shape[0]))
         for j in range(d.shape[1]):
             t0 = x0[t0_idx]
             if irf == 'g':
                 A[:num_comp+1*base, :] = make_A_matrix_gau(ti-t0, fwhm, k)
-                A[num_comp+1*base:, :] = make_A_matrix_gau_osc(ti-t0, fwhm, 1/tau_osc, period_osc, phase_osc)
+                A[num_comp+1*base:, :] = make_A_matrix_gau_osc(ti-t0, fwhm, 1/tau_osc, period_osc)
             elif irf == 'c':
                 A[:num_comp+1*base, :] = make_A_matrix_cauchy(ti-t0, fwhm, k)
-                A[num_comp+1*base:, :] = make_A_matrix_cauchy_osc(ti-t0, fwhm, 1/tau_osc, period_osc, phase_osc)
+                A[num_comp+1*base:, :] = make_A_matrix_cauchy_osc(ti-t0, fwhm, 1/tau_osc, period_osc)
             else:
                 tmp_gau = make_A_matrix_gau(ti-t0, fwhm, k); 
-                tmp_gau_osc = make_A_matrix_gau_osc(ti-t0, fwhm, 1/tau_osc, period_osc, phase_osc)
+                tmp_gau_osc = make_A_matrix_gau_osc(ti-t0, fwhm, 1/tau_osc, period_osc)
                 tmp_cauchy = make_A_matrix_cauchy(ti-t0, fwhm, k)
-                tmp_cauchy_osc = make_A_matrix_cauchy_osc(ti-t0, fwhm, 1/tau_osc, period_osc, phase_osc)
+                tmp_cauchy_osc = make_A_matrix_cauchy_osc(ti-t0, fwhm, 1/tau_osc, period_osc)
                 A[:num_comp+1*base, :] = tmp_gau + eta*(tmp_cauchy-tmp_gau)
                 A[num_comp+1*base:, :] = tmp_gau_osc + eta*(tmp_cauchy_osc-tmp_gau_osc)
 
@@ -142,7 +139,6 @@ def res_grad_both(x0: np.ndarray, num_comp: int, num_comp_osc:int, base: bool, i
         * :math:`2+N_{scan}` to :math:`2+N_{scan}+N_{\\tau}`: time constant of each decay component
         * :math:`2+N_{scan}+N_{\\tau}+i`: time constant of each damped oscillation
         * :math:`2+N_{scan}+N_{\\tau}+N_{osc}+i`: period of each damped oscillation
-        * :math:`2+N_{scan}+N_{\\tau}+2N_{osc}+i`: phase of each damped oscillation component
 
       if irf == 'pv':
 
@@ -151,7 +147,6 @@ def res_grad_both(x0: np.ndarray, num_comp: int, num_comp_osc:int, base: bool, i
         * :math:`3+N_{scan}` to :math:`3+N_{scan}+N_{\\tau}`: time constant of each decay component
         * :math:`3+N_{scan}+N_{\\tau}+i`: time constant of each damped oscillation
         * :math:`3+N_{scan}+N_{\\tau}+N_{osc}+i`: period of each damped oscillation
-        * :math:`3+N_{scan}+N_{\\tau}+2N_{osc}+i`: phase of each damped oscillation component
 
      num_comp: number of exponential decay component (except base)
      num_comp_osc: number of damped oscillation component
@@ -194,7 +189,6 @@ def res_grad_both(x0: np.ndarray, num_comp: int, num_comp_osc:int, base: bool, i
     tau = x0[num_irf+num_t0:num_irf+num_t0+num_comp]
     tau_osc = x0[num_irf+num_t0+num_comp:num_irf+num_t0+num_comp+num_comp_osc]
     period_osc = x0[num_irf+num_t0+num_comp+num_comp_osc:num_irf+num_t0+num_comp+2*num_comp_osc]
-    phase_osc = x0[num_irf+num_t0+num_comp+2*num_comp_osc:]
 
     if base:
         k = np.empty(tau.size+1)
@@ -202,29 +196,29 @@ def res_grad_both(x0: np.ndarray, num_comp: int, num_comp_osc:int, base: bool, i
     else:
         k = 1/tau
     
-    num_param = num_irf+num_t0+num_comp+3*num_comp_osc
+    num_param = num_irf+num_t0+num_comp+2*num_comp_osc
 
     chi = np.empty(sum)
-    df = np.zeros((sum, num_irf+num_comp+3*num_comp_osc))
+    df = np.zeros((sum, num_irf+num_comp+2*num_comp_osc))
     grad = np.empty(num_param)
     
     end = 0; t0_idx = num_irf
     for ti,d,e in zip(t,intensity,eps):
         step = d.shape[0]
-        A = np.empty((num_comp+1*base+num_comp_osc, step))
+        A = np.empty((num_comp+1*base+2*num_comp_osc, step))
         for j in range(d.shape[1]):
             t0 = x0[t0_idx]
             if irf == 'g':
                 A[:num_comp+1*base, :] = make_A_matrix_gau(ti-t0, fwhm, k)
-                A[num_comp+1*base:, :] = make_A_matrix_gau_osc(ti-t0, fwhm, 1/tau_osc, period_osc, phase_osc)
+                A[num_comp+1*base:, :] = make_A_matrix_gau_osc(ti-t0, fwhm, 1/tau_osc, period_osc)
             elif irf == 'c':
                 A[:num_comp+1*base, :] = make_A_matrix_cauchy(ti-t0, fwhm, k)
-                A[num_comp+1*base:, :] = make_A_matrix_cauchy_osc(ti-t0, fwhm, 1/tau_osc, period_osc, phase_osc)
+                A[num_comp+1*base:, :] = make_A_matrix_cauchy_osc(ti-t0, fwhm, 1/tau_osc, period_osc)
             else:
                 tmp_gau = make_A_matrix_gau(ti-t0, fwhm, k); 
-                tmp_gau_osc = make_A_matrix_gau_osc(ti-t0, fwhm, 1/tau_osc, period_osc, phase_osc)
+                tmp_gau_osc = make_A_matrix_gau_osc(ti-t0, fwhm, 1/tau_osc, period_osc)
                 tmp_cauchy = make_A_matrix_cauchy(ti-t0, fwhm, k)
-                tmp_cauchy_osc = make_A_matrix_cauchy_osc(ti-t0, fwhm, 1/tau_osc, period_osc, phase_osc)
+                tmp_cauchy_osc = make_A_matrix_cauchy_osc(ti-t0, fwhm, 1/tau_osc, period_osc)
                 diff = tmp_cauchy-tmp_gau; diff_osc = tmp_cauchy_osc-tmp_gau_osc
                 A[:num_comp+1*base, :] = tmp_gau + eta*diff
                 A[num_comp+1*base:, :] = tmp_gau_osc + eta*diff_osc
@@ -232,17 +226,22 @@ def res_grad_both(x0: np.ndarray, num_comp: int, num_comp_osc:int, base: bool, i
             c = fact_anal_A(A, d[:,j], e[:,j])
             chi[end:end+step] = (c@A-d[:,j])/e[:, j]
 
+            c_amp = np.sqrt(c[num_comp+1*base:num_comp+1*base+num_comp_osc]**2+
+            c[num_comp+1*base+num_comp_osc:]**2)
+            phase_osc = -np.arctan2(c[num_comp+1*base+num_comp_osc:], 
+            c[:num_comp+1*base+num_comp_osc])
+
             if irf == 'g':
                 grad_decay = deriv_exp_sum_conv_gau(ti-t0, fwhm, 1/tau, c[:num_comp+1*base], base)
-                grad_osc = deriv_dmp_osc_sum_conv_gau(ti-t0, fwhm, 1/tau_osc, period_osc, phase_osc, c[num_comp+1*base:])
+                grad_osc = deriv_dmp_osc_sum_conv_gau(ti-t0, fwhm, 1/tau_osc, period_osc, phase_osc, c_amp)
             elif irf == 'c':
                 grad_decay = deriv_exp_sum_conv_cauchy(ti-t0, fwhm, 1/tau, c[:num_comp+1*base], base)
-                grad_osc = deriv_dmp_osc_sum_conv_cauchy(ti-t0, fwhm, 1/tau_osc, period_osc, phase_osc, c[num_comp+1*base:])
+                grad_osc = deriv_dmp_osc_sum_conv_cauchy(ti-t0, fwhm, 1/tau_osc, period_osc, phase_osc, c_amp)
             else:
                 grad_gau_decay = deriv_exp_sum_conv_gau(ti-t0, fwhm, 1/tau, c[:num_comp+1*base], base)
-                grad_gau_osc = deriv_dmp_osc_sum_conv_gau(ti-t0, fwhm, 1/tau_osc, period_osc, phase_osc, c[num_comp+1*base:])
+                grad_gau_osc = deriv_dmp_osc_sum_conv_gau(ti-t0, fwhm, 1/tau_osc, period_osc, phase_osc, c_amp)
                 grad_cauchy_decay = deriv_exp_sum_conv_cauchy(ti-t0, fwhm, 1/tau, c[:num_comp+1*base], base)
-                grad_cauchy_osc = deriv_dmp_osc_sum_conv_cauchy(ti-t0, fwhm, 1/tau_osc, period_osc, phase_osc, c[num_comp+1*base:])
+                grad_cauchy_osc = deriv_dmp_osc_sum_conv_cauchy(ti-t0, fwhm, 1/tau_osc, period_osc, phase_osc, c_amp)
                 grad_decay = grad_gau_decay + eta*(grad_cauchy_decay-grad_gau_decay)
                 grad_osc = grad_gau_osc + eta*(grad_cauchy_osc-grad_gau_osc)
             
@@ -263,7 +262,7 @@ def res_grad_both(x0: np.ndarray, num_comp: int, num_comp_osc:int, base: bool, i
                 np.einsum('j,ij->ij', -1/tau**2, grad_decay[:, 2:])
             df[end:end+step, num_irf+num_comp:num_irf+num_comp+num_comp_osc] = \
                 np.einsum('j,ij->ij',-1/tau_osc**2, grad_osc[:, 2:2+num_comp_osc])
-            df[end:end+step, num_irf+num_comp+num_comp_osc:] = grad_osc[:, 2+num_comp_osc:]
+            df[end:end+step, num_irf+num_comp+num_comp_osc:] = grad_osc[:, 2+num_comp_osc:2+2*num_comp_osc]
 
 
             end = end + step

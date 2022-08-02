@@ -20,7 +20,6 @@ from ..res.res_both import residual_both, res_grad_both
 def fit_transient_both(irf: str, fwhm_init: Union[float, np.ndarray], 
                       t0_init: np.ndarray, tau_init: np.ndarray,
                       tau_osc_init: np.ndarray, period_osc_init: np.ndarray,
-                      phase_osc_init: np.ndarray, 
                       base: bool, 
                       do_glb: Optional[bool] = False, 
                       method_lsq: Optional[str] = 'trf',
@@ -31,7 +30,6 @@ def fit_transient_both(irf: str, fwhm_init: Union[float, np.ndarray],
                       bound_tau: Optional[Sequence[Tuple[float, float]]] = None,
                       bound_tau_osc: Optional[Sequence[Tuple[float, float]]] = None,
                       bound_period_osc: Optional[Sequence[Tuple[float, float]]] = None,
-                      bound_phase_osc: Optional[Sequence[Tuple[float, float]]] = None,
                       name_of_dset: Optional[Sequence[str]] = None,
                       t: Optional[Sequence[np.ndarray]] = None, 
                       intensity: Optional[Sequence[np.ndarray]] = None,
@@ -74,7 +72,6 @@ def fit_transient_both(irf: str, fwhm_init: Union[float, np.ndarray],
        tau_init (np.ndarray): lifetime constant for each decay component
        tau_osc (np.ndarray): lifetime constant for each damped oscillation component
        period_init (np.ndarray): period of each oscillation component
-       phase_init (np.ndarray): phase factor of each oscillation component
        base (bool): Whether or not include baseline feature (i.e. very long lifetime constant)
        do_glb (bool): Whether or not use global optimization algorithm. If True then basinhopping algorithm is used.
        method_lsq ({'trf', 'dogbox', 'lm'}): method of local optimization for least_squares
@@ -92,8 +89,6 @@ def fit_transient_both(irf: str, fwhm_init: Union[float, np.ndarray],
         if `bound_tau_osc` is `None`, the upper and lower bound are given by ``set_bound_tau``.
        bound_period_osc (sequence of tuple): boundary for period of damped oscillation component, 
         if `bound_period_osc` is `None`, the upper and lower bound are given by ``set_bound_tau``.
-       bound_phase_osc (sequence of tuple): boundary for phase factor of damped oscillation component,
-        if `bound_phase_osc` is `None`, the upper and lower bound are gien as (-np.pi, np.pi).
        t (sequence of np.narray): time scan range for each datasets
        intensity (sequence of np.ndarray): sequence of intensity of datasets 
         for time delay scan
@@ -102,9 +97,9 @@ def fit_transient_both(irf: str, fwhm_init: Union[float, np.ndarray],
        Returns:
         TransientResult class object
       '''
-      
+
       num_irf = 1*(irf in ['g', 'c'])+2*(irf == 'pv')
-      num_param = num_irf+t0_init.size+tau_init.size+3*tau_osc_init.size
+      num_param = num_irf+t0_init.size+tau_init.size+2*tau_osc_init.size
       param = np.empty(num_param, dtype=float)
       fix_param_idx = np.empty(num_param, dtype=bool)
 
@@ -114,7 +109,6 @@ def fit_transient_both(irf: str, fwhm_init: Union[float, np.ndarray],
       osc_start = num_irf+t0_init.size+tau_init.size
       param[osc_start:osc_start+tau_osc_init.size] = tau_osc_init
       param[osc_start+tau_osc_init.size:osc_start+2*tau_osc_init.size] = period_osc_init
-      param[osc_start+2*tau_osc_init.size:] = phase_osc_init
 
       bound = num_param*[None]
 
@@ -147,11 +141,6 @@ def fit_transient_both(irf: str, fwhm_init: Union[float, np.ndarray],
                   bound[osc_start+tau_osc_init.size+i] = set_bound_tau(period_osc_init[i], fwhm_init)
       else:
             bound[osc_start+tau_osc_init.size:osc_start+2*tau_osc_init.size] = bound_period_osc
-      
-      if bound_phase_osc is None:
-            bound[osc_start+2*tau_osc_init.size:] = tau_osc_init.size*[(-np.pi,np.pi)]
-      else:
-            bound[osc_start+2*tau_osc_init.size:] = bound_phase_osc
       
       for i in range(num_param):
             fix_param_idx[i] = (bound[i][0] == bound[i][1])
@@ -206,7 +195,6 @@ def fit_transient_both(irf: str, fwhm_init: Union[float, np.ndarray],
       tau_opt = param_opt[num_irf+t0_init.size:osc_start]
       tau_osc_opt = param_opt[osc_start:osc_start+tau_osc_init.size]
       period_osc_opt = param_opt[osc_start+tau_osc_init.size:osc_start+2*tau_osc_init.size]
-      phase_osc_opt = param_opt[osc_start+2*tau_osc_init.size:]
       
       fit = np.empty(len(t), dtype=object); fit_osc = np.empty(len(t), dtype=object)
       fit_decay = np.empty(len(t), dtype=object)
@@ -221,7 +209,7 @@ def fit_transient_both(irf: str, fwhm_init: Union[float, np.ndarray],
 
     # Calc individual chi2
       chi = res_lsq['fun']
-      num_param_tot = num_tot_scan*(tau_opt.size+1*base+tau_osc_opt.size)+num_param-np.sum(fix_param_idx)
+      num_param_tot = num_tot_scan*(tau_opt.size+1*base+2*tau_osc_opt.size)+num_param-np.sum(fix_param_idx)
       chi2 = 2*res_lsq['cost']
       red_chi2 = chi2/(chi.size-num_param_tot)
       
@@ -241,6 +229,7 @@ def fit_transient_both(irf: str, fwhm_init: Union[float, np.ndarray],
 
       param_name = np.empty(param_opt.size, dtype=object)
       c = np.empty(len(t), dtype=object)
+      phase = np.empty(len(t), dtype=object)
       t0_idx = num_irf
 
       if irf == 'g':
@@ -258,21 +247,24 @@ def fit_transient_both(irf: str, fwhm_init: Union[float, np.ndarray],
             param_name[1] = 'fwhm_L'
 
       for i in range(len(t)):
-            A = np.empty((tau_init.size+1*base+tau_osc_init.size, t[i].size))
-            if base:
-                  c[i] = np.empty((tau_init.size+1+tau_osc_init.size, intensity[i].shape[1]))
-            else:
-                  c[i] = np.empty((tau_init.size+tau_osc_init.size, intensity[i].shape[1]))
+            A = np.empty((tau_init.size+1*base+2*tau_osc_init.size, t[i].size))
+            c[i] = np.empty((tau_init.size+1*base+tau_osc_init.size, intensity[i].shape[1]))
+            phase[i] = np.empty((tau_osc_init.size, intensity[i].shape[1]))
             
             for j in range(intensity[i].shape[1]):
                   A[:tau_init.size+1*base, :] = make_A_matrix_exp(t[i]-param_opt[t0_idx], fwhm_pv, tau_opt, base, irf, eta)
                   A[tau_init.size+1*base:, :] = make_A_matrix_dmp_osc(t[i]-param_opt[t0_idx], fwhm_pv, 
-                  tau_osc_opt, period_osc_opt, phase_osc_opt, irf, eta)
-
-                  c[i][:, j] = fact_anal_A(A, intensity[i][:, j], eps[i][:, j])
-                  fit[i][:, j] = c[i][:, j] @ A
-                  fit_decay[i][:, j] = c[i][:tau_init.size+1*base, j] @ A[:tau_init.size+1*base, :]
-                  fit_osc[i][:, j] = c[i][tau_init.size+1*base:, j] @ A[tau_init.size+1*base:, :]
+                  tau_osc_opt, period_osc_opt, irf, eta)
+                  tmp = fact_anal_A(A, intensity[i][:, j], eps[i][:, j])
+                  fit[i][:, j] = tmp @ A
+                  fit_decay[i][:, j] = tmp[:tau_init.size+1*base] @ A[:tau_init.size+1*base, :]
+                  fit_osc[i][:, j] = tmp[tau_init.size+1*base:] @ A[tau_init.size+1*base:, :]
+                  c[i][:tau_init.size+1*base, j] = tmp[:tau_init.size+1*base]
+                  c[i][tau_init.size+1*base:, j] = \
+                        np.sqrt(tmp[tau_init.size+1*base:tau_init.size+1*base+tau_osc_init.size]**2 + 
+                        tmp[tau_init.size+1*base+tau_osc_init.size:]**2)
+                  phase[i][:, j] = -np.arctan2(tmp[tau_init.size+1*base+tau_osc_init.size:],
+                  tmp[tau_init.size+1*base:tau_init.size+1*base+tau_osc_init.size])
                   param_name[t0_idx] = f't_0_{i+1}_{j+1}'
                   t0_idx = t0_idx + 1
             
@@ -284,7 +276,6 @@ def fit_transient_both(irf: str, fwhm_init: Union[float, np.ndarray],
       for i in range(tau_osc_init.size):
             param_name[osc_start+i] = f'tau_osc_{i+1}'
             param_name[osc_start+tau_osc_init.size+i] = f'period_osc_{i+1}'
-            param_name[osc_start+2*tau_osc_init.size+i] = f'phase_osc_{i+1}'
       
       jac = res_lsq['jac']
       hes = jac.T @ jac
@@ -315,6 +306,7 @@ def fit_transient_both(irf: str, fwhm_init: Union[float, np.ndarray],
       
       result['param_name'] = param_name; result['x'] = param_opt
       result['bounds'] = bound; result['base'] = base; result['c'] = c
+      result['phase'] = phase
       result['chi2'] = chi2; result['chi2_ind'] = chi2_ind
       result['aic'] = chi.size*np.log(chi2/chi.size)+2*num_param_tot
       result['bic'] = chi.size*np.log(chi2/chi.size)+num_param_tot*np.log(chi.size)

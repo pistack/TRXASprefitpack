@@ -45,6 +45,7 @@ class TransientResult(dict):
        bounds (sequence of tuple): boundary of each parameter
        base (bool): whether or not use baseline feature in fitting process
        c (sequence of np.ndarray): best weight of each component of each datasets 
+       phase (sequence of np.ndarray): phase factor of each oscillation component of each datasets [mode = 'dmp_osc', 'both']
        chi2 (float): total chi squared value of fitting
        aic (float): Akaike Information Criterion statistic: :math:`N\\log(\\chi^2/N)+2N_{parm}`
        bic (float): Bayesian Information Criterion statistic: :math:`N\\log(\\chi^2/N)+N_{parm}\log(N)`
@@ -137,6 +138,21 @@ class TransientResult(dict):
                   doc_lst.append(f"    {pn}: {bd[0]: .8f}".rstrip('0').rstrip('.')+f" <= {pv: .8f} <= {bd[1]: .8f}".rstrip('0').rstrip('.'))
             doc_lst.append(' ')
 
+            if self['model'] in ['dmp_osc', 'both']:
+                  doc_lst.append("[Phase Factor]")
+                  for i in range(len(self['phase'])):
+                        doc_lst.append(f"    DataSet {self['name_of_dset'][i]}:")
+                        row = ['     #tscan']
+                        for j in range(self['c'][i].shape[1]):
+                              row.append(f'tscan_{j+1}')
+                        doc_lst.append('\t'.join(row))
+                  for o in range(self['n_osc']):
+                        row = [f"     dmp_osc {o+1}"]
+                        for l in range(self['phase'][i].shape[1]):
+                              row.append(f"{self['phase'][i][o, l]/np.pi: .4f} π")
+                        doc_lst.append('\t'.join(row))
+            doc_lst.append(' ')
+
             doc_lst.append("[Component Contribution]")
             for i in range(len(self['c'])):
                   doc_lst.append(f"    DataSet {self['name_of_dset'][i]}:")
@@ -225,6 +241,9 @@ def save_TransientResult(result: TransientResult, filename: str):
                   if result['model'] == 'both':
                         fit_res_dset.create_dataset("fit_osc", data=result['fit_osc'][i])
                         fit_res_dset.create_dataset("fit_decay", data=result['fit_decay'][i])
+                  if result['model'] in ['dmp_osc', 'both']:
+                        fit_res_dset.create_dataset('phase', data=result['phase'][i])
+
 
             for k in model_key_lst:
                   fit_res.attrs[k] = result[k]
@@ -293,6 +312,9 @@ def load_TransientResult(filename: str) -> TransientResult:
             for k in fit_key_lst:
                   result[k] = np.empty(len(result['name_of_dset']), dtype=object)
             
+            if result['model'] in ['dmp_osc', 'both']:
+                  result['phase'] = np.empty(len(result['name_of_dset']), dtype=object)
+            
             if result['model'] == 'both':
                   result['fit_osc'] = np.empty(len(result['name_of_dset']), dtype=object)
                   result['fit_decay'] = np.empty(len(result['name_of_dset']), dtype=object)
@@ -305,6 +327,10 @@ def load_TransientResult(filename: str) -> TransientResult:
                         result[k][i] = np.atleast_2d(expt_dset[d])
                   for k,d in zip(fit_key_lst, fit_dir_lst):
                         result[k][i] = np.atleast_2d(fit_res_dset[d])
+                  
+                  if result['model'] in ['both', 'dmp_osc']:
+                        result['phase'][i] = np.atleast_2d(fit_res_dset['phase'])
+
                   if result['model'] == 'both':
                         result['fit_osc'][i] = fit_res_dset['fit_osc']
                         result['fit_decay'][i] = fit_res_dset['fit_decay']

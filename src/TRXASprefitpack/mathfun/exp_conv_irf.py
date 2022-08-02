@@ -7,7 +7,7 @@ exponential decay convolved with irf
 :license: LGPL3.
 '''
 
-from typing import Union, Optional
+from typing import Union, Optional, Tuple
 import numpy as np
 from scipy.special import erfc, erfcx, wofz, exp1
 
@@ -302,7 +302,8 @@ def deriv_exp_sum_conv_cauchy(t: np.ndarray, fwhm: float,
     return grad
 
 def exp_mod_gau_cplx(t: Union[float, np.ndarray], sigma: float,
-                     kr: float, ki: float) -> Union[complex, np.ndarray]:
+                     kr: float, ki: float) -> \
+                        Union[Tuple[float, float], Tuple[np.ndarray, np.ndarray]]:
     '''
     Complex version of exponentially (exp(-krt+i*kit)) modified gaussian function
 
@@ -314,6 +315,9 @@ def exp_mod_gau_cplx(t: Union[float, np.ndarray], sigma: float,
     
     Returns:
      complex version of exponentially modified gaussian distribution with mean = 0
+    
+    Note:
+     first element is cosine and second element is sine.
     '''
 
     isigmak_cplx = complex(ki*sigma, kr*sigma)
@@ -335,7 +339,35 @@ def exp_mod_gau_cplx(t: Union[float, np.ndarray], sigma: float,
         ans[inv_mask] = np.exp(isigmak_cplx**2/2-isigmak_cplx*iz[inv_mask]) - \
             1/2*np.exp(-(t[inv_mask]/sigma)**2/2)*wofz(-iz[inv_mask]/np.sqrt(2))
 
-    return ans
+    return ans.real, ans.imag
+
+def dmp_osc_conv_cauchy_pair(t: Union[float, np.ndarray], fwhm: float,
+k: float, T: float) -> Union[Tuple[float, float], Tuple[np.ndarray, np.ndarray]]:
+
+    '''
+    Compute damped oscillation convolved with normalized cauchy
+    distribution
+
+    Args:
+      t: time
+      fwhm: full width at half maximum of cauchy distribution
+      k: damping constant (inverse of life time)
+      T: period of vibration 
+      phase: phase factor
+
+    Returns:
+     Tuple of convolution of normalized cauchy distribution and 
+     damped oscillation 
+     :math:`(\\exp(-kt)cos(2\\pi t/T))` and :math:`(\\exp(-kt)sin(2\\pi t/T))`.
+    '''
+
+    gamma = fwhm/2; omega = 2*np.pi/T 
+    z1 = (-k*t-omega*gamma) + complex(0,1)*(-k*gamma+omega*t)
+    z2 = (-k*t+omega*gamma) + complex(0,-1)*(k*gamma+omega*t)
+    ans1 = exp1x(z1)/(2*np.pi)+\
+        np.exp(z1.real)*(-np.sin(z1.imag)+complex(0, 1)*np.cos(z1.imag))*np.heaviside(z1.imag, 1)
+    ans2 = exp1x(z2)/(2*np.pi)
+    return ans1.imag + ans2.imag, ans2.real - ans1.real
 
 def dmp_osc_conv_gau(t: Union[float, np.ndarray], fwhm: float,
 k: float, T: float, phase: float) -> Union[float, np.ndarray]:
@@ -357,9 +389,9 @@ k: float, T: float, phase: float) -> Union[float, np.ndarray]:
     '''
 
     sigma = fwhm/(2*np.sqrt(2*np.log(2)))
-    ans = (complex(np.cos(phase), np.sin(phase)))*exp_mod_gau_cplx(t, sigma, k, 2*np.pi/T)
+    cosine, sine = exp_mod_gau_cplx(t, sigma, k, 2*np.pi/T)
 
-    return ans.real
+    return cosine*np.cos(phase)-sine*np.sin(phase)
 
 def dmp_osc_conv_cauchy(t: Union[float, np.ndarray], fwhm: float,
 k: float, T: float, phase: float) -> Union[float, np.ndarray]:
@@ -380,15 +412,9 @@ k: float, T: float, phase: float) -> Union[float, np.ndarray]:
      damped oscillation :math:`(\\exp(-kt)cos(2\\pi t/T+phase))`.
     '''
 
-    gamma = fwhm/2; omega = 2*np.pi/T 
-    z1 = (-k*t-omega*gamma) + complex(0,1)*(-k*gamma+omega*t)
-    z2 = (-k*t+omega*gamma) + complex(0,-1)*(k*gamma+omega*t)
+    cosine, sine = dmp_osc_conv_cauchy_pair(t, fwhm, k, T)
 
-    ans = complex(np.cos(phase), np.sin(phase))*exp1x(z1)+complex(np.cos(phase), -np.sin(phase))*exp1x(z2)
-    ans = ans/(2*np.pi)+np.exp(z1.real)*(-np.sin(z1.imag+phase)+complex(0,1)*np.cos(z1.imag+phase))*\
-        np.heaviside(z1.imag, 1)
-
-    return ans.imag
+    return cosine*np.cos(phase)-sine*np.sin(phase)
 
 def dmp_osc_conv_pvoigt(t: Union[float, np.ndarray], fwhm: float, eta: float,
 k: float, T: float, phase: float) -> Union[float, np.ndarray]:
@@ -446,25 +472,28 @@ k: float, T: float, phase: float) -> np.ndarray:
     '''
 
     sigma = fwhm/(2*np.sqrt(2*np.log(2))); omega = 2*np.pi/T
-    f = (complex(np.cos(phase), np.sin(phase)))*exp_mod_gau_cplx(t, sigma, k, omega)
-    g = (complex(np.cos(phase), np.sin(phase)))*np.exp(-(t/sigma)**2/2)/np.sqrt(2*np.pi)
+    tmp1, tmp2 = exp_mod_gau_cplx(t, sigma, k, omega)
+    freal = np.cos(phase)*tmp1 - np.sin(phase)*tmp2
+    fimag = np.cos(phase)*tmp2 + np.sin(phase)*tmp1
+    tmp3 = np.exp(-(t/sigma)**2/2)/np.sqrt(2*np.pi)
+    greal = np.cos(phase)*tmp3; gimag = np.sin(phase)*tmp3
 
     if not isinstance(t, np.ndarray):
         grad = np.empty(5)
-        grad[0] = g.real/sigma - k*f.real-omega*f.imag
-        grad[1] = (sigma*((k**2-omega**2)*f.real + 2*k*omega*f.imag) - 
-        omega*g.imag - (k+t/sigma**2)*g.real)/(2*np.sqrt(2*np.log(2)))
-        grad[2] = sigma**2*(k*f.real+omega*f.imag)-t*f.real - sigma*g.real
-        grad[3] = -omega/T*(sigma**2*(k*f.imag-omega*f.real)-t*f.imag - sigma*g.imag)
-        grad[4] = -f.imag
+        grad[0] = greal/sigma - k*freal-omega*fimag
+        grad[1] = (sigma*((k**2-omega**2)*freal + 2*k*omega*fimag) - 
+        omega*gimag - (k+t/sigma**2)*greal)/(2*np.sqrt(2*np.log(2)))
+        grad[2] = sigma**2*(k*freal+omega*fimag)-t*freal - sigma*greal
+        grad[3] = -omega/T*(sigma**2*(k*fimag-omega*freal)-t*fimag - sigma*gimag)
+        grad[4] = -fimag
     else:
         grad = np.empty((t.size, 5))
-        grad[:, 0] = g.real/sigma - k*f.real-omega*f.imag
-        grad[:, 1] = (sigma*((k**2-omega**2)*f.real + 2*k*omega*f.imag) - 
-        omega*g.imag - (k+t/sigma**2)*g.real)/(2*np.sqrt(2*np.log(2)))
-        grad[:, 2] = sigma**2*(k*f.real+omega*f.imag)-t*f.real - sigma*g.real
-        grad[:, 3] = -omega/T*(sigma**2*(k*f.imag-omega*f.real)-t*f.imag - sigma*g.imag)
-        grad[:, 4] = -f.imag
+        grad[:, 0] = greal/sigma - k*freal-omega*fimag
+        grad[:, 1] = (sigma*((k**2-omega**2)*freal + 2*k*omega*fimag) - 
+        omega*gimag - (k+t/sigma**2)*greal)/(2*np.sqrt(2*np.log(2)))
+        grad[:, 2] = sigma**2*(k*freal+omega*fimag)-t*freal - sigma*greal
+        grad[:, 3] = -omega/T*(sigma**2*(k*fimag-omega*freal)-t*fimag - sigma*gimag)
+        grad[:, 4] = -fimag
     
     return grad
 

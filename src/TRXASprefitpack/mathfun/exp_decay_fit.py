@@ -271,23 +271,29 @@ def dmp_osc_conv(t: np.ndarray, fwhm: float,
       Convolution of sum of damped oscillation and instrumental
       response function.
     '''
-    A = make_A_matrix_dmp_osc(t, fwhm, tau, T, phase, irf, eta)
-    y = c@A
+    c_osc = np.zeros(2*c.size)
+    for i in range(c.size):
+      c_osc[i] = c[i]*np.cos(phase[i])
+      c_osc[i+c.size] = c[i]*np.sin(phase[i])
+
+    A = make_A_matrix_dmp_osc(t, fwhm, tau, T, irf, eta)
+    y = c_osc@A
 
     return y
 
 def fact_anal_dmp_osc_conv(t: np.ndarray,
                        fwhm: float,
-                       tau: np.ndarray, T: np.ndarray, phase: np.ndarray,
+                       tau: np.ndarray, T: np.ndarray,
                        irf: Optional[str] = 'g',
                        eta: Optional[float] = None,
                        intensity: Optional[np.ndarray] = None,
                        eps: Optional[np.ndarray] = None
-                       ) -> np.ndarray:
+                       ) -> Tuple[np.ndarray, np.ndarray]:
 
     '''
-    Estimate the best coefficiets when full width at half maximum fwhm
-    , life constant tau, period of vibration T and phase factor are given
+    Estimate the best coefficiets and phase factor 
+    when full width at half maximum fwhm
+    , life constant tau and period of vibration T are given
 
     Supported instrumental response functions are 
 
@@ -313,13 +319,13 @@ def fact_anal_dmp_osc_conv(t: np.ndarray,
        eps: standard error of data
 
     Returns:
-     Best coefficient for given damped oscillation component.
+     Pair of phase factor and Best coefficient for given damped oscillation component.
 
     Note:
      the dimension of the intensity should be one.
     '''
     
-    A = make_A_matrix_dmp_osc(t, fwhm, tau, T, phase, irf, eta)
+    A = make_A_matrix_dmp_osc(t, fwhm, tau, T, irf, eta)
 
     if eps is None:
         eps = np.ones_like(intensity)
@@ -327,8 +333,12 @@ def fact_anal_dmp_osc_conv(t: np.ndarray,
     y = intensity/eps
     A = np.einsum('j,ij->ij', 1/eps, A)
     c, _, _, _ = LA.lstsq(A.T, y, cond=1e-2)
+    c_cosine = c[:tau.size]
+    c_sine = c[tau.size:]
+    c_amp = np.sqrt(c_cosine**2+c_sine**2)
+    phase_factor = -np.arctan2(c_sine, c_cosine)
 
-    return c
+    return phase_factor, c_amp
 
 def sum_exp_dmp_osc_conv(t: np.ndarray, fwhm: float,
                          tau: np.ndarray,
@@ -373,25 +383,31 @@ def sum_exp_dmp_osc_conv(t: np.ndarray, fwhm: float,
       Convolution of sum of exponential decay and damped oscillation and instrumental
       response function.
     '''
+    c_osc_2 = np.zeros(2*c_osc.size)
+    for i in range(c_osc.size):
+      c_osc_2[i] = c_osc[i]*np.cos(phase[i])
+      c_osc_2[i+c_osc.size] = c_osc[i]*np.sin(phase[i])
+
     A = make_A_matrix_exp(t, fwhm, tau, base, irf, eta)
-    A_osc = make_A_matrix_dmp_osc(t, fwhm, tau_osc, T, phase, irf, eta)
-    y = c@A + c_osc@A_osc
+    A_osc = make_A_matrix_dmp_osc(t, fwhm, tau_osc, T, irf, eta)
+    y = c@A + c_osc_2@A_osc
 
     return y
 
 def fact_anal_sum_exp_dmp_osc_conv(t: np.ndarray, fwhm: float,
                                    tau: np.ndarray, tau_osc: np.ndarray,
-                                   T: np.ndarray, phase: np.ndarray,
+                                   T: np.ndarray,
                                    base: Optional[bool] = True,
                                    irf: Optional[str] = 'g',
                                    eta: Optional[float] = None,
                                    intensity: Optional[np.ndarray] = None,
-                                   eps: Optional[np.ndarray] = None) -> Tuple[np.ndarray, np.ndarray]:
+                                   eps: Optional[np.ndarray] = None) -> \
+                                    Tuple[np.ndarray, np.ndarray, np.ndarray]:
     '''
-    Estimate the best coefficiets when full width at half maximum fwhm
+    Estimate the best coefficiets and phase factor of oscillation part 
+    when full width at half maximum fwhm
     , lifetime constant of decay component tau, lifetime constant of 
-    oscillation component tau_osc,
-    period of vibration T and phase factor are given
+    oscillation component tau_osc and period of vibration T are given
 
     Supported instrumental response functions are 
 
@@ -420,16 +436,16 @@ def fact_anal_sum_exp_dmp_osc_conv(t: np.ndarray, fwhm: float,
        eps: standard error of data
 
     Returns:
-     Tuple of best coefficient for given decay and damped oscillation component.
-     (c_(decay), c_(osc))
+     Tuple of best coefficient and phase_factor for given decay and damped oscillation component.
+     (c_(decay), phase_(osc), c_(osc))
 
     Note:
      the dimension of the intensity should be one.
     '''
 
-    A = np.empty((tau.size+1*base+tau_osc.size, t.size))
+    A = np.empty((tau.size+1*base+2*tau_osc.size, t.size))
     A[:tau.size+1*base, :] = make_A_matrix_exp(t, fwhm, tau, base, irf, eta)
-    A[tau.size+1*base:, :] = make_A_matrix_dmp_osc(t, fwhm, tau_osc, T, phase, irf, eta)
+    A[tau.size+1*base:, :] = make_A_matrix_dmp_osc(t, fwhm, tau_osc, T, irf, eta)
 
     if eps is None:
         eps = np.ones_like(intensity)
@@ -437,6 +453,10 @@ def fact_anal_sum_exp_dmp_osc_conv(t: np.ndarray, fwhm: float,
     y = intensity/eps
     A = np.einsum('j,ij->ij', 1/eps, A)
     c, _, _, _ = LA.lstsq(A.T, y, cond=1e-2)
+    c_cosine = c[tau.size+1*base:tau.size+1*base+tau_osc.size]
+    c_sine = c[tau.size+1*base+tau_osc.size:]
+    c_osc = np.sqrt(c_cosine**2+c_sine**2)
+    phase_osc = -np.arctan2(c_sine, c_cosine)
 
-    return c[:tau.size+1*base], c[tau.size+1*base:]
+    return c[:tau.size+1*base], phase_osc, c_osc
 

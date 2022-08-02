@@ -9,7 +9,7 @@ from typing import Optional
 import numpy as np
 from scipy.linalg import lstsq
 from .exp_conv_irf import exp_conv_gau, exp_conv_cauchy
-from .exp_conv_irf import dmp_osc_conv_gau, dmp_osc_conv_cauchy
+from .exp_conv_irf import exp_mod_gau_cplx, dmp_osc_conv_cauchy_pair
 
 
 def make_A_matrix(t: np.ndarray, k: np.ndarray) -> np.ndarray:
@@ -76,47 +76,48 @@ def make_A_matrix_exp(t: np.ndarray,
     return A
 
 def make_A_matrix_gau_osc(t: np.ndarray, fwhm: float,
-k: np.ndarray, T: np.ndarray, phase: np.ndarray) -> np.ndarray:
+k: np.ndarray, T: np.ndarray) -> np.ndarray:
 
-    A = np.empty((k.size, t.size))
+    sigma = fwhm/(2*np.sqrt(2*np.log(2)))
+    A = np.empty((2*k.size, t.size))
     for i in range(k.size):
-        A[i, :] = dmp_osc_conv_gau(t, fwhm, k[i], T[i], phase[i])
-
+        A[i, :], A[i+k.size, :] = \
+            exp_mod_gau_cplx(t, sigma, k[i], 2*np.pi/T[i])
+        # cosine, sine
     return A
 
 def make_A_matrix_cauchy_osc(t: np.ndarray, fwhm: float,
-k: np.ndarray, T: np.ndarray, phase: np.ndarray) -> np.ndarray:
+k: np.ndarray, T: np.ndarray) -> np.ndarray:
 
-    A = np.empty((k.size, t.size))
+    A = np.empty((2*k.size, t.size))
     for i in range(k.size):
-        A[i, :] = dmp_osc_conv_cauchy(t, fwhm, k[i], T[i], phase[i])
-
+        A[i, :], A[i+k.size, :] = \
+            dmp_osc_conv_cauchy_pair(t, fwhm, k[i], T[i])
     return A
 
 def make_A_matrix_pvoigt_osc(t: np.ndarray, fwhm: float, eta: float,
                              k: np.ndarray, 
-                             T: np.ndarray, phase: np.ndarray) -> np.ndarray:
+                             T: np.ndarray) -> np.ndarray:
     
-    u = make_A_matrix_gau_osc(t, fwhm, k, T, phase)
-    v = make_A_matrix_cauchy_osc(t, fwhm, k, T, phase)
+    u = make_A_matrix_gau_osc(t, fwhm, k, T)
+    v = make_A_matrix_cauchy_osc(t, fwhm, k, T)
 
     return u + eta*(v-u)
 
 def make_A_matrix_dmp_osc(t: np.ndarray, fwhm: float,
                       tau: np.ndarray,
                       T: np.ndarray,
-                      phase: np.ndarray,
                       irf: Optional[str] = 'g',
                       eta: Optional[float] = None
                       ) -> np.ndarray:
 
 
     if irf == 'g':
-        A = make_A_matrix_gau_osc(t, fwhm, 1/tau, T, phase)
+        A = make_A_matrix_gau_osc(t, fwhm, 1/tau, T)
     elif irf == 'c':
-        A = make_A_matrix_cauchy_osc(t, fwhm, 1/tau, T, phase)
+        A = make_A_matrix_cauchy_osc(t, fwhm, 1/tau, T)
     elif irf == 'pv':
-        A = make_A_matrix_pvoigt_osc(t, fwhm, eta, 1/tau, T, phase)
+        A = make_A_matrix_pvoigt_osc(t, fwhm, eta, 1/tau, T)
 
     return A
 
