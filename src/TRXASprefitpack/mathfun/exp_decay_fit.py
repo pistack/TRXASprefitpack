@@ -274,7 +274,7 @@ def dmp_osc_conv(t: np.ndarray, fwhm: float,
     c_osc = np.zeros(2*c.size)
     for i in range(c.size):
       c_osc[i] = c[i]*np.cos(phase[i])
-      c_osc[i+c.size] = c[i]*np.sin(phase[i])
+      c_osc[i+c.size] = -c[i]*np.sin(phase[i])
 
     A = make_A_matrix_dmp_osc(t, fwhm, tau, T, irf, eta)
     y = c_osc@A
@@ -386,7 +386,7 @@ def sum_exp_dmp_osc_conv(t: np.ndarray, fwhm: float,
     c_osc_2 = np.zeros(2*c_osc.size)
     for i in range(c_osc.size):
       c_osc_2[i] = c_osc[i]*np.cos(phase[i])
-      c_osc_2[i+c_osc.size] = c_osc[i]*np.sin(phase[i])
+      c_osc_2[i+c_osc.size] = -c_osc[i]*np.sin(phase[i])
 
     A = make_A_matrix_exp(t, fwhm, tau, base, irf, eta)
     A_osc = make_A_matrix_dmp_osc(t, fwhm, tau_osc, T, irf, eta)
