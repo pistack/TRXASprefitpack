@@ -1,35 +1,57 @@
 # fit_static Basic Example
 
 Basic usage example ``fit_static`` utility.
-Yon can find example file from [TRXASprefitpack-example](https://github.com/pistack/TRXASprefitpack-example/tree/v0.5.1) fit_static subdirectory.
+Yon can find example file from [TRXASprefitpack-example](https://github.com/pistack/TRXASprefitpack-example/) fit_static subdirectory.
 
-## Peak position shifting
+## Fitting with voigt profile
 
-1. Go to shift subdirectory. In shift subdirectory, you can find ``example_calc_peak.txt`` and ``example_1.txt`` files. First one is simplified version of thoretically calculated x-ray absorption spectrum peak and its intensity. Last one is the fake experimental x-ray absorption spectrum.
-2. Type ``fit_static -h``. Then it prints help message. You can find detailed description of arguments in the utility section of this document.
-3. Type ``fit_staitc example 1 example_calc_peak.txt -1.25 -ls v --fwhm_G 0.5 --fwhm_L 2.0 -o example`` First positional argument is ``prefix`` of experimental spectrum file to fit and second positional argument is the number of scan to fit. In this example it reads ``example_1.txt`` file. If you set ``num_scan`` argument to 2, it will search ``example_2.txt`` file and read it if such file exists. Third positional argument is filename of theoretical line shape spectrum. In this example it reads ``example_calc_peak.txt`` to get peak position and intensity of theoretically calculated one. Last positional argument is ``peak_factor``. When ``--scale_energy`` option argument is not set, it left shift peak positions to match experimental one. In this example, it sets -1.25 as initial ``peak_factor``.
-The fist optional argument ``-ls`` or ``--line_shape`` is line shape of spectrum. In this example it uses ``v`` voigt profile. The second and third optional argument ``--fwhm_G`` and ``--fwhm_L`` are initial broadening parameter of gaussian and lorenzian part respectively. In this example, It set ``0.5`` as initial broadening parameter of gaussian part and ``2.0`` as initial broadening parameter of lorenzian part.
-4. After fitting process is finished, you can see both fitting result plot and report for fitting result in the console.
+1. I `fit_static` sub directory,  you can find ``example_static.txt`` file.
+This example is generated from Library example, fitting with static spectrum.
+2. Type ``fit_static -h`` Then it prints help message. You can find detailed description of arguments in the utility section of this document.
+3. First find edge feature. Type ``fit_static example_static.txt  --mode voigt --edge g --e0_edge 8992 --fwhm_edge 10 -o edge --do_glb``.
 
-![png](fit_static_example_file/XAS_example_fit.png)
+The first and the only one positional argument is the filename of static spectrum file to read.
 
-* Close all fitting result plot windows, after then you can find ``example_A.txt``, ``example_base.txt``, ``example_fit.txt`` and ``example_fit_report.txt``.
+Second optional argument ``--mode`` sets fitting model, we set ``--mode voigt`` that is fitting with sum of voigt component. 
 
-``example_A.txt`` contains peak intensity scaling factor of each spectrum.
+Third optional argument ``--edge``, if it is not set, it does not include edge feature. In this example we set `--edge g`, that is gaussian type edge.
 
-``example_base.txt`` contains fitted base line feature of experimental spectrum.
+Fourth optional argument ``--e0_edge`` is initial edge position.
 
-``example_fit.txt`` contains fitted thoretically calculated spectrum.
+Fifth optional argument is ``--fwhm_edge`` initial guess for fwhm paramter of edge. 
 
-``example_fit_report.txt`` contains fitting result report.
+Last optional argument is `-o` it sets name of `hdf5` file to save fitting result and directory to save text file format of fitting result.
 
-## Peak position scaling
+4. After fitting process is finished, you can see both fitting result plot and report for fitting result in the console. Upper part of plot shows fitting curve and experimental data. Lower part of plot shows residual of fit (data-fit).
 
-1. Go to scale subdirectory. In scale subdirectory, you can find ``example_calc_peak.txt``  and ``example_1.txt`` files. First one contains thoretically calculated IR peak information and last one is fake experimental IR spectrum.
-2. Type  ``fit_staitc example 1 example_calc_peak.txt 0.95 -ls g --fwhm_G 15 --scale_energy -o example``. Last positional argument is initial parameter of ``peak_factor``. Since we set ``--scale_energy``, it matchs peak position of thoretical spectrum to experimental one by uniformly scaling peak position instead of uniform shifting. 
-In this example we use ``g`` gaussian peak shape, so we need not to set ``--fwhm_L`` initial lorenzian broadening parameter.
-3.  After fitting process is finished, you can see both fitting result plot and report for fitting result in the console.
+5. Inspecting residual panel, we can find two voigt component centered near 8985 and 9000
 
-![png](fit_static_example_file/IR_example_fit.png)
+![png](fit_static_example_file/find_edge.png)
 
-* Close all fitting result plot windows, then fitting results files will be generated.
+1. Based on this now add two voigt component.
+
+2. Type ``fit_static example_static.txt  --mode voigt --e0_voigt 8985 9000 --fwhm_L_voigt 2 6  --edge g --e0_edge 8992 --fwhm_edge 10 -o fit --do_glb``.
+
+First additional optional argument ``--e0_voigt`` sets initial peak position of voigt component
+
+Second additional optional argument ``--fwhm_L_voigt`` sets initial fwhm parameter of voigt component. In this example we only set lorenzian part of voigt componnet, so our voigt component is indeed lorenzian component.
+
+3. After fitting process is finished, you can see fitting result plot.
+
+![png](fit_static_example_file/fit_voigt.png)
+
+## Description for Output file in fit directory.
+
+* ``fit.txt`` contains fitting and each component curve
+
+* ``weight.txt`` weight of each fitting component
+
+* ``fit_summary.txt`` Summary of fitting result.
+
+* ``res.txt`` contains residual of fit
+
+
+
+## Fitting with theoretical calculated line spectrum
+
+Comming Soon... 

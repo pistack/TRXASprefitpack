@@ -48,39 +48,41 @@ class TestFactAnal(unittest.TestCase):
 
     def test_fact_anal_dmp_osc_conv(self):
         fwhm = 0.15
-        c_ref = np.array([1, -0.5])
+        c_ref = np.array([1, 0.5])
         tau = np.array([0.3, 1])
         period = np.array([0.5, 1])
-        phase = np.array([np.pi/3, np.pi/4])
+        phase = np.array([np.pi/3, -np.pi/4])
         t = np.hstack((np.arange(-1, 1, 0.02), np.linspace(1, 100, 99)))
         model = dmp_osc_conv(t, fwhm, tau, period, phase, c_ref, irf='g')
         noise = np.random.normal(0, np.max(np.abs(model))/100, model.size)
         eps = np.max(np.abs(model))/100*np.ones_like(noise)
         expt = model+noise
-        c_tst = fact_anal_dmp_osc_conv(t, fwhm, tau, period, phase, irf='g', intensity=expt, eps=eps)
+        phase_tst, c_tst = fact_anal_dmp_osc_conv(t, fwhm, tau, period, irf='g', intensity=expt, eps=eps)
         cond = np.linalg.norm(c_ref-c_tst)/(np.linalg.norm(c_ref)) < 1e-2
-        self.assertEqual(cond, True)
+        cond_phase = np.allclose(phase, phase_tst, rtol=1e-2)
+        self.assertEqual((cond, cond_phase), (True, True))
 
     def test_fact_anal_sum_exp_dmp_osc_conv(self):
         fwhm = 0.15
         c_ref_decay = np.array([1, -0.5, -0.25])
-        c_ref_osc = np.array([0.15, -0.075])
+        c_ref_osc = np.array([0.15, 0.075])
         tau = np.array([0.5, 10])
         tau_osc = np.array([0.3, 1])
         period_osc = np.array([0.5, 1])
-        phase_osc = np.array([np.pi/3, np.pi/4])
+        phase_osc = np.array([np.pi/3, -np.pi/4])
         t = np.hstack((np.arange(-1, 1, 0.02), np.linspace(1, 100, 99)))
         model = sum_exp_dmp_osc_conv(t, fwhm, tau, tau_osc, period_osc, phase_osc, 
         c_ref_decay, c_ref_osc, base=True, irf='g')
         noise = np.random.normal(0, np.max(np.abs(model))/100, model.size)
         eps = np.max(np.abs(model))/100*np.ones_like(noise)
         expt = model+noise
-        c_tst_decay, c_tst_osc = \
-            fact_anal_sum_exp_dmp_osc_conv(t, fwhm, tau, tau_osc, period_osc, phase_osc, base=True,
+        c_tst_decay, phase_tst_osc, c_tst_osc = \
+            fact_anal_sum_exp_dmp_osc_conv(t, fwhm, tau, tau_osc, period_osc, base=True,
             irf='g', intensity=expt, eps=eps)
         cond_decay = np.linalg.norm(c_ref_decay-c_tst_decay)/(np.linalg.norm(c_ref_decay)) < 1e-2
         cond_osc = np.linalg.norm(c_ref_osc-c_tst_osc)/(np.linalg.norm(c_ref_osc)) < 1e-1
-        self.assertEqual((cond_decay, cond_osc), (True, True))
+        cond_phase_osc = np.allclose(phase_osc, phase_tst_osc, rtol=1e-1)
+        self.assertEqual((cond_decay, cond_phase_osc, cond_osc), (True, True, True))
 
 
 if __name__ == '__main__':

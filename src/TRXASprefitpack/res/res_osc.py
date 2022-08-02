@@ -31,8 +31,7 @@ def residual_dmp_osc(x0: np.ndarray, num_comp: int, irf: str,
         * 1st: fwhm_(G/L)
         * 2nd to :math:`2+N_{scan}`: time zero of each scan
         * :math:`2+N_{scan}+i`: time constant of each damped oscillation
-        * :math:`2+N_{scan}+i`: period of each damped oscillation
-        * :math:`2+N_{scan}+i`: phase of each damped oscillation component
+        * :math:`2+N_{scan}+N_{osc}+i`: period of each damped oscillation
 
       if irf == 'pv':
 
@@ -40,7 +39,6 @@ def residual_dmp_osc(x0: np.ndarray, num_comp: int, irf: str,
         * 3rd to :math:`3+N_{scan}`: time zero of each scan
         * :math:`3+N_{scan}+i`: time constant of each damped oscillation
         * :math:`3+N_{scan}+N_{osc}+i`: period of each damped oscillation
-        * :math:`3+N_{scan}+2N_{osc}+i`: phase of each damped oscillation component
            
      num_comp: number of damped oscillation component
      irf: shape of instrumental response function
@@ -78,19 +76,18 @@ def residual_dmp_osc(x0: np.ndarray, num_comp: int, irf: str,
     
     tau = x0[num_irf+num_t0:num_irf+num_t0+num_comp]
     period = x0[num_irf+num_t0+num_comp:num_irf+num_t0+2*num_comp]
-    phase = x0[num_irf+num_t0+2*num_comp:num_irf+num_t0+3*num_comp]
 
     end = 0; t0_idx = num_irf
     for ti,d,e in zip(t,intensity,eps):
         for j in range(d.shape[1]):
             t0 = x0[t0_idx]
             if irf == 'g':
-                A = make_A_matrix_gau_osc(ti-t0, fwhm, 1/tau, period, phase)
+                A = make_A_matrix_gau_osc(ti-t0, fwhm, 1/tau, period)
             elif irf == 'c':
-                A = make_A_matrix_cauchy_osc(ti-t0, fwhm, 1/tau, period, phase)
+                A = make_A_matrix_cauchy_osc(ti-t0, fwhm, 1/tau, period)
             else:
-                A_gau = make_A_matrix_gau_osc(ti-t0, fwhm, 1/tau, period, phase)
-                A_cauchy = make_A_matrix_cauchy_osc(ti-t0, fwhm, 1/tau, period, phase)
+                A_gau = make_A_matrix_gau_osc(ti-t0, fwhm, 1/tau, period)
+                A_cauchy = make_A_matrix_cauchy_osc(ti-t0, fwhm, 1/tau, period)
                 A = A_gau + eta*(A_cauchy-A_gau)
             c = fact_anal_A(A, d[:,j], e[:,j])
             chi[end:end+d.shape[0]] = ((c@A) - d[:, j])/e[:, j]
@@ -117,8 +114,7 @@ def res_grad_dmp_osc(x0: np.ndarray, num_comp: int, irf: str,
         * 1st: fwhm_(G/L)
         * 2nd to :math:`2+N_{scan}`: time zero of each scan
         * :math:`2+N_{scan}+i`: time constant of each damped oscillation
-        * :math:`2+N_{scan}+i`: period of each damped oscillation
-        * :math:`2+N_{scan}+i`: phase of each damped oscillation component
+        * :math:`2+N_{scan}+N_{osc}+i`: period of each damped oscillation
 
       if irf == 'pv':
 
@@ -126,7 +122,6 @@ def res_grad_dmp_osc(x0: np.ndarray, num_comp: int, irf: str,
         * 3rd to :math:`3+N_{scan}`: time zero of each scan
         * :math:`3+N_{scan}+i`: time constant of each damped oscillation
         * :math:`3+N_{scan}+N_{osc}+i`: period of each damped oscillation
-        * :math:`3+N_{scan}+2N_{osc}+i`: phase of each damped oscillation component
            
      num_comp: number of damped oscillation component
      irf: shape of instrumental response function
@@ -164,11 +159,10 @@ def res_grad_dmp_osc(x0: np.ndarray, num_comp: int, irf: str,
 
     tau = x0[num_irf+num_t0:num_irf+num_t0+num_comp]
     period = x0[num_irf+num_t0+num_comp:num_irf+num_t0+2*num_comp]
-    phase = x0[num_irf+num_t0+2*num_comp:num_irf+num_t0+3*num_comp]
     
-    num_param = num_irf+num_t0+3*num_comp
+    num_param = num_irf+num_t0+2*num_comp
     chi = np.empty(sum)
-    df = np.zeros((sum, num_irf+3*num_comp))
+    df = np.zeros((sum, num_irf+2*num_comp))
     grad = np.empty(num_param)
 
     end = 0; t0_idx = num_irf
@@ -178,24 +172,27 @@ def res_grad_dmp_osc(x0: np.ndarray, num_comp: int, irf: str,
         for j in range(d.shape[1]):
             t0 = x0[t0_idx]
             if irf == 'g':
-                A = make_A_matrix_gau_osc(ti-t0, fwhm, 1/tau, period, phase)
+                A = make_A_matrix_gau_osc(ti-t0, fwhm, 1/tau, period)
             elif irf == 'c':
-                A = make_A_matrix_cauchy_osc(ti-t0, fwhm, 1/tau, period, phase)
+                A = make_A_matrix_cauchy_osc(ti-t0, fwhm, 1/tau, period)
             else:
-                A_gau = make_A_matrix_gau_osc(ti-t0, fwhm, 1/tau, period, phase)
-                A_cauchy = make_A_matrix_cauchy_osc(ti-t0, fwhm, 1/tau, period, phase)
+                A_gau = make_A_matrix_gau_osc(ti-t0, fwhm, 1/tau, period)
+                A_cauchy = make_A_matrix_cauchy_osc(ti-t0, fwhm, 1/tau, period)
                 diff = A_cauchy-A_gau
                 A = A_gau + eta*diff
             c = fact_anal_A(A, d[:,j], e[:,j])
             chi[end:end+step] = (c@A-d[:,j])/e[:, j]
+
+            c_amp = np.sqrt(c[:num_comp]**2+c[num_comp:]**2)
+            phase = -np.arctan2(c[num_comp:], c[:num_comp])
                 
             if irf == 'g':
-                grad_tmp = deriv_dmp_osc_sum_conv_gau(ti-t0, fwhm, 1/tau, period, phase, c)
+                grad_tmp = deriv_dmp_osc_sum_conv_gau(ti-t0, fwhm, 1/tau, period, phase, c_amp)
             elif irf == 'c':
-                grad_tmp = deriv_dmp_osc_sum_conv_cauchy(ti-t0, fwhm, 1/tau, period, phase, c)
+                grad_tmp = deriv_dmp_osc_sum_conv_cauchy(ti-t0, fwhm, 1/tau, period, phase, c_amp)
             else:
-                grad_gau = deriv_dmp_osc_sum_conv_gau(ti-t0, fwhm[0], 1/tau, period, phase, c)
-                grad_cauchy = deriv_dmp_osc_sum_conv_cauchy(ti-t0, fwhm[1], 1/tau, period, phase, c)
+                grad_gau = deriv_dmp_osc_sum_conv_gau(ti-t0, fwhm[0], 1/tau, period, phase, c_amp)
+                grad_cauchy = deriv_dmp_osc_sum_conv_cauchy(ti-t0, fwhm[1], 1/tau, period, phase, c_amp)
                 grad_tmp = grad_gau + eta*(grad_cauchy-grad_gau)
    
             grad_tmp = np.einsum('i,ij->ij', 1/e[:, j], grad_tmp)
@@ -209,7 +206,7 @@ def res_grad_dmp_osc(x0: np.ndarray, num_comp: int, irf: str,
             grad[t0_idx] = -chi[end:end+step]@grad_tmp[:, 0]
             df[end:end+step, :num_irf+num_comp] = \
                 np.einsum('j,ij->ij', -1/tau**2, grad_tmp[:, 2:2+num_comp])
-            df[end:end+step, num_irf+num_comp:] = grad_tmp[:, 2+num_comp:]
+            df[end:end+step, num_irf+num_comp:] = grad_tmp[:, 2+num_comp:2+2*num_comp]
 
                 
             end = end + step

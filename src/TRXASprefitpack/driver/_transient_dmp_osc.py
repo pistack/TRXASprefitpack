@@ -18,7 +18,6 @@ from ..res.res_osc import residual_dmp_osc, res_grad_dmp_osc
 
 def fit_transient_dmp_osc(irf: str, fwhm_init: Union[float, np.ndarray], 
                           t0_init: np.ndarray, tau_init: np.ndarray, period_init: np.ndarray,
-                          phase_init: np.ndarray,
                           do_glb: Optional[bool] = False, 
                           method_lsq: Optional[str] = 'trf',
                           kwargs_glb: Optional[dict] = None, 
@@ -27,7 +26,6 @@ def fit_transient_dmp_osc(irf: str, fwhm_init: Union[float, np.ndarray],
                           bound_t0: Optional[Sequence[Tuple[float, float]]] = None, 
                           bound_tau: Optional[Sequence[Tuple[float, float]]] = None,
                           bound_period: Optional[Sequence[Tuple[float, float]]] = None,
-                          bound_phase: Optional[Sequence[Tuple[float, float]]] = None,
                           name_of_dset: Optional[Sequence[str]] = None,
                           t: Optional[Sequence[np.ndarray]] = None, 
                           intensity: Optional[Sequence[np.ndarray]] = None,
@@ -68,7 +66,6 @@ def fit_transient_dmp_osc(irf: str, fwhm_init: Union[float, np.ndarray],
        t0_init (np.ndarray): time zeros for each scan
        tau_init (np.ndarray): lifetime constant for each damped oscillation component
        period_init (np.ndarray): period of each oscillation component
-       phase_init (np.ndarray): phase factor of each oscillation component
        do_glb (bool): Whether or not use global optimization algorithm. If True then basinhopping algorithm is used.
        method_lsq ({'trf', 'dogbox', 'lm'}): method of local optimization for least_squares
                                              minimization (refinement of global optimization solution)
@@ -83,8 +80,6 @@ def fit_transient_dmp_osc(irf: str, fwhm_init: Union[float, np.ndarray],
         if `bound_tau` is `None`, the upper and lower bound are given by `set_bound_tau`.
        bound_period (sequence of tuple): boundary for period of damped oscillation component, 
         if `bound_period` is `None`, the upper and lower bound are given by `set_bound_tau`.
-       bound_phase (sequence of tuple): boundary for phase factor of damped oscillation component,
-        if `bound_phase` is `None`, the upper and lower bound are given as `(-np.pi, np.pi)`.
        name_of_dset (sequence of str): name of each dataset
        t (sequence of np.narray): time scan range for each datasets
        intensity (sequence of np.ndarray): sequence of intensity pf datasets for time delay scan (it should not contain time scan range)
@@ -96,7 +91,7 @@ def fit_transient_dmp_osc(irf: str, fwhm_init: Union[float, np.ndarray],
       num_comp = tau_init.size
 
       num_irf = 1*(irf in ['g', 'c'])+2*(irf == 'pv')
-      num_param = num_irf+t0_init.size+3*num_comp
+      num_param = num_irf+t0_init.size+2*num_comp
       param = np.empty(num_param, dtype=float)
       fix_param_idx = np.empty(num_param, dtype=bool)
 
@@ -104,7 +99,6 @@ def fit_transient_dmp_osc(irf: str, fwhm_init: Union[float, np.ndarray],
       param[num_irf:num_irf+t0_init.size] = t0_init
       param[num_irf+t0_init.size:num_irf+t0_init.size+num_comp] = tau_init
       param[num_irf+t0_init.size+num_comp:num_irf+t0_init.size+2*num_comp] = period_init
-      param[num_irf+t0_init.size+2*num_comp:] = phase_init
       bound = num_param*[None]
 
       if bound_fwhm is None:
@@ -130,11 +124,6 @@ def fit_transient_dmp_osc(irf: str, fwhm_init: Union[float, np.ndarray],
                   bound[i+num_irf+t0_init.size+num_comp] = set_bound_tau(period_init[i], fwhm_init)
       else:
             bound[num_irf+t0_init.size+num_comp:num_irf+t0_init.size+2*num_comp] = bound_period
-      
-      if bound_phase is None:
-            bound[num_irf+t0_init.size+2*num_comp:] = num_comp*[(-np.pi, np.pi)]
-      else:
-            bound[num_irf+t0_init.size+2*num_comp:] = bound_phase
 
       for i in range(num_param):
             fix_param_idx[i] = (bound[i][0] == bound[i][1])
@@ -187,7 +176,6 @@ def fit_transient_dmp_osc(irf: str, fwhm_init: Union[float, np.ndarray],
       fwhm_opt = param_opt[:num_irf]
       tau_opt = param_opt[num_irf+t0_init.size:num_irf+t0_init.size+num_comp]
       period_opt = param_opt[num_irf+t0_init.size+num_comp:num_irf+t0_init.size+2*num_comp]
-      phase_opt = param_opt[num_irf+t0_init.size+2*num_comp:]
       
       fit = np.empty(len(t), dtype=object); res = np.empty(len(t), dtype=object)
       
@@ -199,7 +187,7 @@ def fit_transient_dmp_osc(irf: str, fwhm_init: Union[float, np.ndarray],
 
     # Calc individual chi2
       chi = res_lsq['fun']
-      num_param_tot = num_tot_scan*num_comp+num_param-np.sum(fix_param_idx)
+      num_param_tot = 2*num_tot_scan*num_comp+num_param-np.sum(fix_param_idx)
       chi2 = 2*res_lsq['cost']
       red_chi2 = chi2/(chi.size-num_param_tot)
       
@@ -219,6 +207,7 @@ def fit_transient_dmp_osc(irf: str, fwhm_init: Union[float, np.ndarray],
 
       param_name = np.empty(param_opt.size, dtype=object)
       c = np.empty(len(t), dtype=object)
+      phase = np.empty(len(t), dtype=object)
       t0_idx = num_irf
 
       if irf == 'g':
@@ -237,11 +226,14 @@ def fit_transient_dmp_osc(irf: str, fwhm_init: Union[float, np.ndarray],
 
       for i in range(len(t)):
             c[i] = np.empty((num_comp, intensity[i].shape[1]))
+            phase[i] = np.empty((num_comp, intensity[i].shape[1]))
             
             for j in range(intensity[i].shape[1]):
-                  A = make_A_matrix_dmp_osc(t[i]-param_opt[t0_idx], fwhm_pv, tau_opt, period_opt, phase_opt, irf, eta)
-                  c[i][:, j] = fact_anal_A(A, intensity[i][:, j], eps[i][:, j])
-                  fit[i][:, j] = c[i][:, j] @ A
+                  A = make_A_matrix_dmp_osc(t[i]-param_opt[t0_idx], fwhm_pv, tau_opt, period_opt, irf, eta)
+                  tmp = fact_anal_A(A, intensity[i][:, j], eps[i][:, j])
+                  c[i][:, j] = np.sqrt(tmp[:num_comp]**2+tmp[num_comp:])
+                  phase[i][:, j] = -np.arctan2(tmp[num_comp:], tmp[:num_comp]) 
+                  fit[i][:, j] = tmp @ A
                   param_name[t0_idx] = f't_0_{i+1}_{j+1}'
                   t0_idx = t0_idx + 1
             
@@ -250,7 +242,6 @@ def fit_transient_dmp_osc(irf: str, fwhm_init: Union[float, np.ndarray],
       for i in range(num_comp):
             param_name[num_irf+t0_init.size+i] = f'tau_{i+1}'
             param_name[num_irf+t0_init.size+num_comp+i] = f'period_{i+1}'
-            param_name[num_irf+t0_init.size+2*num_comp+i] = f'phase_{i+1}'
       
       jac = res_lsq['jac']
       hes = jac.T @ jac
@@ -280,6 +271,7 @@ def fit_transient_dmp_osc(irf: str, fwhm_init: Union[float, np.ndarray],
       
       result['param_name'] = param_name; result['x'] = param_opt
       result['bounds'] = bound; result['base'] = False; result['c'] = c
+      result['phase'] = phase
       result['chi2'] = chi2; result['chi2_ind'] = chi2_ind
       result['aic'] = chi.size*np.log(chi2/chi.size)+2*num_param_tot
       result['bic'] = chi.size*np.log(chi2/chi.size)+num_param_tot*np.log(chi.size)
