@@ -1,7 +1,7 @@
 # fit_tscan Intermediate Example
 
 Intermediate usage example for fit_tscan utility.
-Yon can find example file from [TRXASprefitpack-example](https://github.com/pistack/TRXASprefitpack-example/) fit_tscan subdirectory.
+Yon can find example file from [TRXASprefitpack-example](https://github.com/pistack/TRXASprefitpack-example/tree/v0.6.0) fit_tscan subdirectory.
 
 1. Go to `osc` sub directory of `fit_tscan` directory.
 2. In `osc` sub directory,  you can find ``example_osc_1.txt``, ``example_osc_2.txt``, ``example_osc_3.txt``, ``example_osc_4.txt`` files.

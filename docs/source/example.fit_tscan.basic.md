@@ -1,7 +1,7 @@
 # fit_tscan Basic Example
 
 Basic usage example for fit_tscan utility.
-Yon can find example file from [TRXASprefitpack-example](https://github.com/pistack/TRXASprefitpack-example/) fit_tscan subdirectory.
+Yon can find example file from [TRXASprefitpack-example](https://github.com/pistack/TRXASprefitpack-example/tree/v0.6.0) fit_tscan subdirectory.
 
 1. Go to `basic` sub directory of `fit_tscan` directory.
 1. In `basic` sub directory,  you can find ``example_basic_1.txt``, ``example_basic_2.txt``, ``example_basic_3.txt``, ``example_basic_4.txt`` files.

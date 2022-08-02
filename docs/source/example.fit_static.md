@@ -1,11 +1,11 @@
 # fit_static Basic Example
 
 Basic usage example ``fit_static`` utility.
-Yon can find example file from [TRXASprefitpack-example](https://github.com/pistack/TRXASprefitpack-example/) fit_static subdirectory.
+Yon can find example file from [TRXASprefitpack-example](https://github.com/pistack/TRXASprefitpack-example/tree/v0.6.0) fit_static subdirectory.
 
 ## Fitting with voigt profile
 
-1. I `fit_static` sub directory,  you can find ``example_static.txt`` file.
+1. In  `fit_static` sub directory,  you can find ``example_static.txt`` file.
 This example is generated from Library example, fitting with static spectrum.
 2. Type ``fit_static -h`` Then it prints help message. You can find detailed description of arguments in the utility section of this document.
 3. First find edge feature. Type ``fit_static example_static.txt  --mode voigt --edge g --e0_edge 8992 --fwhm_edge 10 -o edge --do_glb``.

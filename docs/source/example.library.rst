@@ -1,6 +1,8 @@
 Library
 ================
 
+You can download jupyter notebook example from [TRXASprefitpack-example](https://github.com/pistack/TRXASprefitpack-example/tree/v0.6.0).
+
 .. toctree::
    :maxdepth: 1
 
