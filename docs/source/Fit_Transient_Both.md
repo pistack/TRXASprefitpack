@@ -26,7 +26,7 @@ print(TRXASprefitpack.__version__)
 ```
 
     0.6.0
-
+    
 
 ## Detecting oscillation feature
 
@@ -124,6 +124,16 @@ print(f'scan 3: {abs_3[0]} \t {abs_3[1]} \t {abs_3[2]}')
 print(f'scan 4: {abs_4[0]} \t {abs_4[1]} \t {abs_4[2]}')
 
 param_exact = [fwhm, t0[0], t0[1], t0[2], t0[3], tau_1, tau_2, tau_3, tau_osc, period_osc, phase]
+
+data1 = np.vstack((t_seq, i_obs_1, eps_obs_1)).T
+data2 = np.vstack((t_seq, i_obs_2, eps_obs_2)).T
+data3 = np.vstack((t_seq, i_obs_3, eps_obs_3)).T
+data4 = np.vstack((t_seq, i_obs_4, eps_obs_4)).T
+
+np.savetxt('./fit_tscan/osc/example_osc_1.txt', data1)
+np.savetxt('./fit_tscan/osc/example_osc_2.txt', data2)
+np.savetxt('./fit_tscan/osc/example_osc_3.txt', data3)
+np.savetxt('./fit_tscan/osc/example_osc_4.txt', data4)
 ```
 
     ------------------------
@@ -134,17 +144,17 @@ param_exact = [fwhm, t0[0], t0[1], t0[2], t0[3], tau_1, tau_2, tau_3, tau_osc, p
     tau_osc: 1
     period_osc: 0.3
     phase_osc: 0.7853981633974483
-    t_0_1: 0.023319938080473612
-    t_0_2: 0.022808896228266443
-    t_0_3: -0.023474178102756708
-    t_0_4: -0.06616291848757526
+    t_0_1: 0.05053956334459484
+    t_0_2: -0.07163546673750752
+    t_0_3: -0.004390946806632458
+    t_0_4: 0.13670418243246096
     ------------------------
     Excited Species contribution
     scan 1: 1 	 1 	 1
     scan 2: 0.5 	 0.8 	 0.2
     scan 3: -0.5 	 0.7 	 0.9
     scan 4: 0.6 	 0.3 	 -1
-
+    
 
 
 ```python
@@ -213,7 +223,7 @@ print(fit_result_decay)
     [Model information]
         model : decay
         irf: g
-        fwhm:  0.1001
+        fwhm:  0.1008
         eta:  0.0000
         base: False
      
@@ -222,7 +232,7 @@ print(fit_result_decay)
         leastsq: trf
      
     [Optimization Status]
-        nfev: 3516
+        nfev: 3456
         status: 0
         global_opt msg: requested number of basinhopping iterations completed successfully
         leastsq_opt msg: `ftol` termination condition is satisfied.
@@ -231,48 +241,49 @@ print(fit_result_decay)
         Total Data points: 600
         Number of effective parameters: 20
         Degree of Freedom: 580
-        Chi squared:  1026.0937
-        Reduced chi squared:  1.7691
-        AIC (Akaike Information Criterion statistic):  361.9508
-        BIC (Bayesian Information Criterion statistic):  449.8894
+        Chi squared:  1060.8466
+        Reduced chi squared:  1.829
+        AIC (Akaike Information Criterion statistic):  381.9358
+        BIC (Bayesian Information Criterion statistic):  469.8743
      
     [Parameters]
-        fwhm_G:  0.10007463 +/-  0.00089776 ( 0.90%)
-        t_0_1_1:  0.02231415 +/-  0.00042144 ( 1.89%)
-        t_0_1_2:  0.02226138 +/-  0.00060401 ( 2.71%)
-        t_0_1_3: -0.02382116 +/-  0.00074505 ( 3.13%)
-        t_0_1_4: -0.06663829 +/-  0.00064808 ( 0.97%)
-        tau_1:  0.49965492 +/-  0.00262923 ( 0.53%)
-        tau_2:  9.99814026 +/-  0.05342504 ( 0.53%)
-        tau_3:  1004.29529145 +/-  4.69763846 ( 0.47%)
+        fwhm_G:  0.10077973 +/-  0.00091351 ( 0.91%)
+        t_0_1_1:  0.05003520 +/-  0.00042857 ( 0.86%)
+        t_0_1_2: -0.07119986 +/-  0.00060856 ( 0.85%)
+        t_0_1_3: -0.00538671 +/-  0.00076649 ( 14.23%)
+        t_0_1_4:  0.13664093 +/-  0.00066225 ( 0.48%)
+        tau_1:  0.50197077 +/-  0.00270331 ( 0.54%)
+        tau_2:  10.00304080 +/-  0.05645921 ( 0.56%)
+        tau_3:  1003.82449967 +/-  4.76296335 ( 0.47%)
      
     [Parameter Bound]
-        fwhm_G:  0.075 <=  0.10007463 <=  0.3
-        t_0_1_1: -0.3 <=  0.02231415 <=  0.3
-        t_0_1_2: -0.3 <=  0.02226138 <=  0.3
-        t_0_1_3: -0.3 <= -0.02382116 <=  0.3
-        t_0_1_4: -0.3 <= -0.06663829 <=  0.3
-        tau_1:  0.075 <=  0.49965492 <=  1.2
-        tau_2:  4.8 <=  9.99814026 <=  76.8
-        tau_3:  307.2 <=  1004.29529145 <=  4915.2
+        fwhm_G:  0.075 <=  0.10077973 <=  0.3
+        t_0_1_1: -0.3 <=  0.05003520 <=  0.3
+        t_0_1_2: -0.3 <= -0.07119986 <=  0.3
+        t_0_1_3: -0.3 <= -0.00538671 <=  0.3
+        t_0_1_4: -0.3 <=  0.13664093 <=  0.3
+        tau_1:  0.075 <=  0.50197077 <=  1.2
+        tau_2:  4.8 <=  10.00304080 <=  76.8
+        tau_3:  307.2 <=  1003.82449967 <=  4915.2
+     
      
     [Component Contribution]
         DataSet dataset_1:
          #tscan	tscan_1	tscan_2	tscan_3	tscan_4
-         decay 1	-1.74%	-28.82%	-51.39%	 8.75%
-         decay 2	-0.20%	 53.96%	-9.45%	 52.68%
-         decay 3	 98.06%	 17.22%	 39.16%	-38.57%
+         decay 1	-1.29%	-28.41%	-51.13%	 8.89%
+         decay 2	-0.71%	 54.18%	-9.62%	 52.56%
+         decay 3	 97.99%	 17.41%	 39.25%	-38.55%
      
     [Parameter Correlation]
         Parameter Correlations >  0.1 are reported.
-        (t_0_1_1, fwhm_G) =  0.105
-        (t_0_1_2, fwhm_G) =  0.102
-        (tau_1, t_0_1_2) =  0.121
-        (tau_1, t_0_1_3) = -0.345
-        (tau_2, t_0_1_2) =  0.1
-        (tau_2, t_0_1_4) =  0.133
-        (tau_3, tau_2) = -0.164
-
+        (t_0_1_1, fwhm_G) =  0.106
+        (t_0_1_2, fwhm_G) =  0.103
+        (tau_1, t_0_1_2) =  0.118
+        (tau_1, t_0_1_3) = -0.347
+        (tau_2, t_0_1_2) =  0.101
+        (tau_2, t_0_1_4) =  0.145
+        (tau_3, tau_2) = -0.156
+    
 
 
 ```python
@@ -340,10 +351,9 @@ Only residual for experimental scan 1 shows clear oscillation feature, Now add o
 from TRXASprefitpack import fit_transient_both
 tau_osc_init = np.array([1.5])
 period_osc_init = np.array([0.5])
-phase_osc_init = np.array([0])
 
 fit_result_decay_osc = fit_transient_both(irf, fwhm_init, t0_init, tau_init, 
-tau_osc_init, period_osc_init, phase_osc_init, 
+tau_osc_init, period_osc_init,
 False, do_glb=True, t=t, intensity=intensity, eps=eps)
 
 ```
@@ -357,7 +367,7 @@ print(fit_result_decay_osc)
     [Model information]
         model : both
         irf: g
-        fwhm:  0.0982
+        fwhm:  0.0998
         eta:  0.0000
         base: False
      
@@ -366,69 +376,70 @@ print(fit_result_decay_osc)
         leastsq: trf
      
     [Optimization Status]
-        nfev: 16200
+        nfev: 13494
         status: 0
         global_opt msg: requested number of basinhopping iterations completed successfully
         leastsq_opt msg: `ftol` termination condition is satisfied.
      
     [Optimization Results]
         Total Data points: 600
-        Number of effective parameters: 27
-        Degree of Freedom: 573
-        Chi squared:  568.9827
-        Reduced chi squared:  0.993
-        AIC (Akaike Information Criterion statistic):  22.1522
-        BIC (Bayesian Information Criterion statistic):  140.8693
+        Number of effective parameters: 30
+        Degree of Freedom: 570
+        Chi squared:  638.1717
+        Reduced chi squared:  1.1196
+        AIC (Akaike Information Criterion statistic):  97.0066
+        BIC (Bayesian Information Criterion statistic):  228.9145
      
     [Parameters]
-        fwhm_G:  0.09817267 +/-  0.00070595 ( 0.72%)
-        t_0_1_1:  0.02213832 +/-  0.00039378 ( 1.78%)
-        t_0_1_2:  0.02212862 +/-  0.00044881 ( 2.03%)
-        t_0_1_3: -0.02382946 +/-  0.00055378 ( 2.32%)
-        t_0_1_4: -0.06671371 +/-  0.00048032 ( 0.72%)
-        tau_1:  0.50024992 +/-  0.00202120 ( 0.40%)
-        tau_2:  9.99079667 +/-  0.04010556 ( 0.40%)
-        tau_3:  1003.42985657 +/-  3.51461165 ( 0.35%)
-        tau_osc_1:  0.86388391 +/-  0.13013780 ( 15.06%)
-        period_osc_1:  0.30468441 +/-  0.00268993 ( 0.88%)
-        phase_osc_1: -2.18880168 +/-  0.08419389 ( 3.85%)
+        fwhm_G:  0.09984398 +/-  0.00075909 ( 0.76%)
+        t_0_1_1:  0.05061665 +/-  0.00039406 ( 0.78%)
+        t_0_1_2: -0.07132916 +/-  0.00051803 ( 0.73%)
+        t_0_1_3: -0.00474142 +/-  0.00064774 ( 13.66%)
+        t_0_1_4:  0.13670938 +/-  0.00056220 ( 0.41%)
+        tau_1:  0.50172568 +/-  0.00215798 ( 0.43%)
+        tau_2:  10.00631278 +/-  0.04434765 ( 0.44%)
+        tau_3:  1002.83212275 +/-  3.72071882 ( 0.37%)
+        tau_osc_1:  1.28461622 +/-  0.25058768 ( 19.51%)
+        period_osc_1:  0.29797454 +/-  0.00220269 ( 0.74%)
      
     [Parameter Bound]
-        fwhm_G:  0.075 <=  0.09817267 <=  0.3
-        t_0_1_1: -0.3 <=  0.02213832 <=  0.3
-        t_0_1_2: -0.3 <=  0.02212862 <=  0.3
-        t_0_1_3: -0.3 <= -0.02382946 <=  0.3
-        t_0_1_4: -0.3 <= -0.06671371 <=  0.3
-        tau_1:  0.075 <=  0.50024992 <=  1.2
-        tau_2:  4.8 <=  9.99079667 <=  76.8
-        tau_3:  307.2 <=  1003.42985657 <=  4915.2
-        tau_osc_1:  0.3 <=  0.86388391 <=  4.8
-        period_osc_1:  0.075 <=  0.30468441 <=  1.2
-        phase_osc_1: -3.14159265 <= -2.18880168 <=  3.14159265
+        fwhm_G:  0.075 <=  0.09984398 <=  0.3
+        t_0_1_1: -0.3 <=  0.05061665 <=  0.3
+        t_0_1_2: -0.3 <= -0.07132916 <=  0.3
+        t_0_1_3: -0.3 <= -0.00474142 <=  0.3
+        t_0_1_4: -0.3 <=  0.13670938 <=  0.3
+        tau_1:  0.075 <=  0.50172568 <=  1.2
+        tau_2:  4.8 <=  10.00631278 <=  76.8
+        tau_3:  307.2 <=  1002.83212275 <=  4915.2
+        tau_osc_1:  0.3 <=  1.28461622 <=  4.8
+        period_osc_1:  0.075 <=  0.29797454 <=  1.2
+     
+    [Phase Factor]
+        DataSet dataset_1:
+         #tscan	tscan_1	tscan_2	tscan_3	tscan_4
+         dmp_osc 1	 0.2120 π	 0.4132 π	 0.8410 π	 0.2091 π
      
     [Component Contribution]
         DataSet dataset_1:
          #tscan	tscan_1	tscan_2	tscan_3	tscan_4
-         decay 1	-0.40%	-28.85%	-51.36%	 8.69%
-         decay 2	-0.68%	 53.89%	-9.45%	 52.70%
-         decay 3	 93.83%	 17.19%	 39.18%	-38.57%
-        dmp_osc 1	-5.09%	-0.06%	 0.01%	 0.04%
+         decay 1	 0.01%	-28.40%	-51.00%	 8.90%
+         decay 2	-1.21%	 54.11%	-9.61%	 52.46%
+         decay 3	 94.45%	 17.39%	 39.18%	-38.48%
+        dmp_osc 1	 4.34%	 0.11%	 0.22%	 0.16%
      
     [Parameter Correlation]
         Parameter Correlations >  0.1 are reported.
-        (t_0_1_1, fwhm_G) =  0.254
-        (t_0_1_2, fwhm_G) =  0.111
-        (tau_1, t_0_1_2) =  0.123
+        (t_0_1_1, fwhm_G) =  0.241
+        (t_0_1_2, fwhm_G) =  0.154
+        (t_0_1_4, fwhm_G) =  0.116
+        (tau_1, t_0_1_2) =  0.111
         (tau_1, t_0_1_3) = -0.348
-        (tau_2, t_0_1_4) =  0.131
-        (tau_3, tau_2) = -0.164
-        (tau_osc_1, fwhm_G) =  0.123
-        (period_osc_1, fwhm_G) = -0.235
-        (period_osc_1, t_0_1_1) = -0.52
-        (phase_osc_1, fwhm_G) = -0.298
-        (phase_osc_1, t_0_1_1) = -0.592
-        (phase_osc_1, period_osc_1) =  0.838
-
+        (tau_2, t_0_1_2) =  0.103
+        (tau_2, t_0_1_4) =  0.133
+        (tau_3, tau_2) = -0.156
+        (period_osc_1, fwhm_G) = -0.251
+        (period_osc_1, t_0_1_1) = -0.451
+    
 
 
 ```python
@@ -454,7 +465,7 @@ print()
 
 
     
-
+    
 
 
 ```python
@@ -463,20 +474,17 @@ for i in range(len(fit_result_decay_osc['x'])):
     print(f"{fit_result_decay_osc['param_name'][i]}: {fit_result_decay_osc['x'][i]} (fit) \t {param_exact[i]} (exact)")
 ```
 
-    fwhm_G: 0.09817267448566006 (fit) 	 0.1 (exact)
-    t_0_1_1: 0.02213831760155054 (fit) 	 0.023319938080473612 (exact)
-    t_0_1_2: 0.02212861717160382 (fit) 	 0.022808896228266443 (exact)
-    t_0_1_3: -0.023829456447629297 (fit) 	 -0.023474178102756708 (exact)
-    t_0_1_4: -0.06671371415887084 (fit) 	 -0.06616291848757526 (exact)
-    tau_1: 0.5002499230390485 (fit) 	 0.5 (exact)
-    tau_2: 9.990796671170218 (fit) 	 10 (exact)
-    tau_3: 1003.4298565703303 (fit) 	 1000 (exact)
-    tau_osc_1: 0.8638839106790563 (fit) 	 1 (exact)
-    period_osc_1: 0.3046844059272981 (fit) 	 0.3 (exact)
-    phase_osc_1: -2.1888016822078504 (fit) 	 0.7853981633974483 (exact)
-
-
-Since $\pi$ is corresponding to sign inversion ($e^{i \pi} = -1$), one can assume ($\pi+\phi = \phi$).
+    fwhm_G: 0.09984398023073539 (fit) 	 0.1 (exact)
+    t_0_1_1: 0.050616647691810734 (fit) 	 0.05053956334459484 (exact)
+    t_0_1_2: -0.07132916197304762 (fit) 	 -0.07163546673750752 (exact)
+    t_0_1_3: -0.004741422504451592 (fit) 	 -0.004390946806632458 (exact)
+    t_0_1_4: 0.1367093818502816 (fit) 	 0.13670418243246096 (exact)
+    tau_1: 0.5017256765256979 (fit) 	 0.5 (exact)
+    tau_2: 10.006312781399181 (fit) 	 10 (exact)
+    tau_3: 1002.8321227541483 (fit) 	 1000 (exact)
+    tau_osc_1: 1.284616223329954 (fit) 	 1 (exact)
+    period_osc_1: 0.29797453736969626 (fit) 	 0.3 (exact)
+    
 
 
 ```python
@@ -492,7 +500,7 @@ Now deduce species associated difference coefficient from sequential decay model
 
 ```python
 y0 = np.array([1, 0, 0, 0]) # initial cond
-eigval, V, c = solve_seq_model(loaded_result['x'][5:-3], y0)
+eigval, V, c = solve_seq_model(loaded_result['x'][5:-2], y0)
 
 # compute scaled V matrix
 V_scale = np.einsum('j,ij->ij', c, V)
@@ -514,11 +522,11 @@ print(f'4 \t {diff_abs_fit[0,3]} \t {abs_4[0]}  \t {diff_abs_fit[1,3]} \t {abs_4
     ------------------------
     [Species Associated Difference Coefficent]
     scan # 	 ex 1 (fit) 	 ex 1 (exact) 	 ex 2 (fit) 	 ex 2 (exact) 	 ex 3 (exact)
-    1 	 0.9964197294868353 	 1  	 1.0006264175714779 	 1 	 0.9974852126182684 	 1
-    2 	 0.4952242997097968 	 0.5  	 0.8017524559863427 	 0.8 	 0.19948994139714366 	 0.2
-    3 	 -0.5020454807241927 	 -0.5  	 0.7002431770151698 	 0.7 	 0.8994776774561238 	 0.9
-    4 	 0.5979286958144661 	 0.6  	 0.30152861842772394 	 0.3 	 -1.0003053038966574 	 -1
-
+    1 	 0.999814728016317 	 1  	 0.9998813520856183 	 1 	 1.0020621741915658 	 1
+    2 	 0.5013994541791791 	 0.5  	 0.8002106071258839 	 0.8 	 0.20017964124729995 	 0.2
+    3 	 -0.498563790521078 	 -0.5  	 0.6989863593941319 	 0.7 	 0.9022594839616441 	 0.9
+    4 	 0.6007902340276545 	 0.6  	 0.29855248807181206 	 0.3 	 -1.0000321282616873 	 -1
+    
 
 It also matches well, as expected.
 
@@ -537,18 +545,17 @@ print(ci_result) # report confidence interval
         Significance level:  5.000000e-02
      
     [Confidence interval]
-        0.09817267 -  0.00137419 <= b'fwhm_G' <=  0.09817267 +  0.00138019
-        0.02213832 -  0.00077537 <= b't_0_1_1' <=  0.02213832 +  0.00077968
-        0.02212862 -  0.00088784 <= b't_0_1_2' <=  0.02212862 +  0.00088411
-        -0.02382946 -  0.00109041 <= b't_0_1_3' <= -0.02382946 +  0.00109126
-        -0.06671371 -  0.00094465 <= b't_0_1_4' <= -0.06671371 +  0.00094325
-        0.50024992 -  0.00393884 <= b'tau_1' <=  0.50024992 +  0.00396466
-        9.99079667 -  0.07734601 <= b'tau_2' <=  9.99079667 +  0.078199
-        1003.42985657 -  6.87202608 <= b'tau_3' <=  1003.42985657 +  6.93904522
-        0.86388391 -  0.21114474 <= b'tau_osc_1' <=  0.86388391 +  0.32329336
-        0.30468441 -  0.00550132 <= b'period_osc_1' <=  0.30468441 +  0.00552368
-        -2.18880168 -  0.16792602 <= b'phase_osc_1' <= -2.18880168 +  0.17068111
-
+        0.09984398 -  0.00147569 <= b'fwhm_G' <=  0.09984398 +  0.00147812
+        0.05061665 -  0.00076623 <= b't_0_1_1' <=  0.05061665 +  0.00076005
+        -0.07132916 -  0.00102483 <= b't_0_1_2' <= -0.07132916 +  0.00099725
+        -0.00474142 -  0.00126688 <= b't_0_1_3' <= -0.00474142 +  0.00127079
+        0.13670938 -  0.00110796 <= b't_0_1_4' <=  0.13670938 +  0.001104
+        0.50172568 -  0.00418296 <= b'tau_1' <=  0.50172568 +  0.00422175
+        10.00631278 -  0.08543495 <= b'tau_2' <=  10.00631278 +  0.08629124
+        1002.83212275 -  7.26121914 <= b'tau_3' <=  1002.83212275 +  7.33143627
+        1.28461622 -  0.40931793 <= b'tau_osc_1' <=  1.28461622 +  0.75237185
+        0.29797454 -  0.00397536 <= b'period_osc_1' <=  0.29797454 +  0.00455939
+    
 
 
 ```python
@@ -564,17 +571,16 @@ for i in range(loaded_result['param_name'].size):
 ```
 
     [Confidence interval (from ASE)]
-     0.09817267 - 0.00138365 <= b'fwhm_G' <= 0.09817267 +  0.00138365
-     0.02213832 - 0.00077180 <= b't_0_1_1' <= 0.02213832 +  0.00077180
-     0.02212862 - 0.00087965 <= b't_0_1_2' <= 0.02212862 +  0.00087965
-    -0.02382946 - 0.00108539 <= b't_0_1_3' <= -0.02382946 +  0.00108539
-    -0.06671371 - 0.00094141 <= b't_0_1_4' <= -0.06671371 +  0.00094141
-     0.50024992 - 0.00396148 <= b'tau_1' <= 0.50024992 +  0.00396148
-     9.99079667 - 0.07860544 <= b'tau_2' <= 9.99079667 +  0.07860544
-     1003.42985657 - 6.88851226 <= b'tau_3' <= 1003.42985657 +  6.88851226
-     0.86388391 - 0.25506541 <= b'tau_osc_1' <= 0.86388391 +  0.25506541
-     0.30468441 - 0.00527217 <= b'period_osc_1' <= 0.30468441 +  0.00527217
-    -2.18880168 - 0.16501699 <= b'phase_osc_1' <= -2.18880168 +  0.16501699
-
+     0.09984398 - 0.00148779 <= b'fwhm_G' <= 0.09984398 +  0.00148779
+     0.05061665 - 0.00077233 <= b't_0_1_1' <= 0.05061665 +  0.00077233
+    -0.07132916 - 0.00101533 <= b't_0_1_2' <= -0.07132916 +  0.00101533
+    -0.00474142 - 0.00126955 <= b't_0_1_3' <= -0.00474142 +  0.00126955
+     0.13670938 - 0.00110190 <= b't_0_1_4' <= 0.13670938 +  0.00110190
+     0.50172568 - 0.00422955 <= b'tau_1' <= 0.50172568 +  0.00422955
+     10.00631278 - 0.08691980 <= b'tau_2' <= 10.00631278 +  0.08691980
+     1002.83212275 - 7.29247489 <= b'tau_3' <= 1002.83212275 +  7.29247489
+     1.28461622 - 0.49114282 <= b'tau_osc_1' <= 1.28461622 +  0.49114282
+     0.29797454 - 0.00431719 <= b'period_osc_1' <= 0.29797454 +  0.00431719
+    
 
 However, as you can see, in many case, ASE does not much different from more sophisticated `f-test` based error estimation.

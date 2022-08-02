@@ -11,7 +11,7 @@ To calculate the contribution of each life time component, it solve least linear
 
 * usage: fit_tscan 
                     [-h] [--mode {decay,osc,both}] [--irf {g,c,pv}] [--fwhm_G FWHM_G] [--fwhm_L FWHM_L] [--num_file NUM_FILE [NUM_FILE ...]] [-t0 TIME_ZEROS [TIME_ZEROS ...]] [-t0f TIME_ZEROS_FILE]
-                    [--tau [TAU ...]] [--tau_osc TAU_OSC [TAU_OSC ...]] [--period_osc PERIOD_OSC [PERIOD_OSC ...]] [--phase_osc PHASE_OSC [PHASE_OSC ...]] [--no_base] [--fix_irf] [--fix_t0] [--do_glb]
+                    [--tau [TAU ...]] [--tau_osc TAU_OSC [TAU_OSC ...]] [--period_osc PERIOD_OSC [PERIOD_OSC ...]] [--no_base] [--fix_irf] [--fix_t0] [--do_glb]
                     [-o OUTDIR] [--save_fig]
                     prefix [prefix ...]
 
@@ -52,8 +52,6 @@ To calculate the contribution of each life time component, it solve least linear
    lifetime of each damped oscillation component [mode: osc, both]
   * --period_osc PERIOD_OSC [PERIOD_OSC ...]
    period of the vibration of each damped oscillation component [mode: osc, both]
-  * --phase_osc PHASE_OSC [PHASE_OSC ...]
-   phase factor of each damped oscilliation component [model: osc, both]
   * --no_base             exclude baseline for fitting [mode: decay, both]
   * --fix_irf             fix irf parameter (fwhm_G, fwhm_L) during fitting process
   * --fix_t0              fix time zero parameter during fitting process.
@@ -77,13 +75,12 @@ To calculate the contribution of each life time component, it solve least linear
 
 4. If you did not set tau and `mode=decay` then `--no_base` option is discouraged.
 
-5. If you set `mode=decay` then any parameter whoose subscript is `osc` is discarded (i.e. tau_osc, period_osc, phase_osc).
+5. If you set `mode=decay` then any parameter whoose subscript is `osc` is discarded (i.e. tau_osc, period_osc).
 
 6. If you set `mode=osc` then `tau` parameter is discarded. Also, baseline feature is not included in fitting function.
 
-7. The number of tau_osc, period_osc and phase_osc parameter should be same
+7. The number of tau_osc and period_osc parameter should be same
 
-8. phase_osc should be confined in [-pi, pi] (pi ~ 3.14)
-
-9. If you set `mode=both` then you should set `tau`, `tau_osc`, `period_osc` and `phase_osc`. However the number of `tau` and `tau_osc` need not to be same.
+8. If you set `mode=both` then you should set `tau`, `tau_osc` and `period_osc`. 
+ However the number of `tau` and `tau_osc` need not to be same.
 ```
