@@ -6,14 +6,15 @@ sum of voigt broadened theoretical spectrum, edge function and base function
 :copyright: 2021-2022 by pistack (Junho Lee).
 :license: LGPL3.
 '''
-from typing import Optional
+from typing import Optional, Sequence
 import numpy as np
 from numpy.polynomial.legendre import legval
 from ..mathfun.A_matrix import fact_anal_A
 from ..mathfun.peak_shape import voigt_thy, edge_gaussian, edge_lorenzian
 from ..mathfun.peak_shape import deriv_voigt_thy, deriv_edge_gaussian, deriv_edge_lorenzian
 
-def residual_thy(x0: np.ndarray, policy: str, thy_peak: np.ndarray, edge: Optional[str] = None,
+def residual_thy(x0: np.ndarray, policy: str, thy_peak: Sequence[np.ndarray], 
+                 edge: Optional[str] = None,
                  base_order: Optional[int] = None, 
                  e: np.ndarray = None, 
                  intensity: np.ndarray = None, eps: np.ndarray = None) -> np.ndarray:
@@ -76,7 +77,8 @@ def residual_thy(x0: np.ndarray, policy: str, thy_peak: np.ndarray, edge: Option
     elif policy == 'both':
         peak_factor = np.ndarray([x0[2], x0[3]])
     
-    tot_comp = 1
+    thy_comp = len(thy_peak)
+    tot_comp = thy_comp
     
     if edge is not None:
         tot_comp = tot_comp+1
@@ -84,16 +86,16 @@ def residual_thy(x0: np.ndarray, policy: str, thy_peak: np.ndarray, edge: Option
         tot_comp = tot_comp+base_order+1
     
     A = np.empty((tot_comp, e.size))
-
-    A[0, :] = voigt_thy(e, thy_peak, x0[0], x0[1], peak_factor, policy)
+    for i in range(thy_comp):
+        A[i, :] = voigt_thy(e, thy_peak[i], x0[0], x0[1], peak_factor, policy)
     
-    base_start = 1
+    base_start = thy_comp
     if edge is not None:
         base_start = base_start+1
         if edge == 'g':
-            A[1, :] = edge_gaussian(e-x0[-2], x0[-1])
+            A[thy_comp, :] = edge_gaussian(e-x0[-2], x0[-1])
         elif edge == 'l':
-            A[1, :] = edge_lorenzian(e-x0[-2], x0[-1])
+            A[thy_comp, :] = edge_lorenzian(e-x0[-2], x0[-1])
     
     if base_order is not None:
         e_max = np.max(e); e_min = np.min(e)
@@ -107,7 +109,8 @@ def residual_thy(x0: np.ndarray, policy: str, thy_peak: np.ndarray, edge: Option
 
     return chi
 
-def res_grad_thy(x0: np.ndarray, policy: str, thy_peak: np.ndarray, edge: Optional[str] = None,
+def res_grad_thy(x0: np.ndarray, policy: str, thy_peak: Sequence[np.ndarray], 
+                 edge: Optional[str] = None,
                  base_order: Optional[int] = None, 
                  fix_param_idx: Optional[np.ndarray] = None,
                  e: np.ndarray = None, 
@@ -172,7 +175,8 @@ def res_grad_thy(x0: np.ndarray, policy: str, thy_peak: np.ndarray, edge: Option
     elif policy == 'both':
         peak_factor = np.ndarray([x0[2], x0[3]])
     
-    tot_comp = 1
+    thy_comp = len(thy_peak)
+    tot_comp = thy_comp
     
     if edge is not None:
         tot_comp = tot_comp+1
@@ -180,16 +184,16 @@ def res_grad_thy(x0: np.ndarray, policy: str, thy_peak: np.ndarray, edge: Option
         tot_comp = tot_comp+base_order+1
     
     A = np.empty((tot_comp, e.size))
-
-    A[0, :] = voigt_thy(e, thy_peak, x0[0], x0[1], peak_factor, policy)
+    for i in range(thy_comp):
+        A[i, :] = voigt_thy(e, thy_peak[i], x0[0], x0[1], peak_factor, policy)
     
-    base_start = 1
+    base_start = thy_comp
     if edge is not None:
         base_start = base_start+1
         if edge == 'g':
-            A[1, :] = edge_gaussian(e-x0[-2], x0[-1])
+            A[thy_comp, :] = edge_gaussian(e-x0[-2], x0[-1])
         elif edge == 'l':
-            A[1, :] = edge_lorenzian(e-x0[-2], x0[-1])
+            A[thy_comp, :] = edge_lorenzian(e-x0[-2], x0[-1])
     
     if base_order is not None:
         e_max = np.max(e); e_min = np.min(e)
@@ -201,7 +205,11 @@ def res_grad_thy(x0: np.ndarray, policy: str, thy_peak: np.ndarray, edge: Option
     chi = (c@A - intensity)/eps
     df = np.empty((intensity.size, x0.size))
 
-    deriv_thy = c[0]*deriv_voigt_thy(e, thy_peak, x0[0], x0[1], peak_factor, policy)
+    deriv_thy = c[0]*deriv_voigt_thy(e, thy_peak[0], x0[0], x0[1], peak_factor, policy)
+    for i in range(1, thy_comp):
+        deriv_thy = deriv_thy + c[i]*deriv_voigt_thy(e, thy_peak[i],
+        x0[0], x0[1], peak_factor, policy)
+
     df[:, :2] = deriv_thy[:, :2]
     if policy in ['scale', 'shift']:
         df[:, 2] = deriv_thy[:, 2]
@@ -210,9 +218,9 @@ def res_grad_thy(x0: np.ndarray, policy: str, thy_peak: np.ndarray, edge: Option
 
     if edge is not None:
         if edge == 'g':
-            df_edge = c[1]*deriv_edge_gaussian(e-x0[-2], x0[-1])
+            df_edge = c[thy_comp]*deriv_edge_gaussian(e-x0[-2], x0[-1])
         elif edge == 'l':
-            df_edge = c[1]*deriv_edge_lorenzian(e-x0[-2], x0[-1]) 
+            df_edge = c[thy_comp]*deriv_edge_lorenzian(e-x0[-2], x0[-1]) 
         
         df[:, -2] = -df_edge[:, 0]
         df[:, -1] = df_edge[:, 1]

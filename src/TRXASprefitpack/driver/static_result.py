@@ -6,6 +6,7 @@ submodule for reporting fitting process of static spectrum result
 :license: LGPL3.
 '''
 
+from email import policy
 from typing import Callable
 import numpy as np
 from scipy.special import erfc, wofz
@@ -23,7 +24,7 @@ class StaticResult(dict):
               `voigt`: sum of voigt function, edge function and base funtion
 
               `thy`: sum of voigt broadened theoretical lineshape spectrum, edge function and base function
-       thy_peak (np.ndarray): theoretical calculated peak position and intensity [model: `thy`]
+       thy_peak (sequence of np.ndarray): theoretical calculated peak position and intensity [model: `thy`]
        policy ({'shift', 'scale', 'both'}): policy to match discrepancy between theoretical spectrum and
         experimental static spectrum.
        e (np.ndarray): energy range
@@ -190,7 +191,10 @@ def save_StaticResult(result: StaticResult, filename: str):
             expt = f.create_group("experiment")
             fit_res = f.create_group("fitting_result")
             if result['model'] == 'thy':
-                  f.create_dataset("theoretical_peaks", data=result['thy_peak'])
+                  thy_stick = f.create_group("theoretical_peaks")
+                  thy_stick.attrs['num_thy'] = len(result['thy_peak'])
+                  for i in range(thy_stick['num_thy']):
+                        thy_stick.create_dataset(f'species {i+1}', data=result['thy_peak'][i])
                   fit_res.attrs['policy'] = result['policy']
             expt.create_dataset("energy", data=result['e'])
             expt.create_dataset("intensity", data=result['intensity'])
@@ -257,7 +261,10 @@ def load_StaticResult(filename: str) -> StaticResult:
             result['eps'] = np.atleast_1d(expt['error'])
             result['model'] = fit_res.attrs['model']
             if result['model'] == 'thy':
-                  result['thy_peak'] = np.atleast_2d(f['theoretical_peaks'])
+                  thy_stick = f['theoretical_peaks']
+                  result['thy_peak'] = np.empty(thy_stick['num_thy'], dtype=object)
+                  for i in range(thy_stick['num_thy']):
+                        result['thy_peak'][i] = thy_stick[f'species {i+1}']
                   result['policy'] = fit_res.attrs['policy']
             result['n_voigt'] = fit_res.attrs['n_voigt']
             if fit_res.attrs['edge'] != 'no':
@@ -414,6 +421,41 @@ def dderiv_voigt_aux(e: np.ndarray, fwhm_G: float, fwhm_L: float) -> np.ndarray:
     return 1/sigma**4*\
       ((e**2-fwhm_L**2/4-sigma**2)*f.real - e*fwhm_L*f.imag + fwhm_L/(2*np.pi))
 
+def voigt_thy_aux(e: np.ndarray, thy_peak: np.ndarray,
+                  fwhm_G: float, fwhm_L: float,
+                  deriv_order: int = 0) -> np.ndarray:
+
+    '''
+    Calculates derivative of normalized 
+    voigt broadened theoretically calculated lineshape spectrum
+
+    Args:
+        e: energy 
+        thy_peak: theoretical calculated peak position and intensity
+        fwhm_G: full width at half maximum of gaussian shape 
+        fwhm_L: full width at half maximum of lorenzian shape 
+        deriv_order({0, 1, 2}): order of derivative
+
+    Returns:
+      derivative of normalized voigt broadened theoritical lineshape spectrum 
+    '''
+
+    v_matrix = np.empty((e.size, thy_peak.shape[0]))
+
+    if deriv_order == 0:
+      for i in range(thy_peak.shape[0]):
+            v_matrix[:, i] = voigt(e-thy_peak[i, 0], fwhm_G, fwhm_L)
+    elif deriv_order == 1:
+      for i in range(thy_peak.shape[0]):
+            v_matrix[:, i] = deriv_voigt_aux(e-thy_peak[i, 0], fwhm_G, fwhm_L)
+    else:
+      for i in range(thy_peak.shape[0]):
+            v_matrix[:, i] = dderiv_voigt_aux(e-thy_peak[i, 0], fwhm_G, fwhm_L)
+
+    broadened_theory = v_matrix @ thy_peak[:, 1].reshape((thy_peak.shape[0], 1))
+
+    return broadened_theory.flatten()/np.sum(thy_peak[:, 1])
+
 def static_spectrum(e: np.ndarray, 
                     result: StaticResult, deriv_order: int = 0) -> Callable:
       '''
@@ -429,13 +471,12 @@ def static_spectrum(e: np.ndarray,
        Evaluated static spectrum
       
       Note:
-
-       1. Currently, it only supports `model == voigt`.
-       2. Baseline feature is removed.
+       Baseline feature is removed.
       '''
-      if result['n_voigt'] == 0:
-            tmp = 0
-      else:
+
+      tmp = np.zeros(e.size)
+
+      if result['model'] == 'voigt' and result['n_voigt'] > 0:
             e0_voigt = result['x'][:result['n_voigt']]
             fwhm_G_voigt = result['x'][result['n_voigt']:2*result['n_voigt']]
             fwhm_L_voigt = result['x'][2*result['n_voigt']:3*result['n_voigt']]
@@ -452,6 +493,25 @@ def static_spectrum(e: np.ndarray,
                         V[i, :] = dderiv_voigt_aux(e-e0_voigt[i], fwhm_G_voigt[i],
                         fwhm_L_voigt[i])
             tmp = (result['c'][:result['n_voigt']]@V).flatten()
+      else:
+            if policy == 'shift':
+                  for i in range(result['n_voigt']):
+                        peak_tmp = result['thy_peak'].copy()
+                        peak_tmp[:, 0] = peak_tmp[:, 0]-result['x'][2]
+                        tmp = tmp + result['c'][i]*voigt_thy_aux(e, peak_tmp,
+                        result['x'][0], result['x'][1], deriv_order)
+            elif policy == 'scale':
+                  for i in range(result['n_voigt']):
+                        peak_tmp = result['thy_peak'].copy()
+                        peak_tmp[:, 0] = peak_tmp[:, 0]*result['x'][2]
+                        tmp = tmp + result['c'][i]*voigt_thy_aux(e, peak_tmp,
+                        result['x'][0], result['x'][1], deriv_order)
+            else:
+                  for i in range(result['n_voigt']):
+                        peak_tmp = result['thy_peak'].copy()
+                        peak_tmp[:, 0] = result['x'][3]*peak_tmp[:, 0]-result['x'][2]
+                        tmp = tmp + result['c'][i]*voigt_thy_aux(e, peak_tmp,
+                        result['x'][0], result['x'][1], deriv_order)
 
       if result['edge'] == 'g':
             if deriv_order == 0:

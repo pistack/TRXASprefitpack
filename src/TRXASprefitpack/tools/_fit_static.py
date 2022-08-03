@@ -112,6 +112,7 @@ epilog = '''
 *Note
  If fwhm_G of voigt component is zero then this voigt component is treated as lorenzian
  If fwhm_L of voigt component is zero then this voigt component is treated as gaussian
+ Every thoeretical calculated spectrums are normalized.
 '''
 
 do_glb_help='''
@@ -156,7 +157,8 @@ def fit_static():
     parse.add_argument('--fwhm_L_voigt', type=float, nargs='*',
                         help='full width at half maximum for lorenzian shape ' +
                         'It would be not used when you use gaussian line shape')
-    parse.add_argument('--thy_file', type=str, help='filename which stores thoretical peak position and intensity.')
+    parse.add_argument('--thy_file', type=str, nargs='*',
+    help='filenames which store thoretical peak position and intensity.')
     parse.add_argument('--fwhm_G_thy', type=float, default=0, help='gaussian part of uniform' +
     ' broadening parameter for theoretical line shape spectrum')
     parse.add_argument('--fwhm_L_thy', type=float, default=0, help='lorenzian part of uniform' +
@@ -199,7 +201,9 @@ def fit_static():
     elif args.mode == 'thy':
         fwhm_G_init = args.fwhm_G_thy
         fwhm_L_init = args.fwhm_L_thy
-        thy_peak = np.genfromtxt(args.thy_file)[:,:2]
+        thy_peak = np.empty(len(args.thy_file), dtype=object)
+        for i in range(thy_peak.size):
+            thy_peak[i] = np.genfromtxt(args.thy_file[i])[:,:2]
         if args.policy is None:
             raise Exception("Please set policy to solve descrepency between theoretical and experimental spectrum.")
         if args.policy in ['shift', 'both'] and args.peak_shift is None:

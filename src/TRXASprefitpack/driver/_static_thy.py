@@ -7,7 +7,7 @@ sum of voigt broadend theoretical spectrum, edge function and baseline function
 :license: LGPL3.
 '''
 
-from typing import Optional, Tuple
+from typing import Optional, Tuple, Sequence
 import numpy as np
 from numpy.polynomial.legendre import legval
 from .static_result import StaticResult
@@ -18,7 +18,8 @@ from ..mathfun.A_matrix import fact_anal_A
 from ..res.parm_bound import set_bound_t0
 from ..res.res_thy import residual_thy, res_grad_thy
 
-def fit_static_thy(thy_peak: np.ndarray, fwhm_G_init: float, fwhm_L_init: float,
+def fit_static_thy(thy_peak: Sequence[np.ndarray], 
+                   fwhm_G_init: float, fwhm_L_init: float,
                    policy: str, peak_shift: Optional[float] = None,
                    peak_scale: Optional[float] = None,
                    edge: Optional[str] = None, 
@@ -56,7 +57,7 @@ def fit_static_thy(thy_peak: np.ndarray, fwhm_G_init: float, fwhm_L_init: float,
       Thus, in this stage, it uses numerical jacobian. 
       
       Args:
-       thy_peak (np.ndarray): peak position and intensity for theoretically calculated spectrum
+       thy_peak (sequence of np.ndarray): peak position and intensity for theoretically calculated spectrum
        fwhm_G_init (float): initial gaussian part of fwhm parameter
        fwhm_L_init (float): initial lorenzian part of fwhm parameter
        policy ({'shift', 'scale', 'both'}): policy to match discrepancy between thoretical spectrum and experimental one 
@@ -92,8 +93,9 @@ def fit_static_thy(thy_peak: np.ndarray, fwhm_G_init: float, fwhm_L_init: float,
        
         * if initial fwhm_G is zero then such voigt component is treated as lorenzian component
         * if initial fwhm_L is zero then such voigt component is treated as gaussian component
+        * Every theoretical spectrum is normalize. 
       '''
-      num_voigt = 1
+      num_voigt = len(thy_peak)
       num_param = 3 + 1*(policy == 'both')
 
       num_comp = num_voigt
@@ -239,14 +241,15 @@ def fit_static_thy(thy_peak: np.ndarray, fwhm_G_init: float, fwhm_L_init: float,
                   param_name[-1] = 'fwhm_(L, edge)'
       
       A = np.empty((num_comp, e.size))
-      A[0, :] = voigt_thy(e, thy_peak, fwhm_G_opt, fwhm_L_opt, peak_factor_opt, policy)      
-      base_start = 1
+      for i in range(num_voigt):
+            A[i, :] = voigt_thy(e, thy_peak[i], fwhm_G_opt, fwhm_L_opt, peak_factor_opt, policy)      
+      base_start = num_voigt
       if edge is not None:
             base_start = base_start+1
             if edge == 'g':
-                  A[1, :] = edge_gaussian(e-param_opt[-2], param_opt[-1])
+                  A[num_voigt, :] = edge_gaussian(e-param_opt[-2], param_opt[-1])
             elif edge == 'l':
-                  A[1, :] = edge_lorenzian(e-param_opt[-2], param_opt[-1])
+                  A[num_voigt, :] = edge_lorenzian(e-param_opt[-2], param_opt[-1])
     
       if base_order is not None:
             e_max = np.max(e); e_min = np.min(e)
