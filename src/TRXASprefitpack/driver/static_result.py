@@ -193,7 +193,7 @@ def save_StaticResult(result: StaticResult, filename: str):
             if result['model'] == 'thy':
                   thy_stick = f.create_group("theoretical_peaks")
                   thy_stick.attrs['num_thy'] = len(result['thy_peak'])
-                  for i in range(thy_stick['num_thy']):
+                  for i in range(len(result['thy_peak'])):
                         thy_stick.create_dataset(f'species {i+1}', data=result['thy_peak'][i])
                   fit_res.attrs['policy'] = result['policy']
             expt.create_dataset("energy", data=result['e'])
