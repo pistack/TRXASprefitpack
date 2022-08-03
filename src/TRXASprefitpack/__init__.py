@@ -11,5 +11,5 @@ from .mathfun import *
 from .driver import *
 from .res import *
 
-__version__ = '0.6.0'
+__version__ = '0.6.1.dev'
 
