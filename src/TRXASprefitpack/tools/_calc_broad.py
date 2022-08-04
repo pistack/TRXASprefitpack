@@ -1,6 +1,11 @@
 import argparse
 import numpy as np
+import matplotlib.pyplot as plt
 from ..mathfun import voigt_thy
+
+description = '''
+calc_broad: Evaluates voigt broadened theoritical calc spectrum
+'''
 
 policy_help = '''
 Policy to match discrepency between experimental data and theoretical spectrum.
@@ -9,11 +14,7 @@ Policy to match discrepency between experimental data and theoretical spectrum.
  'both': shift and scale peak position
 '''
 
-
 def calc_broad():
-    description = '''
-    calc_broad: Evaluates voigt broadened theoritical calc spectrum
-    '''
 
     parser = argparse.ArgumentParser(description=description)
     parser.add_argument('peak',
@@ -56,9 +57,9 @@ def calc_broad():
     else:
         policy = args.policy
     
-    if policy in ['shift', 'both'] and args.peak_shift is None:
+    if policy in ['shift', 'both'] and args.shift_factor is None:
         raise Exception(f"Your policy is {args.policy}, please set initial peak_shift parameter.")
-    if policy in ['scale', 'both'] and args.peak_scale is None:
+    if policy in ['scale', 'both'] and args.scale_factor is None:
         raise Exception(f"Your policy is {args.policy}, please set peak_scale parameter.")
 
     if args.policy == 'shift':
@@ -84,5 +85,9 @@ def calc_broad():
 
     np.savetxt(f'{out}_thy_stk.txt', rescaled_stk, fmt=['%.8e', '%.8e'], header='energy \t abs')
     np.savetxt(f'{out}_thy.txt', spec_thy, fmt=['%.8e', '%.8e'], header='energy \t abs')
+
+    plt.plot(e, broadened_thy)
+    plt.title("voigt broadened theoretical spectrum")
+    plt.show()
 
     return

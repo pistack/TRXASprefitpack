@@ -9,7 +9,7 @@ submodule for reporting fitting process of static spectrum result
 from email import policy
 from typing import Callable
 import numpy as np
-from scipy.special import erfc, wofz
+from scipy.special import wofz
 import h5py as h5
 from ..mathfun.peak_shape import voigt, \
       edge_gaussian, edge_lorenzian
@@ -497,19 +497,20 @@ def static_spectrum(e: np.ndarray,
             if policy == 'shift':
                   for i in range(result['n_voigt']):
                         peak_tmp = result['thy_peak'].copy()
-                        peak_tmp[:, 0] = peak_tmp[:, 0]-result['x'][2]
+                        peak_tmp[:, 0] = peak_tmp[:, 0]-result['x'][2+i]
                         tmp = tmp + result['c'][i]*voigt_thy_aux(e, peak_tmp,
                         result['x'][0], result['x'][1], deriv_order)
             elif policy == 'scale':
                   for i in range(result['n_voigt']):
                         peak_tmp = result['thy_peak'].copy()
-                        peak_tmp[:, 0] = peak_tmp[:, 0]*result['x'][2]
+                        peak_tmp[:, 0] = peak_tmp[:, 0]*result['x'][2+i]
                         tmp = tmp + result['c'][i]*voigt_thy_aux(e, peak_tmp,
                         result['x'][0], result['x'][1], deriv_order)
             else:
                   for i in range(result['n_voigt']):
                         peak_tmp = result['thy_peak'].copy()
-                        peak_tmp[:, 0] = result['x'][3]*peak_tmp[:, 0]-result['x'][2]
+                        peak_tmp[:, 0] = result['x'][2+result['n_voigt']+i]*peak_tmp[:, 0]-\
+                              result['x'][2+i]
                         tmp = tmp + result['c'][i]*voigt_thy_aux(e, peak_tmp,
                         result['x'][0], result['x'][1], deriv_order)
 
@@ -533,11 +534,10 @@ def static_spectrum(e: np.ndarray,
                         result['x'][-1])
             elif deriv_order == 1:
                   tmp = tmp + result['c'][result['n_voigt']]*\
-                        deriv_edge_l_aux(e-result['x'][0],
-                        result['x'][1])
+                        deriv_edge_l_aux(e-result['x'][-2],
+                        result['x'][-1])
             else:
                   tmp = tmp + result['c'][result['n_voigt']]*\
-                        dderiv_edge_l_aux(e-result['x'][0],
-                        result['x'][1])
-
+                        dderiv_edge_l_aux(e-result['x'][-2],
+                        result['x'][-1])
       return tmp

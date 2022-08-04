@@ -15,13 +15,13 @@ from scipy.optimize import basinhopping
 from scipy.optimize import least_squares
 from ..mathfun.peak_shape import edge_gaussian, edge_lorenzian, voigt_thy
 from ..mathfun.A_matrix import fact_anal_A
-from ..res.parm_bound import set_bound_t0
+from ..res.parm_bound import set_bound_e0, set_bound_t0
 from ..res.res_thy import residual_thy, res_grad_thy
 
 def fit_static_thy(thy_peak: Sequence[np.ndarray], 
                    fwhm_G_init: float, fwhm_L_init: float,
-                   policy: str, peak_shift: Optional[float] = None,
-                   peak_scale: Optional[float] = None,
+                   policy: str, peak_shift: Optional[np.ndarray] = None,
+                   peak_scale: Optional[np.ndarray] = None,
                    edge: Optional[str] = None, 
                    edge_pos_init: Optional[float] = None,
                    edge_fwhm_init: Optional[float] = None,
@@ -32,8 +32,8 @@ def fit_static_thy(thy_peak: Sequence[np.ndarray],
                    kwargs_lsq: Optional[dict] = None,
                    bound_fwhm_G: Optional[Tuple[float, float]] = None, 
                    bound_fwhm_L: Optional[Tuple[float, float]] = None,
-                   bound_peak_shift: Optional[Tuple[float, float]] = None,
-                   bound_peak_scale: Optional[Tuple[float, float]] = None,
+                   bound_peak_shift: Optional[Sequence[Tuple[float, float]]] = None,
+                   bound_peak_scale: Optional[Sequence[Tuple[float, float]]] = None,
                    bound_edge_pos: Optional[Tuple[float, float]] = None,
                    bound_edge_fwhm: Optional[Tuple[float, float]] = None,
                    e: Optional[np.ndarray] = None, 
@@ -61,8 +61,8 @@ def fit_static_thy(thy_peak: Sequence[np.ndarray],
        fwhm_G_init (float): initial gaussian part of fwhm parameter
        fwhm_L_init (float): initial lorenzian part of fwhm parameter
        policy ({'shift', 'scale', 'both'}): policy to match discrepancy between thoretical spectrum and experimental one 
-       peak_shift (float): peak shift parameter
-       peak_scale (float): peak scale parameter
+       peak_shift (np.ndarray): peak shift parameter for each species
+       peak_scale (np.ndarray): peak scale parameter for each species
        edge ({'g', 'l'}): type of edge function. If edge is not set, edge feature is not included.
        edge_pos_init: initial edge position
        edge_fwhm_init: initial fwhm parameter of edge
@@ -71,13 +71,13 @@ def fit_static_thy(thy_peak: Sequence[np.ndarray],
                                              minimization (refinement of global optimization solution)
        kwargs_glb: keyward arguments for global optimization solver
        kwargs_lsq: keyward arguments for least square optimization solver
-       bound_fwhm_G (sequence of tuple): boundary for fwhm_G parameter. 
+       bound_fwhm_G (tuple): boundary for fwhm_G parameter. 
         If `bound_fwhm_G` is `None`, the upper and lower bound are given as `(fwhm_G/2, 2*fwhm_G)`.
-       bound_fwhm_L (sequence of tuple): boundary for fwhm_L parameter. 
+       bound_fwhm_L (tuple): boundary for fwhm_L parameter. 
         If `bound_fwhm_L` is `None`, the upper and lower bound are given as `(fwhm_L/2, 2*fwhm_L)`.
-       bound_peak_shift (tuple): boundary for peak shift parameter. If `bound_peak_shift` is `None`, the upper and lower bound are
-        given as `(-2*|peak_shift|,2*|peak_shift|)`.
-       bound_peak_scale (tuple): boundary for peak scale parameter. If `bound_peak_scale` is `None`, the upper and lower bound are
+       bound_peak_shift (sequence of tuple): boundary for peak shift parameter. 
+        If `bound_peak_shift` is `None`, the upper and lower bound are given by `set_bound_e0`.
+       bound_peak_scale (sequence of tuple): boundary for peak scale parameter. If `bound_peak_scale` is `None`, the upper and lower bound are
         given as `(0.9*peak_scale, 1.1*peak_scale)`.
        bound_edge_pos (tuple): boundary for edge position, 
         if `bound_edge_pos` is `None` and `edge` is set, the upper and lower bound are given by `set_bound_t0`.
@@ -96,7 +96,7 @@ def fit_static_thy(thy_peak: Sequence[np.ndarray],
         * Every theoretical spectrum is normalize. 
       '''
       num_voigt = len(thy_peak)
-      num_param = 3 + 1*(policy == 'both')
+      num_param = 2 + num_voigt*(1+(policy == 'both'))
 
       num_comp = num_voigt
       if edge is not None:
@@ -112,12 +112,12 @@ def fit_static_thy(thy_peak: Sequence[np.ndarray],
       param[0] = fwhm_G_init
       param[1] = fwhm_L_init
       if policy == 'shift':
-            param[2] = peak_shift
+            param[2:2+num_voigt] = peak_shift
       elif policy == 'scale':
-            param[2] = peak_scale
+            param[2:2+num_voigt] = peak_scale
       elif policy == 'both':
-            param[2] = peak_shift
-            param[3] = peak_scale
+            param[2:2+num_voigt] = peak_shift
+            param[2+num_voigt:2+2*num_voigt] = peak_scale
       if edge is not None:
             param[-2] = edge_pos_init
             param[-1] = edge_fwhm_init
@@ -136,20 +136,23 @@ def fit_static_thy(thy_peak: Sequence[np.ndarray],
       
       if policy in ['shift', 'both']:
             if bound_peak_shift is None:
-                  bound[2] = (-2*np.abs(peak_shift), 2*np.abs(peak_shift))
+                  for i in range(num_voigt):
+                        bound[2+i] = set_bound_e0(peak_shift[i], fwhm_G_init, fwhm_L_init)
             else:
-                  bound[2] = bound_peak_shift
+                  bound[2:2+num_voigt] = bound_peak_shift
       elif policy == 'scale':
             if bound_peak_scale is None:
-                  bound[2] = (0.9*peak_scale, 1.1*peak_scale)
+                  for i in range(num_voigt):
+                        bound[2+i] = (0.9*peak_scale[i], 1.1*peak_scale[i])
             else:
-                  bound[2] = bound_peak_scale
+                  bound[2:2+num_voigt] = bound_peak_scale
       
       if policy == 'both':
             if bound_peak_scale is None:
-                  bound[3] = (0.9*peak_scale, 1.1*peak_scale)
+                  for i in range(num_voigt):
+                        bound[2+num_voigt+i] = (0.9*peak_scale[i], 1.1*peak_scale[i])
             else:
-                  bound[3] = bound_peak_scale
+                  bound[2+num_voigt:2+2*num_voigt] = bound_peak_scale
       
       if edge is not None:
             if bound_edge_pos is None:
