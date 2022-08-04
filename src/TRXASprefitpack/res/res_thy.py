@@ -14,7 +14,7 @@ from ..mathfun.peak_shape import voigt_thy, edge_gaussian, edge_lorenzian
 from ..mathfun.peak_shape import deriv_voigt_thy, deriv_edge_gaussian, deriv_edge_lorenzian
 
 def residual_thy(x0: np.ndarray, policy: str, thy_peak: Sequence[np.ndarray], 
-                 edge: Optional[str] = None,
+                 edge: Optional[str] = None, num_edge: Optional[int] = 0,
                  base_order: Optional[int] = None, 
                  e: np.ndarray = None, 
                  intensity: np.ndarray = None, eps: np.ndarray = None) -> np.ndarray:
