@@ -164,13 +164,14 @@ def fit_static():
     parse.add_argument('--fwhm_L_thy', type=float, default=0, help='lorenzian part of uniform' +
     ' broadening parameter for theoretical line shape spectrum')
     parse.add_argument('--policy', choices=['shift', 'scale', 'both'], help=policy_help)
-    parse.add_argument('--peak_scale', type=float, help='inital peak position scale parameter')
-    parse.add_argument('--peak_shift', type=float, help='inital peak position shift parameter')
+    parse.add_argument('--peak_scale', type=float, nargs='*', help='inital peak position scale parameter')
+    parse.add_argument('--peak_shift', type=float, nargs='*', help='inital peak position shift parameter')
     parse.add_argument('--edge', type=str, choices=['g', 'l'],
     help=edge_help)
-    parse.add_argument('--e0_edge', type=float,
+
+    parse.add_argument('--e0_edge', type=float, nargs='*',
     help='edge position')
-    parse.add_argument('--fwhm_edge', type=float,
+    parse.add_argument('--fwhm_edge', type=float, nargs='*',
     help='full width at half maximum parameter of edge')
     parse.add_argument('--base_order', type=int,
     help ='Order of polynomial to correct baseline feature. If it is not set then baseline is not corrected')
@@ -212,8 +213,8 @@ def fit_static():
             raise Exception(f"Your policy is {args.policy}, please set peak_scale parameter.")   
     
     edge = args.edge
-    e0_edge_init = args.e0_edge
-    fwhm_edge_init = args.fwhm_edge
+    e0_edge_init = np.array(args.e0_edge)
+    fwhm_edge_init = np.array(args.fwhm_edge)
     base_order = args.base_order
     outdir = args.outdir
 

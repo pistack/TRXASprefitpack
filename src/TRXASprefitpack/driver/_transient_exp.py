@@ -287,6 +287,7 @@ def fit_transient_exp(irf: str, fwhm_init: Union[float, np.ndarray],
       result['n_osc'] = 0
       if tau_init is None:
             result['n_decay'] = 0
-      result['n_decay'] = tau_init.size
+      else:
+            result['n_decay'] = tau_init.size
 
       return result

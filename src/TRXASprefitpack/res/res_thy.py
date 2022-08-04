@@ -43,8 +43,8 @@ def residual_thy(x0: np.ndarray, policy: str, thy_peak: Sequence[np.ndarray],
 
       if edge is not None:
       
-      * :math:`{last}-1`: edge position
-      * last: fwhm of edge
+      * :math:`2+{num}_{thy}+{num}_{edge}+i` or :math:`2+2{num_thy}+{num}_{edge}+i`: i th edge position
+      * :math:`2+{num}_{thy}+2{num}_{edge}+i` or :math:`2+2{num_thy}+2{num}_{edge}+i`: fwhm of i th edge
 
      policy ({'shift', 'scale', 'both'}): Policy to match discrepency 
       between experimental data and theoretical spectrum.
@@ -56,6 +56,7 @@ def residual_thy(x0: np.ndarray, policy: str, thy_peak: Sequence[np.ndarray],
      thy_peak: theoretically calculated peak position and intensity
      edge ({'g', 'l'}): type of edge shape function
       if edge is not set, it does not include edge function.
+     num_edge: the number of edge feature
      base_order (int): polynomial order of baseline function
       if base_order is not set, it does not include baseline function.
      fix_param_idx: idx for fixed parameter (masked array for `x0`)
@@ -84,7 +85,7 @@ def residual_thy(x0: np.ndarray, policy: str, thy_peak: Sequence[np.ndarray],
             peak_factor[i] = np.array([x0[2+i], x0[2+thy_comp+i]])
     
     if edge is not None:
-        tot_comp = tot_comp+1
+        tot_comp = tot_comp+num_edge
     if base_order is not None:
         tot_comp = tot_comp+base_order+1
     
@@ -94,11 +95,19 @@ def residual_thy(x0: np.ndarray, policy: str, thy_peak: Sequence[np.ndarray],
     
     base_start = thy_comp
     if edge is not None:
-        base_start = base_start+1
+        base_start = base_start+num_edge
+        if policy in ['shift', 'scale']:
+            param_edge_start = 2+thy_comp
+        else:
+            param_edge_start = 2+2*thy_comp
         if edge == 'g':
-            A[thy_comp, :] = edge_gaussian(e-x0[-2], x0[-1])
+            for i in range(num_edge):
+                A[thy_comp+i, :] = edge_gaussian(e-x0[param_edge_start+i], 
+                x0[param_edge_start+num_edge+i])
         elif edge == 'l':
-            A[thy_comp, :] = edge_lorenzian(e-x0[-2], x0[-1])
+            for i in range(num_edge):
+                A[thy_comp+i, :] = edge_lorenzian(e-x0[param_edge_start+i], 
+                    x0[param_edge_start+num_edge+i])
     
     if base_order is not None:
         e_max = np.max(e); e_min = np.min(e)
@@ -112,7 +121,7 @@ def residual_thy(x0: np.ndarray, policy: str, thy_peak: Sequence[np.ndarray],
     return chi
 
 def res_grad_thy(x0: np.ndarray, policy: str, thy_peak: Sequence[np.ndarray], 
-                 edge: Optional[str] = None,
+                 edge: Optional[str] = None, num_edge: Optional[int] = 0,
                  base_order: Optional[int] = None, 
                  fix_param_idx: Optional[np.ndarray] = None,
                  e: np.ndarray = None, 
@@ -142,8 +151,8 @@ def res_grad_thy(x0: np.ndarray, policy: str, thy_peak: Sequence[np.ndarray],
 
       if edge is not None:
       
-      * :math:`{last}-1`: edge position
-      * last: fwhm of edge
+      * :math:`2+{num}_{thy}+{num}_{edge}+i` or :math:`2+2{num_thy}+{num}_{edge}+i`: i th edge position
+      * :math:`2+{num}_{thy}+2{num}_{edge}+i` or :math:`2+2{num_thy}+2{num}_{edge}+i`: fwhm of i th edge
 
      policy ({'shift', 'scale', 'both'}): Policy to match discrepency 
       between experimental data and theoretical spectrum.
@@ -155,6 +164,7 @@ def res_grad_thy(x0: np.ndarray, policy: str, thy_peak: Sequence[np.ndarray],
      thy_peak: theoretically calculated peak position and intensity
      edge ({'g', 'l'}): type of edge shape function
       if edge is not set, it does not include edge function.
+     num_edge: the number of edge feature
      base_order (int): polynomial order of baseline function
       if base_order is not set, it does not include baseline function.
      fix_param_idx: idx for fixed parameter (masked array for `x0`)
@@ -183,7 +193,7 @@ def res_grad_thy(x0: np.ndarray, policy: str, thy_peak: Sequence[np.ndarray],
             peak_factor[i] = np.array([x0[2+i], x0[2+thy_comp+i]])
     
     if edge is not None:
-        tot_comp = tot_comp+1
+        tot_comp = tot_comp+num_edge
     if base_order is not None:
         tot_comp = tot_comp+base_order+1
     
@@ -193,11 +203,19 @@ def res_grad_thy(x0: np.ndarray, policy: str, thy_peak: Sequence[np.ndarray],
     
     base_start = thy_comp
     if edge is not None:
-        base_start = base_start+1
+        base_start = base_start+num_edge
+        if policy in ['shift', 'scale']:
+            param_edge_start = 2+thy_comp
+        else:
+            param_edge_start = 2+2*thy_comp
         if edge == 'g':
-            A[thy_comp, :] = edge_gaussian(e-x0[-2], x0[-1])
+            for i in range(num_edge):
+                A[thy_comp+i, :] = edge_gaussian(e-x0[param_edge_start+i], 
+                x0[param_edge_start+num_edge+i])
         elif edge == 'l':
-            A[thy_comp, :] = edge_lorenzian(e-x0[-2], x0[-1])
+            for i in range(num_edge):
+                A[thy_comp+i, :] = edge_lorenzian(e-x0[param_edge_start+i], 
+                    x0[param_edge_start+num_edge+i])
     
     if base_order is not None:
         e_max = np.max(e); e_min = np.min(e)
@@ -220,12 +238,17 @@ def res_grad_thy(x0: np.ndarray, policy: str, thy_peak: Sequence[np.ndarray],
 
     if edge is not None:
         if edge == 'g':
-            df_edge = c[thy_comp]*deriv_edge_gaussian(e-x0[-2], x0[-1])
+            for i in range(num_edge):
+                df_edge = c[thy_comp+i]*deriv_edge_gaussian(e-x0[param_edge_start+i], 
+                x0[param_edge_start+num_edge+i])
+                df[:, param_edge_start+i] = -df_edge[:, 0]
+                df[:, param_edge_start+num_edge+i] = df_edge[:, 1]
         elif edge == 'l':
-            df_edge = c[thy_comp]*deriv_edge_lorenzian(e-x0[-2], x0[-1]) 
-        
-        df[:, -2] = -df_edge[:, 0]
-        df[:, -1] = df_edge[:, 1]
+            for i in range(num_edge):
+                df_edge = c[thy_comp+i]*deriv_edge_lorenzian(e-x0[param_edge_start+i], 
+                x0[param_edge_start+num_edge+i]) 
+                df[:, param_edge_start+i] = -df_edge[:, 0]
+                df[:, param_edge_start+num_edge+i] = df_edge[:, 1]
     
     df = np.einsum('i,ij->ij', 1/eps, df)
 
