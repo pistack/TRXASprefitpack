@@ -54,13 +54,14 @@ def calc_broad():
     if args.policy is None:
         policy = 'shift'
         peak_factor = 0
+        args.shift_factor = 0
     else:
         policy = args.policy
     
     if policy in ['shift', 'both'] and args.shift_factor is None:
-        raise Exception(f"Your policy is {args.policy}, please set initial peak_shift parameter.")
+        raise Exception(f"Your policy is {args.policy}, please set shift_factor parameter.")
     if policy in ['scale', 'both'] and args.scale_factor is None:
-        raise Exception(f"Your policy is {args.policy}, please set peak_scale parameter.")
+        raise Exception(f"Your policy is {args.policy}, please set scale_factor parameter.")
 
     if args.policy == 'shift':
         peak_factor = args.shift_factor
