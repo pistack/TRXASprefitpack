@@ -44,6 +44,7 @@ class StaticResult(dict):
                          if base_order is None then baseline is not included in the fitting model
        param_name (np.ndarray): name of parameter
        n_voigt (int): number of voigt component
+       n_edge (int): number of edge component
        x (np.ndarray): best parameter
        bounds (sequence of tuple): boundary of each parameter
        c (np.ndarray): best weight of each voigt component and edge of data
@@ -147,9 +148,10 @@ class StaticResult(dict):
                   row.append(f'{coeff_contrib[v]: .2f}%')
                   doc_lst.append(' '.join(row))
             if self['edge'] is not None:
-                  row = [f"     {self['edge']} type edge:"]
-                  row.append(f"{coeff_contrib[self['n_voigt']]: .2f}%")
-                  doc_lst.append(' '.join(row))
+                  for e in range(self['n_edge']):
+                        row = [f"     {self['edge']} type edge {e+1}:"]
+                        row.append(f"{coeff_contrib[self['n_voigt']+e]: .2f}%")
+                        doc_lst.append(' '.join(row))
             doc_lst.append(' ')
 
             doc_lst.append("[Parameter Correlation]")
@@ -201,10 +203,9 @@ def save_StaticResult(result: StaticResult, filename: str):
             expt.create_dataset("error", data=result['eps'])
             fit_res.attrs['model'] = result['model']
             fit_res.attrs['n_voigt'] = result['n_voigt']
+            fit_res.attrs['n_edge'] = result['n_edge']
             if result['edge'] is not None:
                   fit_res.attrs['edge'] = result['edge']
-            else:
-                  fit_res.attrs['edge'] = 'no'
             if result['base_order'] is not None:
                   fit_res.attrs['base_order'] = result['base_order']
             else:
@@ -267,7 +268,8 @@ def load_StaticResult(filename: str) -> StaticResult:
                         result['thy_peak'][i] = thy_stick[f'species {i+1}']
                   result['policy'] = fit_res.attrs['policy']
             result['n_voigt'] = fit_res.attrs['n_voigt']
-            if fit_res.attrs['edge'] != 'no':
+            result['n_edge'] = fit_res.attrs['n_edge']
+            if fit_res.attrs['n_edge'] != 0:
                   result['edge'] = fit_res.attrs['edge']
             else:
                   result['edge'] = None

@@ -146,7 +146,7 @@ def fit_static_voigt(e0_init: np.ndarray, fwhm_G_init: np.ndarray, fwhm_L_init: 
             if bound_edge_fwhm is None:
                   for i in range(num_edge):
                         bound[3*num_voigt+num_edge+i] = \
-                              (edge_fwhm_init/2, 2*edge_fwhm_init)
+                              (edge_fwhm_init[i]/2, 2*edge_fwhm_init[i])
             else:
                   bound[3*num_voigt+num_edge:] = bound_edge_fwhm
 
