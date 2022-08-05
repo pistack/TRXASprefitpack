@@ -107,7 +107,7 @@ def voigt_thy(e: np.ndarray, thy_peak: np.ndarray,
 
     broadened_theory = v_matrix @ thy_peak[:, 1].reshape((peak_copy.size, 1))
 
-    return broadened_theory.flatten()/np.sum(thy_peak[:, 1])
+    return broadened_theory.flatten()
 
 def deriv_edge_gaussian(e: Union[float, np.ndarray], fwhm_G: float) -> np.ndarray:
     '''
@@ -322,7 +322,7 @@ def deriv_voigt_thy(e: np.ndarray, thy_peak: np.ndarray,
         grad[:, 2] = -grad_tmp[:, 0]
         grad[:, 3] = np.einsum('i,i->i', thy_peak[:, 1], grad_tmp[:, 0])
 
-    return grad/np.sum(thy_peak[:, 1])
+    return grad
 
 
 

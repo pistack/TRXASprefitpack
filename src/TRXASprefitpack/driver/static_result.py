@@ -456,7 +456,7 @@ def voigt_thy_aux(e: np.ndarray, thy_peak: np.ndarray,
 
     broadened_theory = v_matrix @ thy_peak[:, 1].reshape((thy_peak.shape[0], 1))
 
-    return broadened_theory.flatten()/np.sum(thy_peak[:, 1])
+    return broadened_theory.flatten()
 
 def static_spectrum(e: np.ndarray, 
                     result: StaticResult, deriv_order: int = 0) -> Callable:

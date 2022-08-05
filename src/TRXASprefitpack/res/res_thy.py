@@ -91,7 +91,8 @@ def residual_thy(x0: np.ndarray, policy: str, thy_peak: Sequence[np.ndarray],
     
     A = np.empty((tot_comp, e.size))
     for i in range(thy_comp):
-        A[i, :] = voigt_thy(e, thy_peak[i], x0[0], x0[1], peak_factor[i], policy)
+        A[i, :] = \
+            voigt_thy(e, thy_peak[i], x0[0], x0[1], peak_factor[i], policy)/np.sum(thy_peak[i][:, 1])
     
     base_start = thy_comp
     if edge is not None:
@@ -184,6 +185,9 @@ def res_grad_thy(x0: np.ndarray, policy: str, thy_peak: Sequence[np.ndarray],
 
     thy_comp = len(thy_peak)
     tot_comp = thy_comp
+    area = np.empty(thy_comp)
+    for i in range(thy_comp):
+        area[i] = np.sum(thy_peak[i][:, 1])
 
     if policy in ['scale', 'shift']:
         peak_factor = x0[2:2+thy_comp]
@@ -199,7 +203,8 @@ def res_grad_thy(x0: np.ndarray, policy: str, thy_peak: Sequence[np.ndarray],
     
     A = np.empty((tot_comp, e.size))
     for i in range(thy_comp):
-        A[i, :] = voigt_thy(e, thy_peak[i], x0[0], x0[1], peak_factor[i], policy)
+        A[i, :] = \
+            voigt_thy(e, thy_peak[i], x0[0], x0[1], peak_factor[i], policy)/area[i]
     
     base_start = thy_comp
     if edge is not None:
@@ -228,7 +233,8 @@ def res_grad_thy(x0: np.ndarray, policy: str, thy_peak: Sequence[np.ndarray],
     df = np.zeros((intensity.size, x0.size))
 
     for i in range(thy_comp):
-        deriv_thy = c[i]*deriv_voigt_thy(e, thy_peak[i], x0[0], x0[1], peak_factor[i], policy)
+        deriv_thy = (c[i]/area[i])*\
+            deriv_voigt_thy(e, thy_peak[i], x0[0], x0[1], peak_factor[i], policy)
         df[:, :2] = df[:, :2] + deriv_thy[:, :2]
         if policy in ['scale', 'shift']:
             df[:, 2+i] = deriv_thy[:, 2]

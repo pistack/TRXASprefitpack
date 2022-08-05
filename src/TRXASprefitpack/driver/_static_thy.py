@@ -257,8 +257,13 @@ def fit_static_thy(thy_peak: Sequence[np.ndarray],
                         f'fwhm_({edge}, edge {i+1})'
       
       A = np.empty((num_comp, e.size))
+      area = np.empty(num_voigt)
       for i in range(num_voigt):
-            A[i, :] = voigt_thy(e, thy_peak[i], fwhm_G_opt, fwhm_L_opt, peak_factor_opt[i], policy)      
+            area[i] = np.sum(thy_peak[i][:, 1])
+            A[i, :] = \
+                  voigt_thy(e, thy_peak[i], fwhm_G_opt, fwhm_L_opt, 
+                  peak_factor_opt[i], policy)/area[i]
+
       base_start = num_voigt
       if edge is not None:
             base_start = base_start+num_edge
@@ -288,6 +293,8 @@ def fit_static_thy(thy_peak: Sequence[np.ndarray],
             base = c[base_start:]@A[base_start:,:]
             
       res = intensity - fit
+
+      c[:num_voigt] = c[:num_voigt]/area
       
       jac = res_lsq['jac']
       hes = jac.T @ jac
