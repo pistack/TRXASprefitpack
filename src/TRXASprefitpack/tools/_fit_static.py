@@ -37,7 +37,7 @@ def save_StaticResult_txt(result: StaticResult, dirname: str):
 
       tot_comp = result['n_voigt']
       if result['edge'] is not None:
-            tot_comp = tot_comp+1
+            tot_comp = tot_comp+result['n_edge']
       if result['base_order'] is not None:
             tot_comp = tot_comp+1
       coeff_fmt = ['%.8e']
@@ -46,7 +46,8 @@ def save_StaticResult_txt(result: StaticResult, dirname: str):
       for i in range(result['n_voigt']):
             fit_header_lst.append(f'voigt_{i}')
       if result['edge'] is not None:
-            fit_header_lst.append(f"{result['edge']}_type_edge")
+            for i in range(result['n_edge']):
+                fit_header_lst.append(f"{result['edge']}_type_edge {i+1}")
       if result['base'] is not None:
             fit_header_lst.append("base")
             fit_save = np.vstack((result['e'], result['fit'], result['fit_comp'], result['base'])).T
@@ -90,7 +91,9 @@ def plot_StaticResult(result: StaticResult):
       for i in range(result['n_voigt']):
             sub1.plot(result['e'], result['fit_comp'][i, :], label=f'{i+1}th voigt component', linestyle='dashed')
       if result['edge'] is not None:
-            sub1.plot(result['e'], result['fit_comp'][-1, :], label=f"{result['edge']} type edge", linestyle='dashed')
+            for i in range(result['n_edge']):
+                sub1.plot(result['e'], result['fit_comp'][result['n_voigt']+i, :], 
+                label=f"{result['edge']} type edge {i+1}", linestyle='dashed')
       if result['base_order'] is not None:
         sub1.plot(result['e'], result['base'], label=f"base [order {result['base_order']}]", linestyle='dashed')
       sub1.legend()
