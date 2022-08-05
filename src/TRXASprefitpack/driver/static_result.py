@@ -265,7 +265,8 @@ def load_StaticResult(filename: str) -> StaticResult:
                   thy_stick = f['theoretical_peaks']
                   result['thy_peak'] = np.empty(result['n_voigt'], dtype=object)
                   for i in range(result['n_voigt']):
-                        result['thy_peak'][i] = thy_stick[f'species {i+1}']
+                        result['thy_peak'][i] = \
+                              np.atleast_2d(thy_stick[f'species {i+1}'])
                   result['policy'] = fit_res.attrs['policy']
             if fit_res.attrs['n_edge'] != 0:
                   result['edge'] = fit_res.attrs['edge']
