@@ -6,7 +6,6 @@ submodule for reporting fitting process of static spectrum result
 :license: LGPL3.
 '''
 
-from email import policy
 from typing import Callable
 import numpy as np
 from scipy.special import wofz
@@ -496,50 +495,64 @@ def static_spectrum(e: np.ndarray,
                         fwhm_L_voigt[i])
             tmp = (result['c'][:result['n_voigt']]@V).flatten()
       else:
-            if policy == 'shift':
+            if result['policy'] == 'shift':
                   for i in range(result['n_voigt']):
-                        peak_tmp = result['thy_peak'].copy()
+                        peak_tmp = result['thy_peak'][i].copy()
                         peak_tmp[:, 0] = peak_tmp[:, 0]-result['x'][2+i]
                         tmp = tmp + result['c'][i]*voigt_thy_aux(e, peak_tmp,
                         result['x'][0], result['x'][1], deriv_order)
-            elif policy == 'scale':
+            elif result['policy'] == 'scale':
                   for i in range(result['n_voigt']):
-                        peak_tmp = result['thy_peak'].copy()
+                        peak_tmp = result['thy_peak'][i].copy()
                         peak_tmp[:, 0] = peak_tmp[:, 0]*result['x'][2+i]
                         tmp = tmp + result['c'][i]*voigt_thy_aux(e, peak_tmp,
                         result['x'][0], result['x'][1], deriv_order)
             else:
                   for i in range(result['n_voigt']):
-                        peak_tmp = result['thy_peak'].copy()
+                        peak_tmp = result['thy_peak'][i].copy()
                         peak_tmp[:, 0] = result['x'][2+result['n_voigt']+i]*peak_tmp[:, 0]-\
                               result['x'][2+i]
                         tmp = tmp + result['c'][i]*voigt_thy_aux(e, peak_tmp,
                         result['x'][0], result['x'][1], deriv_order)
+      
+      if result['model'] == 'voigt':
+            param_edge_start = 3*result['n_voigt']
+      else:
+            if result['policy'] in ['scale', 'shift']:
+                  param_edge_start = 2+result['n_voigt']
+            else:
+                  param_edge_start = 2+2*result['n_voigt']
 
       if result['edge'] == 'g':
             if deriv_order == 0:
-                  tmp = tmp + result['c'][result['n_voigt']]*\
-                        edge_gaussian(e-result['x'][-2],
-                        result['x'][-1])
+                  for i in range(result['n_edge']):
+                        tmp = tmp + result['c'][result['n_voigt']+i]*\
+                        edge_gaussian(e-result['x'][param_edge_start+i],
+                        result['x'][param_edge_start+result['n_edge']+i])
             elif deriv_order == 1:
-                  tmp = tmp + result['c'][result['n_voigt']]*\
-                        deriv_edge_g_aux(e-result['x'][-2],
-                        result['x'][-1])
+                  for i in range(result['n_edge']):
+                        tmp = tmp + result['c'][result['n_voigt']+i]*\
+                        deriv_edge_g_aux(e-result['x'][param_edge_start+i],
+                        result['x'][param_edge_start+result['n_edge']+i])
             else:
-                  tmp = tmp + result['c'][result['n_voigt']]*\
-                        dderiv_edge_g_aux(e-result['x'][-2],
-                        result['x'][-1])
+                  for i in range(result['n_edge']):
+                        tmp = tmp + result['c'][result['n_voigt']+i]*\
+                        dderiv_edge_g_aux(e-result['x'][param_edge_start+i],
+                        result['x'][param_edge_start+result['n_edge']+i])
       elif result['edge'] == 'l':
             if deriv_order == 0:
-                  tmp = tmp + result['c'][result['n_voigt']]*\
-                        edge_lorenzian(e-result['x'][-2],
-                        result['x'][-1])
+                  for i in range(result['n_edge']):
+                        tmp = tmp + result['c'][result['n_voigt']+i]*\
+                        edge_lorenzian(e-result['x'][param_edge_start+i],
+                        result['x'][param_edge_start+result['n_edge']+i])
             elif deriv_order == 1:
-                  tmp = tmp + result['c'][result['n_voigt']]*\
-                        deriv_edge_l_aux(e-result['x'][-2],
-                        result['x'][-1])
+                  for i in range(result['n_edge']):
+                        tmp = tmp + result['c'][result['n_voigt']+i]*\
+                        deriv_edge_l_aux(e-result['x'][param_edge_start+i],
+                        result['x'][param_edge_start+result['n_edge']+i])
             else:
-                  tmp = tmp + result['c'][result['n_voigt']]*\
-                        dderiv_edge_l_aux(e-result['x'][-2],
-                        result['x'][-1])
+                  for i in range(result['n_edge']):
+                        tmp = tmp + result['c'][result['n_voigt']+i]*\
+                        dderiv_edge_l_aux(e-result['x'][param_edge_start+i],
+                        result['x'][param_edge_start+result['n_edge']+i])
       return tmp
