@@ -97,11 +97,11 @@ def voigt_thy(e: np.ndarray, thy_peak: np.ndarray,
     v_matrix = np.empty((e.size, thy_peak.shape[0]))
     peak_copy = np.copy(thy_peak[:, 0])
     if policy == 'shift':
-      peak_copy = peak_copy - peak_factor
+      peak_copy = peak_copy + peak_factor
     elif policy == 'scale':
       peak_copy = peak_factor*peak_copy 
     else:
-        peak_copy = peak_factor[1]*peak_copy - peak_factor[0]
+        peak_copy = peak_factor[1]*peak_copy + peak_factor[0]
     for i in range(peak_copy.size):
         v_matrix[:, i] = voigt(e-peak_copy[i], fwhm_G, fwhm_L)
 
@@ -293,34 +293,34 @@ def deriv_voigt_thy(e: np.ndarray, thy_peak: np.ndarray,
      * 4th column: df/d(peak_factor[1]), peak_factor[1]: scale factor
     '''
 
-    deriv_voigt_tensor = np.zeros((thy_peak.shape[0], e.size, 3))
+    deriv_voigt_tensor = np.empty((e.size, 3, thy_peak.shape[0]))
     peak_copy = np.copy(thy_peak[:, 0])
     if policy == 'shift':
-      peak_copy = peak_copy - peak_factor
+      peak_copy = peak_copy + peak_factor
     elif policy == 'scale':
       peak_copy = peak_factor*peak_copy 
     else:
-        peak_copy = peak_factor[1]*peak_copy - peak_factor[0]
+        peak_copy = peak_factor[1]*peak_copy + peak_factor[0]
     for i in range(peak_copy.size):
-        deriv_voigt_tensor[i, :, :] = deriv_voigt(e-peak_copy[i], fwhm_G, fwhm_L)
-    
-    grad_tmp = np.tensordot(thy_peak[:, 1], deriv_voigt_tensor, axes=1)
+        deriv_voigt_tensor[:, :, i] = deriv_voigt(e-peak_copy[i], fwhm_G, fwhm_L)
 
     if policy in ['shift', 'scale']:
         grad = np.empty((e.size, 3))
     else:
         grad = np.empty((e.size, 4))
     
-    grad[:, 0] = grad_tmp[:, 1]
-    grad[:, 1] = grad_tmp[:, 2]
+    grad[:, 0] = deriv_voigt_tensor[:, 1, :] @ thy_peak[:, 1]
+    grad[:, 1] = deriv_voigt_tensor[:, 2, :] @ thy_peak[:, 1]
 
     if policy == 'shift':
-        grad[:, 2] = -grad_tmp[:, 0]
+        grad[:, 2] = -deriv_voigt_tensor[:, 0, :] @ thy_peak[:, 1]
     elif policy == 'scale':
-        grad[:, 2] = np.einsum('i,i->i', thy_peak[:, 1], grad_tmp[:, 0])
+        grad[:, 2] = -deriv_voigt_tensor[:, 0, :] @ \
+        (thy_peak[:, 0]*thy_peak[:, 1])
     else:
-        grad[:, 2] = -grad_tmp[:, 0]
-        grad[:, 3] = np.einsum('i,i->i', thy_peak[:, 1], grad_tmp[:, 0])
+        grad[:, 2] = -deriv_voigt_tensor[:, 0, :] @ thy_peak[:, 1]
+        grad[:, 3] = -deriv_voigt_tensor[:, 0, :] @ \
+            (thy_peak[:, 0]*thy_peak[:, 1])
 
     return grad
 

@@ -498,7 +498,7 @@ def static_spectrum(e: np.ndarray,
             if result['policy'] == 'shift':
                   for i in range(result['n_voigt']):
                         peak_tmp = result['thy_peak'][i].copy()
-                        peak_tmp[:, 0] = peak_tmp[:, 0]-result['x'][2+i]
+                        peak_tmp[:, 0] = peak_tmp[:, 0]+result['x'][2+i]
                         tmp = tmp + result['c'][i]*voigt_thy_aux(e, peak_tmp,
                         result['x'][0], result['x'][1], deriv_order)
             elif result['policy'] == 'scale':
@@ -510,7 +510,7 @@ def static_spectrum(e: np.ndarray,
             else:
                   for i in range(result['n_voigt']):
                         peak_tmp = result['thy_peak'][i].copy()
-                        peak_tmp[:, 0] = result['x'][2+result['n_voigt']+i]*peak_tmp[:, 0]-\
+                        peak_tmp[:, 0] = result['x'][2+result['n_voigt']+i]*peak_tmp[:, 0]+\
                               result['x'][2+i]
                         tmp = tmp + result['c'][i]*voigt_thy_aux(e, peak_tmp,
                         result['x'][0], result['x'][1], deriv_order)
