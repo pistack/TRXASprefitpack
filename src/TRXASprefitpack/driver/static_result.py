@@ -193,8 +193,7 @@ def save_StaticResult(result: StaticResult, filename: str):
             fit_res = f.create_group("fitting_result")
             if result['model'] == 'thy':
                   thy_stick = f.create_group("theoretical_peaks")
-                  thy_stick.attrs['num_thy'] = len(result['thy_peak'])
-                  for i in range(len(result['thy_peak'])):
+                  for i in range(result['n_voigt']):
                         thy_stick.create_dataset(f'species {i+1}', data=result['thy_peak'][i])
                   fit_res.attrs['policy'] = result['policy']
             expt.create_dataset("energy", data=result['e'])
@@ -260,14 +259,14 @@ def load_StaticResult(filename: str) -> StaticResult:
             result['intensity'] = np.atleast_1d(expt['intensity'])
             result['eps'] = np.atleast_1d(expt['error'])
             result['model'] = fit_res.attrs['model']
-            if result['model'] == 'thy':
-                  thy_stick = f['theoretical_peaks']
-                  result['thy_peak'] = np.empty(thy_stick['num_thy'], dtype=object)
-                  for i in range(thy_stick['num_thy']):
-                        result['thy_peak'][i] = thy_stick[f'species {i+1}']
-                  result['policy'] = fit_res.attrs['policy']
             result['n_voigt'] = fit_res.attrs['n_voigt']
             result['n_edge'] = fit_res.attrs['n_edge']
+            if result['model'] == 'thy':
+                  thy_stick = f['theoretical_peaks']
+                  result['thy_peak'] = np.empty(result['n_voigt'], dtype=object)
+                  for i in range(result['n_voigt']):
+                        result['thy_peak'][i] = thy_stick[f'species {i+1}']
+                  result['policy'] = fit_res.attrs['policy']
             if fit_res.attrs['n_edge'] != 0:
                   result['edge'] = fit_res.attrs['edge']
             else:
