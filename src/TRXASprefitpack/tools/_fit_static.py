@@ -103,7 +103,7 @@ def plot_StaticResult(result: StaticResult):
 
 description = '''
 fit static: fitting static spectrum with 
- 'voigt': some of voigt component
+ 'voigt': sum of voigt component
   'thy' : theoretically calculated line spectrum broadened by voigt function
 It also include edge and polynomial type baseline feature.
 '''
@@ -112,7 +112,6 @@ epilog = '''
 *Note
  If fwhm_G of voigt component is zero then this voigt component is treated as lorenzian
  If fwhm_L of voigt component is zero then this voigt component is treated as gaussian
- Every thoeretical calculated spectrums are normalized.
 '''
 
 do_glb_help='''

@@ -1,4 +1,4 @@
-# Fitting with Static spectrum
+# Fitting with Static spectrum (Model: Voigt)
 ## Objective
 1. Fitting with sum of voigt profile model
 2. Save and Load fitting result
@@ -21,7 +21,7 @@ plt.rcParams["figure.figsize"] = (12,9)
 print(TRXASprefitpack.__version__)
 ```
 
-    0.6.0
+    0.6.1.dev
     
 
 
@@ -81,8 +81,8 @@ e0_init = np.array([9000]) # initial peak position
 fwhm_G_init = np.array([0]) # fwhm_G = 0 -> lorenzian
 fwhm_L_init = np.array([8])
 
-e0_edge = 8995 # initial edge position
-fwhm_edge = 15 # initial edge width
+e0_edge = np.array([8995]) # initial edge position
+fwhm_edge = np.array([15]) # initial edge width
 
 fit_result_static = fit_static_voigt(e0_init, fwhm_G_init, fwhm_L_init, edge='g', edge_pos_init=e0_edge,
  edge_fwhm_init = fwhm_edge, do_glb=True, e=e, intensity=obs_static, eps=eps_static)
@@ -104,7 +104,7 @@ print(fit_result_static)
         leastsq: trf
      
     [Optimization Status]
-        nfev: 1630
+        nfev: 1584
         status: 0
         global_opt msg: requested number of basinhopping iterations completed successfully
         leastsq_opt msg: `xtol` termination condition is satisfied.
@@ -113,38 +113,38 @@ print(fit_result_static)
         Data points: 160
         Number of effective parameters: 6
         Degree of Freedom: 154
-        Chi squared:  821.7233
-        Reduced chi squared:  5.3359
-        AIC (Akaike Information Criterion statistic):  273.7968
-        BIC (Bayesian Information Criterion statistic):  292.2478
+        Chi squared:  906.2726
+        Reduced chi squared:  5.8849
+        AIC (Akaike Information Criterion statistic):  289.4666
+        BIC (Bayesian Information Criterion statistic):  307.9177
      
     [Parameters]
-        e0_1:  8998.83756990 +/-  0.14369391 ( 0.00%)
+        e0_1:  8998.88218027 +/-  0.14728200 ( 0.00%)
         fwhm_(G, 1):  0.00000000 +/-  0.00000000 ( 0.00%)
-        fwhm_(L, 1):  10.98042009 +/-  0.33685176 ( 3.07%)
-        E0_g:  8992.31652251 +/-  0.07898415 ( 0.00%)
-        fwhm_(G, edge):  8.93716972 +/-  0.14320764 ( 1.60%)
+        fwhm_(L, 1):  10.85181966 +/-  0.35062622 ( 3.23%)
+        E0_(g, 1):  8992.28470005 +/-  0.08061572 ( 0.00%)
+        fwhm_(G, edge, 1):  8.86061909 +/-  0.14703200 ( 1.66%)
      
     [Parameter Bound]
-        e0_1:  8996 <=  8998.83756990 <=  9004
+        e0_1:  8996 <=  8998.88218027 <=  9004
         fwhm_(G, 1):  0 <=  0.00000000 <=  0
-        fwhm_(L, 1):  4 <=  10.98042009 <=  16
-        E0_g:  8965 <=  8992.31652251 <=  9025
-        fwhm_(G, edge):  7.5 <=  8.93716972 <=  30
+        fwhm_(L, 1):  4 <=  10.85181966 <=  16
+        E0_(g, 1):  8965 <=  8992.28470005 <=  9025
+        fwhm_(G, edge, 1):  7.5 <=  8.86061909 <=  30
      
     [Component Contribution]
         Static spectrum
-         voigt 1:  83.02%
-         g type edge:  16.98%
+         voigt 1:  82.86%
+         g type edge 1:  17.14%
      
     [Parameter Correlation]
         Parameter Correlations >  0.1 are reported.
-        (fwhm_(L, 1), e0_1) = -0.217
-        (E0_g, e0_1) = -0.843
-        (E0_g, fwhm_(L, 1)) =  0.466
-        (fwhm_(G, edge), e0_1) = -0.534
-        (fwhm_(G, edge), fwhm_(L, 1)) = -0.309
-        (fwhm_(G, edge), E0_g) =  0.443
+        (fwhm_(L, 1), e0_1) = -0.235
+        (E0_(g, 1), e0_1) = -0.837
+        (E0_(g, 1), fwhm_(L, 1)) =  0.492
+        (fwhm_(G, edge, 1), e0_1) = -0.541
+        (fwhm_(G, edge, 1), fwhm_(L, 1)) = -0.273
+        (fwhm_(G, edge, 1), E0_(g, 1)) =  0.444
     
 
 Using `static_spectrum` function in TRXASprefitpack, you can directly evaluates fitted static spectrum from fitting result
@@ -198,8 +198,8 @@ e0_init = np.array([8987, 8999]) # initial peak position
 fwhm_G_init = np.array([0, 0]) # fwhm_G = 0 -> lorenzian
 fwhm_L_init = np.array([3, 11])
 
-e0_edge = 8992.3 # initial edge position
-fwhm_edge = 9 # initial edge width
+e0_edge = np.array([8992.3]) # initial edge position
+fwhm_edge = np.array([9]) # initial edge width
 
 fit_result_static_2 = fit_static_voigt(e0_init, fwhm_G_init, fwhm_L_init, edge='g', edge_pos_init=e0_edge,
  edge_fwhm_init = fwhm_edge, do_glb=True, e=e, intensity=obs_static, eps=eps_static)
@@ -221,7 +221,7 @@ print(fit_result_static_2)
         leastsq: trf
      
     [Optimization Status]
-        nfev: 2336
+        nfev: 2332
         status: 0
         global_opt msg: requested number of basinhopping iterations completed successfully
         leastsq_opt msg: `xtol` termination condition is satisfied.
@@ -230,54 +230,54 @@ print(fit_result_static_2)
         Data points: 160
         Number of effective parameters: 9
         Degree of Freedom: 151
-        Chi squared:  133.1312
-        Reduced chi squared:  0.8817
-        AIC (Akaike Information Criterion statistic): -11.4142
-        BIC (Bayesian Information Criterion statistic):  16.2624
+        Chi squared:  145.4598
+        Reduced chi squared:  0.9633
+        AIC (Akaike Information Criterion statistic):  2.7562
+        BIC (Bayesian Information Criterion statistic):  30.4327
      
     [Parameters]
-        e0_1:  8987.00803091 +/-  0.05119092 ( 0.00%)
-        e0_2:  8999.93625358 +/-  0.04990511 ( 0.00%)
+        e0_1:  8987.10939657 +/-  0.04917691 ( 0.00%)
+        e0_2:  8999.96669494 +/-  0.04921736 ( 0.00%)
         fwhm_(G, 1):  0.00000000 +/-  0.00000000 ( 0.00%)
         fwhm_(G, 2):  0.00000000 +/-  0.00000000 ( 0.00%)
-        fwhm_(L, 1):  3.15526097 +/-  0.16440273 ( 5.21%)
-        fwhm_(L, 2):  9.07517127 +/-  0.17038338 ( 1.88%)
-        E0_g:  8992.00682571 +/-  0.01757046 ( 0.00%)
-        fwhm_(G, edge):  7.11511594 +/-  0.07541568 ( 1.06%)
+        fwhm_(L, 1):  3.04328938 +/-  0.15822604 ( 5.20%)
+        fwhm_(L, 2):  8.92094402 +/-  0.17200559 ( 1.93%)
+        E0_(g, 1):  8991.99898143 +/-  0.01766788 ( 0.00%)
+        fwhm_(G, edge, 1):  6.99678929 +/-  0.07596346 ( 1.09%)
      
     [Parameter Bound]
-        e0_1:  8985.5 <=  8987.00803091 <=  8988.5
-        e0_2:  8993.5 <=  8999.93625358 <=  9004.5
+        e0_1:  8985.5 <=  8987.10939657 <=  8988.5
+        e0_2:  8993.5 <=  8999.96669494 <=  9004.5
         fwhm_(G, 1):  0 <=  0.00000000 <=  0
         fwhm_(G, 2):  0 <=  0.00000000 <=  0
-        fwhm_(L, 1):  1.5 <=  3.15526097 <=  6
-        fwhm_(L, 2):  5.5 <=  9.07517127 <=  22
-        E0_g:  8974.3 <=  8992.00682571 <=  9010.3
-        fwhm_(G, edge):  4.5 <=  7.11511594 <=  18
+        fwhm_(L, 1):  1.5 <=  3.04328938 <=  6
+        fwhm_(L, 2):  5.5 <=  8.92094402 <=  22
+        E0_(g, 1):  8974.3 <=  8991.99898143 <=  9010.3
+        fwhm_(G, edge, 1):  4.5 <=  6.99678929 <=  18
      
     [Component Contribution]
         Static spectrum
-         voigt 1:  9.99%
-         voigt 2:  69.96%
-         g type edge:  20.05%
+         voigt 1:  10.25%
+         voigt 2:  69.59%
+         g type edge 1:  20.16%
      
     [Parameter Correlation]
         Parameter Correlations >  0.1 are reported.
-        (e0_2, e0_1) =  0.275
-        (fwhm_(L, 1), e0_1) =  0.396
-        (fwhm_(L, 1), e0_2) =  0.397
-        (fwhm_(L, 2), e0_1) = -0.175
-        (fwhm_(L, 2), e0_2) = -0.534
-        (fwhm_(L, 2), fwhm_(L, 1)) = -0.426
-        (E0_g, e0_1) =  0.235
-        (E0_g, e0_2) = -0.478
-        (E0_g, fwhm_(L, 1)) =  0.126
-        (E0_g, fwhm_(L, 2)) =  0.527
-        (fwhm_(G, edge), e0_1) = -0.508
-        (fwhm_(G, edge), e0_2) = -0.718
-        (fwhm_(G, edge), fwhm_(L, 1)) = -0.579
-        (fwhm_(G, edge), fwhm_(L, 2)) =  0.539
-        (fwhm_(G, edge), E0_g) =  0.162
+        (e0_2, e0_1) =  0.261
+        (fwhm_(L, 1), e0_1) =  0.386
+        (fwhm_(L, 1), e0_2) =  0.38
+        (fwhm_(L, 2), e0_1) = -0.168
+        (fwhm_(L, 2), e0_2) = -0.513
+        (fwhm_(L, 2), fwhm_(L, 1)) = -0.415
+        (E0_(g, 1), e0_1) =  0.255
+        (E0_(g, 1), e0_2) = -0.442
+        (E0_(g, 1), fwhm_(L, 1)) =  0.161
+        (E0_(g, 1), fwhm_(L, 2)) =  0.498
+        (fwhm_(G, edge, 1), e0_1) = -0.498
+        (fwhm_(G, edge, 1), e0_2) = -0.701
+        (fwhm_(G, edge, 1), fwhm_(L, 1)) = -0.572
+        (fwhm_(G, edge, 1), fwhm_(L, 2)) =  0.532
+        (fwhm_(G, edge, 1), E0_(g, 1)) =  0.12
     
 
 
@@ -304,8 +304,8 @@ plt.show()
 # save and load fitting result
 from TRXASprefitpack import save_StaticResult, load_StaticResult
 
-save_StaticResult(fit_result_static_2, 'static_example') # save fitting result to static_example.h5
-loaded_result = load_StaticResult('static_example') # load fitting result from static_example.h5
+save_StaticResult(fit_result_static_2, 'static_example_voigt') # save fitting result to static_example_voigt.h5
+loaded_result = load_StaticResult('static_example_voigt') # load fitting result from static_example_voigt.h5
 ```
 
 
@@ -354,12 +354,12 @@ print(ci_result) # report confidence interval
         Significance level:  5.000000e-02
      
     [Confidence interval]
-        8987.00803091 -  0.10054262 <= b'e0_1' <=  8987.00803091 +  0.1040399
-        8999.93625358 -  0.10109791 <= b'e0_2' <=  8999.93625358 +  0.09500443
-        3.15526097 -  0.31563079 <= b'fwhm_(L, 1)' <=  3.15526097 +  0.33284129
-        9.07517127 -  0.32642719 <= b'fwhm_(L, 2)' <=  9.07517127 +  0.33896081
-        8992.00682571 -  0.03405656 <= b'E0_g' <=  8992.00682571 +  0.03514928
-        7.11511594 -  0.14656975 <= b'fwhm_(G, edge)' <=  7.11511594 +  0.15095364
+        8987.10939657 -  0.09755221 <= b'e0_1' <=  8987.10939657 +  0.10020114
+        8999.96669494 -  0.10001769 <= b'e0_2' <=  8999.96669494 +  0.09424686
+        3.04328938 -  0.29615137 <= b'fwhm_(L, 1)' <=  3.04328938 +  0.31384813
+        8.92094402 -  0.32577841 <= b'fwhm_(L, 2)' <=  8.92094402 +  0.338825
+        8991.99898143 -  0.0343486 <= b'E0_(g, 1)' <=  8991.99898143 +  0.03532518
+        6.99678929 -  0.14677849 <= b'fwhm_(G, edge, 1)' <=  6.99678929 +  0.15131551
     
 
 
@@ -376,14 +376,14 @@ for i in range(loaded_result['param_name'].size):
 ```
 
     [Confidence interval (from ASE)]
-    8987.00803091 - 0.10033236 <= b'e0_1' <= 8987.00803091 + 0.10033236
-    8999.93625358 - 0.09781222 <= b'e0_2' <= 8999.93625358 + 0.09781222
+    8987.10939657 - 0.09638497 <= b'e0_1' <= 8987.10939657 + 0.09638497
+    8999.96669494 - 0.09646425 <= b'e0_2' <= 8999.96669494 + 0.09646425
     0.00000000 - 0.00000000 <= b'fwhm_(G, 1)' <= 0.00000000 + 0.00000000
     0.00000000 - 0.00000000 <= b'fwhm_(G, 2)' <= 0.00000000 + 0.00000000
-    3.15526097 - 0.32222343 <= b'fwhm_(L, 1)' <= 3.15526097 + 0.32222343
-    9.07517127 - 0.33394528 <= b'fwhm_(L, 2)' <= 9.07517127 + 0.33394528
-    8992.00682571 - 0.03443746 <= b'E0_g' <= 8992.00682571 + 0.03443746
-    7.11511594 - 0.14781202 <= b'fwhm_(G, edge)' <= 7.11511594 + 0.14781202
+    3.04328938 - 0.31011734 <= b'fwhm_(L, 1)' <= 3.04328938 + 0.31011734
+    8.92094402 - 0.33712477 <= b'fwhm_(L, 2)' <= 8.92094402 + 0.33712477
+    8991.99898143 - 0.03462842 <= b'E0_(g, 1)' <= 8991.99898143 + 0.03462842
+    6.99678929 - 0.14888565 <= b'fwhm_(G, edge, 1)' <= 6.99678929 + 0.14888565
     
 
 In many case, ASE does not much different from more sophisticated `f-test` based error estimation.
