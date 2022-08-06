@@ -10,9 +10,9 @@
 
 [![Documentation Status](https://readthedocs.org/projects/trxasprefitpack/badge/?version=latest)](https://trxasprefitpack.readthedocs.io/en/latest/?badge=latest)
 
-stable version:  0.6.0
+stable version:  0.6.1
 
-current development version: 0.6.1
+current development version: 0.7.x
 
 Copyright: (C) 2021-2022  Junho Lee (@pistack) (Email: pistack@yonsei.ac.kr)
 
@@ -44,6 +44,7 @@ Licence: LGPL3
   4. Special fast solver for certain type (sequential decay and lower triangular rate equation) of 1st order rate equation
 
 * res
+
  1. Provides scalar residual function and its gradient for 5 fitting model based on seperation scheme in least square regression.
   Such models are
 
@@ -54,6 +55,7 @@ Licence: LGPL3
     5. Sum of above two model.
 
 * driver
+
  1. Provides driver routine to fit static spectrum with two model based on seperation scheme in least square regression.
 
     1. sum of voigt function, edge and polynomial baseline
@@ -93,7 +95,7 @@ Licence: LGPL3
   * Now type ``pip install .``
 * Advanced way (from repository)
   * ``git clone https://github.com/pistack/TRXASprefitpack.git``
-  * ``git checkout v0.6.0``
+  * ``git checkout v0.6.1``
   * ``cd TRXASprefitpack``
   * ``python3 -m build``
   * ``cd dist``
@@ -104,4 +106,4 @@ Licence: LGPL3
 ## Examples
 
 Jupyter notebook examples for ``TRXASprefitpack`` are located in
-[example](https://github.com/pistack/TRXASprefitpack-example/tree/v0.6.0)
+[example](https://github.com/pistack/TRXASprefitpack-example/tree/v0.6.1)
