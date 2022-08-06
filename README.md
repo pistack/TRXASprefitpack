@@ -53,9 +53,6 @@ Licence: LGPL3
     4. Convolution of damped oscillation and (gaussian, cauchy, pseudo voigt approximation) instrumental response function.
     5. Sum of above two model.
 
- 2. Provides lmfit compatible layer (`res_lmfit`) to directly use vector residual function defined in `TRXASprefitpack` to `lmfit`.
-  However, currently only supports linear loss function. 
-
 * driver
  1. Provides driver routine to fit static spectrum with two model based on seperation scheme in least square regression.
 

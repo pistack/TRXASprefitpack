@@ -8,5 +8,5 @@ from .test_fact_anal import TestFactAnal
 from .test_rate_eq import TestRateEqSolver
 
 __all__ = ['TestPvoigtIRF', 'TestExpConvIRF', 'TestDmpOscConvIRF',
-'TestDerivExpConvIRF', 'TestDerivDmpOscConvIRF', 'TestFactAnal',
-'TestRateEqSolver']
+'TestDerivExpConvIRF', 'TestDerivDmpOscConvIRF', 'TestDerivPeakShape',
+'TestFactAnal', 'TestRateEqSolver']
