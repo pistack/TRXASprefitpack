@@ -37,7 +37,7 @@ def save_StaticResult_txt(result: StaticResult, dirname: str):
 
       tot_comp = result['n_voigt']
       if result['edge'] is not None:
-            tot_comp = tot_comp+1
+            tot_comp = tot_comp+result['n_edge']
       if result['base_order'] is not None:
             tot_comp = tot_comp+1
       coeff_fmt = ['%.8e']
@@ -46,7 +46,8 @@ def save_StaticResult_txt(result: StaticResult, dirname: str):
       for i in range(result['n_voigt']):
             fit_header_lst.append(f'voigt_{i}')
       if result['edge'] is not None:
-            fit_header_lst.append(f"{result['edge']}_type_edge")
+            for i in range(result['n_edge']):
+                fit_header_lst.append(f"{result['edge']}_type_edge {i+1}")
       if result['base'] is not None:
             fit_header_lst.append("base")
             fit_save = np.vstack((result['e'], result['fit'], result['fit_comp'], result['base'])).T
@@ -90,7 +91,9 @@ def plot_StaticResult(result: StaticResult):
       for i in range(result['n_voigt']):
             sub1.plot(result['e'], result['fit_comp'][i, :], label=f'{i+1}th voigt component', linestyle='dashed')
       if result['edge'] is not None:
-            sub1.plot(result['e'], result['fit_comp'][-1, :], label=f"{result['edge']} type edge", linestyle='dashed')
+            for i in range(result['n_edge']):
+                sub1.plot(result['e'], result['fit_comp'][result['n_voigt']+i, :], 
+                label=f"{result['edge']} type edge {i+1}", linestyle='dashed')
       if result['base_order'] is not None:
         sub1.plot(result['e'], result['base'], label=f"base [order {result['base_order']}]", linestyle='dashed')
       sub1.legend()
@@ -103,7 +106,7 @@ def plot_StaticResult(result: StaticResult):
 
 description = '''
 fit static: fitting static spectrum with 
- 'voigt': some of voigt component
+ 'voigt': sum of voigt component
   'thy' : theoretically calculated line spectrum broadened by voigt function
 It also include edge and polynomial type baseline feature.
 '''
@@ -156,19 +159,21 @@ def fit_static():
     parse.add_argument('--fwhm_L_voigt', type=float, nargs='*',
                         help='full width at half maximum for lorenzian shape ' +
                         'It would be not used when you use gaussian line shape')
-    parse.add_argument('--thy_file', type=str, help='filename which stores thoretical peak position and intensity.')
+    parse.add_argument('--thy_file', type=str, nargs='*',
+    help='filenames which store thoretical peak position and intensity.')
     parse.add_argument('--fwhm_G_thy', type=float, default=0, help='gaussian part of uniform' +
     ' broadening parameter for theoretical line shape spectrum')
     parse.add_argument('--fwhm_L_thy', type=float, default=0, help='lorenzian part of uniform' +
     ' broadening parameter for theoretical line shape spectrum')
     parse.add_argument('--policy', choices=['shift', 'scale', 'both'], help=policy_help)
-    parse.add_argument('--peak_scale', type=float, help='inital peak position scale parameter')
-    parse.add_argument('--peak_shift', type=float, help='inital peak position shift parameter')
+    parse.add_argument('--peak_scale', type=float, nargs='*', help='inital peak position scale parameter')
+    parse.add_argument('--peak_shift', type=float, nargs='*', help='inital peak position shift parameter')
     parse.add_argument('--edge', type=str, choices=['g', 'l'],
     help=edge_help)
-    parse.add_argument('--e0_edge', type=float,
+
+    parse.add_argument('--e0_edge', type=float, nargs='*',
     help='edge position')
-    parse.add_argument('--fwhm_edge', type=float,
+    parse.add_argument('--fwhm_edge', type=float, nargs='*',
     help='full width at half maximum parameter of edge')
     parse.add_argument('--base_order', type=int,
     help ='Order of polynomial to correct baseline feature. If it is not set then baseline is not corrected')
@@ -199,7 +204,9 @@ def fit_static():
     elif args.mode == 'thy':
         fwhm_G_init = args.fwhm_G_thy
         fwhm_L_init = args.fwhm_L_thy
-        thy_peak = np.genfromtxt(args.thy_file)[:,:2]
+        thy_peak = np.empty(len(args.thy_file), dtype=object)
+        for i in range(thy_peak.size):
+            thy_peak[i] = np.genfromtxt(args.thy_file[i])[:,:2]
         if args.policy is None:
             raise Exception("Please set policy to solve descrepency between theoretical and experimental spectrum.")
         if args.policy in ['shift', 'both'] and args.peak_shift is None:
@@ -208,8 +215,8 @@ def fit_static():
             raise Exception(f"Your policy is {args.policy}, please set peak_scale parameter.")   
     
     edge = args.edge
-    e0_edge_init = args.e0_edge
-    fwhm_edge_init = args.fwhm_edge
+    e0_edge_init = np.array(args.e0_edge)
+    fwhm_edge_init = np.array(args.fwhm_edge)
     base_order = args.base_order
     outdir = args.outdir
 

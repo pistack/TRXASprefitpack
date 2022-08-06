@@ -8,7 +8,7 @@ submodule for reporting fitting process of static spectrum result
 
 from typing import Callable
 import numpy as np
-from scipy.special import erfc, wofz
+from scipy.special import wofz
 import h5py as h5
 from ..mathfun.peak_shape import voigt, \
       edge_gaussian, edge_lorenzian
@@ -23,7 +23,7 @@ class StaticResult(dict):
               `voigt`: sum of voigt function, edge function and base funtion
 
               `thy`: sum of voigt broadened theoretical lineshape spectrum, edge function and base function
-       thy_peak (np.ndarray): theoretical calculated peak position and intensity [model: `thy`]
+       thy_peak (sequence of np.ndarray): theoretical calculated peak position and intensity [model: `thy`]
        policy ({'shift', 'scale', 'both'}): policy to match discrepancy between theoretical spectrum and
         experimental static spectrum.
        e (np.ndarray): energy range
@@ -43,6 +43,7 @@ class StaticResult(dict):
                          if base_order is None then baseline is not included in the fitting model
        param_name (np.ndarray): name of parameter
        n_voigt (int): number of voigt component
+       n_edge (int): number of edge component
        x (np.ndarray): best parameter
        bounds (sequence of tuple): boundary of each parameter
        c (np.ndarray): best weight of each voigt component and edge of data
@@ -146,9 +147,10 @@ class StaticResult(dict):
                   row.append(f'{coeff_contrib[v]: .2f}%')
                   doc_lst.append(' '.join(row))
             if self['edge'] is not None:
-                  row = [f"     {self['edge']} type edge:"]
-                  row.append(f"{coeff_contrib[self['n_voigt']]: .2f}%")
-                  doc_lst.append(' '.join(row))
+                  for e in range(self['n_edge']):
+                        row = [f"     {self['edge']} type edge {e+1}:"]
+                        row.append(f"{coeff_contrib[self['n_voigt']+e]: .2f}%")
+                        doc_lst.append(' '.join(row))
             doc_lst.append(' ')
 
             doc_lst.append("[Parameter Correlation]")
@@ -190,17 +192,18 @@ def save_StaticResult(result: StaticResult, filename: str):
             expt = f.create_group("experiment")
             fit_res = f.create_group("fitting_result")
             if result['model'] == 'thy':
-                  f.create_dataset("theoretical_peaks", data=result['thy_peak'])
+                  thy_stick = f.create_group("theoretical_peaks")
+                  for i in range(result['n_voigt']):
+                        thy_stick.create_dataset(f'species {i+1}', data=result['thy_peak'][i])
                   fit_res.attrs['policy'] = result['policy']
             expt.create_dataset("energy", data=result['e'])
             expt.create_dataset("intensity", data=result['intensity'])
             expt.create_dataset("error", data=result['eps'])
             fit_res.attrs['model'] = result['model']
             fit_res.attrs['n_voigt'] = result['n_voigt']
+            fit_res.attrs['n_edge'] = result['n_edge']
             if result['edge'] is not None:
                   fit_res.attrs['edge'] = result['edge']
-            else:
-                  fit_res.attrs['edge'] = 'no'
             if result['base_order'] is not None:
                   fit_res.attrs['base_order'] = result['base_order']
             else:
@@ -256,11 +259,16 @@ def load_StaticResult(filename: str) -> StaticResult:
             result['intensity'] = np.atleast_1d(expt['intensity'])
             result['eps'] = np.atleast_1d(expt['error'])
             result['model'] = fit_res.attrs['model']
-            if result['model'] == 'thy':
-                  result['thy_peak'] = np.atleast_2d(f['theoretical_peaks'])
-                  result['policy'] = fit_res.attrs['policy']
             result['n_voigt'] = fit_res.attrs['n_voigt']
-            if fit_res.attrs['edge'] != 'no':
+            result['n_edge'] = fit_res.attrs['n_edge']
+            if result['model'] == 'thy':
+                  thy_stick = f['theoretical_peaks']
+                  result['thy_peak'] = np.empty(result['n_voigt'], dtype=object)
+                  for i in range(result['n_voigt']):
+                        result['thy_peak'][i] = \
+                              np.atleast_2d(thy_stick[f'species {i+1}'])
+                  result['policy'] = fit_res.attrs['policy']
+            if fit_res.attrs['n_edge'] != 0:
                   result['edge'] = fit_res.attrs['edge']
             else:
                   result['edge'] = None
@@ -414,6 +422,41 @@ def dderiv_voigt_aux(e: np.ndarray, fwhm_G: float, fwhm_L: float) -> np.ndarray:
     return 1/sigma**4*\
       ((e**2-fwhm_L**2/4-sigma**2)*f.real - e*fwhm_L*f.imag + fwhm_L/(2*np.pi))
 
+def voigt_thy_aux(e: np.ndarray, thy_peak: np.ndarray,
+                  fwhm_G: float, fwhm_L: float,
+                  deriv_order: int = 0) -> np.ndarray:
+
+    '''
+    Calculates derivative of normalized 
+    voigt broadened theoretically calculated lineshape spectrum
+
+    Args:
+        e: energy 
+        thy_peak: theoretical calculated peak position and intensity
+        fwhm_G: full width at half maximum of gaussian shape 
+        fwhm_L: full width at half maximum of lorenzian shape 
+        deriv_order({0, 1, 2}): order of derivative
+
+    Returns:
+      derivative of normalized voigt broadened theoritical lineshape spectrum 
+    '''
+
+    v_matrix = np.empty((e.size, thy_peak.shape[0]))
+
+    if deriv_order == 0:
+      for i in range(thy_peak.shape[0]):
+            v_matrix[:, i] = voigt(e-thy_peak[i, 0], fwhm_G, fwhm_L)
+    elif deriv_order == 1:
+      for i in range(thy_peak.shape[0]):
+            v_matrix[:, i] = deriv_voigt_aux(e-thy_peak[i, 0], fwhm_G, fwhm_L)
+    else:
+      for i in range(thy_peak.shape[0]):
+            v_matrix[:, i] = dderiv_voigt_aux(e-thy_peak[i, 0], fwhm_G, fwhm_L)
+
+    broadened_theory = v_matrix @ thy_peak[:, 1].reshape((thy_peak.shape[0], 1))
+
+    return broadened_theory.flatten()
+
 def static_spectrum(e: np.ndarray, 
                     result: StaticResult, deriv_order: int = 0) -> Callable:
       '''
@@ -429,13 +472,12 @@ def static_spectrum(e: np.ndarray,
        Evaluated static spectrum
       
       Note:
-
-       1. Currently, it only supports `model == voigt`.
-       2. Baseline feature is removed.
+       Baseline feature is removed.
       '''
-      if result['n_voigt'] == 0:
-            tmp = 0
-      else:
+
+      tmp = np.zeros(e.size)
+
+      if result['model'] == 'voigt' and result['n_voigt'] > 0:
             e0_voigt = result['x'][:result['n_voigt']]
             fwhm_G_voigt = result['x'][result['n_voigt']:2*result['n_voigt']]
             fwhm_L_voigt = result['x'][2*result['n_voigt']:3*result['n_voigt']]
@@ -452,32 +494,65 @@ def static_spectrum(e: np.ndarray,
                         V[i, :] = dderiv_voigt_aux(e-e0_voigt[i], fwhm_G_voigt[i],
                         fwhm_L_voigt[i])
             tmp = (result['c'][:result['n_voigt']]@V).flatten()
+      else:
+            if result['policy'] == 'shift':
+                  for i in range(result['n_voigt']):
+                        peak_tmp = result['thy_peak'][i].copy()
+                        peak_tmp[:, 0] = peak_tmp[:, 0]+result['x'][2+i]
+                        tmp = tmp + result['c'][i]*voigt_thy_aux(e, peak_tmp,
+                        result['x'][0], result['x'][1], deriv_order)
+            elif result['policy'] == 'scale':
+                  for i in range(result['n_voigt']):
+                        peak_tmp = result['thy_peak'][i].copy()
+                        peak_tmp[:, 0] = peak_tmp[:, 0]*result['x'][2+i]
+                        tmp = tmp + result['c'][i]*voigt_thy_aux(e, peak_tmp,
+                        result['x'][0], result['x'][1], deriv_order)
+            else:
+                  for i in range(result['n_voigt']):
+                        peak_tmp = result['thy_peak'][i].copy()
+                        peak_tmp[:, 0] = result['x'][2+result['n_voigt']+i]*peak_tmp[:, 0]+\
+                              result['x'][2+i]
+                        tmp = tmp + result['c'][i]*voigt_thy_aux(e, peak_tmp,
+                        result['x'][0], result['x'][1], deriv_order)
+      
+      if result['model'] == 'voigt':
+            param_edge_start = 3*result['n_voigt']
+      else:
+            if result['policy'] in ['scale', 'shift']:
+                  param_edge_start = 2+result['n_voigt']
+            else:
+                  param_edge_start = 2+2*result['n_voigt']
 
       if result['edge'] == 'g':
             if deriv_order == 0:
-                  tmp = tmp + result['c'][result['n_voigt']]*\
-                        edge_gaussian(e-result['x'][-2],
-                        result['x'][-1])
+                  for i in range(result['n_edge']):
+                        tmp = tmp + result['c'][result['n_voigt']+i]*\
+                        edge_gaussian(e-result['x'][param_edge_start+i],
+                        result['x'][param_edge_start+result['n_edge']+i])
             elif deriv_order == 1:
-                  tmp = tmp + result['c'][result['n_voigt']]*\
-                        deriv_edge_g_aux(e-result['x'][-2],
-                        result['x'][-1])
+                  for i in range(result['n_edge']):
+                        tmp = tmp + result['c'][result['n_voigt']+i]*\
+                        deriv_edge_g_aux(e-result['x'][param_edge_start+i],
+                        result['x'][param_edge_start+result['n_edge']+i])
             else:
-                  tmp = tmp + result['c'][result['n_voigt']]*\
-                        dderiv_edge_g_aux(e-result['x'][-2],
-                        result['x'][-1])
+                  for i in range(result['n_edge']):
+                        tmp = tmp + result['c'][result['n_voigt']+i]*\
+                        dderiv_edge_g_aux(e-result['x'][param_edge_start+i],
+                        result['x'][param_edge_start+result['n_edge']+i])
       elif result['edge'] == 'l':
             if deriv_order == 0:
-                  tmp = tmp + result['c'][result['n_voigt']]*\
-                        edge_lorenzian(e-result['x'][-2],
-                        result['x'][-1])
+                  for i in range(result['n_edge']):
+                        tmp = tmp + result['c'][result['n_voigt']+i]*\
+                        edge_lorenzian(e-result['x'][param_edge_start+i],
+                        result['x'][param_edge_start+result['n_edge']+i])
             elif deriv_order == 1:
-                  tmp = tmp + result['c'][result['n_voigt']]*\
-                        deriv_edge_l_aux(e-result['x'][0],
-                        result['x'][1])
+                  for i in range(result['n_edge']):
+                        tmp = tmp + result['c'][result['n_voigt']+i]*\
+                        deriv_edge_l_aux(e-result['x'][param_edge_start+i],
+                        result['x'][param_edge_start+result['n_edge']+i])
             else:
-                  tmp = tmp + result['c'][result['n_voigt']]*\
-                        dderiv_edge_l_aux(e-result['x'][0],
-                        result['x'][1])
-
+                  for i in range(result['n_edge']):
+                        tmp = tmp + result['c'][result['n_voigt']+i]*\
+                        dderiv_edge_l_aux(e-result['x'][param_edge_start+i],
+                        result['x'][param_edge_start+result['n_edge']+i])
       return tmp

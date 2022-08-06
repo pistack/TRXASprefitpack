@@ -40,7 +40,7 @@ def set_bound_e0(e0: float, fwhm_G: float, fwhm_L: float) -> Tuple[float, float]
      fwhm_L: initial guess of fwhm_L parameter of voigt component
     
     Returns:
-     Tuple of upper and lower bound of time zero
+     Tuple of upper and lower bound of peak position
     '''
     if fwhm_G == 0:
         bound = (e0-fwhm_L/2, e0+fwhm_L/2)

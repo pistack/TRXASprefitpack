@@ -2,7 +2,7 @@
 
 fit static: fitting static spectrum with
 
- * 'voigt': some of voigt component
+ * 'voigt': sum of voigt component
  * 'thy' : theoretically calculated line spectrum broadened by voigt function
 
 

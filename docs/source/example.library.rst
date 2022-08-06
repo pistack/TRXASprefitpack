@@ -1,7 +1,7 @@
 Library
 ================
 
-You can download jupyter notebook example from [TRXASprefitpack-example](https://github.com/pistack/TRXASprefitpack-example/tree/v0.6.0).
+You can download jupyter notebook example from `TRXASprefitpack-example <https://github.com/pistack/TRXASprefitpack-example/tree/v0.6.1>`__.
 
 .. toctree::
    :maxdepth: 1
@@ -13,3 +13,4 @@ You can download jupyter notebook example from [TRXASprefitpack-example](https:/
    Fit_Transient_Exp
    Fit_Transient_Both
    Fit_Static_voigt
+   Fit_Static_thy
