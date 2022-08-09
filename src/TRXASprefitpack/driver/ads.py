@@ -14,7 +14,8 @@ from ..mathfun.rate_eq import compute_signal_irf
 
 def dads(escan_time: np.ndarray, fwhm: float, tau: np.ndarray, base: Optional[bool] = True,
 irf: Optional[str] = 'g', eta: Optional[float] = None,
-intensity: Optional[np.ndarray] = None, eps: Optional[np.ndarray] = None) -> Tuple[np.ndarray, np.ndarray, np.ndarray]:
+intensity: Optional[np.ndarray] = None, eps: Optional[np.ndarray] = None) \
+  -> Tuple[np.ndarray, np.ndarray, np.ndarray, np.ndarray]:
     '''
     Calculate decay associated difference spectrum from experimental energy scan data
 
@@ -35,8 +36,8 @@ intensity: Optional[np.ndarray] = None, eps: Optional[np.ndarray] = None) -> Tup
       eps: standard error of dataset
     
     Returns:
-     Tuple of calculated decay associated difference spectrum of each component, estimated error and
-     retrieved energy scan intensity from dads and decay components
+     Tuple of calculated decay associated difference spectrum of each component, estimated error, 
+     scaled convarience tensor and retrieved energy scan intensity from dads and decay components
     
     Note:
      To calculate decay associated difference spectrum of n component exponential decay, you should measure at least n+1
@@ -57,6 +58,7 @@ intensity: Optional[np.ndarray] = None, eps: Optional[np.ndarray] = None) -> Tup
     
     A = make_A_matrix_exp(escan_time, fwhm, tau, base, irf, eta)
     data_scaled = intensity/eps
+    c_cov = np.empty((c.size, c.size, intensity.shape[0]))
 
     # evaluates dads
     cond = 1e-2
@@ -69,11 +71,12 @@ intensity: Optional[np.ndarray] = None, eps: Optional[np.ndarray] = None) -> Tup
       res = data_scaled[i,:] - (c[:,i] @ A_scaled)
       if dof != 0:
         red_chi2 = np.sum(res**2)/dof
-        cov = Vh_turn.T @ np.einsum('i,ij->ij', 1/s_turn**2, Vh_turn)
-        c_eps[:,i] = np.sqrt(red_chi2*np.diag(cov))
+        c_cov[:, :, i] = red_chi2*\
+          Vh_turn.T @ np.einsum('i,ij->ij', 1/s_turn**2, Vh_turn)
+        c_eps[:,i] = np.sqrt(c_cov[:, :, i])
 
 
-    return c, c_eps, c.T @ A
+    return c, c_eps, c_cov, c.T @ A
 
 def sads(escan_time: np.ndarray, fwhm: float, eigval: np.ndarray, V: np.ndarray, c: np.ndarray,
 exclude: Optional[str] = None, irf: Optional[str] = 'g', eta: Optional[float] = None,
