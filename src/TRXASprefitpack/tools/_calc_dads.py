@@ -107,7 +107,7 @@ def calc_dads():
     out_prefix = args.out
     base = args.no_base
     
-    ads, ads_eps, fit = dads(escan_time-time_zero, fwhm, tau, base, irf, eta,
+    ads, ads_eps, _, fit = dads(escan_time-time_zero, fwhm, tau, base, irf, eta,
     intensity=escan_data[:,1:], eps=escan_err)
 
     e = escan_data[:,0]
