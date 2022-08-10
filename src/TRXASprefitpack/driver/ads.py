@@ -58,7 +58,6 @@ intensity: Optional[np.ndarray] = None, eps: Optional[np.ndarray] = None) \
     
     A = make_A_matrix_exp(escan_time, fwhm, tau, base, irf, eta)
     data_scaled = intensity/eps
-    c_cov = np.empty((c.size, c.size, intensity.shape[0]))
 
     # evaluates dads
     cond = 1e-2
@@ -71,12 +70,12 @@ intensity: Optional[np.ndarray] = None, eps: Optional[np.ndarray] = None) \
       res = data_scaled[i,:] - (c[:,i] @ A_scaled)
       if dof != 0:
         red_chi2 = np.sum(res**2)/dof
-        c_cov[:, :, i] = red_chi2*\
+        cov_scale = red_chi2*\
           Vh_turn.T @ np.einsum('i,ij->ij', 1/s_turn**2, Vh_turn)
-        c_eps[:,i] = np.sqrt(c_cov[:, :, i])
+        c_eps[:,i] = np.sqrt(np.diag(cov_scale))
 
 
-    return c, c_eps, c_cov, c.T @ A
+    return c, c_eps, c.T @ A
 
 def sads(escan_time: np.ndarray, fwhm: float, eigval: np.ndarray, V: np.ndarray, c: np.ndarray,
 exclude: Optional[str] = None, irf: Optional[str] = 'g', eta: Optional[float] = None,
