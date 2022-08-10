@@ -15,7 +15,7 @@ from ..mathfun.rate_eq import compute_signal_irf
 def dads(escan_time: np.ndarray, fwhm: float, tau: np.ndarray, base: Optional[bool] = True,
 irf: Optional[str] = 'g', eta: Optional[float] = None,
 intensity: Optional[np.ndarray] = None, eps: Optional[np.ndarray] = None) \
-  -> Tuple[np.ndarray, np.ndarray, np.ndarray, np.ndarray]:
+  -> Tuple[np.ndarray, np.ndarray, np.ndarray]:
     '''
     Calculate decay associated difference spectrum from experimental energy scan data
 
@@ -37,7 +37,7 @@ intensity: Optional[np.ndarray] = None, eps: Optional[np.ndarray] = None) \
     
     Returns:
      Tuple of calculated decay associated difference spectrum of each component, estimated error, 
-     scaled convarience tensor and retrieved energy scan intensity from dads and decay components
+     and retrieved energy scan intensity from dads and decay components
     
     Note:
      To calculate decay associated difference spectrum of n component exponential decay, you should measure at least n+1
