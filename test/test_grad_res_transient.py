@@ -8,13 +8,12 @@ path = os.path.dirname(os.path.realpath(__file__))
 sys.path.append(path+"/../src/")
 
 from TRXASprefitpack import residual_decay, residual_dmp_osc, residual_both
-from TRXASprefitpack import residual_voigt, residual_thy
 from TRXASprefitpack import res_grad_decay, res_grad_dmp_osc, res_grad_both
-from TRXASprefitpack import res_grad_voigt, res_grad_thy
 from TRXASprefitpack import solve_seq_model, rate_eq_conv
 from TRXASprefitpack import dmp_osc_conv_gau, dmp_osc_conv_cauchy, dmp_osc_conv_pvoigt 
+from TRXASprefitpack import dmp_osc_conv
 
-class TestGradRes(unittest.TestCase):
+class TestGradResTransient(unittest.TestCase):
 
     def test_res_grad_decay_1(self):
         '''
@@ -223,6 +222,215 @@ class TestGradRes(unittest.TestCase):
         atol=1e-6) # noise field
 
         self.assertEqual((check_res, check_grad), (True, True))
+    
+    def test_res_grad_dmp_osc_1(self):
+        '''
+        Gaussian IRF
+        '''
+        fwhm = 0.100
+        tau = np.array([0.5, 10, 1000])
+        period = np.array([0.2, 3, 200])
+        phase = np.array([np.pi/17, -np.pi/6, np.pi/2])
+        
+        # set time range (mixed step)
+        t_seq1 = np.arange(-2, -1, 0.2)
+        t_seq2 = np.arange(-1, 2, 0.02)
+        t_seq3 = np.arange(2, 5, 0.2)
+        t_seq4 = np.arange(5, 10, 1)
+        t_seq5 = np.arange(10, 100, 10)
+        t_seq6 = np.arange(100, 1000, 100)
+        t_seq7 = np.linspace(1000, 2000, 2)
+        
+        t_seq = np.hstack((t_seq1, t_seq2, t_seq3, t_seq4, t_seq5, t_seq6, t_seq7))
+        
+        # Now generates measured transient signal
+        # Last element is ground state
+        abs_1 = np.array([1, 1, 1])
+        abs_2 = np.array([0.5, 0.8, 0.2])
+        abs_3 = np.array([-0.5, 0.7, 0.9])
+        abs_4 = np.array([0.6, 0.3, -1])
+        
+        t0 = np.random.normal(0, fwhm, 4) # perturb time zero of each scan
+        
+        # generate measured data
+        y_obs_1 = dmp_osc_conv(t_seq-t0[0], fwhm, tau, period, phase, abs_1, irf='g')
+        y_obs_2 = dmp_osc_conv(t_seq-t0[1], fwhm, tau, period, phase, abs_2, irf='g')
+        y_obs_3 = dmp_osc_conv(t_seq-t0[2], fwhm, tau, period, phase, abs_3, irf='g')
+        y_obs_4 = dmp_osc_conv(t_seq-t0[3], fwhm, tau, period, phase, abs_4, irf='g')
+        
+        eps_obs_1 = np.ones_like(y_obs_1)
+        eps_obs_2 = np.ones_like(y_obs_2)
+        eps_obs_3 = np.ones_like(y_obs_3)
+        eps_obs_4 = np.ones_like(y_obs_4)
+        
+        # generate measured intensity
+        i_obs_1 = y_obs_1
+        i_obs_2 = y_obs_2
+        i_obs_3 = y_obs_3
+        i_obs_4 = y_obs_4
+
+        t = [t_seq] 
+        intensity = [np.vstack((i_obs_1, i_obs_2, i_obs_3, i_obs_4)).T]
+        eps = [np.vstack((eps_obs_1, eps_obs_2, eps_obs_3, eps_obs_4)).T]
+
+        x0 = np.array([0.15, 0, 0, 0, 0, 0.4, 9, 990, 0.3, 5, 250])
+
+        res_ref = 1/2*np.sum(residual_dmp_osc(x0, 3, 'g', 
+        t=t, intensity=intensity, eps=eps)**2)
+        grad_ref = approx_fprime(x0, lambda x0: \
+            1/2*np.sum(residual_dmp_osc(x0, 3, 'g', 
+            t=t, intensity=intensity, eps=eps)**2), 1e-6)
+
+        res_tst, grad_tst = res_grad_dmp_osc(x0, 3, 'g', 
+        np.zeros_like(x0, dtype=bool), t, intensity, eps)
+
+        check_res = np.allclose(res_ref, res_tst)
+        check_grad = np.allclose(grad_ref, grad_tst, rtol=1e-3,
+        atol=1e-6) # noise field
+
+        self.assertEqual((check_res, check_grad), (True, True))
+
+    def test_res_grad_dmp_osc_2(self):
+        '''
+        Cauchy IRF
+        '''
+        fwhm = 0.100
+        tau = np.array([0.5, 10, 1000])
+        period = np.array([0.2, 3, 200])
+        phase = np.array([np.pi/17, -np.pi/6, np.pi/2])
+        
+        # set time range (mixed step)
+        t_seq1 = np.arange(-2, -1, 0.2)
+        t_seq2 = np.arange(-1, 2, 0.02)
+        t_seq3 = np.arange(2, 5, 0.2)
+        t_seq4 = np.arange(5, 10, 1)
+        t_seq5 = np.arange(10, 100, 10)
+        t_seq6 = np.arange(100, 1000, 100)
+        t_seq7 = np.linspace(1000, 2000, 2)
+        
+        t_seq = np.hstack((t_seq1, t_seq2, t_seq3, t_seq4, t_seq5, t_seq6, t_seq7))
+        
+        # Now generates measured transient signal
+        # Last element is ground state
+        abs_1 = np.array([1, 1, 1])
+        abs_2 = np.array([0.5, 0.8, 0.2])
+        abs_3 = np.array([-0.5, 0.7, 0.9])
+        abs_4 = np.array([0.6, 0.3, -1])
+        
+        t0 = np.random.normal(0, fwhm, 4) # perturb time zero of each scan
+        
+        # generate measured data
+        y_obs_1 = dmp_osc_conv(t_seq-t0[0], fwhm, tau, period, phase, abs_1, irf='c')
+        y_obs_2 = dmp_osc_conv(t_seq-t0[1], fwhm, tau, period, phase, abs_2, irf='c')
+        y_obs_3 = dmp_osc_conv(t_seq-t0[2], fwhm, tau, period, phase, abs_3, irf='c')
+        y_obs_4 = dmp_osc_conv(t_seq-t0[3], fwhm, tau, period, phase, abs_4, irf='c')
+        
+        eps_obs_1 = np.ones_like(y_obs_1)
+        eps_obs_2 = np.ones_like(y_obs_2)
+        eps_obs_3 = np.ones_like(y_obs_3)
+        eps_obs_4 = np.ones_like(y_obs_4)
+        
+        # generate measured intensity
+        i_obs_1 = y_obs_1
+        i_obs_2 = y_obs_2
+        i_obs_3 = y_obs_3
+        i_obs_4 = y_obs_4
+
+        t = [t_seq] 
+        intensity = [np.vstack((i_obs_1, i_obs_2, i_obs_3, i_obs_4)).T]
+        eps = [np.vstack((eps_obs_1, eps_obs_2, eps_obs_3, eps_obs_4)).T]
+
+        x0 = np.array([0.15, 0, 0, 0, 0, 0.4, 9, 990, 0.3, 5, 250])
+
+        res_ref = 1/2*np.sum(residual_dmp_osc(x0, 3, 'c', 
+        t=t, intensity=intensity, eps=eps)**2)
+        grad_ref = approx_fprime(x0, lambda x0: \
+            1/2*np.sum(residual_dmp_osc(x0, 3, 'c', 
+            t=t, intensity=intensity, eps=eps)**2), 1e-6)
+
+        res_tst, grad_tst = res_grad_dmp_osc(x0, 3, 'c', 
+        np.zeros_like(x0, dtype=bool), t, intensity, eps)
+
+        check_res = np.allclose(res_ref, res_tst)
+        check_grad = np.allclose(grad_ref, grad_tst, rtol=1e-3,
+        atol=1e-6) # noise field
+
+        self.assertEqual((check_res, check_grad), (True, True))
+
+    def test_res_grad_dmp_osc_3(self):
+        '''
+        Pseudo Voigt IRF
+        '''
+        fwhm = 0.100; eta = 0.6
+        tau = np.array([0.5, 10, 1000])
+        period = np.array([0.2, 2, 300])
+        phase = np.array([np.pi/17, -np.pi/6, np.pi/2])
+        
+        # set time range (mixed step)
+        t_seq1 = np.arange(-2, -1, 0.2)
+        t_seq2 = np.arange(-1, 2, 0.02)
+        t_seq3 = np.arange(2, 5, 0.2)
+        t_seq4 = np.arange(5, 10, 1)
+        t_seq5 = np.arange(10, 100, 10)
+        t_seq6 = np.arange(100, 1000, 100)
+        t_seq7 = np.linspace(1000, 2000, 2)
+        
+        t_seq = np.hstack((t_seq1, t_seq2, t_seq3, t_seq4, t_seq5, t_seq6, t_seq7))
+        
+        # Now generates measured transient signal
+        # Last element is ground state
+        abs_1 = np.array([1, 1, 1])
+        abs_2 = np.array([0.5, 0.8, 0.2])
+        abs_3 = np.array([-0.5, 0.7, 0.9])
+        abs_4 = np.array([0.6, 0.3, -1])
+        
+        t0 = np.random.normal(0, fwhm, 4) # perturb time zero of each scan
+        
+        # generate measured data
+        y_obs_1 = dmp_osc_conv(t_seq-t0[0], fwhm, tau, period, phase, abs_1, 
+        irf='pv', eta=eta)
+        y_obs_2 = dmp_osc_conv(t_seq-t0[1], fwhm, tau, period, phase, abs_2, 
+        irf='pv', eta=eta)
+        y_obs_3 = dmp_osc_conv(t_seq-t0[2], fwhm, tau, period, phase, abs_3, 
+        irf='pv', eta=eta)
+        y_obs_4 = dmp_osc_conv(t_seq-t0[3], fwhm, tau, period, phase, abs_4, 
+        irf='pv', eta=eta)
+        
+        eps_obs_1 = np.ones_like(y_obs_1)
+        eps_obs_2 = np.ones_like(y_obs_2)
+        eps_obs_3 = np.ones_like(y_obs_3)
+        eps_obs_4 = np.ones_like(y_obs_4)
+        
+        # generate measured intensity
+        i_obs_1 = y_obs_1
+        i_obs_2 = y_obs_2
+        i_obs_3 = y_obs_3
+        i_obs_4 = y_obs_4
+
+        t = [t_seq] 
+        intensity = [np.vstack((i_obs_1, i_obs_2, i_obs_3, i_obs_4)).T]
+        eps = [np.vstack((eps_obs_1, eps_obs_2, eps_obs_3, eps_obs_4)).T]
+
+        x0 = np.array([0.15, 0.30, 0, 0, 0, 0, 0.4, 5, 800, 0.3, 1, 200])
+
+        res_ref = 1/2*np.sum(residual_dmp_osc(x0, 3, 'pv', 
+        t=t, intensity=intensity, eps=eps)**2)
+        grad_ref = approx_fprime(x0, lambda x0: \
+            1/2*np.sum(residual_dmp_osc(x0, 3, 'pv', 
+            t=t, intensity=intensity, eps=eps)**2), 1e-6)
+
+        res_tst, grad_tst = res_grad_dmp_osc(x0, 3, 'pv', 
+        np.zeros_like(x0, dtype=bool), t, intensity, eps)
+
+        check_res = np.allclose(res_ref, res_tst)
+        check_grad = np.allclose(grad_ref, grad_tst, rtol=1e-3,
+        atol=1e-6) # noise field
+
+        print(grad_ref)
+        print((grad_ref-grad_tst)/grad_ref)
+
+        self.assertEqual((check_res, check_grad), (True, True))
+
 
     def test_res_grad_both_1(self):
         '''
@@ -231,7 +439,7 @@ class TestGradRes(unittest.TestCase):
         tau_1 = 0.5; tau_2 = 10
         tau_3 = 1000; fwhm = 0.100
         tau_osc = 1; period_osc = 0.3
-        phase = np.pi/4
+        phase = np.pi/3
         # initial condition
         y0 = np.array([1, 0, 0, 0])
         
@@ -294,7 +502,7 @@ class TestGradRes(unittest.TestCase):
 
         check_res = np.allclose(res_ref, res_tst)
         check_grad = np.allclose(grad_ref, grad_tst, rtol=1e-3,
-        atol=1e-6) # noise field
+        atol=1e-6)
 
         self.assertEqual((check_res, check_grad), (True, True))
 
@@ -305,7 +513,7 @@ class TestGradRes(unittest.TestCase):
         tau_1 = 0.5; tau_2 = 10
         tau_3 = 1000; fwhm = 0.100
         tau_osc = 1; period_osc = 0.3
-        phase = np.pi/4
+        phase = np.pi/3
         # initial condition
         y0 = np.array([1, 0, 0, 0])
         
@@ -332,13 +540,13 @@ class TestGradRes(unittest.TestCase):
         
         # generate measured data
         y_obs_1 = rate_eq_conv(t_seq-t0[0], fwhm, abs_1, eigval_seq, V_seq, c_seq, irf='c')+\
-            abs_1_osc*dmp_osc_conv_gau(t_seq-t0[0], fwhm, 1/tau_osc, period_osc, phase)
+            abs_1_osc*dmp_osc_conv_cauchy(t_seq-t0[0], fwhm, 1/tau_osc, period_osc, phase)
         y_obs_2 = rate_eq_conv(t_seq-t0[1], fwhm, abs_2, eigval_seq, V_seq, c_seq, irf='c')+\
-            abs_2_osc*dmp_osc_conv_gau(t_seq-t0[1], fwhm, 1/tau_osc, period_osc, phase)
+            abs_2_osc*dmp_osc_conv_cauchy(t_seq-t0[1], fwhm, 1/tau_osc, period_osc, phase)
         y_obs_3 = rate_eq_conv(t_seq-t0[2], fwhm, abs_3, eigval_seq, V_seq, c_seq, irf='c')+\
-            abs_3_osc*dmp_osc_conv_gau(t_seq-t0[2], fwhm, 1/tau_osc, period_osc, phase)
+            abs_3_osc*dmp_osc_conv_cauchy(t_seq-t0[2], fwhm, 1/tau_osc, period_osc, phase)
         y_obs_4 = rate_eq_conv(t_seq-t0[3], fwhm, abs_4, eigval_seq, V_seq, c_seq, irf='c')+\
-            abs_4_osc*dmp_osc_conv_gau(t_seq-t0[3], fwhm, 1/tau_osc, period_osc, phase)
+            abs_4_osc*dmp_osc_conv_cauchy(t_seq-t0[3], fwhm, 1/tau_osc, period_osc, phase)
         
         eps_obs_1 = np.ones_like(y_obs_1)
         eps_obs_2 = np.ones_like(y_obs_2)
@@ -379,7 +587,7 @@ class TestGradRes(unittest.TestCase):
         tau_1 = 0.5; tau_2 = 10
         tau_3 = 1000; fwhm = 0.100; eta = 0.7
         tau_osc = 1; period_osc = 0.3
-        phase = np.pi/4
+        phase = np.pi/3
         # initial condition
         y0 = np.array([1, 0, 0, 0])
         
@@ -407,13 +615,20 @@ class TestGradRes(unittest.TestCase):
         # generate measured data
         y_obs_1 = rate_eq_conv(t_seq-t0[0], fwhm, abs_1, eigval_seq, V_seq, c_seq, 
         irf='pv', eta=eta)+\
-            abs_1_osc*dmp_osc_conv_gau(t_seq-t0[0], fwhm, 1/tau_osc, period_osc, phase)
-        y_obs_2 = rate_eq_conv(t_seq-t0[1], fwhm, abs_2, eigval_seq, V_seq, c_seq, irf='c')+\
-            abs_2_osc*dmp_osc_conv_gau(t_seq-t0[1], fwhm, 1/tau_osc, period_osc, phase)
-        y_obs_3 = rate_eq_conv(t_seq-t0[2], fwhm, abs_3, eigval_seq, V_seq, c_seq, irf='c')+\
-            abs_3_osc*dmp_osc_conv_gau(t_seq-t0[2], fwhm, 1/tau_osc, period_osc, phase)
-        y_obs_4 = rate_eq_conv(t_seq-t0[3], fwhm, abs_4, eigval_seq, V_seq, c_seq, irf='c')+\
-            abs_4_osc*dmp_osc_conv_gau(t_seq-t0[3], fwhm, 1/tau_osc, period_osc, phase)
+            abs_1_osc*dmp_osc_conv_pvoigt(t_seq-t0[0], fwhm, eta,
+            1/tau_osc, period_osc, phase)
+        y_obs_2 = rate_eq_conv(t_seq-t0[1], fwhm, abs_2, eigval_seq, V_seq, c_seq, 
+        irf='pv', eta=eta)+\
+            abs_2_osc*dmp_osc_conv_pvoigt(t_seq-t0[1], fwhm, eta,
+            1/tau_osc, period_osc, phase)
+        y_obs_3 = rate_eq_conv(t_seq-t0[2], fwhm, abs_3, eigval_seq, V_seq, c_seq, 
+        irf='pv', eta=eta)+\
+            abs_3_osc*dmp_osc_conv_pvoigt(t_seq-t0[2], fwhm, eta,
+            1/tau_osc, period_osc, phase)
+        y_obs_4 = rate_eq_conv(t_seq-t0[3], fwhm, abs_4, eigval_seq, V_seq, c_seq, 
+        irf='pv', eta=eta)+\
+            abs_4_osc*dmp_osc_conv_pvoigt(t_seq-t0[3], fwhm, eta,
+            1/tau_osc, period_osc, phase)
         
         eps_obs_1 = np.ones_like(y_obs_1)
         eps_obs_2 = np.ones_like(y_obs_2)
@@ -430,15 +645,15 @@ class TestGradRes(unittest.TestCase):
         intensity = [np.vstack((i_obs_1, i_obs_2, i_obs_3, i_obs_4)).T]
         eps = [np.vstack((eps_obs_1, eps_obs_2, eps_obs_3, eps_obs_4)).T]
 
-        x0 = np.array([0.15, 0, 0, 0, 0, 0.5, 9, 990, 1.5, 0.5])
+        x0 = np.array([0.15, 0.3, 0, 0, 0, 0, 0.5, 9, 990, 1.5, 0.5])
 
-        res_ref = 1/2*np.sum(residual_both(x0, 3, 1, False, 'c', 
+        res_ref = 1/2*np.sum(residual_both(x0, 3, 1, False, 'pv', 
         t=t, intensity=intensity, eps=eps)**2)
         grad_ref = approx_fprime(x0, lambda x0: \
-            1/2*np.sum(residual_both(x0, 3, 1, False, 'c', 
+            1/2*np.sum(residual_both(x0, 3, 1, False, 'pv', 
             t=t, intensity=intensity, eps=eps)**2), 1e-6)
 
-        res_tst, grad_tst = res_grad_both(x0, 3, 1, False, 'c', 
+        res_tst, grad_tst = res_grad_both(x0, 3, 1, False, 'pv', 
         np.zeros_like(x0, dtype=bool), t, intensity, eps)
 
         check_res = np.allclose(res_ref, res_tst)
