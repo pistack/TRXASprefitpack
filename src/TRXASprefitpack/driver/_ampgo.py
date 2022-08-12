@@ -41,7 +41,7 @@ def ampgo(fun: Callable, x0: np.ndarray,
       `scipy.optimize.minimize`. Some important options could be:
              
         * method (str): The minimization Method (default: `L-BFGS-B`)
-        * args (tuple): The extra arguments passed to the objective function (`func`) and
+        * args (tuple): The extra arguments passed to the objective function (`fun`) and
          its derivatives (`jac`, `hess`)     
         * jac: jacobian of objective function (see scipy.optimize.minimize)
         * hess: hessian of objective function (see scipy.optimize.minimize)
@@ -166,7 +166,7 @@ def ampgo(fun: Callable, x0: np.ndarray,
             vaild = False
             while not vaild:
                 r = np.random.uniform(-1, 1, n_param)
-                beta = eps2*np.linalg.norm(x0)/np.linalg.norm(r)
+                beta = eps2*(1+np.linalg.norm(x0))/np.linalg.norm(r)
                 x_try = x0 + beta*r
                 x_try = np.where(x_try < lb, lb, x_try)
                 x_try = np.where(x_try > ub, ub, x_try)
