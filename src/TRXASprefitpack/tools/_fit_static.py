@@ -117,9 +117,11 @@ epilog = '''
  If fwhm_L of voigt component is zero then this voigt component is treated as gaussian
 '''
 
-do_glb_help='''
-Whether or not use Global optimization Method.
-When do_glb option is set then `basinhopping` global optimization algorithm will be used.
+method_glb_help='''
+Global optimization Method.
+* 'basinhopping' : basinhopping
+* 'ampgo' : adaptive memory programming for global optimization
+If method_glb is not set, global optimization algorithm is not used.
 '''
 
 edge_help = '''
@@ -178,7 +180,7 @@ def fit_static():
     parse.add_argument('--base_order', type=int,
     help ='Order of polynomial to correct baseline feature. If it is not set then baseline is not corrected')
     parse.add_argument('-o', '--outdir', default='out', help='directory to store output file')
-    parse.add_argument('--do_glb', action='store_true', help=do_glb_help)
+    parse.add_argument('--method_glb', choices=['basinhopping', 'ampgo'], help=method_glb_help)
 
     args = parse.parse_args()
 
@@ -230,12 +232,12 @@ def fit_static():
     
     if args.mode == 'voigt':
         result = fit_static_voigt(e0_init, fwhm_G_init, fwhm_L_init, edge, e0_edge_init, fwhm_edge_init,
-        base_order, args.do_glb, e=e, intensity=intensity, eps=eps)
+        base_order, args.method_glb, e=e, intensity=intensity, eps=eps)
     
     elif args.mode == 'thy':
         result = fit_static_thy(thy_peak, fwhm_G_init, fwhm_L_init, args.policy, args.peak_shift, args.peak_scale,
         edge, e0_edge_init, fwhm_edge_init,
-        base_order, args.do_glb, e=e, intensity=intensity, eps=eps)
+        base_order, args.method_glb, e=e, intensity=intensity, eps=eps)
 
     save_StaticResult_txt(result, outdir)
     save_StaticResult(result, outdir)
