@@ -12,7 +12,7 @@ import numpy as np
 from ..mathfun.irf import calc_eta, deriv_eta
 from ..mathfun.irf import calc_fwhm, deriv_fwhm
 from ..mathfun.A_matrix import make_A_matrix_gau_osc, make_A_matrix_cauchy_osc, fact_anal_A
-from ..mathfun.exp_conv_irf import deriv_dmp_osc_sum_conv_gau, deriv_dmp_osc_sum_conv_cauchy
+from ..mathfun.exp_conv_irf import deriv_dmp_osc_sum_conv_gau_2, deriv_dmp_osc_sum_conv_cauchy_2
 
 # residual and gradient function for damped oscillation model 
 
@@ -182,17 +182,14 @@ def res_grad_dmp_osc(x0: np.ndarray, num_comp: int, irf: str,
                 A = A_gau + eta*diff
             c = fact_anal_A(A, d[:,j], e[:,j])
             chi[end:end+step] = (c@A-d[:,j])/e[:, j]
-
-            c_amp = np.sqrt(c[:num_comp]**2+c[num_comp:]**2)
-            phase = -np.arctan2(c[num_comp:], c[:num_comp])
                 
             if irf == 'g':
-                grad_tmp = deriv_dmp_osc_sum_conv_gau(ti-t0, fwhm, 1/tau, period, phase, c_amp)
+                grad_tmp = deriv_dmp_osc_sum_conv_gau_2(ti-t0, fwhm, 1/tau, period, c)
             elif irf == 'c':
-                grad_tmp = deriv_dmp_osc_sum_conv_cauchy(ti-t0, fwhm, 1/tau, period, phase, c_amp)
+                grad_tmp = deriv_dmp_osc_sum_conv_cauchy_2(ti-t0, fwhm, 1/tau, period, c)
             else:
-                grad_gau = deriv_dmp_osc_sum_conv_gau(ti-t0, fwhm[0], 1/tau, period, phase, c_amp)
-                grad_cauchy = deriv_dmp_osc_sum_conv_cauchy(ti-t0, fwhm[1], 1/tau, period, phase, c_amp)
+                grad_gau = deriv_dmp_osc_sum_conv_gau_2(ti-t0, fwhm[0], 1/tau, period, c)
+                grad_cauchy = deriv_dmp_osc_sum_conv_cauchy_2(ti-t0, fwhm[1], 1/tau, period, c)
                 grad_tmp = grad_gau + eta*(grad_cauchy-grad_gau)
    
             grad_tmp = np.einsum('i,ij->ij', 1/e[:, j], grad_tmp)

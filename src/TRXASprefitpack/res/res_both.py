@@ -14,7 +14,7 @@ from ..mathfun.irf import calc_fwhm, deriv_fwhm
 from ..mathfun.A_matrix import make_A_matrix_gau, make_A_matrix_cauchy
 from ..mathfun.A_matrix import make_A_matrix_gau_osc, make_A_matrix_cauchy_osc, fact_anal_A
 from ..mathfun.exp_conv_irf import deriv_exp_sum_conv_gau, deriv_exp_sum_conv_cauchy
-from ..mathfun.exp_conv_irf import deriv_dmp_osc_sum_conv_gau, deriv_dmp_osc_sum_conv_cauchy
+from ..mathfun.exp_conv_irf import deriv_dmp_osc_sum_conv_gau_2, deriv_dmp_osc_sum_conv_cauchy_2
 
 # residual and gradient function for exponential decay model + damped oscillation model
 
@@ -226,22 +226,17 @@ def res_grad_both(x0: np.ndarray, num_comp: int, num_comp_osc:int, base: bool, i
             c = fact_anal_A(A, d[:,j], e[:,j])
             chi[end:end+step] = (c@A-d[:,j])/e[:, j]
 
-            c_amp = np.sqrt(c[num_comp+1*base:num_comp+1*base+num_comp_osc]**2+
-            c[num_comp+1*base+num_comp_osc:]**2)
-            phase_osc = -np.arctan2(c[num_comp+1*base+num_comp_osc:], 
-            c[:num_comp+1*base+num_comp_osc])
-
             if irf == 'g':
                 grad_decay = deriv_exp_sum_conv_gau(ti-t0, fwhm, 1/tau, c[:num_comp+1*base], base)
-                grad_osc = deriv_dmp_osc_sum_conv_gau(ti-t0, fwhm, 1/tau_osc, period_osc, phase_osc, c_amp)
+                grad_osc = deriv_dmp_osc_sum_conv_gau_2(ti-t0, fwhm, 1/tau_osc, period_osc, c[num_comp+1*base:])
             elif irf == 'c':
                 grad_decay = deriv_exp_sum_conv_cauchy(ti-t0, fwhm, 1/tau, c[:num_comp+1*base], base)
-                grad_osc = deriv_dmp_osc_sum_conv_cauchy(ti-t0, fwhm, 1/tau_osc, period_osc, phase_osc, c_amp)
+                grad_osc = deriv_dmp_osc_sum_conv_cauchy_2(ti-t0, fwhm, 1/tau_osc, period_osc, c[num_comp+1*base:])
             else:
                 grad_gau_decay = deriv_exp_sum_conv_gau(ti-t0, fwhm, 1/tau, c[:num_comp+1*base], base)
-                grad_gau_osc = deriv_dmp_osc_sum_conv_gau(ti-t0, fwhm, 1/tau_osc, period_osc, phase_osc, c_amp)
+                grad_gau_osc = deriv_dmp_osc_sum_conv_gau_2(ti-t0, fwhm, 1/tau_osc, period_osc, c[num_comp+1*base:])
                 grad_cauchy_decay = deriv_exp_sum_conv_cauchy(ti-t0, fwhm, 1/tau, c[:num_comp+1*base], base)
-                grad_cauchy_osc = deriv_dmp_osc_sum_conv_cauchy(ti-t0, fwhm, 1/tau_osc, period_osc, phase_osc, c_amp)
+                grad_cauchy_osc = deriv_dmp_osc_sum_conv_cauchy_2(ti-t0, fwhm, 1/tau_osc, period_osc, c[num_comp+1*base:])
                 grad_decay = grad_gau_decay + eta*(grad_cauchy_decay-grad_gau_decay)
                 grad_osc = grad_gau_osc + eta*(grad_cauchy_osc-grad_gau_osc)
             
