@@ -74,7 +74,7 @@ def fact_anal_exp_conv(t: np.ndarray,
     linear least square problem to find best coefficients when fwhm and
     tau are given.
 
-    Supported instrumental response functions are 
+    Supported instrumental response functions are
 
        1. 'g': gaussian distribution
        2. 'c': cauchy distribution
@@ -116,7 +116,7 @@ def fact_anal_exp_conv(t: np.ndarray,
 
 
 def rate_eq_conv(t: np.ndarray, fwhm: float,
-                 abs: np.ndarray, eigval: np.ndarray, V: np.ndarray, c: np.ndarray,
+                 diff_abs: np.ndarray, eigval: np.ndarray, V: np.ndarray, c: np.ndarray,
                  irf: Optional[str] = 'g', eta: Optional[float] = None) -> np.ndarray:
     '''
     Constructs signal model rate equation with
@@ -130,9 +130,9 @@ def rate_eq_conv(t: np.ndarray, fwhm: float,
     Args:
        t: time
        fwhm: full width at half maximum of instrumental response function
-       abs: coefficient for each excited state
-       eigval: eigenvalue of rate equation matrix 
-       V: eigenvector of rate equation matrix 
+       diff_abs: coefficient for each excited state
+       eigval: eigenvalue of rate equation matrix
+       V: eigenvector of rate equation matrix
        c: coefficient to match initial condition of rate equation
        irf: shape of instrumental
             response function [default: g]
@@ -148,7 +148,7 @@ def rate_eq_conv(t: np.ndarray, fwhm: float,
       response function.
     '''
     A = compute_signal_irf(t, eigval, V, c, fwhm, irf, eta)
-    y = abs@A
+    y = diff_abs@A
 
     return y
 
@@ -162,7 +162,7 @@ def fact_anal_rate_eq_conv(t: np.ndarray, fwhm: float,
     Estimate the best coefficiets when full width at half maximum fwhm
     and eigenvector and eigenvalue of rate equation matrix are given
 
-    Supported instrumental response functions are 
+    Supported instrumental response functions are
 
        1. 'g': gaussian distribution
        2. 'c': cauchy distribution
@@ -171,14 +171,14 @@ def fact_anal_rate_eq_conv(t: np.ndarray, fwhm: float,
     Args:
        t: time
        fwhm: full width at half maximum of instrumental response function
-       eigval: eigenvalue of rate equation matrix 
-       V: eigenvector of rate equation matrix 
+       eigval: eigenvalue of rate equation matrix
+       V: eigenvector of rate equation matrix
        c: coefficient to match initial condition of rate equation
        exclude: exclude either 'first' or 'last' element or both 'first' and 'last' element.
 
                 * 'first' : exclude first element
                 * 'last' : exclude last element
-                * 'first_and_last' : exclude both first and last element  
+                * 'first_and_last' : exclude both first and last element
                 * None : Do not exclude any element [default]
        irf: shape of instrumental
             response function [default: g]
@@ -201,7 +201,7 @@ def fact_anal_rate_eq_conv(t: np.ndarray, fwhm: float,
 
     A = compute_signal_irf(t, eigval, V, c, fwhm, irf, eta)
 
-    abs = np.zeros(A.shape[0])
+    diff_abs = np.zeros(A.shape[0])
 
     if eps is None:
         eps = np.ones_like(intensity)
@@ -220,15 +220,15 @@ def fact_anal_rate_eq_conv(t: np.ndarray, fwhm: float,
     coeff, _, _, _ = LA.lstsq(B.T, y, cond=1e-2)
 
     if exclude == 'first_and_last':
-        abs[1:-1] = coeff
+        diff_abs[1:-1] = coeff
     elif exclude == 'first':
-        abs[1:] = coeff
+        diff_abs[1:] = coeff
     elif exclude == 'last':
-        abs[:-1] = coeff
+        diff_abs[:-1] = coeff
     else:
-        abs = coeff
+        diff_abs = coeff
 
-    return abs
+    return diff_abs
 
 
 def dmp_osc_conv(t: np.ndarray, fwhm: float,
@@ -288,11 +288,11 @@ def fact_anal_dmp_osc_conv(t: np.ndarray,
                            eps: Optional[np.ndarray] = None
                            ) -> Tuple[np.ndarray, np.ndarray]:
     '''
-    Estimate the best coefficiets and phase factor 
+    Estimate the best coefficiets and phase factor
     when full width at half maximum fwhm
     , life constant tau and period of vibration T are given
 
-    Supported instrumental response functions are 
+    Supported instrumental response functions are
 
        1. 'g': gaussian distribution
        2. 'c': cauchy distribution
@@ -403,12 +403,12 @@ def fact_anal_sum_exp_dmp_osc_conv(t: np.ndarray, fwhm: float,
                                    eps: Optional[np.ndarray] = None) -> \
         Tuple[np.ndarray, np.ndarray, np.ndarray]:
     '''
-    Estimate the best coefficiets and phase factor of oscillation part 
+    Estimate the best coefficiets and phase factor of oscillation part
     when full width at half maximum fwhm
-    , lifetime constant of decay component tau, lifetime constant of 
+    , lifetime constant of decay component tau, lifetime constant of
     oscillation component tau_osc and period of vibration T are given
 
-    Supported instrumental response functions are 
+    Supported instrumental response functions are
 
        1. 'g': gaussian distribution
        2. 'c': cauchy distribution

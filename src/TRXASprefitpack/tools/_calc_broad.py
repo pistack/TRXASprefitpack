@@ -1,3 +1,11 @@
+'''
+calc_broad:
+evaluates voigt broadened theoretical spectrum
+
+:copyright: 2021-2022 by pistack (Junho Lee).
+:license: LGPL3.
+'''
+
 import argparse
 import numpy as np
 import matplotlib.pyplot as plt
@@ -96,4 +104,3 @@ def calc_broad():
     plt.title('voigt broadened theoretical spectrum')
     plt.show()
 
-    return

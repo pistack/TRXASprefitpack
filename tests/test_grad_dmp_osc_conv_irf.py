@@ -133,7 +133,7 @@ def test_deriv_exp_conv_pvoigt_2():
     grad[:, 2]=dfwhm_L*grad_tot[:, 1] + deta_L*diff
 
     ref=check_num_deriv(lambda t, fwhm_G, fwhm_L, k, period: \
-        tmp_fun_2(t, fwhm_G, fwhm_L, k, period, c_pair), 
+        tmp_fun_2(t, fwhm_G, fwhm_L, k, period, c_pair),
     t, fwhm_G, fwhm_L, 1/tau_1, period)
 
     result=np.allclose(grad, ref)

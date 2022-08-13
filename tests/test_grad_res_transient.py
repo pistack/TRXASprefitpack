@@ -660,5 +660,7 @@ def test_res_grad_both_3():
     check_res = np.allclose(res_ref, res_tst)
     check_grad = np.allclose(grad_ref, grad_tst, rtol=rel,
     atol=epsilon)
-    
+
     assert (check_res, check_grad) == (True, True)
+
+    

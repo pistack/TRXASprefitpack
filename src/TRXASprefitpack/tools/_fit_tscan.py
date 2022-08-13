@@ -95,7 +95,6 @@ def save_TransientResult_txt(result: TransientResult, dirname: str):
             np.savetxt(
                 f"{dirname}/fit_osc_{result['name_of_dset'][i]}.txt", fit_osc_save, fmt=fit_fmt, header=fit_header)
 
-    return
 
 
 def plot_TransientResult(result: TransientResult, save_fig: Optional[str] = None):
@@ -161,11 +160,10 @@ def plot_TransientResult(result: TransientResult, save_fig: Optional[str] = None
         start = start + result['intensity'][i].shape[1]
     if save_fig is None:
         plt.show()
-    return
 
 
 description = '''
-fit tscan: fitting experimental time trace spectrum data with the convolution of the sum of 
+fit tscan: fitting experimental time trace spectrum data with the convolution of the sum of
 1. exponential decay (mode = decay)
 2. damped oscillation (mode = osc)
 3. exponential decay, damped oscillation (mode=both)
@@ -208,10 +206,10 @@ irf_help = '''
 shape of instrument response functon
 g: gaussian distribution
 c: cauchy distribution
-pv: pseudo voigt profile, linear combination of gaussian distribution and cauchy distribution 
-    pv = eta*c+(1-eta)*g 
-    the uniform fwhm parameter and 
-    mixing parameter are determined according to Journal of Applied Crystallography. 33 (6): 1311–1316. 
+pv: pseudo voigt profile, linear combination of gaussian distribution and cauchy distribution
+    pv = eta*c+(1-eta)*g
+    the uniform fwhm parameter and
+    mixing parameter are determined according to Journal of Applied Crystallography. 33 (6): 1311–1316.
 '''
 
 fwhm_G_help = '''
@@ -369,4 +367,3 @@ def fit_tscan():
     else:
         plot_TransientResult(result)
 
-    return

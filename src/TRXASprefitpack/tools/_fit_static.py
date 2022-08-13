@@ -1,5 +1,10 @@
-# fit static
-# fitting static spectrum
+'''
+fit static
+fitting static spectrum with sum of voigt or voigt broadned theoretical spectrum
+
+:copyright: 2022 by pistack (Junho Lee).
+:license: LGPL3.
+'''
 
 import os
 from pathlib import Path
@@ -65,7 +70,6 @@ def save_StaticResult_txt(result: StaticResult, dirname: str):
                result['c'], fmt=coeff_fmt, header=coeff_header)
     np.savetxt(f'{dirname}/fit.txt', fit_save, fmt=fit_fmt, header=fit_header)
 
-    return
 
 
 def plot_StaticResult(result: StaticResult):
@@ -108,17 +112,16 @@ def plot_StaticResult(result: StaticResult):
                   marker='o', mfc='none', label=f'res {title}', linestyle='none')
     sub2.legend()
     plt.show()
-    return
 
 
 description = '''
-fit static: fitting static spectrum with 
+fit static: fitting static spectrum with
  'voigt': sum of voigt component
   'thy' : theoretically calculated line spectrum broadened by voigt function
 It also include edge and polynomial type baseline feature.
 '''
 
-epilog = ''' 
+epilog = '''
 *Note
  If fwhm_G of voigt component is zero then this voigt component is treated as lorenzian
  If fwhm_L of voigt component is zero then this voigt component is treated as gaussian
@@ -261,4 +264,3 @@ def fit_static():
     print(result)
     plot_StaticResult(result)
 
-    return

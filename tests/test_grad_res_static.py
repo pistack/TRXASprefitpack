@@ -333,3 +333,5 @@ def test_res_grad_thy_4():
     cond_grad = np.allclose(grad_tst, ref_grad, rtol=1e-4, atol=1e-6)
 
     assert (cond_res, cond_grad) == (True, True)
+
+    

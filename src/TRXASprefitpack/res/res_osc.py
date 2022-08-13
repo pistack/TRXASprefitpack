@@ -1,7 +1,7 @@
 '''
 res_osc:
 submodule for residual function and gradient for fitting time delay scan with the
-convolution of sum of damped oscillation and instrumental response function 
+convolution of sum of damped oscillation and instrumental response function
 
 :copyright: 2021-2022 by pistack (Junho Lee).
 :license: LGPL3.
@@ -23,7 +23,7 @@ def residual_dmp_osc(x0: np.ndarray, num_comp: int, irf: str,
     '''
     residual_dmp_osc
     `scipy.optimize.least_squares` compatible gradient of vector residual function for fitting multiple set of time delay scan with the
-    sum of convolution of damped oscillation and instrumental response function  
+    sum of convolution of damped oscillation and instrumental response function
 
     Args:
      x0: initial parameter,
@@ -69,12 +69,12 @@ def residual_dmp_osc(x0: np.ndarray, num_comp: int, irf: str,
         eta = calc_eta(x0[0], x0[1])
 
     num_t0 = 0
-    sum = 0
+    count = 0
     for d in intensity:
         num_t0 = d.shape[1] + num_t0
-        sum = sum + d.size
+        count = count + d.size
 
-    chi = np.empty(sum)
+    chi = np.empty(count)
 
     tau = x0[num_irf+num_t0:num_irf+num_t0+num_comp]
     period = x0[num_irf+num_t0+num_comp:num_irf+num_t0+2*num_comp]
@@ -109,7 +109,7 @@ def res_grad_dmp_osc(x0: np.ndarray, num_comp: int, irf: str,
     '''
     res_grad_dmp_osc
     scipy.optimize.minimize compatible pair of scalar residual function and its gradient for fitting multiple set of time delay scan with the
-    sum of convolution of damped oscillation and instrumental response function  
+    sum of convolution of damped oscillation and instrumental response function
 
     Args:
      x0: initial parameter,
@@ -157,17 +157,17 @@ def res_grad_dmp_osc(x0: np.ndarray, num_comp: int, irf: str,
         deta_G, deta_L = deriv_eta(x0[0], x0[1])
 
     num_t0 = 0
-    sum = 0
+    count = 0
     for d in intensity:
         num_t0 = num_t0 + d.shape[1]
-        sum = sum + d.size
+        count = count + d.size
 
     tau = x0[num_irf+num_t0:num_irf+num_t0+num_comp]
     period = x0[num_irf+num_t0+num_comp:num_irf+num_t0+2*num_comp]
 
     num_param = num_irf+num_t0+2*num_comp
-    chi = np.empty(sum)
-    df = np.zeros((sum, num_irf+2*num_comp))
+    chi = np.empty(count)
+    df = np.zeros((count, num_irf+2*num_comp))
     grad = np.empty(num_param)
 
     end = 0

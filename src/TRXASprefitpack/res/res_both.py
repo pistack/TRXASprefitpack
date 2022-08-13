@@ -26,7 +26,7 @@ def residual_both(x0: np.ndarray, num_comp: int, num_comp_osc: int, base: bool, 
     '''
     residual_both
     `scipy.optimize.least_squares` compatible vector residual function for fitting multiple set of time delay scan with the
-    sum of convolution of (sum of exponential decay damped oscillation) and instrumental response function  
+    sum of convolution of (sum of exponential decay damped oscillation) and instrumental response function
 
     Args:
      x0: initial parameter,
@@ -79,12 +79,12 @@ def residual_both(x0: np.ndarray, num_comp: int, num_comp_osc: int, base: bool, 
         eta = calc_eta(x0[0], x0[1])
 
     num_t0 = 0
-    sum = 0
+    count = 0
     for d in intensity:
         num_t0 = d.shape[1] + num_t0
-        sum = sum + d.size
+        count = count + d.size
 
-    chi = np.empty(sum)
+    chi = np.empty(count)
 
     tau = x0[num_irf+num_t0:num_irf+num_t0+num_comp]
     tau_osc = x0[num_irf+num_t0+num_comp:num_irf+num_t0+num_comp+num_comp_osc]
@@ -139,7 +139,7 @@ def res_grad_both(x0: np.ndarray, num_comp: int, num_comp_osc: int, base: bool, 
     '''
     res_grad_both
     `scipy.optimize.minimize` compatible scalar residual and its gradient function for fitting multiple set of time delay scan with the
-    sum of convolution of (sum of exponential decay damped oscillation) and instrumental response function  
+    sum of convolution of (sum of exponential decay damped oscillation) and instrumental response function
 
     Args:
      x0: initial parameter,
@@ -193,10 +193,10 @@ def res_grad_both(x0: np.ndarray, num_comp: int, num_comp_osc: int, base: bool, 
         dfwhm_G, dfwhm_L = deriv_fwhm(x0[0], x0[1])
 
     num_t0 = 0
-    sum = 0
+    count = 0
     for d in intensity:
         num_t0 = d.shape[1] + num_t0
-        sum = sum + d.size
+        count = count + d.size
 
     tau = x0[num_irf+num_t0:num_irf+num_t0+num_comp]
     tau_osc = x0[num_irf+num_t0+num_comp:num_irf+num_t0+num_comp+num_comp_osc]
@@ -212,8 +212,8 @@ def res_grad_both(x0: np.ndarray, num_comp: int, num_comp_osc: int, base: bool, 
 
     num_param = num_irf+num_t0+num_comp+2*num_comp_osc
 
-    chi = np.empty(sum)
-    df = np.zeros((sum, num_irf+num_comp+2*num_comp_osc))
+    chi = np.empty(count)
+    df = np.zeros((count, num_irf+num_comp+2*num_comp_osc))
     grad = np.empty(num_param)
 
     end = 0
@@ -288,8 +288,8 @@ def res_grad_both(x0: np.ndarray, num_comp: int, num_comp_osc: int, base: bool, 
             df[end:end+step, num_irf+num_comp:num_irf+num_comp+num_comp_osc] = \
                 np.einsum('j,ij->ij', -1/tau_osc**2,
                           grad_osc[:, 2:2+num_comp_osc])
-            df[end:end+step, num_irf+num_comp+num_comp_osc:] = grad_osc[:,
-                                                                        2+num_comp_osc:2+2*num_comp_osc]
+            df[end:end+step, num_irf+num_comp+num_comp_osc:] = \
+                grad_osc[:, 2+num_comp_osc:2+2*num_comp_osc]
 
             end = end + step
             t0_idx = t0_idx + 1

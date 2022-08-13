@@ -21,7 +21,7 @@ def residual_voigt(x0: np.ndarray, num_voigt: int, edge: Optional[str] = None,
                    intensity: np.ndarray = None, eps: np.ndarray = None) -> np.ndarray:
     '''
     residual_voigt
-    scipy.optimize.least_squares compatible vector residual function for fitting static spectrum with the 
+    scipy.optimize.least_squares compatible vector residual function for fitting static spectrum with the
     sum of voigt function, edge function base function
 
     Args:
@@ -105,7 +105,7 @@ def res_grad_voigt(x0: np.ndarray, num_voigt: int, edge: Optional[str] = None,
                    intensity: np.ndarray = None, eps: np.ndarray = None) -> np.ndarray:
     '''
     res_grad_voigt
-    scipy.optimize.minimizer compatible scalar residual function and its gradient for fitting static spectrum with the 
+    scipy.optimize.minimizer compatible scalar residual function and its gradient for fitting static spectrum with the
     sum of voigt function, edge function base function
 
     Args:

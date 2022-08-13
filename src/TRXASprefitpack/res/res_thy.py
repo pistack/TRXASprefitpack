@@ -21,7 +21,7 @@ def residual_thy(x0: np.ndarray, policy: str, thy_peak: Sequence[np.ndarray],
                  intensity: np.ndarray = None, eps: np.ndarray = None) -> np.ndarray:
     '''
     residaul_thy
-    `scipy.optimize.least_squares` compatible vector residual function for fitting static spectrum with the 
+    `scipy.optimize.least_squares` compatible vector residual function for fitting static spectrum with the
     sum of voigt broadend theoretical spectrum, edge function base function
 
     Args:
@@ -47,7 +47,7 @@ def residual_thy(x0: np.ndarray, policy: str, thy_peak: Sequence[np.ndarray],
       * :math:`2+{num}_{thy}+{num}_{edge}+i` or :math:`2+2{num_thy}+{num}_{edge}+i`: i th edge position
       * :math:`2+{num}_{thy}+2{num}_{edge}+i` or :math:`2+2{num_thy}+2{num}_{edge}+i`: fwhm of i th edge
 
-     policy ({'shift', 'scale', 'both'}): Policy to match discrepency 
+     policy ({'shift', 'scale', 'both'}): Policy to match discrepency
       between experimental data and theoretical spectrum.
 
       * 'shift' : Default option, shift peak position by peak_factor
@@ -133,7 +133,7 @@ def res_grad_thy(x0: np.ndarray, policy: str, thy_peak: Sequence[np.ndarray],
                  intensity: np.ndarray = None, eps: np.ndarray = None) -> np.ndarray:
     '''
     res_grad_thy
-    `scipy.optimize.minimize` compatible scalar residual function and its gradient for fitting static spectrum with the 
+    `scipy.optimize.minimize` compatible scalar residual function and its gradient for fitting static spectrum with the
     sum of voigt broadend theoretical spectrum, edge function base function
 
     Args:
@@ -159,7 +159,7 @@ def res_grad_thy(x0: np.ndarray, policy: str, thy_peak: Sequence[np.ndarray],
       * :math:`2+{num}_{thy}+{num}_{edge}+i` or :math:`2+2{num_thy}+{num}_{edge}+i`: i th edge position
       * :math:`2+{num}_{thy}+2{num}_{edge}+i` or :math:`2+2{num_thy}+2{num}_{edge}+i`: fwhm of i th edge
 
-     policy ({'shift', 'scale', 'both'}): Policy to match discrepency 
+     policy ({'shift', 'scale', 'both'}): Policy to match discrepency
       between experimental data and theoretical spectrum.
 
       * 'shift' : Default option, shift peak position by peak_factor

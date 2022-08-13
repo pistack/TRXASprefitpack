@@ -72,8 +72,8 @@ def solve_seq_model(tau: np.ndarray, y0: np.ndarray):
     '''
     Solve sequential decay model
 
-    sequential decay model: 
-      0 -> 1 -> 2 -> 3 -> ... -> n 
+    sequential decay model:
+      0 -> 1 -> 2 -> 3 -> ... -> n
 
     Args:
       tau: liftime constants for each decay
@@ -240,7 +240,7 @@ def compute_signal_irf(t: np.ndarray, eigval: np.ndarray, V: np.ndarray, c: np.n
 def fact_anal_model(model: np.ndarray, exclude: Optional[str] = None,
                     intensity: Optional[np.ndarray] = None, eps: Optional[np.ndarray] = None):
 
-    abs = np.zeros(model.shape[0])
+    diff_abs = np.zeros(model.shape[0])
 
     if eps is None:
         eps = np.ones_like(intensity)
@@ -259,12 +259,12 @@ def fact_anal_model(model: np.ndarray, exclude: Optional[str] = None,
     coeff, _, _, _ = LA.lstsq(B.T, y, cond=1e-2)
 
     if exclude == 'first':
-        abs[1:] = coeff
+        diff_abs[1:] = coeff
     elif exclude == 'last':
-        abs[:-1] = coeff
+        diff_abs[:-1] = coeff
     elif exclude == 'first_and_last':
-        abs[1:-1] = coeff
+        diff_abs[1:-1] = coeff
     else:
-        abs = coeff
+        diff_abs = coeff
 
-    return abs
+    return diff_abs

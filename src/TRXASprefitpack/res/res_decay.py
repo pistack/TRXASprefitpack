@@ -1,7 +1,7 @@
 '''
 res_decay:
 submodule for residual function and gradient for fitting time delay scan with the
-convolution of sum of exponential decay and instrumental response function 
+convolution of sum of exponential decay and instrumental response function
 
 :copyright: 2021-2022 by pistack (Junho Lee).
 :license: LGPL3.
@@ -23,7 +23,7 @@ def residual_decay(x0: np.ndarray, base: bool, irf: str,
     '''
     residual_decay
     scipy.optimize.least_squares compatible vector residual function for fitting multiple set of time delay scan with the
-    sum of convolution of exponential decay and instrumental response function  
+    sum of convolution of exponential decay and instrumental response function
 
     Args:
      x0: initial parameter,
@@ -70,12 +70,12 @@ def residual_decay(x0: np.ndarray, base: bool, irf: str,
         eta = calc_eta(x0[0], x0[1])
 
     num_t0 = 0
-    sum = 0
+    count = 0
     for d in intensity:
         num_t0 = d.shape[1] + num_t0
-        sum = sum + d.size
+        count = count + d.size
 
-    chi = np.empty(sum)
+    chi = np.empty(count)
     tau = x0[num_irf+num_t0:]
     if not base:
         k = 1/tau
@@ -114,7 +114,7 @@ def res_grad_decay(x0: np.ndarray, num_comp: int, base: bool, irf: str,
     '''
     res_grad_decay
     scipy.optimize.minimize compatible scalar residual and its gradient function for fitting multiple set of time delay scan with the
-    sum of convolution of exponential decay and instrumental response function  
+    sum of convolution of exponential decay and instrumental response function
 
     Args:
      x0: initial parameter,
@@ -161,10 +161,10 @@ def res_grad_decay(x0: np.ndarray, num_comp: int, base: bool, irf: str,
         deta_G, deta_L = deriv_eta(x0[0], x0[1])
 
     num_t0 = 0
-    sum = 0
+    count = 0
     for d in intensity:
         num_t0 = num_t0 + d.shape[1]
-        sum = sum + d.size
+        count = count + d.size
 
     tau = x0[num_irf+num_t0:]
 
@@ -176,8 +176,8 @@ def res_grad_decay(x0: np.ndarray, num_comp: int, base: bool, irf: str,
         k[-1] = 0
 
     num_param = num_irf+num_t0+num_comp
-    chi = np.empty(sum)
-    df = np.empty((sum, tau.size+num_irf))
+    chi = np.empty(count)
+    df = np.empty((count, tau.size+num_irf))
     grad = np.empty(num_param)
 
     end = 0

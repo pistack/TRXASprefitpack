@@ -19,7 +19,7 @@ description = '''
 match scale: match scaling of each energy scan data to one reference time delay scan data.
 Experimentally measured time delay scan data has unsystematic error, which makes correct scaling of
 each energy scan data ambiguous. To reduce such ambiguity, it fits reference time delay scan with the sum of
-the convolution of exponential decay and instrumental response function.  
+the convolution of exponential decay and instrumental response function.
 '''
 
 epilog = '''
@@ -36,10 +36,10 @@ irf_help = '''
 shape of instrument response functon
 g: gaussian distribution
 c: cauchy distribution
-pv: pseudo voigt profile, linear combination of gaussian distribution and cauchy distribution 
-    pv = eta*c+(1-eta)*g 
-    the uniform fwhm parameter and 
-    mixing parameter are determined according to Journal of Applied Crystallography. 33 (6): 1311–1316. 
+pv: pseudo voigt profile, linear combination of gaussian distribution and cauchy distribution
+    pv = eta*c+(1-eta)*g
+    the uniform fwhm parameter and
+    mixing parameter are determined according to Journal of Applied Crystallography. 33 (6): 1311–1316.
 '''
 
 fwhm_G_help = '''
@@ -115,7 +115,7 @@ def match_scale():
         tau = np.array(args.tau)
         base = args.no_base
 
-    if (args.time_zero is None):
+    if args.time_zero is None:
         print('You should set time_zeros!\n')
         return
     else:

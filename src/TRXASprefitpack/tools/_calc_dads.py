@@ -1,7 +1,12 @@
-# calc_dads
-# Calculate decay associated difference spectrum from experimental
-# energy scan data and the convolution of sum of exponential decay and
-# instrumental response function.
+'''
+calc_dads
+Calculate decay associated difference spectrum from experimental
+energy scan data and the convolution of sum of exponential decay and
+instrumental response function.
+
+:copyright: 2022 by pistack (Junho Lee).
+:license: LGPL3.
+'''
 
 import argparse
 import numpy as np
@@ -23,10 +28,10 @@ irf_help = '''
 shape of instrument response functon
 g: gaussian distribution
 c: cauchy distribution
-pv: pseudo voigt profile, linear combination of gaussian distribution and cauchy distribution 
-    pv = eta*c+(1-eta)*g 
-    the uniform fwhm parameter and 
-    mixing parameter are determined according to Journal of Applied Crystallography. 33 (6): 1311–1316. 
+pv: pseudo voigt profile, linear combination of gaussian distribution and cauchy distribution
+    pv = eta*c+(1-eta)*g
+    the uniform fwhm parameter and
+    mixing parameter are determined according to Journal of Applied Crystallography. 33 (6): 1311–1316.
 '''
 
 fwhm_G_help = '''
@@ -96,7 +101,7 @@ def calc_dads():
     else:
         tau = np.array(args.tau)
 
-    if (args.time_zero is None):
+    if args.time_zero is None:
         raise Exception('You should set time_zero for energy scan \n')
     else:
         time_zero = args.time_zero
@@ -145,4 +150,3 @@ def calc_dads():
     plt.legend()
     plt.show()
 
-    return

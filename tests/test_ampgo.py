@@ -43,7 +43,7 @@ def test_grad_six_hump_camelback():
     grad_tst = np.empty((n_try, 2))
     for i in range(n_try):
         x0 = np.random.uniform(-5, 5, 2)
-        grad_ref[i, :] = approx_fprime(x0, six_hump_camelback, 1e-7)
+        grad_ref[i, :] = approx_fprime(x0, six_hump_camelback, 5e-8)
         grad_tst[i, :] = grad_six_hump_camelback(x0)
 
     cond = np.allclose(grad_ref, grad_tst)
@@ -108,7 +108,7 @@ def test_grad_tunnel():
     ttf_args = (six_hump_camelback, f_opt, tabulist,
                 grad_six_hump_camelback)
 
-    grad_ref = approx_fprime(x0, lambda x0: tunnel(x0, *ttf_args), 1e-7)
+    grad_ref = approx_fprime(x0, lambda x0: tunnel(x0, *ttf_args), 5e-8)
     grad = grad_tunnel(x0, *ttf_args)
     cond = np.allclose(grad, grad_ref)
     assert cond is True
@@ -130,7 +130,7 @@ def test_fun_grad_tunnel():
     ttf_args_tst = (fun_grad_six_hump_camelback, f_opt, tabulist)
 
     ttf_ref = tunnel(x0, *ttf_args_ref)
-    grad_ref = approx_fprime(x0, lambda x0: tunnel(x0, *ttf_args_ref), 1e-7)
+    grad_ref = approx_fprime(x0, lambda x0: tunnel(x0, *ttf_args_ref), 5e-8)
     ttf_tst, grad_tst = fun_grad_tunnel(x0, *ttf_args_tst)
     cond_ttf = np.allclose(ttf_tst, ttf_ref)
     cond_grad = np.allclose(grad_tst, grad_ref)

@@ -48,14 +48,14 @@ def parse_matrix(mat_str: np.ndarray, tau_rate: np.ndarray) -> np.ndarray:
 
     Return:
      parsed rate equation matrix.
-     the value of lifetime 
+     the value of lifetime
      parameters (1/ki) used to define rate equation matrix
 
     Note:
      Every entry in the rate equation matrix should be
      '0', '1*ki', '-x.xxx*ki', 'x.xxx*ki' or '-(x.xxx*ki+y.yyy*kj+...)'
      Number of non zero diagonal elements and size of tau should be same
-     Number of parameter used to define rate equation and size of tau should 
+     Number of parameter used to define rate equation and size of tau should
      be same.
     '''
 

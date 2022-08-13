@@ -45,8 +45,8 @@ def cauchy_irf(t: Union[float, np.ndarray], fwhm: float) -> Union[float, np.ndar
 
 def calc_fwhm(fwhm_G: float, fwhm_L: float) -> float:
     '''
-    Calculate uniform fwhm of both gaussian and cauchy component of 
-    pseudo voigt profile with fwhm_G, fwhm_L based on 
+    Calculate uniform fwhm of both gaussian and cauchy component of
+    pseudo voigt profile with fwhm_G, fwhm_L based on
     Journal of Applied Crystallography. 33 (6): 1311–1316.
 
     Args:
@@ -66,7 +66,7 @@ def calc_fwhm(fwhm_G: float, fwhm_L: float) -> float:
 
 def calc_eta(fwhm_G: float, fwhm_L: float) -> float:
     '''
-    Calculate eta of pseudo voigt profile with fwhm_G, fwhm_L based on 
+    Calculate eta of pseudo voigt profile with fwhm_G, fwhm_L based on
     Journal of Applied Crystallography. 33 (6): 1311–1316.
 
     Args:
@@ -132,7 +132,7 @@ def deriv_fwhm(fwhm_G: float, fwhm_L: float) -> Tuple[float, float]:
 
 def deriv_eta(fwhm_G: float, fwhm_L: float) -> Tuple[float, float]:
     '''
-    Calculate gradient of eta of pseudo voigt profile with fwhm_G, fwhm_L based on 
+    Calculate gradient of eta of pseudo voigt profile with fwhm_G, fwhm_L based on
     Journal of Applied Crystallography. 33 (6): 1311–1316.
 
     Args:

@@ -4,7 +4,7 @@ submodule for the mathematical functions for
 exponential decay convolved with irf
 
 :copyright: 2021-2022 by pistack (Junho Lee).
-:license: LGPL3.
+:license: LGPL3
 '''
 
 from typing import Union, Optional, Tuple
@@ -358,12 +358,12 @@ def dmp_osc_conv_cauchy_pair(t: Union[float, np.ndarray], fwhm: float,
       t: time
       fwhm: full width at half maximum of cauchy distribution
       k: damping constant (inverse of life time)
-      T: period of vibration 
+      T: period of vibration
       phase: phase factor
 
     Returns:
-     Tuple of convolution of normalized cauchy distribution and 
-     damped oscillation 
+     Tuple of convolution of normalized cauchy distribution and
+     damped oscillation
      :math:`(\\exp(-kt)cos(2\\pi t/T))` and :math:`(\\exp(-kt)sin(2\\pi t/T))`.
     '''
 
@@ -388,11 +388,11 @@ def dmp_osc_conv_gau(t: Union[float, np.ndarray], fwhm: float,
       t: time
       fwhm: full width at half maximum of gaussian distribution
       k: damping constant (inverse of life time)
-      T: period of vibration 
+      T: period of vibration
       phase: phase factor
 
     Returns:
-     Convolution of normalized gaussian distribution and 
+     Convolution of normalized gaussian distribution and
      damped oscillation :math:`(\\exp(-kt)cos(2\\pi t/T+phase))`.
     '''
 
@@ -412,11 +412,11 @@ def dmp_osc_conv_gau_2(t: Union[float, np.ndarray], fwhm: float,
       t: time
       fwhm: full width at half maximum of gaussian distribution
       k: damping constant (inverse of life time)
-      T: period of vibration 
+      T: period of vibration
       c_pair: pair of coefficient for cosine and sine part of oscillation
 
     Returns:
-     Convolution of normalized gaussian distribution and 
+     Convolution of normalized gaussian distribution and
      damped oscillation :math:`(\\exp(-kt) \\cdot (c_1 \\cos(2\\pi t/T) + c_2 \\sin(2\\pi t/T)))`.
     '''
 
@@ -436,11 +436,11 @@ def dmp_osc_conv_cauchy(t: Union[float, np.ndarray], fwhm: float,
       t: time
       fwhm: full width at half maximum of cauchy distribution
       k: damping constant (inverse of life time)
-      T: period of vibration 
+      T: period of vibration
       phase: phase factor
 
     Returns:
-     Convolution of normalized cauchy distribution and 
+     Convolution of normalized cauchy distribution and
      damped oscillation :math:`(\\exp(-kt)cos(2\\pi t/T+phase))`.
     '''
 
@@ -459,11 +459,11 @@ def dmp_osc_conv_cauchy_2(t: Union[float, np.ndarray], fwhm: float,
       t: time
       fwhm: full width at half maximum of cauchy distribution
       k: damping constant (inverse of life time)
-      T: period of vibration 
+      T: period of vibration
       c_pair: pair of cosine and sine part of oscillation
 
     Returns:
-     Convolution of normalized cauchy distribution and 
+     Convolution of normalized cauchy distribution and
      damped oscillation :math:`(\\exp(-kt) \\cdot (c_1 \\cos(2\\pi t/T) + c_2 \\sin(2\\pi t/T)))`.
     '''
 
@@ -486,7 +486,7 @@ def dmp_osc_conv_pvoigt(t: Union[float, np.ndarray], fwhm: float, eta: float,
        fwhm: uniform full width at half maximum parameter
        eta: mixing parameter
        k: damping constant (inverse of life time)
-       T: period of vibration 
+       T: period of vibration
        phase: phase factor
 
     Returns:
@@ -514,7 +514,7 @@ def dmp_osc_conv_pvoigt_2(t: Union[float, np.ndarray], fwhm: float, eta: float,
        fwhm: uniform full width at half maximum parameter
        eta: mixing parameter
        k: damping constant (inverse of life time)
-       T: period of vibration 
+       T: period of vibration
        c_pair: pair of cosine and sine part of oscillation
 
     Returns:
@@ -531,18 +531,18 @@ def dmp_osc_conv_pvoigt_2(t: Union[float, np.ndarray], fwhm: float, eta: float,
 def deriv_dmp_osc_conv_gau(t: Union[float, np.ndarray], fwhm: float,
                            k: float, T: float, phase: float) -> np.ndarray:
     '''
-    Compute derivative of the convolution of damped oscillation and 
+    Compute derivative of the convolution of damped oscillation and
     normalized gaussian distribution
 
     Args:
       t: time
       fwhm: full width at half maximum of gaussian distribution
       k: damping constant (inverse of life time)
-      T: period of vibration 
+      T: period of vibration
       phase: phase factor
 
     Returns:
-     Derivative of Convolution of normalized gaussian distribution and 
+     Derivative of Convolution of normalized gaussian distribution and
      damped oscillation :math:`(\\exp(-kt)cos(2\\pi t/T+phase))`.
 
     Note:
@@ -588,18 +588,18 @@ def deriv_dmp_osc_conv_gau(t: Union[float, np.ndarray], fwhm: float,
 def deriv_dmp_osc_conv_gau_2(t: Union[float, np.ndarray], fwhm: float,
                              k: float, T: float, c_pair: Tuple[float]) -> np.ndarray:
     '''
-    Compute derivative of the convolution of damped oscillation and 
+    Compute derivative of the convolution of damped oscillation and
     normalized gaussian distribution
 
     Args:
       t: time
       fwhm: full width at half maximum of gaussian distribution
       k: damping constant (inverse of life time)
-      T: period of vibration 
+      T: period of vibration
       c_pair: pair of coefficient for cosine and sine part of oscillation
 
     Returns:
-     Derivative of Convolution of normalized gaussian distribution and 
+     Derivative of Convolution of normalized gaussian distribution and
      damped oscillation :math:`(\\exp(-kt) \\cdot (c_1 \\cos(2\\pi t/T) + c_2 \\sin(2\\pi t/T)))`.
 
     Note:
@@ -649,11 +649,11 @@ def deriv_dmp_osc_conv_cauchy(t: Union[float, np.ndarray], fwhm: float,
       t: time
       fwhm: full width at half maximum of cauchy distribution
       k: damping constant (inverse of life time)
-      T: period of vibration 
+      T: period of vibration
       phase: phase factor
 
     Returns:
-     Gradient of Convolution of normalized cauchy distribution and 
+     Gradient of Convolution of normalized cauchy distribution and
      damped oscillation :math:`(\\exp(-kt)cos(2\\pi t/T+phase))`.
 
     Note:
@@ -677,11 +677,11 @@ def deriv_dmp_osc_conv_cauchy(t: Union[float, np.ndarray], fwhm: float,
 
     grad_z1 = f1 - complex(np.cos(phase), np.sin(phase))/(2*np.pi*z1)
     grad_z2 = (f2 - complex(np.cos(phase), -np.sin(phase))/z2)/(2*np.pi)
-    sum = grad_z1 + grad_z2
+    grad_sum = grad_z1 + grad_z2
     diff = grad_z1 - grad_z2
-    grad_t = -k*sum.imag + omega*diff.real
-    grad_fwhm = -(omega*diff.imag+k*sum.real)/2
-    grad_k = -(t*sum.imag+gamma*sum.real)
+    grad_t = -k*grad_sum.imag + omega*diff.real
+    grad_fwhm = -(omega*diff.imag+k*grad_sum.real)/2
+    grad_k = -(t*grad_sum.imag+gamma*grad_sum.real)
     grad_T = omega/T*(gamma*diff.imag-t*diff.real)
     grad_phase = f1.real-f2.real/(2*np.pi)
 
@@ -713,11 +713,11 @@ def deriv_dmp_osc_conv_cauchy_2(t: Union[float, np.ndarray], fwhm: float,
       t: time
       fwhm: full width at half maximum of cauchy distribution
       k: damping constant (inverse of life time)
-      T: period of vibration 
+      T: period of vibration
       c_pair: pair of coefficient for cosine and sine part of oscillation
 
     Returns:
-     Gradient of Convolution of normalized cauchy distribution and 
+     Gradient of Convolution of normalized cauchy distribution and
      damped oscillation :math:`(\\exp(-kt) \\cdot (c_1 \\cos(2\\pi t/T) + c_2 \\sin(2\\pi t/T)))`.
 
     Note:
@@ -741,11 +741,11 @@ def deriv_dmp_osc_conv_cauchy_2(t: Union[float, np.ndarray], fwhm: float,
 
     grad_z1 = f1 - complex(c_pair[0], -c_pair[1])/(2*np.pi*z1)
     grad_z2 = (f2 - complex(c_pair[0], c_pair[1])/z2)/(2*np.pi)
-    sum = grad_z1 + grad_z2
+    grad_sum = grad_z1 + grad_z2
     diff = grad_z1 - grad_z2
-    grad_t = -k*sum.imag + omega*diff.real
-    grad_fwhm = -(omega*diff.imag+k*sum.real)/2
-    grad_k = -(t*sum.imag+gamma*sum.real)
+    grad_t = -k*grad_sum.imag + omega*diff.real
+    grad_fwhm = -(omega*diff.imag+k*grad_sum.real)/2
+    grad_k = -(t*grad_sum.imag+gamma*grad_sum.real)
     grad_T = omega/T*(gamma*diff.imag-t*diff.real)
 
     if not isinstance(t, np.ndarray):
@@ -780,7 +780,7 @@ def deriv_dmp_osc_sum_conv_gau(t: np.ndarray, fwhm: float,
        c has coefficient for sine part of oscillation.
 
     Returns:
-     Derivative of Convolution of normalized gaussian distribution and 
+     Derivative of Convolution of normalized gaussian distribution and
      damped oscillation :math:`(\\exp(-kt)cos(2\\pi t/T+phase))`.
     Note:
      * 1st column: df/dt
@@ -816,7 +816,7 @@ def deriv_dmp_osc_sum_conv_gau_2(t: np.ndarray, fwhm: float,
       c: amplitude coefficient
 
     Returns:
-     Derivative of Convolution of normalized gaussian distribution and 
+     Derivative of Convolution of normalized gaussian distribution and
      damped oscillation :math:`(\\exp(-kt) \\cdot (c_1 \\cos(2\\pi t/T) + c_2 \\sin(2\\pi t/T)))`.
     Note:
      * 1st column: df/dt
@@ -851,7 +851,7 @@ def deriv_dmp_osc_sum_conv_cauchy(t: np.ndarray, fwhm: float,
       c: coefficient
 
     Returns:
-     Derivative of Convolution of normalized cauchy distribution and 
+     Derivative of Convolution of normalized cauchy distribution and
      damped oscillation :math:`(\\exp(-kt)cos(2\\pi t/T+phase))`.
     Note:
      * 1st column: df/dt
@@ -887,7 +887,7 @@ def deriv_dmp_osc_sum_conv_cauchy_2(t: np.ndarray, fwhm: float,
       c: amplitude coefficient
 
     Returns:
-     Derivative of Convolution of normalized cauchy distribution and 
+     Derivative of Convolution of normalized cauchy distribution and
      damped oscillation :math:`(\\exp(-kt) \\cdot (c_1 \\cos(2\\pi t/T) + c_2 \\sin(2\\pi t/T)))`.
     Note:
      * 1st column: df/dt
