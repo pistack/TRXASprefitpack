@@ -174,7 +174,7 @@ def fit_static_voigt(e0_init: np.ndarray, fwhm_G_init: np.ndarray, fwhm_L_init: 
             kwargs_glb = {'minimizer_kwargs': min_go_kwargs}
         res_go = GLBSOLVER[method_glb](res_grad_voigt, param, **kwargs_glb)
     else:
-        res_go = dict()
+        res_go = {}
         res_go['x'] = param
         res_go['message'] = None
         res_go['nfev'] = 0

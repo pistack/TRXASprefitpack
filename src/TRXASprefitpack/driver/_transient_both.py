@@ -169,7 +169,7 @@ def fit_transient_both(irf: str, fwhm_init: Union[float, np.ndarray],
             kwargs_glb = {'minimizer_kwargs': min_go_kwargs}
         res_go = GLBSOLVER[method_glb](res_grad_both, param, **kwargs_glb)
     else:
-        res_go = dict()
+        res_go = {}
         res_go['x'] = param
         res_go['message'] = None
         res_go['nfev'] = 0
