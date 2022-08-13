@@ -1,5 +1,5 @@
 # calc_dads
-# Calculate decay associated difference spectrum from experimental 
+# Calculate decay associated difference spectrum from experimental
 # energy scan data and the convolution of sum of exponential decay and
 # instrumental response function.
 
@@ -40,7 +40,6 @@ It would not be used when you did not set irf or use gaussian irf function
 '''
 
 
-
 def calc_dads():
 
     tmp = argparse.RawTextHelpFormatter
@@ -56,15 +55,15 @@ def calc_dads():
     parser.add_argument('escan_file',
                         help='filename for scale corrected energy scan file')
     parser.add_argument('escan_err_file',
-    help='filename for the scaled estimated experimental error of energy scan file')
+                        help='filename for the scaled estimated experimental error of energy scan file')
     parser.add_argument('-t0', '--time_zero', type=float,
                         help='time zero of energy scan')
     parser.add_argument('--escan_time', type=float, nargs='+',
-    help='time delay for each energy scan')
+                        help='time delay for each energy scan')
     parser.add_argument('--tau', type=float, nargs='+',
                         help='lifetime of each decay component')
     parser.add_argument('--no_base', action='store_false',
-    help='Exclude baseline (i.e. very long lifetime component)')
+                        help='Exclude baseline (i.e. very long lifetime component)')
     parser.add_argument('-o', '--out', default='out',
                         help='prefix for output files')
     args = parser.parse_args()
@@ -72,21 +71,22 @@ def calc_dads():
     irf = args.irf
     if irf == 'g':
         if args.fwhm_G is None:
-            raise Exception('You are using gaussian irf, so you should set fwhm_G!\n')
+            raise Exception(
+                'You are using gaussian irf, so you should set fwhm_G!\n')
         else:
             fwhm = args.fwhm_G
             eta = 0
     elif irf == 'c':
         if args.fwhm_L is None:
-            raise Exception('You are using cauchy/lorenzian irf,' + 
-            'so you should set fwhm_L!\n')
+            raise Exception('You are using cauchy/lorenzian irf,' +
+                            'so you should set fwhm_L!\n')
         else:
             fwhm = args.fwhm_L
             eta = 1
     else:
         if (args.fwhm_G is None) or (args.fwhm_L is None):
             raise Exception('You are using pseudo voigt irf,' +
-            'so you should set both fwhm_G and fwhm_L!\n')
+                            'so you should set both fwhm_G and fwhm_L!\n')
         else:
             fwhm = calc_fwhm(args.fwhm_G, args.fwhm_L)
             eta = calc_eta(args.fwhm_G, args.fwhm_L)
@@ -95,7 +95,7 @@ def calc_dads():
         raise Exception('Please set lifetime constants for each decay')
     else:
         tau = np.array(args.tau)
-    
+
     if (args.time_zero is None):
         raise Exception('You should set time_zero for energy scan \n')
     else:
@@ -106,30 +106,33 @@ def calc_dads():
     escan_time = np.array(args.escan_time)
     out_prefix = args.out
     base = args.no_base
-    
-    ads, ads_eps, fit = dads(escan_time-time_zero, fwhm, tau, base, irf, eta,
-    intensity=escan_data[:,1:], eps=escan_err)
 
-    e = escan_data[:,0]
+    ads, ads_eps, fit = dads(escan_time-time_zero, fwhm, tau, base, irf, eta,
+                             intensity=escan_data[:, 1:], eps=escan_err)
+
+    e = escan_data[:, 0]
 
     out_ads = np.vstack((e, ads)).T
 
     ads_header_lst = []
     for i in range(ads.shape[0]):
-        ads_header.append(f'ex{i+1}')
+        ads_header_lst.append(f'ex{i+1}')
     ads_header = '\t'.join(ads_header_lst)
     fit_header = '\t'.join(list(map(str, escan_time)))
 
     # save calculated dads results
-    np.savetxt(f'{out_prefix}_dads.txt', out_ads, fmt=out_ads.shape[1]*['%.8e'], header='energy \t'+ads_header)
-    np.savetxt(f'{out_prefix}_dads_eps.txt', ads_eps.T, fmt=ads_eps.shape[0]*['%.8e'], header=ads_header)
-    np.savetxt(f'{out_prefix}_dads_fit.txt', fit, fmt=(len(escan_time)+1)*['%.8e'], header='energy \t'+fit_header)
+    np.savetxt(f'{out_prefix}_dads.txt', out_ads,
+               fmt=out_ads.shape[1]*['%.8e'], header='energy \t'+ads_header)
+    np.savetxt(f'{out_prefix}_dads_eps.txt', ads_eps.T,
+               fmt=ads_eps.shape[0]*['%.8e'], header=ads_header)
+    np.savetxt(f'{out_prefix}_dads_fit.txt', fit, fmt=(
+        len(escan_time)+1)*['%.8e'], header='energy \t'+fit_header)
 
     # plot dads results
     plt.figure(1)
     plt.title('Decay Associated Difference Spectrum')
     for i in range(ads.shape[0]):
-        plt.errorbar(e, ads[i,:], ads_eps[i,:], label=f'decay {i+1}')
+        plt.errorbar(e, ads[i, :], ads_eps[i, :], label=f'decay {i+1}')
     plt.legend()
 
     offset = 2*np.max(np.abs(escan_data[:, 1:]))
@@ -137,7 +140,7 @@ def calc_dads():
     plt.title(f'Retrieved Energy Scan (time_zero: {time_zero:.3e}')
     for i in range(escan_time.size):
         plt.errorbar(e, escan_data[:, i+1]+i*offset, escan_err[:, i], marker='o', mfc='none',
-        label=f'{escan_time[i]: .3e} (expt)')
+                     label=f'{escan_time[i]: .3e} (expt)')
         plt.plot(e, fit[:, i]+i*offset, label=f'{escan_time[i]: .3e} (fit)')
     plt.legend()
     plt.show()

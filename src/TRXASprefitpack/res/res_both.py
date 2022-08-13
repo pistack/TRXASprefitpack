@@ -18,9 +18,10 @@ from ..mathfun.exp_conv_irf import deriv_dmp_osc_sum_conv_gau_2, deriv_dmp_osc_s
 
 # residual and gradient function for exponential decay model + damped oscillation model
 
-def residual_both(x0: np.ndarray, num_comp: int, num_comp_osc:int, base: bool, irf: str, 
-                  t: Optional[Sequence[np.ndarray]] = None, 
-                  intensity: Optional[Sequence[np.ndarray]] = None, 
+
+def residual_both(x0: np.ndarray, num_comp: int, num_comp_osc: int, base: bool, irf: str,
+                  t: Optional[Sequence[np.ndarray]] = None,
+                  intensity: Optional[Sequence[np.ndarray]] = None,
                   eps: Optional[Sequence[np.ndarray]] = None) -> np.ndarray:
     '''
     residual_both
@@ -62,69 +63,79 @@ def residual_both(x0: np.ndarray, num_comp: int, num_comp_osc:int, base: bool, i
 
     Returns:
      Residual vector
-    
+
     Note:
      each dataset does not contain time range
     '''
     x0 = np.atleast_1d(x0)
-    
+
     if irf in ['g', 'c']:
         num_irf = 1
         fwhm = x0[0]
         eta = None
     else:
-            num_irf = 2
-            fwhm = calc_fwhm(x0[0], x0[1])
-            eta = calc_eta(x0[0], x0[1])
+        num_irf = 2
+        fwhm = calc_fwhm(x0[0], x0[1])
+        eta = calc_eta(x0[0], x0[1])
 
-    num_t0 = 0; sum = 0
+    num_t0 = 0
+    sum = 0
     for d in intensity:
         num_t0 = d.shape[1] + num_t0
         sum = sum + d.size
-    
+
     chi = np.empty(sum)
 
     tau = x0[num_irf+num_t0:num_irf+num_t0+num_comp]
     tau_osc = x0[num_irf+num_t0+num_comp:num_irf+num_t0+num_comp+num_comp_osc]
-    period_osc = x0[num_irf+num_t0+num_comp+num_comp_osc:num_irf+num_t0+num_comp+2*num_comp_osc]
+    period_osc = x0[num_irf+num_t0+num_comp +
+                    num_comp_osc:num_irf+num_t0+num_comp+2*num_comp_osc]
 
     if base:
         k = np.empty(tau.size+1)
-        k[:-1] = 1/tau; k[-1] = 0
+        k[:-1] = 1/tau
+        k[-1] = 0
     else:
         k = 1/tau
-    
-    end = 0; t0_idx = num_irf
-    for ti,d,e in zip(t,intensity,eps):
+
+    end = 0
+    t0_idx = num_irf
+    for ti, d, e in zip(t, intensity, eps):
         A = np.empty((num_comp+1*base+2*num_comp_osc, d.shape[0]))
         for j in range(d.shape[1]):
             t0 = x0[t0_idx]
             if irf == 'g':
                 A[:num_comp+1*base, :] = make_A_matrix_gau(ti-t0, fwhm, k)
-                A[num_comp+1*base:, :] = make_A_matrix_gau_osc(ti-t0, fwhm, 1/tau_osc, period_osc)
+                A[num_comp+1*base:,
+                    :] = make_A_matrix_gau_osc(ti-t0, fwhm, 1/tau_osc, period_osc)
             elif irf == 'c':
                 A[:num_comp+1*base, :] = make_A_matrix_cauchy(ti-t0, fwhm, k)
-                A[num_comp+1*base:, :] = make_A_matrix_cauchy_osc(ti-t0, fwhm, 1/tau_osc, period_osc)
+                A[num_comp+1*base:,
+                    :] = make_A_matrix_cauchy_osc(ti-t0, fwhm, 1/tau_osc, period_osc)
             else:
-                tmp_gau = make_A_matrix_gau(ti-t0, fwhm, k); 
-                tmp_gau_osc = make_A_matrix_gau_osc(ti-t0, fwhm, 1/tau_osc, period_osc)
+                tmp_gau = make_A_matrix_gau(ti-t0, fwhm, k)
+                tmp_gau_osc = make_A_matrix_gau_osc(
+                    ti-t0, fwhm, 1/tau_osc, period_osc)
                 tmp_cauchy = make_A_matrix_cauchy(ti-t0, fwhm, k)
-                tmp_cauchy_osc = make_A_matrix_cauchy_osc(ti-t0, fwhm, 1/tau_osc, period_osc)
+                tmp_cauchy_osc = make_A_matrix_cauchy_osc(
+                    ti-t0, fwhm, 1/tau_osc, period_osc)
                 A[:num_comp+1*base, :] = tmp_gau + eta*(tmp_cauchy-tmp_gau)
-                A[num_comp+1*base:, :] = tmp_gau_osc + eta*(tmp_cauchy_osc-tmp_gau_osc)
+                A[num_comp+1*base:, :] = tmp_gau_osc + \
+                    eta*(tmp_cauchy_osc-tmp_gau_osc)
 
-            c = fact_anal_A(A, d[:,j], e[:,j])
+            c = fact_anal_A(A, d[:, j], e[:, j])
             chi[end:end+d.shape[0]] = ((c@A) - d[:, j])/e[:, j]
 
             end = end + d.shape[0]
             t0_idx = t0_idx + 1
     return chi
-    
-def res_grad_both(x0: np.ndarray, num_comp: int, num_comp_osc:int, base: bool, irf: str, 
-                   fix_param_idx: Optional[np.ndarray] = None,
-                   t: Optional[Sequence[np.ndarray]] = None, 
-                   intensity: Optional[Sequence[np.ndarray]] = None, 
-                   eps: Optional[Sequence[np.ndarray]] = None) -> Tuple[np.ndarray, np.ndarray]:
+
+
+def res_grad_both(x0: np.ndarray, num_comp: int, num_comp_osc: int, base: bool, irf: str,
+                  fix_param_idx: Optional[np.ndarray] = None,
+                  t: Optional[Sequence[np.ndarray]] = None,
+                  intensity: Optional[Sequence[np.ndarray]] = None,
+                  eps: Optional[Sequence[np.ndarray]] = None) -> Tuple[np.ndarray, np.ndarray]:
     '''
     res_grad_both
     `scipy.optimize.minimize` compatible scalar residual and its gradient function for fitting multiple set of time delay scan with the
@@ -169,77 +180,95 @@ def res_grad_both(x0: np.ndarray, num_comp: int, num_comp_osc:int, base: bool, i
     '''
 
     x0 = np.atleast_1d(x0)
-    
+
     if irf in ['g', 'c']:
         num_irf = 1
         fwhm = x0[0]
         eta = None
     else:
-            num_irf = 2
-            eta = calc_eta(x0[0], x0[1])
-            fwhm = calc_fwhm(x0[0], x0[1])
-            deta_G, deta_L = deriv_eta(x0[0], x0[1])
-            dfwhm_G, dfwhm_L = deriv_fwhm(x0[0], x0[1])
+        num_irf = 2
+        eta = calc_eta(x0[0], x0[1])
+        fwhm = calc_fwhm(x0[0], x0[1])
+        deta_G, deta_L = deriv_eta(x0[0], x0[1])
+        dfwhm_G, dfwhm_L = deriv_fwhm(x0[0], x0[1])
 
-    num_t0 = 0; sum = 0
+    num_t0 = 0
+    sum = 0
     for d in intensity:
         num_t0 = d.shape[1] + num_t0
         sum = sum + d.size
-    
+
     tau = x0[num_irf+num_t0:num_irf+num_t0+num_comp]
     tau_osc = x0[num_irf+num_t0+num_comp:num_irf+num_t0+num_comp+num_comp_osc]
-    period_osc = x0[num_irf+num_t0+num_comp+num_comp_osc:num_irf+num_t0+num_comp+2*num_comp_osc]
+    period_osc = x0[num_irf+num_t0+num_comp +
+                    num_comp_osc:num_irf+num_t0+num_comp+2*num_comp_osc]
 
     if base:
         k = np.empty(tau.size+1)
-        k[:-1] = 1/tau; k[-1] = 0
+        k[:-1] = 1/tau
+        k[-1] = 0
     else:
         k = 1/tau
-    
+
     num_param = num_irf+num_t0+num_comp+2*num_comp_osc
 
     chi = np.empty(sum)
     df = np.zeros((sum, num_irf+num_comp+2*num_comp_osc))
     grad = np.empty(num_param)
-    
-    end = 0; t0_idx = num_irf
-    for ti,d,e in zip(t,intensity,eps):
+
+    end = 0
+    t0_idx = num_irf
+    for ti, d, e in zip(t, intensity, eps):
         step = d.shape[0]
         A = np.empty((num_comp+1*base+2*num_comp_osc, step))
         for j in range(d.shape[1]):
             t0 = x0[t0_idx]
             if irf == 'g':
                 A[:num_comp+1*base, :] = make_A_matrix_gau(ti-t0, fwhm, k)
-                A[num_comp+1*base:, :] = make_A_matrix_gau_osc(ti-t0, fwhm, 1/tau_osc, period_osc)
+                A[num_comp+1*base:,
+                    :] = make_A_matrix_gau_osc(ti-t0, fwhm, 1/tau_osc, period_osc)
             elif irf == 'c':
                 A[:num_comp+1*base, :] = make_A_matrix_cauchy(ti-t0, fwhm, k)
-                A[num_comp+1*base:, :] = make_A_matrix_cauchy_osc(ti-t0, fwhm, 1/tau_osc, period_osc)
+                A[num_comp+1*base:,
+                    :] = make_A_matrix_cauchy_osc(ti-t0, fwhm, 1/tau_osc, period_osc)
             else:
-                tmp_gau = make_A_matrix_gau(ti-t0, fwhm, k); 
-                tmp_gau_osc = make_A_matrix_gau_osc(ti-t0, fwhm, 1/tau_osc, period_osc)
+                tmp_gau = make_A_matrix_gau(ti-t0, fwhm, k)
+                tmp_gau_osc = make_A_matrix_gau_osc(
+                    ti-t0, fwhm, 1/tau_osc, period_osc)
                 tmp_cauchy = make_A_matrix_cauchy(ti-t0, fwhm, k)
-                tmp_cauchy_osc = make_A_matrix_cauchy_osc(ti-t0, fwhm, 1/tau_osc, period_osc)
-                diff = tmp_cauchy-tmp_gau; diff_osc = tmp_cauchy_osc-tmp_gau_osc
+                tmp_cauchy_osc = make_A_matrix_cauchy_osc(
+                    ti-t0, fwhm, 1/tau_osc, period_osc)
+                diff = tmp_cauchy-tmp_gau
+                diff_osc = tmp_cauchy_osc-tmp_gau_osc
                 A[:num_comp+1*base, :] = tmp_gau + eta*diff
                 A[num_comp+1*base:, :] = tmp_gau_osc + eta*diff_osc
 
-            c = fact_anal_A(A, d[:,j], e[:,j])
-            chi[end:end+step] = (c@A-d[:,j])/e[:, j]
+            c = fact_anal_A(A, d[:, j], e[:, j])
+            chi[end:end+step] = (c@A-d[:, j])/e[:, j]
 
             if irf == 'g':
-                grad_decay = deriv_exp_sum_conv_gau(ti-t0, fwhm, 1/tau, c[:num_comp+1*base], base)
-                grad_osc = deriv_dmp_osc_sum_conv_gau_2(ti-t0, fwhm, 1/tau_osc, period_osc, c[num_comp+1*base:])
+                grad_decay = deriv_exp_sum_conv_gau(
+                    ti-t0, fwhm, 1/tau, c[:num_comp+1*base], base)
+                grad_osc = deriv_dmp_osc_sum_conv_gau_2(
+                    ti-t0, fwhm, 1/tau_osc, period_osc, c[num_comp+1*base:])
             elif irf == 'c':
-                grad_decay = deriv_exp_sum_conv_cauchy(ti-t0, fwhm, 1/tau, c[:num_comp+1*base], base)
-                grad_osc = deriv_dmp_osc_sum_conv_cauchy_2(ti-t0, fwhm, 1/tau_osc, period_osc, c[num_comp+1*base:])
+                grad_decay = deriv_exp_sum_conv_cauchy(
+                    ti-t0, fwhm, 1/tau, c[:num_comp+1*base], base)
+                grad_osc = deriv_dmp_osc_sum_conv_cauchy_2(
+                    ti-t0, fwhm, 1/tau_osc, period_osc, c[num_comp+1*base:])
             else:
-                grad_gau_decay = deriv_exp_sum_conv_gau(ti-t0, fwhm, 1/tau, c[:num_comp+1*base], base)
-                grad_gau_osc = deriv_dmp_osc_sum_conv_gau_2(ti-t0, fwhm, 1/tau_osc, period_osc, c[num_comp+1*base:])
-                grad_cauchy_decay = deriv_exp_sum_conv_cauchy(ti-t0, fwhm, 1/tau, c[:num_comp+1*base], base)
-                grad_cauchy_osc = deriv_dmp_osc_sum_conv_cauchy_2(ti-t0, fwhm, 1/tau_osc, period_osc, c[num_comp+1*base:])
-                grad_decay = grad_gau_decay + eta*(grad_cauchy_decay-grad_gau_decay)
+                grad_gau_decay = deriv_exp_sum_conv_gau(
+                    ti-t0, fwhm, 1/tau, c[:num_comp+1*base], base)
+                grad_gau_osc = deriv_dmp_osc_sum_conv_gau_2(
+                    ti-t0, fwhm, 1/tau_osc, period_osc, c[num_comp+1*base:])
+                grad_cauchy_decay = deriv_exp_sum_conv_cauchy(
+                    ti-t0, fwhm, 1/tau, c[:num_comp+1*base], base)
+                grad_cauchy_osc = deriv_dmp_osc_sum_conv_cauchy_2(
+                    ti-t0, fwhm, 1/tau_osc, period_osc, c[num_comp+1*base:])
+                grad_decay = grad_gau_decay + eta * \
+                    (grad_cauchy_decay-grad_gau_decay)
                 grad_osc = grad_gau_osc + eta*(grad_cauchy_osc-grad_gau_osc)
-            
+
             grad_decay = np.einsum('i,ij->ij', 1/e[:, j], grad_decay)
             grad_osc = np.einsum('i,ij->ij', 1/e[:, j], grad_osc)
             grad_sum = grad_decay[:, :2] + grad_osc[:, :2]
@@ -248,7 +277,8 @@ def res_grad_both(x0: np.ndarray, num_comp: int, num_comp_osc:int, base: bool, i
                 df[end:end+step, 0] = grad_sum[:, 1]
 
             else:
-                cdiff = (c[:num_comp+1*base]@diff + c[num_comp+1*base:]@diff_osc)/e[:, j]
+                cdiff = (c[:num_comp+1*base]@diff +
+                         c[num_comp+1*base:]@diff_osc)/e[:, j]
                 df[end:end+step, 0] = dfwhm_G*grad_sum[:, 1]+deta_G*cdiff
                 df[end:end+step, 1] = dfwhm_L*grad_sum[:, 1]+deta_L*cdiff
 
@@ -256,19 +286,19 @@ def res_grad_both(x0: np.ndarray, num_comp: int, num_comp_osc:int, base: bool, i
             df[end:end+step, num_irf:num_irf+num_comp] = \
                 np.einsum('j,ij->ij', -1/tau**2, grad_decay[:, 2:])
             df[end:end+step, num_irf+num_comp:num_irf+num_comp+num_comp_osc] = \
-                np.einsum('j,ij->ij',-1/tau_osc**2, grad_osc[:, 2:2+num_comp_osc])
-            df[end:end+step, num_irf+num_comp+num_comp_osc:] = grad_osc[:, 2+num_comp_osc:2+2*num_comp_osc]
-
+                np.einsum('j,ij->ij', -1/tau_osc**2,
+                          grad_osc[:, 2:2+num_comp_osc])
+            df[end:end+step, num_irf+num_comp+num_comp_osc:] = grad_osc[:,
+                                                                        2+num_comp_osc:2+2*num_comp_osc]
 
             end = end + step
             t0_idx = t0_idx + 1
-    
+
     mask = np.ones(num_param, dtype=bool)
     mask[num_irf:num_irf+num_t0] = False
     grad[mask] = chi@df
 
     if fix_param_idx is not None:
         grad[fix_param_idx] = 0
-    
 
     return np.sum(chi**2)/2, grad

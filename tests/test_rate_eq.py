@@ -1,9 +1,10 @@
+# pylint: disable = missing-module-docstring, wrong-import-position, invalid-name
 import os
 import sys
 import numpy as np
 
 path = os.path.dirname(os.path.realpath(__file__))
-sys.path.append(path+"/../src/")
+sys.path.append(path+'/../src/')
 
 from TRXASprefitpack import solve_seq_model, solve_l_model
 
@@ -12,7 +13,8 @@ def test_solve_seq_1():
     '''
     Test squential decay solver (A->B->C)
     '''
-    tau1 = 1; tau2 = 10
+    tau1 = 1
+    tau2 = 10
     A = np.array([[-1/tau1, 0, 0],
     [1/tau1, -1/tau2, 0],
     [0, 1/tau2, 0]])
@@ -30,7 +32,9 @@ def test_solve_seq_2():
     '''
     Test squential decay solver (A->B->C->D)
     '''
-    tau1 = 1; tau2 = 10; tau3 = 100
+    tau1 = 1
+    tau2 = 10
+    tau3 = 100
     A = np.array([[-1/tau1, 0, 0, 0],
     [1/tau1, -1/tau2, 0, 0],
     [0, 1/tau2, -1/tau3, 0],
@@ -49,7 +53,8 @@ def test_solve_l_1():
     '''
     Test lower triangular rate equation solver (A->B, A->C)
     '''
-    tau1 = 1; tau2 = 0.5
+    tau1 = 1
+    tau2 = 0.5
     A = np.array([[-(1/tau1+1/tau2), 0, 0],
     [1/tau1, 0, 0],
     [1/tau2, 0, 0]])
@@ -67,7 +72,8 @@ def test_solve_l_2():
     '''
     Test lower triangular rate equation solver (A->B, C->D)
     '''
-    tau1 = 1; tau2 = 0.5
+    tau1 = 1
+    tau2 = 0.5
     A = np.array([[-1/tau1, 0, 0, 0],
     [1/tau1, 0, 0, 0],
     [0, 0, -1/tau2, 0],
@@ -86,7 +92,9 @@ def test_solve_l_3():
     '''
     Test lower triangular rate equation solver (A->B, A->C->)
     '''
-    tau1 = 1; tau2 = 0.5; tau3 = 250
+    tau1 = 1
+    tau2 = 0.5
+    tau3 = 250
     A = np.array([[-(1/tau1+1/tau2), 0, 0],
     [1/tau1, 0, 0],
     [1/tau3, 0, -1/tau3]])
@@ -99,12 +107,15 @@ def test_solve_l_3():
     tst2 = np.allclose(V_tst@c_tst, y0)
     tst3 = np.allclose(A@V_tst, lV_tst)
     assert (tst1, tst2, tst3) == (True, True, True)
-    
+
 def test_solve_l_4():
     '''
     Test lower triangular rate equation solver (A->B->, A->C->)
     '''
-    tau1 = 1; tau2 = 0.5; tau3 = 250; tau4 = 500
+    tau1 = 1
+    tau2 = 0.5
+    tau3 = 250
+    tau4 = 500
 
     A = np.array([[-(1/tau1+1/tau2), 0, 0],
     [1/tau1, -1/tau3, 0],

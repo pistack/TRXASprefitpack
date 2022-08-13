@@ -1,9 +1,10 @@
+# pylint: disable = missing-module-docstring, wrong-import-position, invalid-name
 import os
 import sys
 import numpy as np
 
 path = os.path.dirname(os.path.realpath(__file__))
-sys.path.append(path+"/../src/")
+sys.path.append(path+'/../src/')
 
 from TRXASprefitpack import exp_conv, fact_anal_exp_conv
 from TRXASprefitpack import dmp_osc_conv, fact_anal_dmp_osc_conv

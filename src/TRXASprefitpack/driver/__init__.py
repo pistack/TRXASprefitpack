@@ -24,5 +24,4 @@ __all__ = ['sads', 'dads', 'ampgo',
            'StaticResult', 'save_StaticResult', 'load_StaticResult',
            'static_spectrum',
            'fit_transient_exp', 'fit_transient_dmp_osc', 'fit_transient_both',
-           'fit_static_voigt', 'fit_static_thy'
-           ,'CIResult', 'is_better_fit', 'confidence_interval']
+           'fit_static_voigt', 'fit_static_thy', 'CIResult', 'is_better_fit', 'confidence_interval']

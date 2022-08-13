@@ -14,6 +14,7 @@ Policy to match discrepency between experimental data and theoretical spectrum.
  'both': shift and scale peak position
 '''
 
+
 def calc_broad():
 
     parser = argparse.ArgumentParser(description=description)
@@ -24,7 +25,7 @@ def calc_broad():
     parser.add_argument('e_max', type=float,
                         help='maximum energy')
     parser.add_argument('e_step', type=float,
-    help='energy step')
+                        help='energy step')
     parser.add_argument('A', type=float,
                         help='scale factor')
     parser.add_argument('fwhm_G', type=float,
@@ -32,15 +33,15 @@ def calc_broad():
     parser.add_argument('fwhm_L', type=float,
                         help='Full Width at Half Maximum of lorenzian shape')
     parser.add_argument('--shift_factor', type=float,
-    help='parameter to shift peak position of thoretical spectrum')
+                        help='parameter to shift peak position of thoretical spectrum')
     parser.add_argument('--scale_factor', type=float,
-    help='paramter to scale peak position of theoretical spectrum')
+                        help='paramter to scale peak position of theoretical spectrum')
     parser.add_argument('-o', '--out', help='prefix for output files')
     parser.add_argument('--policy', choices=['shift', 'scale', 'both'], type=str,
-    help=policy_help)
+                        help=policy_help)
     args = parser.parse_args()
 
-    peak = np.genfromtxt(args.peak)[:,:2]
+    peak = np.genfromtxt(args.peak)[:, :2]
     if args.out is None:
         out = args.prefix
     else:
@@ -57,11 +58,13 @@ def calc_broad():
         args.shift_factor = 0
     else:
         policy = args.policy
-    
+
     if policy in ['shift', 'both'] and args.shift_factor is None:
-        raise Exception(f"Your policy is {args.policy}, please set shift_factor parameter.")
+        raise Exception(
+            f'Your policy is {args.policy}, please set shift_factor parameter.')
     if policy in ['scale', 'both'] and args.scale_factor is None:
-        raise Exception(f"Your policy is {args.policy}, please set scale_factor parameter.")
+        raise Exception(
+            f'Your policy is {args.policy}, please set scale_factor parameter.')
 
     if args.policy == 'shift':
         peak_factor = args.shift_factor
@@ -84,11 +87,13 @@ def calc_broad():
     rescaled_stk[:, 1] = A*rescaled_stk[:, 1]/np.sum(rescaled_stk[:, 1])
     spec_thy = np.vstack((e, broadened_thy)).T
 
-    np.savetxt(f'{out}_thy_stk.txt', rescaled_stk, fmt=['%.8e', '%.8e'], header='energy \t abs')
-    np.savetxt(f'{out}_thy.txt', spec_thy, fmt=['%.8e', '%.8e'], header='energy \t abs')
+    np.savetxt(f'{out}_thy_stk.txt', rescaled_stk, fmt=[
+               '%.8e', '%.8e'], header='energy \t abs')
+    np.savetxt(f'{out}_thy.txt', spec_thy, fmt=[
+               '%.8e', '%.8e'], header='energy \t abs')
 
     plt.plot(e, broadened_thy)
-    plt.title("voigt broadened theoretical spectrum")
+    plt.title('voigt broadened theoretical spectrum')
     plt.show()
 
     return

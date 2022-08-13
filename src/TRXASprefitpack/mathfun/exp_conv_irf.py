@@ -12,27 +12,30 @@ import numpy as np
 from scipy.special import erfc, erfcx, wofz, exp1
 
 # special function: scaled expoential integral
-# if scipy starts to support scaled expoential integral I will delete this function 
+# if scipy starts to support scaled expoential integral I will delete this function
+
 
 def exp1x_asymp(z: Union[complex, np.ndarray]) -> Union[complex, np.ndarray]:
     return z*(1+z*(1+2*z*(1+3*z*(1+4*z*(1+5*z*(1+6*z*(1+7*z*(1+8*z*(1+9*z*(1+10*z))))))))))
 
+
 def exp1x(z: Union[complex, np.ndarray]) -> Union[complex, np.ndarray]:
-    
+
     if not isinstance(z, np.ndarray):
-            if np.abs(z.real) < 200:
-                # ans = np.exp(z)*exp1(z)
-                ans = complex(np.cos(z.imag), np.sin(z.imag))*exp1(z)
-                ans = np.exp(z.real)*ans
-            else:
-                ans = -exp1x_asymp(-1/z)
+        if np.abs(z.real) < 200:
+            # ans = np.exp(z)*exp1(z)
+            ans = complex(np.cos(z.imag), np.sin(z.imag))*exp1(z)
+            ans = np.exp(z.real)*ans
+        else:
+            ans = -exp1x_asymp(-1/z)
     else:
         mask = np.abs(z.real) < 200
         inv_mask = np.invert(mask)
         ans = np.empty(z.size, dtype=np.complex128)
-        
+
         # abs(Re z) < 200
-        ans[mask] = (np.cos(z[mask].imag)+complex(0,1)*np.sin(z[mask].imag))*exp1(z[mask])
+        ans[mask] = (np.cos(z[mask].imag)+complex(0, 1)
+                     * np.sin(z[mask].imag))*exp1(z[mask])
         ans[mask] = np.exp(z.real[mask])*ans[mask]
 
         # abs(Re z) > 200, use asymptotic series
@@ -41,9 +44,9 @@ def exp1x(z: Union[complex, np.ndarray]) -> Union[complex, np.ndarray]:
 
 # calculate convolution of exponential decay and instrumental response function
 
+
 def exp_conv_gau(t: Union[float, np.ndarray], fwhm: float,
                  k: float) -> Union[float, np.ndarray]:
-
     '''
     Compute exponential function convolved with normalized gaussian
     distribution
@@ -80,10 +83,10 @@ def exp_conv_gau(t: Union[float, np.ndarray], fwhm: float,
 
     return ans
 
+
 def exp_conv_cauchy(t: Union[float, np.ndarray],
                     fwhm: float,
                     k: float) -> Union[float, np.ndarray]:
-
     '''
     Compute exponential function convolved with normalized cauchy
     distribution
@@ -105,11 +108,11 @@ def exp_conv_cauchy(t: Union[float, np.ndarray],
         ans = exp1x(z).imag/np.pi
     return ans
 
+
 def exp_conv_pvoigt(t: Union[float, np.ndarray],
                     fwhm: float,
                     eta: float,
                     k: float) -> Union[float, np.ndarray]:
-
     '''
     Compute exponential function convolved with normalized pseudo
     voigt profile (i.e. linear combination of normalized gaussian and
@@ -135,9 +138,9 @@ def exp_conv_pvoigt(t: Union[float, np.ndarray],
 
 # calculate derivative of the convolution of exponential decay and instrumental response function
 
-def deriv_exp_conv_gau(t: Union[float, np.ndarray], fwhm: float,
-                 k: float) -> np.ndarray:
 
+def deriv_exp_conv_gau(t: Union[float, np.ndarray], fwhm: float,
+                       k: float) -> np.ndarray:
     '''
     Compute derivative of exponential function convolved with normalized gaussian
     distribution
@@ -170,15 +173,16 @@ def deriv_exp_conv_gau(t: Union[float, np.ndarray], fwhm: float,
     else:
         grad = np.empty((t.size, 3))
         grad[:, 0] = g/sigma - k*f
-        grad[:, 1] = ((k**2*sigma)*f - (k+t/sigma**2)*g)/(2*np.sqrt(2*np.log(2)))
+        grad[:, 1] = ((k**2*sigma)*f - (k+t/sigma**2)*g) / \
+            (2*np.sqrt(2*np.log(2)))
         grad[:, 2] = (sigma**2*k-t)*f - sigma*g
 
     return grad
 
-def deriv_exp_conv_cauchy(t: Union[float, np.ndarray],
-                    fwhm: float,
-                    k: float) -> Union[float, np.ndarray]:
 
+def deriv_exp_conv_cauchy(t: Union[float, np.ndarray],
+                          fwhm: float,
+                          k: float) -> Union[float, np.ndarray]:
     '''
     Compute derivative of the convolution of exponential function and normalized cauchy
     distribution
@@ -191,7 +195,7 @@ def deriv_exp_conv_cauchy(t: Union[float, np.ndarray],
     Returns:
       Derivative of convolution of normalized cauchy distribution and
       exponential decay :math:`(\\exp(-kt))`.
-    
+
     Note:
 
      * 1st column: df/dt
@@ -229,9 +233,9 @@ def deriv_exp_conv_cauchy(t: Union[float, np.ndarray],
 
 # calculate derivative of the convolution of sum of exponential decay and instrumental response function
 
-def deriv_exp_sum_conv_gau(t: np.ndarray, fwhm: float,
-                 k: np.ndarray, c: np.ndarray, base: Optional[bool] = True) -> np.ndarray:
 
+def deriv_exp_sum_conv_gau(t: np.ndarray, fwhm: float,
+                           k: np.ndarray, c: np.ndarray, base: Optional[bool] = True) -> np.ndarray:
     '''
     Compute derivative of sum of exponential function convolved with normalized gaussian
     distribution
@@ -265,9 +269,9 @@ def deriv_exp_sum_conv_gau(t: np.ndarray, fwhm: float,
 
     return grad
 
-def deriv_exp_sum_conv_cauchy(t: np.ndarray, fwhm: float,
-                 k: np.ndarray, c: np.ndarray, base: Optional[bool] = True) -> np.ndarray:
 
+def deriv_exp_sum_conv_cauchy(t: np.ndarray, fwhm: float,
+                              k: np.ndarray, c: np.ndarray, base: Optional[bool] = True) -> np.ndarray:
     '''
     Compute derivative of sum of exponential function convolved with normalized cauchy
     distribution
@@ -301,9 +305,10 @@ def deriv_exp_sum_conv_cauchy(t: np.ndarray, fwhm: float,
 
     return grad
 
+
 def exp_mod_gau_cplx(t: Union[float, np.ndarray], sigma: float,
                      kr: float, ki: float) -> \
-                        Union[Tuple[float, float], Tuple[np.ndarray, np.ndarray]]:
+        Union[Tuple[float, float], Tuple[np.ndarray, np.ndarray]]:
     '''
     Complex version of exponentially (exp(-krt+i*kit)) modified gaussian function
 
@@ -312,16 +317,16 @@ def exp_mod_gau_cplx(t: Union[float, np.ndarray], sigma: float,
      sigma: deviation of gaussian distribution
      kr: real part of decay constant
      ki: imag part of decay constant
-    
+
     Returns:
      complex version of exponentially modified gaussian distribution with mean = 0
-    
+
     Note:
      first element is cosine and second element is sine.
     '''
 
     isigmak_cplx = complex(ki*sigma, kr*sigma)
-    iz = isigmak_cplx - complex(0,1)*t/sigma
+    iz = isigmak_cplx - complex(0, 1)*t/sigma
 
     if not isinstance(t, np.ndarray):
         if iz.imag > 0:
@@ -329,7 +334,7 @@ def exp_mod_gau_cplx(t: Union[float, np.ndarray], sigma: float,
                 wofz(iz/np.sqrt(2))
         else:
             ans = np.exp(isigmak_cplx**2/2-isigmak_cplx*iz) - \
-                1/2*np.exp(-(t/sigma)**2/2)*wofz(-iz/np.sqrt(2)) 
+                1/2*np.exp(-(t/sigma)**2/2)*wofz(-iz/np.sqrt(2))
     else:
         mask = iz.imag > 0
         inv_mask = np.invert(mask)
@@ -337,13 +342,14 @@ def exp_mod_gau_cplx(t: Union[float, np.ndarray], sigma: float,
         ans[mask] = 1/2*np.exp(-(t[mask]/sigma)**2/2) * \
             wofz(iz[mask]/np.sqrt(2))
         ans[inv_mask] = np.exp(isigmak_cplx**2/2-isigmak_cplx*iz[inv_mask]) - \
-            1/2*np.exp(-(t[inv_mask]/sigma)**2/2)*wofz(-iz[inv_mask]/np.sqrt(2))
+            1/2*np.exp(-(t[inv_mask]/sigma)**2/2) * \
+            wofz(-iz[inv_mask]/np.sqrt(2))
 
     return ans.real, ans.imag
 
-def dmp_osc_conv_cauchy_pair(t: Union[float, np.ndarray], fwhm: float,
-k: float, T: float) -> Union[Tuple[float, float], Tuple[np.ndarray, np.ndarray]]:
 
+def dmp_osc_conv_cauchy_pair(t: Union[float, np.ndarray], fwhm: float,
+                             k: float, T: float) -> Union[Tuple[float, float], Tuple[np.ndarray, np.ndarray]]:
     '''
     Compute damped oscillation convolved with normalized cauchy
     distribution
@@ -361,17 +367,19 @@ k: float, T: float) -> Union[Tuple[float, float], Tuple[np.ndarray, np.ndarray]]
      :math:`(\\exp(-kt)cos(2\\pi t/T))` and :math:`(\\exp(-kt)sin(2\\pi t/T))`.
     '''
 
-    gamma = fwhm/2; omega = 2*np.pi/T 
-    z1 = (-k*t-omega*gamma) + complex(0,1)*(-k*gamma+omega*t)
-    z2 = (-k*t+omega*gamma) + complex(0,-1)*(k*gamma+omega*t)
-    ans1 = exp1x(z1)/(2*np.pi)+\
-        np.exp(z1.real)*(-np.sin(z1.imag)+complex(0, 1)*np.cos(z1.imag))*np.heaviside(z1.imag, 1)
+    gamma = fwhm/2
+    omega = 2*np.pi/T
+    z1 = (-k*t-omega*gamma) + complex(0, 1)*(-k*gamma+omega*t)
+    z2 = (-k*t+omega*gamma) + complex(0, -1)*(k*gamma+omega*t)
+    ans1 = exp1x(z1)/(2*np.pi) +\
+        np.exp(z1.real)*(-np.sin(z1.imag)+complex(0, 1)
+                         * np.cos(z1.imag))*np.heaviside(z1.imag, 1)
     ans2 = exp1x(z2)/(2*np.pi)
     return ans1.imag + ans2.imag, ans2.real - ans1.real
 
-def dmp_osc_conv_gau(t: Union[float, np.ndarray], fwhm: float,
-k: float, T: float, phase: float) -> Union[float, np.ndarray]:
 
+def dmp_osc_conv_gau(t: Union[float, np.ndarray], fwhm: float,
+                     k: float, T: float, phase: float) -> Union[float, np.ndarray]:
     '''
     Compute damped oscillation convolved with normalized gaussian
     distribution
@@ -393,9 +401,9 @@ k: float, T: float, phase: float) -> Union[float, np.ndarray]:
 
     return cosine*np.cos(phase)-sine*np.sin(phase)
 
-def dmp_osc_conv_gau_2(t: Union[float, np.ndarray], fwhm: float,
-k: float, T: float, c_pair: Tuple[float]) -> Union[float, np.ndarray]:
 
+def dmp_osc_conv_gau_2(t: Union[float, np.ndarray], fwhm: float,
+                       k: float, T: float, c_pair: Tuple[float]) -> Union[float, np.ndarray]:
     '''
     Compute damped oscillation convolved with normalized gaussian
     distribution
@@ -417,9 +425,9 @@ k: float, T: float, c_pair: Tuple[float]) -> Union[float, np.ndarray]:
 
     return cosine*c_pair[0]+sine*c_pair[1]
 
-def dmp_osc_conv_cauchy(t: Union[float, np.ndarray], fwhm: float,
-k: float, T: float, phase: float) -> Union[float, np.ndarray]:
 
+def dmp_osc_conv_cauchy(t: Union[float, np.ndarray], fwhm: float,
+                        k: float, T: float, phase: float) -> Union[float, np.ndarray]:
     '''
     Compute damped oscillation convolved with normalized cauchy
     distribution
@@ -440,9 +448,9 @@ k: float, T: float, phase: float) -> Union[float, np.ndarray]:
 
     return cosine*np.cos(phase)-sine*np.sin(phase)
 
-def dmp_osc_conv_cauchy_2(t: Union[float, np.ndarray], fwhm: float,
-k: float, T: float, c_pair: Tuple[float]) -> Union[float, np.ndarray]:
 
+def dmp_osc_conv_cauchy_2(t: Union[float, np.ndarray], fwhm: float,
+                          k: float, T: float, c_pair: Tuple[float]) -> Union[float, np.ndarray]:
     '''
     Compute damped oscillation convolved with normalized cauchy
     distribution
@@ -463,9 +471,9 @@ k: float, T: float, c_pair: Tuple[float]) -> Union[float, np.ndarray]:
 
     return cosine*c_pair[0]+sine*c_pair[1]
 
-def dmp_osc_conv_pvoigt(t: Union[float, np.ndarray], fwhm: float, eta: float,
-k: float, T: float, phase: float) -> Union[float, np.ndarray]:
 
+def dmp_osc_conv_pvoigt(t: Union[float, np.ndarray], fwhm: float, eta: float,
+                        k: float, T: float, phase: float) -> Union[float, np.ndarray]:
     '''
     Compute damped oscillation convolved with normalized pseudo
     voigt profile (i.e. linear combination of normalized gaussian and
@@ -491,9 +499,9 @@ k: float, T: float, phase: float) -> Union[float, np.ndarray]:
 
     return u + eta*(v-u)
 
-def dmp_osc_conv_pvoigt_2(t: Union[float, np.ndarray], fwhm: float, eta: float,
-k: float, T: float, c_pair: Tuple[float]) -> Union[float, np.ndarray]:
 
+def dmp_osc_conv_pvoigt_2(t: Union[float, np.ndarray], fwhm: float, eta: float,
+                          k: float, T: float, c_pair: Tuple[float]) -> Union[float, np.ndarray]:
     '''
     Compute damped oscillation convolved with normalized pseudo
     voigt profile (i.e. linear combination of normalized gaussian and
@@ -519,9 +527,9 @@ k: float, T: float, c_pair: Tuple[float]) -> Union[float, np.ndarray]:
 
     return u + eta*(v-u)
 
-def deriv_dmp_osc_conv_gau(t: Union[float, np.ndarray], fwhm: float,
-k: float, T: float, phase: float) -> np.ndarray:
 
+def deriv_dmp_osc_conv_gau(t: Union[float, np.ndarray], fwhm: float,
+                           k: float, T: float, phase: float) -> np.ndarray:
     '''
     Compute derivative of the convolution of damped oscillation and 
     normalized gaussian distribution
@@ -536,7 +544,7 @@ k: float, T: float, phase: float) -> np.ndarray:
     Returns:
      Derivative of Convolution of normalized gaussian distribution and 
      damped oscillation :math:`(\\exp(-kt)cos(2\\pi t/T+phase))`.
-    
+
     Note:
 
      * 1st column: df/dt
@@ -546,35 +554,39 @@ k: float, T: float, phase: float) -> np.ndarray:
      * 5th column: df/d(phase)
     '''
 
-    sigma = fwhm/(2*np.sqrt(2*np.log(2))); omega = 2*np.pi/T
+    sigma = fwhm/(2*np.sqrt(2*np.log(2)))
+    omega = 2*np.pi/T
     tmp1, tmp2 = exp_mod_gau_cplx(t, sigma, k, omega)
     freal = np.cos(phase)*tmp1 - np.sin(phase)*tmp2
     fimag = np.cos(phase)*tmp2 + np.sin(phase)*tmp1
     tmp3 = np.exp(-(t/sigma)**2/2)/np.sqrt(2*np.pi)
-    greal = np.cos(phase)*tmp3; gimag = np.sin(phase)*tmp3
+    greal = np.cos(phase)*tmp3
+    gimag = np.sin(phase)*tmp3
 
     if not isinstance(t, np.ndarray):
         grad = np.empty(5)
         grad[0] = greal/sigma - k*freal-omega*fimag
-        grad[1] = (sigma*((k**2-omega**2)*freal + 2*k*omega*fimag) - 
-        omega*gimag - (k+t/sigma**2)*greal)/(2*np.sqrt(2*np.log(2)))
+        grad[1] = (sigma*((k**2-omega**2)*freal + 2*k*omega*fimag) -
+                   omega*gimag - (k+t/sigma**2)*greal)/(2*np.sqrt(2*np.log(2)))
         grad[2] = sigma**2*(k*freal+omega*fimag)-t*freal - sigma*greal
-        grad[3] = -omega/T*(sigma**2*(k*fimag-omega*freal)-t*fimag - sigma*gimag)
+        grad[3] = -omega/T * \
+            (sigma**2*(k*fimag-omega*freal)-t*fimag - sigma*gimag)
         grad[4] = -fimag
     else:
         grad = np.empty((t.size, 5))
         grad[:, 0] = greal/sigma - k*freal-omega*fimag
-        grad[:, 1] = (sigma*((k**2-omega**2)*freal + 2*k*omega*fimag) - 
-        omega*gimag - (k+t/sigma**2)*greal)/(2*np.sqrt(2*np.log(2)))
+        grad[:, 1] = (sigma*((k**2-omega**2)*freal + 2*k*omega*fimag) -
+                      omega*gimag - (k+t/sigma**2)*greal)/(2*np.sqrt(2*np.log(2)))
         grad[:, 2] = sigma**2*(k*freal+omega*fimag)-t*freal - sigma*greal
-        grad[:, 3] = -omega/T*(sigma**2*(k*fimag-omega*freal)-t*fimag - sigma*gimag)
+        grad[:, 3] = -omega/T * \
+            (sigma**2*(k*fimag-omega*freal)-t*fimag - sigma*gimag)
         grad[:, 4] = -fimag
-    
+
     return grad
 
-def deriv_dmp_osc_conv_gau_2(t: Union[float, np.ndarray], fwhm: float,
-k: float, T: float, c_pair: Tuple[float]) -> np.ndarray:
 
+def deriv_dmp_osc_conv_gau_2(t: Union[float, np.ndarray], fwhm: float,
+                             k: float, T: float, c_pair: Tuple[float]) -> np.ndarray:
     '''
     Compute derivative of the convolution of damped oscillation and 
     normalized gaussian distribution
@@ -589,7 +601,7 @@ k: float, T: float, c_pair: Tuple[float]) -> np.ndarray:
     Returns:
      Derivative of Convolution of normalized gaussian distribution and 
      damped oscillation :math:`(\\exp(-kt) \\cdot (c_1 \\cos(2\\pi t/T) + c_2 \\sin(2\\pi t/T)))`.
-    
+
     Note:
 
      * 1st column: df/dt
@@ -598,33 +610,37 @@ k: float, T: float, c_pair: Tuple[float]) -> np.ndarray:
      * 4th column: df/dT
     '''
 
-    sigma = fwhm/(2*np.sqrt(2*np.log(2))); omega = 2*np.pi/T
+    sigma = fwhm/(2*np.sqrt(2*np.log(2)))
+    omega = 2*np.pi/T
     tmp1, tmp2 = exp_mod_gau_cplx(t, sigma, k, omega)
     freal = c_pair[0]*tmp1 + c_pair[1]*tmp2
     fimag = c_pair[0]*tmp2 - c_pair[1]*tmp1
     tmp3 = np.exp(-(t/sigma)**2/2)/np.sqrt(2*np.pi)
-    greal = c_pair[0]*tmp3; gimag = -c_pair[1]*tmp3
+    greal = c_pair[0]*tmp3
+    gimag = -c_pair[1]*tmp3
 
     if not isinstance(t, np.ndarray):
         grad = np.empty(4)
         grad[0] = greal/sigma - k*freal-omega*fimag
-        grad[1] = (sigma*((k**2-omega**2)*freal + 2*k*omega*fimag) - 
-        omega*gimag - (k+t/sigma**2)*greal)/(2*np.sqrt(2*np.log(2)))
+        grad[1] = (sigma*((k**2-omega**2)*freal + 2*k*omega*fimag) -
+                   omega*gimag - (k+t/sigma**2)*greal)/(2*np.sqrt(2*np.log(2)))
         grad[2] = sigma**2*(k*freal+omega*fimag)-t*freal - sigma*greal
-        grad[3] = -omega/T*(sigma**2*(k*fimag-omega*freal)-t*fimag - sigma*gimag)
+        grad[3] = -omega/T * \
+            (sigma**2*(k*fimag-omega*freal)-t*fimag - sigma*gimag)
     else:
         grad = np.empty((t.size, 4))
         grad[:, 0] = greal/sigma - k*freal-omega*fimag
-        grad[:, 1] = (sigma*((k**2-omega**2)*freal + 2*k*omega*fimag) - 
-        omega*gimag - (k+t/sigma**2)*greal)/(2*np.sqrt(2*np.log(2)))
+        grad[:, 1] = (sigma*((k**2-omega**2)*freal + 2*k*omega*fimag) -
+                      omega*gimag - (k+t/sigma**2)*greal)/(2*np.sqrt(2*np.log(2)))
         grad[:, 2] = sigma**2*(k*freal+omega*fimag)-t*freal - sigma*greal
-        grad[:, 3] = -omega/T*(sigma**2*(k*fimag-omega*freal)-t*fimag - sigma*gimag)
-    
+        grad[:, 3] = -omega/T * \
+            (sigma**2*(k*fimag-omega*freal)-t*fimag - sigma*gimag)
+
     return grad
 
-def deriv_dmp_osc_conv_cauchy(t: Union[float, np.ndarray], fwhm: float,
-k: float, T: float, phase: float) -> Union[float, np.ndarray]:
 
+def deriv_dmp_osc_conv_cauchy(t: Union[float, np.ndarray], fwhm: float,
+                              k: float, T: float, phase: float) -> Union[float, np.ndarray]:
     '''
     Compute derivative of convolution of damped oscillation and normalized cauchy
     distribution
@@ -649,18 +665,20 @@ k: float, T: float, phase: float) -> Union[float, np.ndarray]:
      * 5th column: df/d(phase)
     '''
 
-    gamma = fwhm/2; omega = 2*np.pi/T 
-    z1 = (-k*t-omega*gamma) + complex(0,1)*(-k*gamma+omega*t)
-    z2 = (-k*t+omega*gamma) + complex(0,-1)*(k*gamma+omega*t)
+    gamma = fwhm/2
+    omega = 2*np.pi/T
+    z1 = (-k*t-omega*gamma) + complex(0, 1)*(-k*gamma+omega*t)
+    z2 = (-k*t+omega*gamma) + complex(0, -1)*(k*gamma+omega*t)
 
-    f1 = complex(np.cos(phase), np.sin(phase))*exp1x(z1)/(2*np.pi)+np.exp(z1.real)*\
-        (-np.sin(z1.imag+phase)+complex(0,1)*np.cos(z1.imag+phase))*\
+    f1 = complex(np.cos(phase), np.sin(phase))*exp1x(z1)/(2*np.pi)+np.exp(z1.real) *\
+        (-np.sin(z1.imag+phase)+complex(0, 1)*np.cos(z1.imag+phase)) *\
         np.heaviside(z1.imag, 1)
     f2 = complex(np.cos(phase), -np.sin(phase))*exp1x(z2)
 
     grad_z1 = f1 - complex(np.cos(phase), np.sin(phase))/(2*np.pi*z1)
     grad_z2 = (f2 - complex(np.cos(phase), -np.sin(phase))/z2)/(2*np.pi)
-    sum = grad_z1 + grad_z2; diff = grad_z1 - grad_z2
+    sum = grad_z1 + grad_z2
+    diff = grad_z1 - grad_z2
     grad_t = -k*sum.imag + omega*diff.real
     grad_fwhm = -(omega*diff.imag+k*sum.real)/2
     grad_k = -(t*sum.imag+gamma*sum.real)
@@ -681,12 +699,12 @@ k: float, T: float, phase: float) -> Union[float, np.ndarray]:
         grad[:, 2] = grad_k
         grad[:, 3] = grad_T
         grad[:, 4] = grad_phase
-    
+
     return grad
 
-def deriv_dmp_osc_conv_cauchy_2(t: Union[float, np.ndarray], fwhm: float,
-k: float, T: float, c_pair: Tuple[float]) -> Union[float, np.ndarray]:
 
+def deriv_dmp_osc_conv_cauchy_2(t: Union[float, np.ndarray], fwhm: float,
+                                k: float, T: float, c_pair: Tuple[float]) -> Union[float, np.ndarray]:
     '''
     Compute derivative of convolution of damped oscillation and normalized cauchy
     distribution
@@ -710,19 +728,21 @@ k: float, T: float, c_pair: Tuple[float]) -> Union[float, np.ndarray]:
      * 4th column: df/dT
     '''
 
-    gamma = fwhm/2; omega = 2*np.pi/T 
-    z1 = (-k*t-omega*gamma) + complex(0,1)*(-k*gamma+omega*t)
-    z2 = (-k*t+omega*gamma) + complex(0,-1)*(k*gamma+omega*t)
+    gamma = fwhm/2
+    omega = 2*np.pi/T
+    z1 = (-k*t-omega*gamma) + complex(0, 1)*(-k*gamma+omega*t)
+    z2 = (-k*t+omega*gamma) + complex(0, -1)*(k*gamma+omega*t)
 
-    f1 = complex(c_pair[0], -c_pair[1])*exp1x(z1)/(2*np.pi)+complex(c_pair[1],c_pair[0])*\
-        np.exp(z1.real)*\
-        (np.cos(z1.imag)+complex(0,1)*np.sin(z1.imag))*\
+    f1 = complex(c_pair[0], -c_pair[1])*exp1x(z1)/(2*np.pi)+complex(c_pair[1], c_pair[0]) *\
+        np.exp(z1.real) *\
+        (np.cos(z1.imag)+complex(0, 1)*np.sin(z1.imag)) *\
         np.heaviside(z1.imag, 1)
     f2 = complex(c_pair[0], c_pair[1])*exp1x(z2)
 
     grad_z1 = f1 - complex(c_pair[0], -c_pair[1])/(2*np.pi*z1)
     grad_z2 = (f2 - complex(c_pair[0], c_pair[1])/z2)/(2*np.pi)
-    sum = grad_z1 + grad_z2; diff = grad_z1 - grad_z2
+    sum = grad_z1 + grad_z2
+    diff = grad_z1 - grad_z2
     grad_t = -k*sum.imag + omega*diff.real
     grad_fwhm = -(omega*diff.imag+k*sum.real)/2
     grad_k = -(t*sum.imag+gamma*sum.real)
@@ -740,12 +760,12 @@ k: float, T: float, c_pair: Tuple[float]) -> Union[float, np.ndarray]:
         grad[:, 1] = grad_fwhm
         grad[:, 2] = grad_k
         grad[:, 3] = grad_T
-    
+
     return grad
 
-def deriv_dmp_osc_sum_conv_gau(t: np.ndarray, fwhm: float,
-k: np.ndarray, T: np.ndarray, phase: np.ndarray, c: np.ndarray) -> np.ndarray:
 
+def deriv_dmp_osc_sum_conv_gau(t: np.ndarray, fwhm: float,
+                               k: np.ndarray, T: np.ndarray, phase: np.ndarray, c: np.ndarray) -> np.ndarray:
     '''
     Compute derivative of sum of damped oscillation function convolved with normalized gaussian
     distribution
@@ -780,9 +800,9 @@ k: np.ndarray, T: np.ndarray, phase: np.ndarray, c: np.ndarray) -> np.ndarray:
 
     return grad
 
-def deriv_dmp_osc_sum_conv_gau_2(t: np.ndarray, fwhm: float,
-k: np.ndarray, T: np.ndarray, c: np.ndarray) -> np.ndarray:
 
+def deriv_dmp_osc_sum_conv_gau_2(t: np.ndarray, fwhm: float,
+                                 k: np.ndarray, T: np.ndarray, c: np.ndarray) -> np.ndarray:
     '''
     Compute derivative of sum of damped oscillation function convolved with normalized gaussian
     distribution
@@ -806,7 +826,8 @@ k: np.ndarray, T: np.ndarray, c: np.ndarray) -> np.ndarray:
     '''
     grad = np.zeros((t.size, 2+2*k.size))
     for i in range(k.size):
-        grad_i = deriv_dmp_osc_conv_gau_2(t, fwhm, k[i], T[i], (c[i], c[i+k.size]))
+        grad_i = deriv_dmp_osc_conv_gau_2(
+            t, fwhm, k[i], T[i], (c[i], c[i+k.size]))
         grad[:, 0] = grad[:, 0] + grad_i[:, 0]
         grad[:, 1] = grad[:, 1] + grad_i[:, 1]
         grad[:, 2+i] = grad_i[:, 2]
@@ -814,9 +835,9 @@ k: np.ndarray, T: np.ndarray, c: np.ndarray) -> np.ndarray:
 
     return grad
 
-def deriv_dmp_osc_sum_conv_cauchy(t: np.ndarray, fwhm: float,
-k: np.ndarray, T: np.ndarray, phase: np.ndarray, c: np.ndarray) -> np.ndarray:
 
+def deriv_dmp_osc_sum_conv_cauchy(t: np.ndarray, fwhm: float,
+                                  k: np.ndarray, T: np.ndarray, phase: np.ndarray, c: np.ndarray) -> np.ndarray:
     '''
     Compute derivative of sum of damped oscillation function convolved with normalized cauchy
     distribution
@@ -850,9 +871,9 @@ k: np.ndarray, T: np.ndarray, phase: np.ndarray, c: np.ndarray) -> np.ndarray:
 
     return grad
 
-def deriv_dmp_osc_sum_conv_cauchy_2(t: np.ndarray, fwhm: float,
-k: np.ndarray, T: np.ndarray, c: np.ndarray) -> np.ndarray:
 
+def deriv_dmp_osc_sum_conv_cauchy_2(t: np.ndarray, fwhm: float,
+                                    k: np.ndarray, T: np.ndarray, c: np.ndarray) -> np.ndarray:
     '''
     Compute derivative of sum of damped oscillation function convolved with normalized cauchy
     distribution
@@ -876,14 +897,11 @@ k: np.ndarray, T: np.ndarray, c: np.ndarray) -> np.ndarray:
     '''
     grad = np.zeros((t.size, 2+2*k.size))
     for i in range(k.size):
-        grad_i = deriv_dmp_osc_conv_cauchy_2(t, fwhm, k[i], T[i], (c[i], c[i+k.size]))
+        grad_i = deriv_dmp_osc_conv_cauchy_2(
+            t, fwhm, k[i], T[i], (c[i], c[i+k.size]))
         grad[:, 0] = grad[:, 0] + grad_i[:, 0]
         grad[:, 1] = grad[:, 1] + grad_i[:, 1]
         grad[:, 2+i] = grad_i[:, 2]
         grad[:, 2+k.size+i] = grad_i[:, 3]
 
     return grad
-
-
-
-

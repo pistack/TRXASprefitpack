@@ -146,6 +146,7 @@ disable=abstract-method,
         wrong-import-order,
         xrange-builtin,
         zip-builtin-not-iterating,
+        unbalanced-tuple-unpacking
 
 
 [REPORTS]
@@ -258,8 +259,9 @@ generated-members=
 
 [FORMAT]
 
+good-names = A, fwhm_G, fwhm_L, fwhm_G_opt, fwhm_L_opt, fwhm_G_init, fwhm_L_init, fwhm_G_help, fwhm_L_help, bound_fwhm_G, bound_fwhm_L, save_StaticResult, save_StaticResult_txt, plot_StaticResult, load_StaticResult, save_TransientResult, save_TransientResult_txt, plot_TransientResult, load_TransientResult, StaticResult, TransientResult
 # Maximum number of characters on a single line.
-max-line-length=80
+max-line-length=160
 
 # TODO(https://github.com/PyCQA/pylint/issues/3352): Direct pylint to exempt
 # lines made too long by directives to pytype.
@@ -280,7 +282,7 @@ max-module-lines=99999
 # spaces.  Google's externaly-published style guide says 4, consistent with
 # PEP 8.  Here, we use 2 spaces, for conformity with many open-sourced Google
 # projects (like TensorFlow).
-indent-string='  '
+indent-string='    '
 
 # Number of spaces of indent required inside a hanging  or continued line.
 indent-after-paren=4

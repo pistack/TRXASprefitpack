@@ -1,5 +1,5 @@
 # calc_sads
-# Calculate species associated difference spectrum from experimental 
+# Calculate species associated difference spectrum from experimental
 # energy scan data and the convolution of lower triangular 1st order rate equation model and
 # instrumental response function.
 
@@ -73,21 +73,20 @@ It would not be used when you did not set irf or use gaussian irf function
 '''
 
 
-
 def calc_sads():
 
     tmp = argparse.RawTextHelpFormatter
     parser = argparse.ArgumentParser(formatter_class=tmp,
                                      description=description,
                                      epilog=epilog)
-    parser.add_argument('-re_mat', '--rate_eq_mat', type=str, 
+    parser.add_argument('-re_mat', '--rate_eq_mat', type=str,
                         help=rate_eq_mat_help)
     parser.add_argument('--seq', action='store_true',
-    help=seq_help)
-    parser.add_argument('-gsi', '--gs_index', default=None, type=str, 
-    choices=['first', 'last', 'first_and_last'], help=gs_help)
+                        help=seq_help)
+    parser.add_argument('-gsi', '--gs_index', default=None, type=str,
+                        choices=['first', 'last', 'first_and_last'], help=gs_help)
     parser.add_argument('--init_cond', default=None, nargs='+', type=float,
-    help='initial condition ith argument is corresponding to inital concentration of ith component')
+                        help='initial condition ith argument is corresponding to inital concentration of ith component')
     parser.add_argument('--irf', default='g', choices=['g', 'c', 'pv'],
                         help=irf_help)
     parser.add_argument('--fwhm_G', type=float,
@@ -97,11 +96,11 @@ def calc_sads():
     parser.add_argument('escan_file',
                         help='filename for scale corrected energy scan file')
     parser.add_argument('escan_err_file',
-    help='filename for the scaled estimated experimental error of energy scan file')
+                        help='filename for the scaled estimated experimental error of energy scan file')
     parser.add_argument('-t0', '--time_zero', type=float,
                         help='time zero of energy scan')
     parser.add_argument('--escan_time', type=float, nargs='+',
-    help='time delay for each energy scan')
+                        help='time delay for each energy scan')
     parser.add_argument('--tau', type=float, nargs='+',
                         help='lifetime of each decay path')
     parser.add_argument('-o', '--out', default='out',
@@ -111,21 +110,22 @@ def calc_sads():
     irf = args.irf
     if irf == 'g':
         if args.fwhm_G is None:
-            raise Exception('You are using gaussian irf, so you should set fwhm_G!\n')
+            raise Exception(
+                'You are using gaussian irf, so you should set fwhm_G!\n')
         else:
             fwhm = args.fwhm_G
             eta = 0
     elif irf == 'c':
         if args.fwhm_L is None:
             raise Exception('You are using cauchy/lorenzian irf,' +
-            'so you should set fwhm_L!\n')
+                            'so you should set fwhm_L!\n')
         else:
             fwhm = args.fwhm_L
             eta = 1
     else:
         if (args.fwhm_G is None) or (args.fwhm_L is None):
             raise Exception('You are using pseudo voigt irf,' +
-            'so you should set both fwhm_G and fwhm_L!\n')
+                            'so you should set both fwhm_G and fwhm_L!\n')
         else:
             fwhm = calc_fwhm(args.fwhm_G, args.fwhm_L)
             eta = calc_eta(args.fwhm_G, args.fwhm_L)
@@ -134,7 +134,7 @@ def calc_sads():
         raise Exception('Please set lifetime constants for each decay')
     else:
         tau = np.array(args.tau)
-    
+
     if (args.time_zero is None):
         raise Exception('You should set time_zero for energy scan \n')
     else:
@@ -153,14 +153,14 @@ def calc_sads():
         rate_eq_mat_str = np.genfromtxt(args.rate_eq_mat, dtype=str)
         L_mat = parse_matrix(rate_eq_mat_str, tau)
         eigval, V, c = solve_l_model(L_mat, y0)
-    
-    ads, ads_eps, fit = sads(escan_time-time_zero, fwhm, eigval, V, c, exclude, irf, eta,
-    intensity=escan_data[:,1:], eps=escan_err)
 
-    e = escan_data[:,0]
+    ads, ads_eps, fit = sads(escan_time-time_zero, fwhm, eigval, V, c, exclude, irf, eta,
+                             intensity=escan_data[:, 1:], eps=escan_err)
+
+    e = escan_data[:, 0]
 
     out_ads = np.vstack((e, ads)).T
-    out_fit = np.vstack((e,fit.T)).T
+    out_fit = np.vstack((e, fit.T)).T
     ads_header_lst = []
     for i in range(ads.shape[0]):
         ads_header_lst.append(f'ex{i+1}')
@@ -168,15 +168,18 @@ def calc_sads():
     fit_header = '\t'.join(list(map(str, escan_time)))
 
     # save calculated sads results
-    np.savetxt(f'{out_prefix}_sads.txt', out_ads, fmt=out_ads.shape[1]*['%.8e'], header='energy \t'+ads_header)
-    np.savetxt(f'{out_prefix}_sads_eps.txt', ads_eps.T, fmt=ads_eps.shape[0]*['%.8e'], header=ads_header)
-    np.savetxt(f'{out_prefix}_sads_fit.txt', out_fit, fmt=(len(escan_time)+1)*['%.8e'], header='energy \t'+fit_header)
+    np.savetxt(f'{out_prefix}_sads.txt', out_ads,
+               fmt=out_ads.shape[1]*['%.8e'], header='energy \t'+ads_header)
+    np.savetxt(f'{out_prefix}_sads_eps.txt', ads_eps.T,
+               fmt=ads_eps.shape[0]*['%.8e'], header=ads_header)
+    np.savetxt(f'{out_prefix}_sads_fit.txt', out_fit, fmt=(
+        len(escan_time)+1)*['%.8e'], header='energy \t'+fit_header)
 
     # plot sads results
     plt.figure(1)
     plt.title('Species Associated Difference Spectrum')
     for i in range(ads.shape[0]):
-        plt.errorbar(e, ads[i,:], ads_eps[i,:], label=f'excited state {i+1}')
+        plt.errorbar(e, ads[i, :], ads_eps[i, :], label=f'excited state {i+1}')
     plt.legend()
 
     offset = 2*np.max(np.abs(escan_data[:, 1:]))
@@ -184,7 +187,7 @@ def calc_sads():
     plt.title(f'Retrieved Energy Scan (time_zero: {time_zero:.3e}')
     for i in range(escan_time.size):
         plt.errorbar(e, escan_data[:, i+1]+i*offset, escan_err[:, i], marker='o', mfc='none',
-        label=f'{escan_time[i]: .3e} (expt)')
+                     label=f'{escan_time[i]: .3e} (expt)')
         plt.plot(e, fit[:, i]+i*offset, label=f'{escan_time[i]: .3e} (fit)')
     plt.legend()
     plt.show()

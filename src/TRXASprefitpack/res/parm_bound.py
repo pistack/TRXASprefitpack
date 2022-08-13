@@ -17,7 +17,7 @@ def set_bound_t0(t0: float, fwhm: Union[float, np.ndarray]) -> Tuple[float, floa
      t0: initial guess for time zero
      fwhm: initial guess for full width at half maximum of instrumental response function
            `float` for gaussian and cauchy shape, `np.ndarray` with two element `(fwhm_G, fwhm_L)` for pseudo voigt shape.
-    
+
     Returns:
      Tuple of upper and lower bound of time zero
     '''
@@ -25,10 +25,11 @@ def set_bound_t0(t0: float, fwhm: Union[float, np.ndarray]) -> Tuple[float, floa
         bound = (t0-2*fwhm, t0+2*fwhm)
     else:
         fwhm_eff = 0.5346*fwhm[1] + \
-                np.sqrt(0.2166*fwhm[1]**2+fwhm[0]**2)
+            np.sqrt(0.2166*fwhm[1]**2+fwhm[0]**2)
         bound = (t0-2*fwhm_eff, t0+2*fwhm_eff)
-    
+
     return bound
+
 
 def set_bound_e0(e0: float, fwhm_G: float, fwhm_L: float) -> Tuple[float, float]:
     '''
@@ -38,7 +39,7 @@ def set_bound_e0(e0: float, fwhm_G: float, fwhm_L: float) -> Tuple[float, float]
      e0: initial guess for peak position
      fwhm_G: initial guess of fwhm_G parameter of voigt component
      fwhm_L: initial guess of fwhm_L parameter of voigt component
-    
+
     Returns:
      Tuple of upper and lower bound of peak position
     '''
@@ -49,7 +50,7 @@ def set_bound_e0(e0: float, fwhm_G: float, fwhm_L: float) -> Tuple[float, float]
     else:
         fwhm_eff = 0.5346*fwhm_L+np.sqrt(0.2166*fwhm_L**2+fwhm_G**2)
         bound = (e0-fwhm_eff, e0+fwhm_eff)
-    
+
     return bound
 
 
@@ -69,8 +70,7 @@ def set_bound_tau(tau: float, fwhm: Union[float, np.ndarray]) -> Tuple[float, fl
         fwhm_eff = fwhm
     else:
         fwhm_eff = 0.5346*fwhm[1] + \
-                np.sqrt(0.2166*fwhm[1]**2+fwhm[0]**2)
-
+            np.sqrt(0.2166*fwhm[1]**2+fwhm[0]**2)
 
     bound = (tau/2, 2*fwhm_eff)
     if fwhm_eff <= tau < 4*fwhm_eff:

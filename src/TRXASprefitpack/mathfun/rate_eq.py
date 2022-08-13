@@ -16,7 +16,6 @@ from .A_matrix import make_A_matrix_gau, make_A_matrix_pvoigt
 
 def solve_model(equation: np.ndarray,
                 y0: np.ndarray) -> Tuple[np.ndarray, np.ndarray, np.ndarray]:
-
     '''
     Solve system of first order rate equation
 
@@ -34,10 +33,10 @@ def solve_model(equation: np.ndarray,
     c = LA.solve(V, y0)
 
     return eigval.real, V, c
-  
-def solve_l_model(equation: np.ndarray,
-                y0: np.ndarray) -> Tuple[np.ndarray, np.ndarray, np.ndarray]:
 
+
+def solve_l_model(equation: np.ndarray,
+                  y0: np.ndarray) -> Tuple[np.ndarray, np.ndarray, np.ndarray]:
     '''
     Solve system of first order rate equation where the rate equation matrix is
     lower triangle
@@ -58,20 +57,21 @@ def solve_l_model(equation: np.ndarray,
     tmp = np.zeros(eigval.size)
 
     for i in range(1, eigval.size):
-      tmp[:i] = eigval[:i]-eigval[i]
-      tmp[:i][tmp[:i] == 0] = 1
-      V[i, :i] = equation[i,:i] @ V[:i,:i]/tmp[:i]
+        tmp[:i] = eigval[:i]-eigval[i]
+        tmp[:i][tmp[:i] == 0] = 1
+        V[i, :i] = equation[i, :i] @ V[:i, :i]/tmp[:i]
 
     c[0] = y0[0]
     for i in range(1, eigval.size):
-      c[i] = y0[i] - np.dot(c[:i], V[i,:i])
+        c[i] = y0[i] - np.dot(c[:i], V[i, :i])
 
     return eigval, V, c
+
 
 def solve_seq_model(tau: np.ndarray, y0: np.ndarray):
     '''
     Solve sequential decay model
-    
+
     sequential decay model: 
       0 -> 1 -> 2 -> 3 -> ... -> n 
 
@@ -87,23 +87,23 @@ def solve_seq_model(tau: np.ndarray, y0: np.ndarray):
     eigval = np.empty(tau.size+1)
     c = np.empty(eigval.size)
     V = np.eye(eigval.size)
-    
+
     eigval[:-1] = -1/tau
     eigval[-1] = 0
 
     for i in range(1, eigval.size):
-      V[i, :i] = V[i-1,:i]*eigval[i-1]/(eigval[i]-eigval[:i])
-    
+        V[i, :i] = V[i-1, :i]*eigval[i-1]/(eigval[i]-eigval[:i])
+
     c[0] = y0[0]
     for i in range(1, eigval.size):
-      c[i] = y0[i]-np.dot(c[:i], V[i,:i])
+        c[i] = y0[i]-np.dot(c[:i], V[i, :i])
     return eigval, V, c
+
 
 def compute_model(t: np.ndarray,
                   eigval: np.ndarray,
                   V: np.ndarray,
                   c: np.ndarray) -> np.ndarray:
-
     '''
     Compute solution of the system of rate equations solved by solve_model
     Note: eigval, V, c should be obtained from solve_model
@@ -131,7 +131,6 @@ def compute_signal_gau(t: np.ndarray,
                        eigval: np.ndarray,
                        V: np.ndarray,
                        c: np.ndarray) -> np.ndarray:
-
     '''
     Compute solution of the system of rate equations solved by solve_model
     convolved with normalized gaussian distribution
@@ -161,7 +160,6 @@ def compute_signal_cauchy(t: np.ndarray,
                           eigval: np.ndarray,
                           V: np.ndarray,
                           c: np.ndarray) -> np.ndarray:
-
     '''
     Compute solution of the system of rate equations solved by solve_model
     convolved with normalized cauchy distribution
@@ -192,7 +190,6 @@ def compute_signal_pvoigt(t: np.ndarray,
                           eigval: np.ndarray,
                           V: np.ndarray,
                           c: np.ndarray) -> np.ndarray:
-
     '''
     Compute solution of the system of rate equations solved by solve_model
     convolved with normalized pseudo voigt profile
@@ -224,51 +221,50 @@ def compute_signal_pvoigt(t: np.ndarray,
     y_signal = (c * V) @ A
     return y_signal
 
-def compute_signal_irf(t: np.ndarray, eigval: np.ndarray, V: np.ndarray, c: np.ndarray, 
+
+def compute_signal_irf(t: np.ndarray, eigval: np.ndarray, V: np.ndarray, c: np.ndarray,
                        fwhm: float, irf: Optional[str] = 'g', eta: Optional[float] = None):
 
-  if irf == 'g':
-    A = make_A_matrix_gau(t, fwhm, -eigval)
+    if irf == 'g':
+        A = make_A_matrix_gau(t, fwhm, -eigval)
 
-  elif irf == 'c':
-    A = make_A_matrix_cauchy(t, fwhm, -eigval)
+    elif irf == 'c':
+        A = make_A_matrix_cauchy(t, fwhm, -eigval)
 
-  elif irf == 'pv':
-    A = make_A_matrix_pvoigt(t, fwhm, eta, -eigval)
+    elif irf == 'pv':
+        A = make_A_matrix_pvoigt(t, fwhm, eta, -eigval)
 
-  return (c * V) @ A
-
-def fact_anal_model(model: np.ndarray, exclude: Optional[str] = None, 
-intensity: Optional[np.ndarray] = None, eps: Optional[np.ndarray] = None):
-
-  abs = np.zeros(model.shape[0])
-
-  if eps is None:
-    eps = np.ones_like(intensity)
-  
-  y = intensity/eps
-
-  if exclude == 'first':
-    B = np.einsum('j,ij->ij', 1/eps, model[1:, :])
-  elif exclude == 'last':
-    B = np.einsum('j,ij->ij', 1/eps, model[:-1,:])
-  elif exclude == 'first_and_last':
-    B = np.einsum('j,ij->ij', 1/eps, model[1:-1,:])
-  else:
-    B = np.einsum('j,ij->ij', 1/eps, model)
-  
-  coeff, _, _, _  = LA.lstsq(B.T, y, cond=1e-2)
-
-  if exclude == 'first':
-    abs[1:] = coeff
-  elif exclude == 'last':
-    abs[:-1] = coeff
-  elif exclude == 'first_and_last':
-    abs[1:-1] = coeff
-  else:
-    abs = coeff
-
-  return abs
+    return (c * V) @ A
 
 
+def fact_anal_model(model: np.ndarray, exclude: Optional[str] = None,
+                    intensity: Optional[np.ndarray] = None, eps: Optional[np.ndarray] = None):
 
+    abs = np.zeros(model.shape[0])
+
+    if eps is None:
+        eps = np.ones_like(intensity)
+
+    y = intensity/eps
+
+    if exclude == 'first':
+        B = np.einsum('j,ij->ij', 1/eps, model[1:, :])
+    elif exclude == 'last':
+        B = np.einsum('j,ij->ij', 1/eps, model[:-1, :])
+    elif exclude == 'first_and_last':
+        B = np.einsum('j,ij->ij', 1/eps, model[1:-1, :])
+    else:
+        B = np.einsum('j,ij->ij', 1/eps, model)
+
+    coeff, _, _, _ = LA.lstsq(B.T, y, cond=1e-2)
+
+    if exclude == 'first':
+        abs[1:] = coeff
+    elif exclude == 'last':
+        abs[:-1] = coeff
+    elif exclude == 'first_and_last':
+        abs[1:-1] = coeff
+    else:
+        abs = coeff
+
+    return abs
