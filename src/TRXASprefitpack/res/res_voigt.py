@@ -63,7 +63,7 @@ def residual_voigt(x0: np.ndarray, num_voigt: int, edge: Optional[str] = None,
     if edge is not None:
         tot_comp = tot_comp+num_edge
     if base_order is not None:
-        tot_comp = tot_comp+num_edge+base_order+1
+        tot_comp = tot_comp+base_order+1
     
     A = np.empty((tot_comp, e.size))
 
@@ -147,7 +147,7 @@ def res_grad_voigt(x0: np.ndarray, num_voigt: int, edge: Optional[str] = None,
     if edge is not None:
         tot_comp = tot_comp+num_edge
     if base_order is not None:
-        tot_comp = tot_comp+base_order+num_edge+1
+        tot_comp = tot_comp+base_order+1
     
     A = np.empty((tot_comp, e.size))
 

@@ -3,7 +3,6 @@ import sys
 import unittest
 import numpy as np
 from scipy.optimize import approx_fprime
-import matplotlib.pyplot as plt
 
 path = os.path.dirname(os.path.realpath(__file__))
 sys.path.append(path+"/../src/")
@@ -46,7 +45,7 @@ class TestGradResTransient(unittest.TestCase):
         abs_3 = [-0.5, 0.7, 0.9, 0]
         abs_4 = [0.6, 0.3, -1, 0]
         
-        t0 = np.random.normal(0, fwhm, 4) # perturb time zero of each scan
+        t0 = np.random.uniform(-0.2, 0.2, 4) # perturb time zero of each scan
         
         # generate measured data
         y_obs_1 = rate_eq_conv(t_seq-t0[0], fwhm, abs_1, eigval_seq, V_seq, c_seq, irf='g')
@@ -114,7 +113,7 @@ class TestGradResTransient(unittest.TestCase):
         abs_3 = [-0.5, 0.7, 0.9, 0]
         abs_4 = [0.6, 0.3, -1, 0]
         
-        t0 = np.random.normal(0, fwhm, 4) # perturb time zero of each scan
+        t0 = np.random.uniform(-0.2, 0.2, 4) # perturb time zero of each scan
         
         # generate measured data
         y_obs_1 = rate_eq_conv(t_seq-t0[0], fwhm, abs_1, eigval_seq, V_seq, c_seq, irf='c')
@@ -182,7 +181,7 @@ class TestGradResTransient(unittest.TestCase):
         abs_3 = [-0.5, 0.7, 0.9, 0]
         abs_4 = [0.6, 0.3, -1, 0]
         
-        t0 = np.random.normal(0, fwhm, 4) # perturb time zero of each scan
+        t0 = np.random.uniform(-0.2, 0.2, 4) # perturb time zero of each scan
         
         # generate measured data
         y_obs_1 = rate_eq_conv(t_seq-t0[0], fwhm, abs_1, eigval_seq, V_seq, c_seq, 
@@ -253,7 +252,7 @@ class TestGradResTransient(unittest.TestCase):
         abs_3 = np.array([-0.5, 0.7, 0.9])
         abs_4 = np.array([0.6, 0.3, -1])
         
-        t0 = np.random.normal(0, fwhm, 4) # perturb time zero of each scan
+        t0 = np.random.uniform(-0.2, 0.2, 4) # perturb time zero of each scan
         
         # generate measured data
         y_obs_1 = dmp_osc_conv(t_seq-t0[0], fwhm, tau, period, phase, abs_1, irf='g')
@@ -320,7 +319,7 @@ class TestGradResTransient(unittest.TestCase):
         abs_3 = np.array([-0.5, 0.7, 0.9])
         abs_4 = np.array([0.6, 0.3, -1])
         
-        t0 = np.random.normal(0, fwhm, 4) # perturb time zero of each scan
+        t0 = np.random.uniform(-0.2, 0.2, 4) # perturb time zero of each scan
         
         # generate measured data
         y_obs_1 = dmp_osc_conv(t_seq-t0[0], fwhm, tau, period, phase, abs_1, irf='c')
@@ -387,7 +386,7 @@ class TestGradResTransient(unittest.TestCase):
         abs_3 = np.array([-0.5, 0.7, 0.9])
         abs_4 = np.array([0.6, 0.3, -1])
         
-        t0 = np.random.normal(0, fwhm, 4) # perturb time zero of each scan
+        t0 = np.random.uniform(-0.2, 0.2, 4) # perturb time zero of each scan
         
         # generate measured data
         y_obs_1 = dmp_osc_conv(t_seq-t0[0], fwhm, tau, period, phase, abs_1, 
@@ -463,7 +462,7 @@ class TestGradResTransient(unittest.TestCase):
         abs_3 = [-0.5, 0.7, 0.9, 0]; abs_3_osc = -0.2*np.array([0.16, 0.28, 0.339])
         abs_4 = [0.6, 0.3, -1, 0]; abs_4_osc = 0.18*np.array([1, 3, -2])
         
-        t0 = np.random.normal(0, fwhm, 4) # perturb time zero of each scan
+        t0 = np.random.uniform(-0.2, 0.2, 4) # perturb time zero of each scan
         
         # generate measured data
         y_obs_1 = rate_eq_conv(t_seq-t0[0], fwhm, abs_1, eigval_seq, V_seq, c_seq, irf='g')+\
@@ -538,7 +537,7 @@ class TestGradResTransient(unittest.TestCase):
         abs_3 = [-0.5, 0.7, 0.9, 0]; abs_3_osc = -0.2*np.array([0.16, 0.28, 0.339])
         abs_4 = [0.6, 0.3, -1, 0]; abs_4_osc = 0.18*np.array([1, 3, -2])
         
-        t0 = np.random.normal(0, fwhm, 4) # perturb time zero of each scan
+        t0 = np.random.uniform(-0.2, 0.2, 4) # perturb time zero of each scan
         
         # generate measured data
         y_obs_1 = rate_eq_conv(t_seq-t0[0], fwhm, abs_1, eigval_seq, V_seq, c_seq, irf='c')+\
@@ -613,7 +612,7 @@ class TestGradResTransient(unittest.TestCase):
         abs_3 = [-0.5, 0.7, 0.9, 0]; abs_3_osc = -0.2*np.array([0.16, 0.28, 0.339])
         abs_4 = [0.6, 0.3, -1, 0]; abs_4_osc = 0.18*np.array([1, 3, -2])
         
-        t0 = np.random.normal(0, fwhm, 4) # perturb time zero of each scan
+        t0 = np.random.uniform(-0.2, 0.2, 4) # perturb time zero of each scan
         
         # generate measured data
         y_obs_1 = rate_eq_conv(t_seq-t0[0], fwhm, abs_1, eigval_seq, V_seq, c_seq, 
