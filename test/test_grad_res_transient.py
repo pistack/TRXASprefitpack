@@ -3,6 +3,7 @@ import sys
 import unittest
 import numpy as np
 from scipy.optimize import approx_fprime
+import matplotlib.pyplot as plt
 
 path = os.path.dirname(os.path.realpath(__file__))
 sys.path.append(path+"/../src/")
@@ -10,8 +11,10 @@ sys.path.append(path+"/../src/")
 from TRXASprefitpack import residual_decay, residual_dmp_osc, residual_both
 from TRXASprefitpack import res_grad_decay, res_grad_dmp_osc, res_grad_both
 from TRXASprefitpack import solve_seq_model, rate_eq_conv
-from TRXASprefitpack import dmp_osc_conv_gau, dmp_osc_conv_cauchy, dmp_osc_conv_pvoigt 
 from TRXASprefitpack import dmp_osc_conv
+
+rel = 1e-4
+epsilon = 1e-7
 
 class TestGradResTransient(unittest.TestCase):
 
@@ -72,14 +75,14 @@ class TestGradResTransient(unittest.TestCase):
         t=t, intensity=intensity, eps=eps)**2)
         grad_ref = approx_fprime(x0, lambda x0: \
             1/2*np.sum(residual_decay(x0, False, 'g', 
-            t=t, intensity=intensity, eps=eps)**2), 1e-6)
+            t=t, intensity=intensity, eps=eps)**2), epsilon)
 
         res_tst, grad_tst = res_grad_decay(x0, 3, False, 'g', 
         np.zeros_like(x0, dtype=bool), t, intensity, eps)
 
         check_res = np.allclose(res_ref, res_tst)
-        check_grad = np.allclose(grad_ref, grad_tst, rtol=1e-3,
-        atol=1e-6) # noise field
+        check_grad = np.allclose(grad_ref, grad_tst, rtol=rel,
+        atol=epsilon) # noise field
 
         self.assertEqual((check_res, check_grad), (True, True))
 
@@ -140,14 +143,14 @@ class TestGradResTransient(unittest.TestCase):
         t=t, intensity=intensity, eps=eps)**2)
         grad_ref = approx_fprime(x0, lambda x0: \
             1/2*np.sum(residual_decay(x0, False, 'c', 
-            t=t, intensity=intensity, eps=eps)**2), 1e-6)
+            t=t, intensity=intensity, eps=eps)**2), epsilon)
 
         res_tst, grad_tst = res_grad_decay(x0, 3, False, 'c', 
         np.zeros_like(x0, dtype=bool), t, intensity, eps)
 
         check_res = np.allclose(res_ref, res_tst)
-        check_grad = np.allclose(grad_ref, grad_tst, rtol=1e-3,
-        atol=1e-6) # noise field
+        check_grad = np.allclose(grad_ref, grad_tst, rtol=rel,
+        atol=epsilon) # noise field
 
         self.assertEqual((check_res, check_grad), (True, True))
 
@@ -212,14 +215,14 @@ class TestGradResTransient(unittest.TestCase):
         t=t, intensity=intensity, eps=eps)**2)
         grad_ref = approx_fprime(x0, lambda x0: \
             1/2*np.sum(residual_decay(x0, True, 'pv', 
-            t=t, intensity=intensity, eps=eps)**2), 1e-6)
+            t=t, intensity=intensity, eps=eps)**2), epsilon)
 
         res_tst, grad_tst = res_grad_decay(x0, 3, True, 'pv', 
         np.zeros_like(x0, dtype=bool), t, intensity, eps)
 
         check_res = np.allclose(res_ref, res_tst)
-        check_grad = np.allclose(grad_ref, grad_tst, rtol=1e-3,
-        atol=1e-6) # noise field
+        check_grad = np.allclose(grad_ref, grad_tst, rtol=rel,
+        atol=epsilon) # noise field
 
         self.assertEqual((check_res, check_grad), (True, True))
     
@@ -279,14 +282,14 @@ class TestGradResTransient(unittest.TestCase):
         t=t, intensity=intensity, eps=eps)**2)
         grad_ref = approx_fprime(x0, lambda x0: \
             1/2*np.sum(residual_dmp_osc(x0, 3, 'g', 
-            t=t, intensity=intensity, eps=eps)**2), 1e-6)
+            t=t, intensity=intensity, eps=eps)**2), epsilon)
 
         res_tst, grad_tst = res_grad_dmp_osc(x0, 3, 'g', 
         np.zeros_like(x0, dtype=bool), t, intensity, eps)
 
         check_res = np.allclose(res_ref, res_tst)
-        check_grad = np.allclose(grad_ref, grad_tst, rtol=1e-3,
-        atol=1e-6) # noise field
+        check_grad = np.allclose(grad_ref, grad_tst, rtol=rel,
+        atol=epsilon) # noise field
 
         self.assertEqual((check_res, check_grad), (True, True))
 
@@ -346,14 +349,14 @@ class TestGradResTransient(unittest.TestCase):
         t=t, intensity=intensity, eps=eps)**2)
         grad_ref = approx_fprime(x0, lambda x0: \
             1/2*np.sum(residual_dmp_osc(x0, 3, 'c', 
-            t=t, intensity=intensity, eps=eps)**2), 1e-6)
+            t=t, intensity=intensity, eps=eps)**2), epsilon)
 
         res_tst, grad_tst = res_grad_dmp_osc(x0, 3, 'c', 
         np.zeros_like(x0, dtype=bool), t, intensity, eps)
 
         check_res = np.allclose(res_ref, res_tst)
-        check_grad = np.allclose(grad_ref, grad_tst, rtol=1e-3,
-        atol=1e-6) # noise field
+        check_grad = np.allclose(grad_ref, grad_tst, rtol=rel,
+        atol=epsilon) # noise field
 
         self.assertEqual((check_res, check_grad), (True, True))
 
@@ -361,9 +364,9 @@ class TestGradResTransient(unittest.TestCase):
         '''
         Pseudo Voigt IRF
         '''
-        fwhm = 0.100; eta = 0.6
+        fwhm = 0.100; eta = 0.7
         tau = np.array([0.5, 10, 1000])
-        period = np.array([0.2, 2, 300])
+        period = np.array([0.2, 3, 200])
         phase = np.array([np.pi/17, -np.pi/6, np.pi/2])
         
         # set time range (mixed step)
@@ -411,23 +414,20 @@ class TestGradResTransient(unittest.TestCase):
         intensity = [np.vstack((i_obs_1, i_obs_2, i_obs_3, i_obs_4)).T]
         eps = [np.vstack((eps_obs_1, eps_obs_2, eps_obs_3, eps_obs_4)).T]
 
-        x0 = np.array([0.15, 0.30, 0, 0, 0, 0, 0.4, 5, 800, 0.3, 1, 200])
+        x0 = np.array([0.15, 0.23, 0, 0, 0, 0, 0.4, 9, 990,  0.3, 5, 250])
 
         res_ref = 1/2*np.sum(residual_dmp_osc(x0, 3, 'pv', 
         t=t, intensity=intensity, eps=eps)**2)
         grad_ref = approx_fprime(x0, lambda x0: \
             1/2*np.sum(residual_dmp_osc(x0, 3, 'pv', 
-            t=t, intensity=intensity, eps=eps)**2), 1e-6)
+            t=t, intensity=intensity, eps=eps)**2), epsilon)
 
         res_tst, grad_tst = res_grad_dmp_osc(x0, 3, 'pv', 
         np.zeros_like(x0, dtype=bool), t, intensity, eps)
 
         check_res = np.allclose(res_ref, res_tst)
-        check_grad = np.allclose(grad_ref, grad_tst, rtol=1e-3,
-        atol=1e-6) # noise field
-
-        print(grad_ref)
-        print((grad_ref-grad_tst)/grad_ref)
+        check_grad = np.allclose(grad_ref, grad_tst, rtol=rel,
+        atol=epsilon) # noise field
 
         self.assertEqual((check_res, check_grad), (True, True))
 
@@ -438,8 +438,9 @@ class TestGradResTransient(unittest.TestCase):
         '''
         tau_1 = 0.5; tau_2 = 10
         tau_3 = 1000; fwhm = 0.100
-        tau_osc = 1; period_osc = 0.3
-        phase = np.pi/3
+        tau_osc = np.array([0.3, 8, 800])
+        period_osc = np.array([0.2, 2, 300])
+        phase = np.array([np.pi/17, -np.pi/6, np.pi/2])
         # initial condition
         y0 = np.array([1, 0, 0, 0])
         
@@ -457,22 +458,22 @@ class TestGradResTransient(unittest.TestCase):
         
         # Now generates measured transient signal
         # Last element is ground state
-        abs_1 = [1, 1, 1, 0]; abs_1_osc = 0.05
-        abs_2 = [0.5, 0.8, 0.2, 0]; abs_2_osc = 0.001
-        abs_3 = [-0.5, 0.7, 0.9, 0]; abs_3_osc = -0.002
-        abs_4 = [0.6, 0.3, -1, 0]; abs_4_osc = 0.0018
+        abs_1 = [1, 1, 1, 0]; abs_1_osc = 0.5*np.array([0.6, 0.1, 0.3])
+        abs_2 = [0.5, 0.8, 0.2, 0]; abs_2_osc = 0.1*np.array([0.2, 0.17, 1.19])
+        abs_3 = [-0.5, 0.7, 0.9, 0]; abs_3_osc = -0.2*np.array([0.16, 0.28, 0.339])
+        abs_4 = [0.6, 0.3, -1, 0]; abs_4_osc = 0.18*np.array([1, 3, -2])
         
         t0 = np.random.normal(0, fwhm, 4) # perturb time zero of each scan
         
         # generate measured data
         y_obs_1 = rate_eq_conv(t_seq-t0[0], fwhm, abs_1, eigval_seq, V_seq, c_seq, irf='g')+\
-            abs_1_osc*dmp_osc_conv_gau(t_seq-t0[0], fwhm, 1/tau_osc, period_osc, phase)
+            dmp_osc_conv(t_seq-t0[1], fwhm, tau_osc, period_osc, phase, abs_1_osc, irf='g')
         y_obs_2 = rate_eq_conv(t_seq-t0[1], fwhm, abs_2, eigval_seq, V_seq, c_seq, irf='g')+\
-            abs_2_osc*dmp_osc_conv_gau(t_seq-t0[1], fwhm, 1/tau_osc, period_osc, phase)
+            dmp_osc_conv(t_seq-t0[1], fwhm, tau_osc, period_osc, phase, abs_2_osc, irf='g')
         y_obs_3 = rate_eq_conv(t_seq-t0[2], fwhm, abs_3, eigval_seq, V_seq, c_seq, irf='g')+\
-            abs_3_osc*dmp_osc_conv_gau(t_seq-t0[2], fwhm, 1/tau_osc, period_osc, phase)
+            dmp_osc_conv(t_seq-t0[1], fwhm, tau_osc, period_osc, phase, abs_3_osc, irf='g')
         y_obs_4 = rate_eq_conv(t_seq-t0[3], fwhm, abs_4, eigval_seq, V_seq, c_seq, irf='g')+\
-            abs_4_osc*dmp_osc_conv_gau(t_seq-t0[3], fwhm, 1/tau_osc, period_osc, phase)
+            dmp_osc_conv(t_seq-t0[1], fwhm, tau_osc, period_osc, phase, abs_4_osc, irf='g')
         
         eps_obs_1 = np.ones_like(y_obs_1)
         eps_obs_2 = np.ones_like(y_obs_2)
@@ -489,20 +490,20 @@ class TestGradResTransient(unittest.TestCase):
         intensity = [np.vstack((i_obs_1, i_obs_2, i_obs_3, i_obs_4)).T]
         eps = [np.vstack((eps_obs_1, eps_obs_2, eps_obs_3, eps_obs_4)).T]
 
-        x0 = np.array([0.15, 0, 0, 0, 0, 0.5, 9, 990, 1.5, 0.5])
+        x0 = np.array([0.15, 0, 0, 0, 0, 0.5, 9, 990, 1, 15, 1500, 0.5, 1, 200])
 
-        res_ref = 1/2*np.sum(residual_both(x0, 3, 1, False, 'g', 
+        res_ref = 1/2*np.sum(residual_both(x0, 3, 3, False, 'g', 
         t=t, intensity=intensity, eps=eps)**2)
         grad_ref = approx_fprime(x0, lambda x0: \
-            1/2*np.sum(residual_both(x0, 3, 1, False, 'g', 
-            t=t, intensity=intensity, eps=eps)**2), 1e-6)
+            1/2*np.sum(residual_both(x0, 3, 3, False, 'g', 
+            t=t, intensity=intensity, eps=eps)**2), epsilon)
 
-        res_tst, grad_tst = res_grad_both(x0, 3, 1, False, 'g', 
+        res_tst, grad_tst = res_grad_both(x0, 3, 3, False, 'g', 
         np.zeros_like(x0, dtype=bool), t, intensity, eps)
 
         check_res = np.allclose(res_ref, res_tst)
-        check_grad = np.allclose(grad_ref, grad_tst, rtol=1e-3,
-        atol=1e-6)
+        check_grad = np.allclose(grad_ref, grad_tst, rtol=rel,
+        atol=epsilon)
 
         self.assertEqual((check_res, check_grad), (True, True))
 
@@ -512,8 +513,9 @@ class TestGradResTransient(unittest.TestCase):
         '''
         tau_1 = 0.5; tau_2 = 10
         tau_3 = 1000; fwhm = 0.100
-        tau_osc = 1; period_osc = 0.3
-        phase = np.pi/3
+        tau_osc = np.array([0.3, 8, 800])
+        period_osc = np.array([0.2, 2, 300])
+        phase = np.array([np.pi/17, -np.pi/6, np.pi/2])
         # initial condition
         y0 = np.array([1, 0, 0, 0])
         
@@ -531,22 +533,22 @@ class TestGradResTransient(unittest.TestCase):
         
         # Now generates measured transient signal
         # Last element is ground state
-        abs_1 = [1, 1, 1, 0]; abs_1_osc = 0.05
-        abs_2 = [0.5, 0.8, 0.2, 0]; abs_2_osc = 0.001
-        abs_3 = [-0.5, 0.7, 0.9, 0]; abs_3_osc = -0.002
-        abs_4 = [0.6, 0.3, -1, 0]; abs_4_osc = 0.0018
+        abs_1 = [1, 1, 1, 0]; abs_1_osc = 0.5*np.array([0.6, 0.1, 0.3])
+        abs_2 = [0.5, 0.8, 0.2, 0]; abs_2_osc = 0.1*np.array([0.2, 0.17, 1.19])
+        abs_3 = [-0.5, 0.7, 0.9, 0]; abs_3_osc = -0.2*np.array([0.16, 0.28, 0.339])
+        abs_4 = [0.6, 0.3, -1, 0]; abs_4_osc = 0.18*np.array([1, 3, -2])
         
         t0 = np.random.normal(0, fwhm, 4) # perturb time zero of each scan
         
         # generate measured data
         y_obs_1 = rate_eq_conv(t_seq-t0[0], fwhm, abs_1, eigval_seq, V_seq, c_seq, irf='c')+\
-            abs_1_osc*dmp_osc_conv_cauchy(t_seq-t0[0], fwhm, 1/tau_osc, period_osc, phase)
+            dmp_osc_conv(t_seq-t0[1], fwhm, tau_osc, period_osc, phase, abs_1_osc, irf='c')
         y_obs_2 = rate_eq_conv(t_seq-t0[1], fwhm, abs_2, eigval_seq, V_seq, c_seq, irf='c')+\
-            abs_2_osc*dmp_osc_conv_cauchy(t_seq-t0[1], fwhm, 1/tau_osc, period_osc, phase)
+            dmp_osc_conv(t_seq-t0[1], fwhm, tau_osc, period_osc, phase, abs_2_osc, irf='c')
         y_obs_3 = rate_eq_conv(t_seq-t0[2], fwhm, abs_3, eigval_seq, V_seq, c_seq, irf='c')+\
-            abs_3_osc*dmp_osc_conv_cauchy(t_seq-t0[2], fwhm, 1/tau_osc, period_osc, phase)
+            dmp_osc_conv(t_seq-t0[1], fwhm, tau_osc, period_osc, phase, abs_3_osc, irf='c')
         y_obs_4 = rate_eq_conv(t_seq-t0[3], fwhm, abs_4, eigval_seq, V_seq, c_seq, irf='c')+\
-            abs_4_osc*dmp_osc_conv_cauchy(t_seq-t0[3], fwhm, 1/tau_osc, period_osc, phase)
+            dmp_osc_conv(t_seq-t0[1], fwhm, tau_osc, period_osc, phase, abs_4_osc, irf='c')
         
         eps_obs_1 = np.ones_like(y_obs_1)
         eps_obs_2 = np.ones_like(y_obs_2)
@@ -563,20 +565,20 @@ class TestGradResTransient(unittest.TestCase):
         intensity = [np.vstack((i_obs_1, i_obs_2, i_obs_3, i_obs_4)).T]
         eps = [np.vstack((eps_obs_1, eps_obs_2, eps_obs_3, eps_obs_4)).T]
 
-        x0 = np.array([0.15, 0, 0, 0, 0, 0.5, 9, 990, 1.5, 0.5])
+        x0 = np.array([0.15, 0, 0, 0, 0, 0.5, 9, 990, 1, 15, 1500, 0.5, 1, 200])
 
-        res_ref = 1/2*np.sum(residual_both(x0, 3, 1, False, 'c', 
+        res_ref = 1/2*np.sum(residual_both(x0, 3, 3, False, 'c', 
         t=t, intensity=intensity, eps=eps)**2)
         grad_ref = approx_fprime(x0, lambda x0: \
-            1/2*np.sum(residual_both(x0, 3, 1, False, 'c', 
-            t=t, intensity=intensity, eps=eps)**2), 1e-6)
+            1/2*np.sum(residual_both(x0, 3, 3, False, 'c', 
+            t=t, intensity=intensity, eps=eps)**2), epsilon)
 
-        res_tst, grad_tst = res_grad_both(x0, 3, 1, False, 'c', 
+        res_tst, grad_tst = res_grad_both(x0, 3, 3, False, 'c', 
         np.zeros_like(x0, dtype=bool), t, intensity, eps)
 
         check_res = np.allclose(res_ref, res_tst)
-        check_grad = np.allclose(grad_ref, grad_tst, rtol=1e-3,
-        atol=1e-6) # noise field
+        check_grad = np.allclose(grad_ref, grad_tst, rtol=rel,
+        atol=epsilon)
 
         self.assertEqual((check_res, check_grad), (True, True))
 
@@ -586,8 +588,9 @@ class TestGradResTransient(unittest.TestCase):
         '''
         tau_1 = 0.5; tau_2 = 10
         tau_3 = 1000; fwhm = 0.100; eta = 0.7
-        tau_osc = 1; period_osc = 0.3
-        phase = np.pi/3
+        tau_osc = np.array([0.3, 8, 800])
+        period_osc = np.array([0.2, 2, 300])
+        phase = np.array([np.pi/17, -np.pi/6, np.pi/2])
         # initial condition
         y0 = np.array([1, 0, 0, 0])
         
@@ -605,30 +608,30 @@ class TestGradResTransient(unittest.TestCase):
         
         # Now generates measured transient signal
         # Last element is ground state
-        abs_1 = [1, 1, 1, 0]; abs_1_osc = 0.05
-        abs_2 = [0.5, 0.8, 0.2, 0]; abs_2_osc = 0.001
-        abs_3 = [-0.5, 0.7, 0.9, 0]; abs_3_osc = -0.002
-        abs_4 = [0.6, 0.3, -1, 0]; abs_4_osc = 0.0018
+        abs_1 = [1, 1, 1, 0]; abs_1_osc = 0.5*np.array([0.6, 0.1, 0.3])
+        abs_2 = [0.5, 0.8, 0.2, 0]; abs_2_osc = 0.1*np.array([0.2, 0.17, 1.19])
+        abs_3 = [-0.5, 0.7, 0.9, 0]; abs_3_osc = -0.2*np.array([0.16, 0.28, 0.339])
+        abs_4 = [0.6, 0.3, -1, 0]; abs_4_osc = 0.18*np.array([1, 3, -2])
         
         t0 = np.random.normal(0, fwhm, 4) # perturb time zero of each scan
         
         # generate measured data
         y_obs_1 = rate_eq_conv(t_seq-t0[0], fwhm, abs_1, eigval_seq, V_seq, c_seq, 
         irf='pv', eta=eta)+\
-            abs_1_osc*dmp_osc_conv_pvoigt(t_seq-t0[0], fwhm, eta,
-            1/tau_osc, period_osc, phase)
+            dmp_osc_conv(t_seq-t0[1], fwhm, tau_osc, period_osc, phase, abs_1_osc, 
+            irf='pv', eta=eta)
         y_obs_2 = rate_eq_conv(t_seq-t0[1], fwhm, abs_2, eigval_seq, V_seq, c_seq, 
         irf='pv', eta=eta)+\
-            abs_2_osc*dmp_osc_conv_pvoigt(t_seq-t0[1], fwhm, eta,
-            1/tau_osc, period_osc, phase)
+            dmp_osc_conv(t_seq-t0[1], fwhm, tau_osc, period_osc, phase, abs_2_osc, 
+            irf='pv', eta=eta)
         y_obs_3 = rate_eq_conv(t_seq-t0[2], fwhm, abs_3, eigval_seq, V_seq, c_seq, 
         irf='pv', eta=eta)+\
-            abs_3_osc*dmp_osc_conv_pvoigt(t_seq-t0[2], fwhm, eta,
-            1/tau_osc, period_osc, phase)
+            dmp_osc_conv(t_seq-t0[1], fwhm, tau_osc, period_osc, phase, abs_3_osc, 
+            irf='pv', eta=eta)
         y_obs_4 = rate_eq_conv(t_seq-t0[3], fwhm, abs_4, eigval_seq, V_seq, c_seq, 
         irf='pv', eta=eta)+\
-            abs_4_osc*dmp_osc_conv_pvoigt(t_seq-t0[3], fwhm, eta,
-            1/tau_osc, period_osc, phase)
+            dmp_osc_conv(t_seq-t0[1], fwhm, tau_osc, period_osc, phase, abs_4_osc, 
+            irf='pv', eta=eta)
         
         eps_obs_1 = np.ones_like(y_obs_1)
         eps_obs_2 = np.ones_like(y_obs_2)
@@ -645,20 +648,20 @@ class TestGradResTransient(unittest.TestCase):
         intensity = [np.vstack((i_obs_1, i_obs_2, i_obs_3, i_obs_4)).T]
         eps = [np.vstack((eps_obs_1, eps_obs_2, eps_obs_3, eps_obs_4)).T]
 
-        x0 = np.array([0.15, 0.3, 0, 0, 0, 0, 0.5, 9, 990, 1.5, 0.5])
+        x0 = np.array([0.15, 0.3 , 0, 0, 0, 0, 0.5, 9, 990, 1, 15, 1500, 0.5, 1, 200])
 
-        res_ref = 1/2*np.sum(residual_both(x0, 3, 1, False, 'pv', 
+        res_ref = 1/2*np.sum(residual_both(x0, 3, 3, False, 'pv', 
         t=t, intensity=intensity, eps=eps)**2)
         grad_ref = approx_fprime(x0, lambda x0: \
-            1/2*np.sum(residual_both(x0, 3, 1, False, 'pv', 
-            t=t, intensity=intensity, eps=eps)**2), 1e-6)
+            1/2*np.sum(residual_both(x0, 3, 3, False, 'pv', 
+            t=t, intensity=intensity, eps=eps)**2), epsilon)
 
-        res_tst, grad_tst = res_grad_both(x0, 3, 1, False, 'pv', 
+        res_tst, grad_tst = res_grad_both(x0, 3, 3, False, 'pv', 
         np.zeros_like(x0, dtype=bool), t, intensity, eps)
 
         check_res = np.allclose(res_ref, res_tst)
-        check_grad = np.allclose(grad_ref, grad_tst, rtol=1e-3,
-        atol=1e-6) # noise field
+        check_grad = np.allclose(grad_ref, grad_tst, rtol=rel,
+        atol=epsilon)
 
         self.assertEqual((check_res, check_grad), (True, True))
 

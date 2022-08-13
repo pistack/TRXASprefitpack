@@ -133,6 +133,17 @@ class TestPvoigtIRF(unittest.TestCase):
         test_num_deriv(calc_eta, fwhm_G, fwhm_L))
         self.assertEqual(result, True)
 
+    def test_deriv_eta_6(self):
+        '''
+         Test gradient of mixing parameter eta (fwhm_L = 2 fwhm_G)
+        '''
+        fwhm_G = 0.15; fwhm_L = 0.3
+        d_G, d_L = deriv_eta(fwhm_G, fwhm_L)
+        
+        result = np.allclose(np.array([d_G, d_L]), 
+        test_num_deriv(calc_eta, fwhm_G, fwhm_L))
+        self.assertEqual(result, True)
+
     def test_deriv_fwhm_1(self):
         '''
          Test gradient of unifrom fwhm parameter (fwhm_L = 3 fwhm_G)
@@ -182,6 +193,17 @@ class TestPvoigtIRF(unittest.TestCase):
          Test gradient of unifrom fwhm parameter (fwhm_G = 3 fwhm_L)
         '''
         fwhm_G = 0.3; fwhm_L = 0.1
+        d_G, d_L = deriv_fwhm(fwhm_G, fwhm_L)
+        
+        result = np.allclose(np.array([d_G, d_L]), 
+        test_num_deriv(calc_fwhm, fwhm_G, fwhm_L))
+        self.assertEqual(result, True)
+
+    def test_deriv_fwhm_6(self):
+        '''
+         Test gradient of unifrom fwhm parameter (fwhm_L = 2 fwhm_L)
+        '''
+        fwhm_G = 0.15; fwhm_L = 0.3
         d_G, d_L = deriv_fwhm(fwhm_G, fwhm_L)
         
         result = np.allclose(np.array([d_G, d_L]), 
