@@ -17,9 +17,6 @@ epsilon = 5e-8
 
 
 def test_res_grad_decay_1():
-    '''
-    Test res_grad_decay (irf: g)
-    '''
     tau_1 = 0.5
     tau_2 = 10
     tau_3 = 1000
@@ -87,9 +84,6 @@ def test_res_grad_decay_1():
     assert (check_res, check_grad) == (True, True)
 
 def test_res_grad_decay_2():
-    '''
-    Test res_grad_decay (irf: c)
-    '''
     tau_1 = 0.5
     tau_2 = 10
     tau_3 = 1000
@@ -157,9 +151,6 @@ def test_res_grad_decay_2():
     assert (check_res, check_grad) == (True, True)
 
 def test_res_grad_decay_3():
-    '''
-    Test res_grad_decay (irf: pv)
-    '''
     tau_1 = 0.5
     tau_2 = 10
     tau_3 = 1000
@@ -232,9 +223,6 @@ def test_res_grad_decay_3():
     assert (check_res, check_grad) == (True, True)
 
 def test_res_grad_dmp_osc_1():
-    '''
-    Gaussian IRF
-    '''
     fwhm = 0.100
     tau = np.array([0.5, 10, 1000])
     period = np.array([0.2, 3, 200])
@@ -299,9 +287,6 @@ def test_res_grad_dmp_osc_1():
     assert (check_res, check_grad) == (True, True)
 
 def test_res_grad_dmp_osc_2():
-    '''
-    Cauchy IRF
-    '''
     fwhm = 0.100
     tau = np.array([0.5, 10, 1000])
     period = np.array([0.2, 3, 200])
@@ -366,9 +351,6 @@ def test_res_grad_dmp_osc_2():
     assert (check_res, check_grad) == (True, True)
 
 def test_res_grad_dmp_osc_3():
-    '''
-    Pseudo Voigt IRF
-    '''
     fwhm = 0.100
     eta = 0.7
     tau = np.array([0.5, 10, 1000])
@@ -439,9 +421,6 @@ def test_res_grad_dmp_osc_3():
 
 
 def test_res_grad_both_1():
-    '''
-    Gaussian IRF
-    '''
     tau_1 = 0.5
     tau_2 = 10
     tau_3 = 1000
@@ -520,9 +499,6 @@ def test_res_grad_both_1():
     assert (check_res, check_grad) == (True, True)
 
 def test_res_grad_both_2():
-    '''
-    Cauchy IRF
-    '''
     tau_1 = 0.5
     tau_2 = 10
     tau_3 = 1000
@@ -601,9 +577,6 @@ def test_res_grad_both_2():
     assert (check_res, check_grad) == (True, True)
 
 def test_res_grad_both_3():
-    '''
-    Pseudo Voigt IRF
-    '''
     tau_1 = 0.5
     tau_2 = 10
     tau_3 = 1000

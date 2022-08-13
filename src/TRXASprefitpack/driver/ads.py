@@ -37,7 +37,7 @@ def dads(escan_time: np.ndarray, fwhm: float, tau: np.ndarray, base: Optional[bo
       eps: standard error of dataset
 
     Returns:
-     Tuple of calculated decay associated difference spectrum of each component, estimated error, 
+     Tuple of calculated decay associated difference spectrum of each component, estimated error,
      and retrieved energy scan intensity from dads and decay components
 
     Note:
@@ -90,14 +90,14 @@ def sads(escan_time: np.ndarray, fwhm: float, eigval: np.ndarray, V: np.ndarray,
     Args:
       escan_time: time delay for each energy scan data
       fwhm: full width at half maximum of instrumental response function
-      eigval: eigenvalue of rate equation matrix 
-      V: eigenvector of rate equation matrix 
+      eigval: eigenvalue of rate equation matrix
+      V: eigenvector of rate equation matrix
       c: coefficient to match initial condition of rate equation
       exclude: exclude either 'first' or 'last' element or both 'first' and 'last' element.
 
                * 'first' : exclude first element
                * 'last' : exclude last element
-               * 'first_and_last' : exclude both first and last element  
+               * 'first_and_last' : exclude both first and last element
                * None : Do not exclude any element [default]
 
       irf: shape of instrumental response function [default: g]
@@ -108,7 +108,7 @@ def sads(escan_time: np.ndarray, fwhm: float, eigval: np.ndarray, V: np.ndarray,
 
       eta: mixing parameter for pseudo voigt profile (only needed for pseudo voigt profile)
       intensity: intensity of energy scan dataset
-      eps: standard error of data 
+      eps: standard error of data
 
     Returns:
      Tuple of calculated species associated difference spectrum of each component, estimated error and
@@ -121,19 +121,19 @@ def sads(escan_time: np.ndarray, fwhm: float, eigval: np.ndarray, V: np.ndarray,
     '''
     # initialization
     if exclude is None:
-        abs = np.empty((eigval.size, intensity.shape[0]))
+        diff_abs = np.empty((eigval.size, intensity.shape[0]))
         dof = escan_time.size - eigval.size
     elif exclude in ['first', 'last']:
-        abs = np.empty((eigval.size-1, intensity.shape[0]))
+        diff_abs = np.empty((eigval.size-1, intensity.shape[0]))
         dof = escan_time.size - (eigval.size-1)
     else:
-        abs = np.empty((eigval.size-2, intensity.shape[0]))
+        diff_abs = np.empty((eigval.size-2, intensity.shape[0]))
         dof = escan_time.size - (eigval.size-2)
 
     if eps is None:
         eps = np.ones_like(intensity)
 
-    abs_eps = np.empty_like(abs)
+    diff_abs_eps = np.empty_like(diff_abs)
 
     A = compute_signal_irf(escan_time, eigval, V, c, fwhm, irf, eta)
     if exclude == 'first':
@@ -157,11 +157,11 @@ def sads(escan_time: np.ndarray, fwhm: float, eigval: np.ndarray, V: np.ndarray,
         s_turn = s[mask]
         Vh_turn = Vh[mask, :]
         cov = Vh_turn.T @ np.einsum('i,ij->ij', 1/s_turn**2, Vh_turn)
-        abs[:, i] = np.einsum('j,ij->ij', 1/s_turn,
+        diff_abs[:, i] = np.einsum('j,ij->ij', 1/s_turn,
                               Vh_turn.T) @ (U_turn.T @ data_scaled[i, :])
-        res = data_scaled[i, :] - (abs[:, i] @ A_scaled)
+        res = data_scaled[i, :] - (diff_abs[:, i] @ A_scaled)
         if dof != 0:
             red_chi2 = np.sum(res**2)/dof
-            abs_eps[:, i] = np.sqrt(red_chi2*np.diag(cov))
+            diff_abs_eps[:, i] = np.sqrt(red_chi2*np.diag(cov))
 
-    return abs, abs_eps, abs.T @ B
+    return diff_abs, diff_abs_eps, diff_abs.T @ B

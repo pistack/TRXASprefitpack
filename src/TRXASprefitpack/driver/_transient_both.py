@@ -1,8 +1,8 @@
 '''
 _transient_both:
 submodule for fitting time delay scan with the
-convolution of sum of (exponential decay and damped oscillation) 
-and instrumental response function 
+convolution of sum of (exponential decay and damped oscillation)
+and instrumental response function
 
 :copyright: 2021-2022 by pistack (Junho Lee).
 :license: LGPL3.
@@ -56,7 +56,7 @@ def fit_transient_both(irf: str, fwhm_init: Union[float, np.ndarray],
     Step 2. (method_lsq)
     Use least squares optimization algorithm to refine global minimum of objective function and approximate covariance matrix.
     Because of linear and non-linear seperation scheme, the analytic jacobian for vector residual function is hard to optain.
-    Thus, in this stage, it uses numerical jacobian. 
+    Thus, in this stage, it uses numerical jacobian.
 
     Args:
      irf ({'g', 'c', 'pv'}): shape of instrumental response function
@@ -81,19 +81,19 @@ def fit_transient_both(irf: str, fwhm_init: Union[float, np.ndarray],
                                            minimization (refinement of global optimization solution)
      kwargs_glb: keyward arguments for global optimization solver
      kwargs_lsq: keyward arguments for least square optimization solver
-     bound_fwhm (sequence of tuple): boundary for irf parameter. If upper and lower bound are same, 
-      driver assumes that the parameter is fixed during optimization. If `bound_fwhm` is `None`, 
+     bound_fwhm (sequence of tuple): boundary for irf parameter. If upper and lower bound are same,
+      driver assumes that the parameter is fixed during optimization. If `bound_fwhm` is `None`,
       the upper and lower bound are given as `(fwhm_init/2, 2*fwhm_init)`.
-     bound_t0 (sequence of tuple): boundary for time zero parameter. 
+     bound_t0 (sequence of tuple): boundary for time zero parameter.
       If `bound_t0` is `None`, the upper and lower bound are given as `(t0-2*fwhm_init, t0+2*fwhm_init)`.
-     bound_tau (sequence of tuple): boundary for lifetime constant for decay component, 
+     bound_tau (sequence of tuple): boundary for lifetime constant for decay component,
       if `bound_tau` is `None`, the upper and lower bound are given by ``set_bound_tau``.
-     bound_tau_osc (sequence of tuple): boundary for lifetime constant for damped oscillation component, 
+     bound_tau_osc (sequence of tuple): boundary for lifetime constant for damped oscillation component,
       if `bound_tau_osc` is `None`, the upper and lower bound are given by ``set_bound_tau``.
-     bound_period_osc (sequence of tuple): boundary for period of damped oscillation component, 
+     bound_period_osc (sequence of tuple): boundary for period of damped oscillation component,
       if `bound_period_osc` is `None`, the upper and lower bound are given by ``set_bound_tau``.
      t (sequence of np.narray): time scan range for each datasets
-     intensity (sequence of np.ndarray): sequence of intensity of datasets 
+     intensity (sequence of np.ndarray): sequence of intensity of datasets
       for time delay scan
      eps (sequence of np.ndarray): sequence of estimated errors of each dataset
 

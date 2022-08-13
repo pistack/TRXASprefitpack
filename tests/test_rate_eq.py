@@ -10,9 +10,6 @@ from TRXASprefitpack import solve_seq_model, solve_l_model
 
 
 def test_solve_seq_1():
-    '''
-    Test squential decay solver (A->B->C)
-    '''
     tau1 = 1
     tau2 = 10
     A = np.array([[-1/tau1, 0, 0],
@@ -29,9 +26,6 @@ def test_solve_seq_1():
     assert (tst1, tst2, tst3) == (True, True, True)
 
 def test_solve_seq_2():
-    '''
-    Test squential decay solver (A->B->C->D)
-    '''
     tau1 = 1
     tau2 = 10
     tau3 = 100
@@ -50,9 +44,6 @@ def test_solve_seq_2():
     assert (tst1, tst2, tst3) == (True, True, True)
 
 def test_solve_l_1():
-    '''
-    Test lower triangular rate equation solver (A->B, A->C)
-    '''
     tau1 = 1
     tau2 = 0.5
     A = np.array([[-(1/tau1+1/tau2), 0, 0],
@@ -69,9 +60,6 @@ def test_solve_l_1():
     assert (tst1, tst2, tst3) == (True, True, True)
 
 def test_solve_l_2():
-    '''
-    Test lower triangular rate equation solver (A->B, C->D)
-    '''
     tau1 = 1
     tau2 = 0.5
     A = np.array([[-1/tau1, 0, 0, 0],
@@ -89,9 +77,6 @@ def test_solve_l_2():
     assert (tst1, tst2, tst3) == (True, True, True)
 
 def test_solve_l_3():
-    '''
-    Test lower triangular rate equation solver (A->B, A->C->)
-    '''
     tau1 = 1
     tau2 = 0.5
     tau3 = 250
@@ -109,9 +94,6 @@ def test_solve_l_3():
     assert (tst1, tst2, tst3) == (True, True, True)
 
 def test_solve_l_4():
-    '''
-    Test lower triangular rate equation solver (A->B->, A->C->)
-    '''
     tau1 = 1
     tau2 = 0.5
     tau3 = 250

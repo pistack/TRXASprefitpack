@@ -1,7 +1,7 @@
 '''
 driver:
 subpackage for driver routine of TRXASprefitpack
-convolution of sum of exponential decay and instrumental response function 
+convolution of sum of exponential decay and instrumental response function
 
 :copyright: 2021-2022 by pistack (Junho Lee).
 :license: LGPL3.

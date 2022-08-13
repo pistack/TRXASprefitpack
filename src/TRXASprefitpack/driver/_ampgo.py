@@ -8,7 +8,6 @@ L. Lasdon et al. Computers & Operations Research 37 (2010) 1500–1509
 http://leeds-faculty.colorado.edu/glover/fred%20pubs/416%20-%20AMP%20(TS)%20for%20Constrained%20Global%20Opt%20w%20Lasdon%20et%20al%20.pdf
 
 :copyright: 2021-2022 by pistack (Junho Lee).
-:license: MIT
 '''
 
 from typing import Callable, Optional
@@ -43,7 +42,7 @@ def ampgo(fun: Callable, x0: np.ndarray,
 
         * method (str): The minimization Method (default: `L-BFGS-B`)
         * args (tuple): The extra arguments passed to the objective function (`fun`) and
-         its derivatives (`jac`, `hess`)    
+         its derivatives (`jac`, `hess`)
         * jac: jacobian of objective function (see scipy.optimize.minimize)
         * hess: hessian of objective function (see scipy.optimize.minimize)
         * bounds (Sequence of Tuple): Boundary of variable (see scipy.optimize.minimize)

@@ -50,18 +50,18 @@ class StaticResult(dict):
      c (np.ndarray): best weight of each voigt component and edge of data
      chi2 (float): chi squared value of fitting
      aic (float): Akaike Information Criterion statistic: :math:`N\\log(\\chi^2/N)+2N_{parm}`
-     bic (float): Bayesian Information Criterion statistic: :math:`N\\log(\\chi^2/N)+N_{parm}\log(N)`
+     bic (float): Bayesian Information Criterion statistic: :math:`N\\log(\\chi^2/N)+N_{parm}\\log(N)`
      red_chi2 (float): total reduced chi squared value of fitting
      nfev (int): total number of function evaluation
      n_param (int): total number of effective parameter
-     num_pts (int): total number of data points 
+     num_pts (int): total number of data points
      jac (np.ndarray): jacobian of objective function at optimal point
      cov (np.ndarray): covariance matrix (i.e. inverse of (jac.T @ jac))
      cov_scaled (np.ndarray): scaled covariance matrix (i.e. `red_chi2` * `cov`)
      corr (np.ndarray): parameter correlation matrix
      x_eps (np.ndarray): estimated error of parameter
       (i.e. square root of diagonal element of `conv_scaled`)
-     method_glb ({'basinhopping'}): 
+     method_glb ({'basinhopping'}):
       method of global optimization used in fitting process
      message_glb (str): messages from global optimization process
      method_lsq ({'trf', 'dogbox', 'lm'}): method of local optimization for least_squares
@@ -94,7 +94,7 @@ class StaticResult(dict):
         corr_tol: parameter correlation greather than `corr_tol` would be reported
         '''
         doc_lst = []
-        doc_lst.append("[Model information]")
+        doc_lst.append('[Model information]')
         doc_lst.append(f"    model : {self['model']}")
         if self['model'] == 'thy':
             doc_lst.append(f"    policy: {self['policy']}")
@@ -103,19 +103,19 @@ class StaticResult(dict):
         if self['base_order'] is not None:
             doc_lst.append(f"    base_order: {self['base_order']}")
         doc_lst.append(' ')
-        doc_lst.append("[Optimization Method]")
+        doc_lst.append('[Optimization Method]')
         if self['method_glb'] is not None:
             doc_lst.append(f"    global: {self['method_glb']}")
         doc_lst.append(f"    leastsq: {self['method_lsq']}")
         doc_lst.append(' ')
-        doc_lst.append("[Optimization Status]")
+        doc_lst.append('[Optimization Status]')
         doc_lst.append(f"    nfev: {self['nfev']}")
         doc_lst.append(f"    status: {self['status']}")
         if self['method_glb'] is not None:
             doc_lst.append(f"    global_opt msg: {self['message_glb']}")
         doc_lst.append(f"    leastsq_opt msg: {self['message_lsq']}")
         doc_lst.append(' ')
-        doc_lst.append("[Optimization Results]")
+        doc_lst.append('[Optimization Results]')
         doc_lst.append(f"    Data points: {self['num_pts']}")
         doc_lst.append(
             f"    Number of effective parameters: {self['n_param']}")
@@ -130,19 +130,19 @@ class StaticResult(dict):
         doc_lst.append(
             f"    BIC (Bayesian Information Criterion statistic): {self['bic']: .4f}".rstrip('0').rstrip('.'))
         doc_lst.append(' ')
-        doc_lst.append("[Parameters]")
+        doc_lst.append('[Parameters]')
         for pn, pv, p_err in zip(self['param_name'], self['x'], self['x_eps']):
             doc_lst.append(
-                f"    {pn}: {pv: .8f} +/- {p_err: .8f} ({100*np.abs(p_err/pv): .2f}%)".rstrip('0').rstrip('.'))
+                f'    {pn}: {pv: .8f} +/- {p_err: .8f} ({100*np.abs(p_err/pv): .2f}%)'.rstrip('0').rstrip('.'))
         doc_lst.append(' ')
-        doc_lst.append("[Parameter Bound]")
+        doc_lst.append('[Parameter Bound]')
         for pn, pv, bd in zip(self['param_name'], self['x'], self['bounds']):
-            doc_lst.append(f"    {pn}: {bd[0]: .8f}".rstrip('0').rstrip(
-                '.')+f" <= {pv: .8f} <= {bd[1]: .8f}".rstrip('0').rstrip('.'))
+            doc_lst.append(f'    {pn}: {bd[0]: .8f}'.rstrip('0').rstrip(
+                '.')+f' <= {pv: .8f} <= {bd[1]: .8f}'.rstrip('0').rstrip('.'))
         doc_lst.append(' ')
 
-        doc_lst.append("[Component Contribution]")
-        doc_lst.append(f"    Static spectrum")
+        doc_lst.append('[Component Contribution]')
+        doc_lst.append('    Static spectrum')
         if self['base_order'] is None:
             coeff_abs = np.abs(self['c'])
             coeff_contrib = 100*self['c']
@@ -162,9 +162,9 @@ class StaticResult(dict):
                 doc_lst.append(' '.join(row))
         doc_lst.append(' ')
 
-        doc_lst.append("[Parameter Correlation]")
-        doc_lst.append(f"    Parameter Correlations > {corr_tol: .3f}".rstrip(
-            '0').rstrip('.') + " are reported.")
+        doc_lst.append('[Parameter Correlation]')
+        doc_lst.append(f'    Parameter Correlations > {corr_tol: .3f}'.rstrip(
+            '0').rstrip('.') + ' are reported.')
 
         A = np.empty((len(self['x']), len(self['x'])), dtype=object)
         for i in range(len(self['x'])):
@@ -200,17 +200,17 @@ def save_StaticResult(result: StaticResult, filename: str):
                      'aic', 'bic', 'nfev', 'method_lsq', 'success_lsq', 'message_lsq', 'status']
 
     with h5.File(f'{filename}.h5', 'w') as f:
-        expt = f.create_group("experiment")
-        fit_res = f.create_group("fitting_result")
+        expt = f.create_group('experiment')
+        fit_res = f.create_group('fitting_result')
         if result['model'] == 'thy':
-            thy_stick = f.create_group("theoretical_peaks")
+            thy_stick = f.create_group('theoretical_peaks')
             for i in range(result['n_voigt']):
                 thy_stick.create_dataset(
                     f'species {i+1}', data=result['thy_peak'][i])
             fit_res.attrs['policy'] = result['policy']
-        expt.create_dataset("energy", data=result['e'])
-        expt.create_dataset("intensity", data=result['intensity'])
-        expt.create_dataset("error", data=result['eps'])
+        expt.create_dataset('energy', data=result['e'])
+        expt.create_dataset('intensity', data=result['intensity'])
+        expt.create_dataset('error', data=result['eps'])
         fit_res.attrs['model'] = result['model']
         fit_res.attrs['n_voigt'] = result['n_voigt']
         fit_res.attrs['n_edge'] = result['n_edge']
@@ -229,25 +229,24 @@ def save_StaticResult(result: StaticResult, filename: str):
         for k in model_key_lst:
             fit_res.attrs[k] = result[k]
 
-        fit_res_curve = fit_res.create_group("fit_curve")
-        fit_res_curve.create_dataset("fit", data=result['fit'])
-        fit_res_curve.create_dataset("fit_comp", data=result['fit_comp'])
-        fit_res_curve.create_dataset("weight", data=result['c'])
+        fit_res_curve = fit_res.create_group('fit_curve')
+        fit_res_curve.create_dataset('fit', data=result['fit'])
+        fit_res_curve.create_dataset('fit_comp', data=result['fit_comp'])
+        fit_res_curve.create_dataset('weight', data=result['c'])
         if result['base_order'] is not None:
-            fit_res_curve.create_dataset("base", data=result['base'])
-        fit_res_curve.create_dataset("res", data=result['res'])
-        fit_res_param = fit_res.create_group("parameter")
-        fit_res_param.create_dataset("param_opt", data=result['x'])
-        fit_res_param.create_dataset("param_eps", data=result['x_eps'])
+            fit_res_curve.create_dataset('base', data=result['base'])
+        fit_res_curve.create_dataset('res', data=result['res'])
+        fit_res_param = fit_res.create_group('parameter')
+        fit_res_param.create_dataset('param_opt', data=result['x'])
+        fit_res_param.create_dataset('param_eps', data=result['x_eps'])
         fit_res_param.create_dataset(
-            "param_name", data=result['param_name'].astype("S100"), dtype='S100')
-        fit_res_param.create_dataset("param_bounds", data=result['bounds'])
-        fit_res_param.create_dataset("correlation", data=result['corr'])
-        fit_res_mis = fit_res.create_group("miscellaneous")
-        fit_res_mis.create_dataset("jac", data=result['jac'])
+            'param_name', data=result['param_name'].astype('S100'), dtype='S100')
+        fit_res_param.create_dataset('param_bounds', data=result['bounds'])
+        fit_res_param.create_dataset('correlation', data=result['corr'])
+        fit_res_mis = fit_res.create_group('miscellaneous')
+        fit_res_mis.create_dataset('jac', data=result['jac'])
         fit_res_mis.create_dataset('cov', data=result['cov'])
         fit_res_mis.create_dataset('cov_scaled', data=result['cov_scaled'])
-    return
 
 
 def load_StaticResult(filename: str) -> StaticResult:
@@ -400,7 +399,7 @@ def deriv_voigt_aux(e: np.ndarray, fwhm_G: float, fwhm_L: float) -> np.ndarray:
      fwhm_L: full width at half maximum of lorenzian part :math:(2\\gamma)
 
     Returns:
-     first derivative of voigt profile 
+     first derivative of voigt profile
     '''
     if fwhm_G < 1e-8:
         tmp = fwhm_L/np.pi/(e**2+fwhm_L**2/4)**2
@@ -425,7 +424,7 @@ def dderiv_voigt_aux(e: np.ndarray, fwhm_G: float, fwhm_L: float) -> np.ndarray:
      fwhm_L: full width at half maximum of lorenzian part :math:(2\\gamma)
 
     Returns:
-     second derivative of voigt profile 
+     second derivative of voigt profile
     '''
 
     if fwhm_G < 1e-8:
@@ -447,18 +446,18 @@ def voigt_thy_aux(e: np.ndarray, thy_peak: np.ndarray,
                   fwhm_G: float, fwhm_L: float,
                   deriv_order: int = 0) -> np.ndarray:
     '''
-    Calculates derivative of normalized 
+    Calculates derivative of normalized
     voigt broadened theoretically calculated lineshape spectrum
 
     Args:
-        e: energy 
+        e: energy
         thy_peak: theoretical calculated peak position and intensity
-        fwhm_G: full width at half maximum of gaussian shape 
-        fwhm_L: full width at half maximum of lorenzian shape 
+        fwhm_G: full width at half maximum of gaussian shape
+        fwhm_L: full width at half maximum of lorenzian shape
         deriv_order({0, 1, 2}): order of derivative
 
     Returns:
-      derivative of normalized voigt broadened theoritical lineshape spectrum 
+      derivative of normalized voigt broadened theoritical lineshape spectrum
     '''
 
     v_matrix = np.empty((e.size, thy_peak.shape[0]))

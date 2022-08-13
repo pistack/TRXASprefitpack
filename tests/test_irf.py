@@ -13,9 +13,6 @@ from TRXASprefitpack import pvoigt_irf
 from TRXASprefitpack import voigt
 
 def test_pvoigt_irf_1():
-    '''
-     Test pseudo voigt approximation (fwhm_L = 3 fwhm_G)
-    '''
     t = np.linspace(-1, 1, 201)
     fwhm_G = 0.1
     fwhm_L = 0.3
@@ -27,9 +24,6 @@ def test_pvoigt_irf_1():
     assert max_rel_err < 2e-2
 
 def test_pvoigt_irf_2():
-    '''
-     Test pseudo voigt approximation (fwhm_L = 1.5 fwhm_G)
-    '''
     t = np.linspace(-1, 1, 201)
     fwhm_G = 0.1
     fwhm_L = 0.15
@@ -41,9 +35,6 @@ def test_pvoigt_irf_2():
     assert max_rel_err < 2e-2
 
 def test_pvoigt_irf_3():
-    '''
-     Test pseudo voigt approximation (fwhm_L = 1 fwhm_G)
-    '''
     t = np.linspace(-1, 1, 201)
     fwhm_G = 0.1
     fwhm_L = 0.1
@@ -55,9 +46,6 @@ def test_pvoigt_irf_3():
     assert max_rel_err < 2e-2
 
 def test_pvoigt_irf_4():
-    '''
-     Test pseudo voigt approximation (fwhm_G = 1.5 fwhm_L)
-    '''
     t = np.linspace(-1, 1, 201)
     fwhm_G = 0.15
     fwhm_L = 0.1
@@ -69,9 +57,6 @@ def test_pvoigt_irf_4():
     assert max_rel_err < 2e-2
 
 def test_pvoigt_irf_5():
-    '''
-     Test pseudo voigt approximation (fwhm_G = 3 fwhm_L)
-    '''
     t = np.linspace(-1, 1, 201)
     fwhm_G = 0.3
     fwhm_L = 0.1
@@ -83,9 +68,6 @@ def test_pvoigt_irf_5():
     assert max_rel_err < 2e-2
 
 def test_deriv_eta_1():
-    '''
-     Test gradient of mixing parameter eta (fwhm_L = 3 fwhm_G)
-    '''
     fwhm_G = 0.1
     fwhm_L = 0.3
     d_G, d_L = deriv_eta(fwhm_G, fwhm_L)
@@ -95,9 +77,6 @@ def test_deriv_eta_1():
     assert result is True
 
 def test_deriv_eta_2():
-    '''
-     Test gradient of mixing parameter eta (fwhm_L = 1.5 fwhm_G)
-    '''
     fwhm_G = 0.1
     fwhm_L = 0.15
     d_G, d_L = deriv_eta(fwhm_G, fwhm_L)
@@ -107,9 +86,6 @@ def test_deriv_eta_2():
     assert result is True
 
 def test_deriv_eta_3():
-    '''
-     Test gradient of mixing parameter eta (fwhm_L = fwhm_G)
-    '''
     fwhm_G = 0.1
     fwhm_L = 0.1
     d_G, d_L = deriv_eta(fwhm_G, fwhm_L)
@@ -119,9 +95,6 @@ def test_deriv_eta_3():
     assert result is True
 
 def test_deriv_eta_4():
-    '''
-     Test gradient of mixing parameter eta (fwhm_G = 1.5 fwhm_L)
-    '''
     fwhm_G = 0.15
     fwhm_L = 0.1
     d_G, d_L = deriv_eta(fwhm_G, fwhm_L)
@@ -131,9 +104,6 @@ def test_deriv_eta_4():
     assert result is True
 
 def test_deriv_eta_5():
-    '''
-     Test gradient of mixing parameter eta (fwhm_G = 3 fwhm_L)
-    '''
     fwhm_G = 0.3
     fwhm_L = 0.1
     d_G, d_L = deriv_eta(fwhm_G, fwhm_L)
@@ -143,9 +113,6 @@ def test_deriv_eta_5():
     assert result is True
 
 def test_deriv_eta_6():
-    '''
-     Test gradient of mixing parameter eta (fwhm_L = 2 fwhm_G)
-    '''
     fwhm_G = 0.15
     fwhm_L = 0.3
     d_G, d_L = deriv_eta(fwhm_G, fwhm_L)
@@ -155,9 +122,6 @@ def test_deriv_eta_6():
     assert result is True
 
 def test_deriv_fwhm_1():
-    '''
-     Test gradient of unifrom fwhm parameter (fwhm_L = 3 fwhm_G)
-    '''
     fwhm_G = 0.1
     fwhm_L = 0.3
     d_G, d_L = deriv_fwhm(fwhm_G, fwhm_L)
@@ -167,9 +131,6 @@ def test_deriv_fwhm_1():
     assert result is True
 
 def test_deriv_fwhm_2():
-    '''
-     Test gradient of unifrom fwhm parameter (fwhm_L = 1.5 fwhm_G)
-    '''
     fwhm_G = 0.1
     fwhm_L = 0.15
     d_G, d_L = deriv_fwhm(fwhm_G, fwhm_L)
@@ -179,9 +140,6 @@ def test_deriv_fwhm_2():
     assert result is True
 
 def test_deriv_fwhm_3():
-    '''
-     Test gradient of unifrom fwhm parameter (fwhm_L = fwhm_G)
-    '''
     fwhm_G = 0.1
     fwhm_L = 0.1
     d_G, d_L = deriv_fwhm(fwhm_G, fwhm_L)
@@ -191,9 +149,6 @@ def test_deriv_fwhm_3():
     assert result is True
 
 def test_deriv_fwhm_4():
-    '''
-     Test gradient of uniform fwhm parameter (fwhm_G = 1.5 fwhm_L)
-    '''
     fwhm_G = 0.15
     fwhm_L = 0.1
     d_G, d_L = deriv_fwhm(fwhm_G, fwhm_L)
@@ -203,9 +158,6 @@ def test_deriv_fwhm_4():
     assert result is True
 
 def test_deriv_fwhm_5():
-    '''
-     Test gradient of unifrom fwhm parameter (fwhm_G = 3 fwhm_L)
-    '''
     fwhm_G = 0.3
     fwhm_L = 0.1
     d_G, d_L = deriv_fwhm(fwhm_G, fwhm_L)
@@ -215,9 +167,6 @@ def test_deriv_fwhm_5():
     assert result is True
 
 def test_deriv_fwhm_6():
-    '''
-     Test gradient of unifrom fwhm parameter (fwhm_L = 2 fwhm_L)
-    '''
     fwhm_G = 0.15
     fwhm_L = 0.3
     d_G, d_L = deriv_fwhm(fwhm_G, fwhm_L)

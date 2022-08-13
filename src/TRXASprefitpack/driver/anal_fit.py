@@ -171,7 +171,8 @@ def confidence_interval(result, alpha: float) -> CIResult:
     num_pts = result['num_pts']
 
     chi2_opt = result['chi2']
-    dfn = 1; dfd = num_pts - num_param
+    dfn = 1
+    dfd = num_pts - num_param
     F_alpha = f.ppf(1-alpha, dfn, dfd)
     norm_alpha = np.ceil(norm.ppf(1-alpha/2))
 
@@ -210,7 +211,8 @@ def confidence_interval(result, alpha: float) -> CIResult:
         args[4] = idx
         fargs = tuple(args)
         p_eps = result['x_eps'][idx]
-        p_lb = p0-norm_alpha*p_eps; p_ub = p0+norm_alpha*p_eps
+        p_lb = p0-norm_alpha*p_eps
+        p_ub = p0+norm_alpha*p_eps
 
         while ci_scan_opt_f(p_lb, *fargs) < 0:
             p_lb = p_lb - p_eps

@@ -48,7 +48,7 @@ def fit_static_thy(thy_peak: Sequence[np.ndarray],
     edge and polynomial base line. To solve least square optimization problem efficiently, it implements
     the seperation scheme.
     Moreover this driver uses two step algorithm to search best parameter, its covariance and
-    estimated parameter error.             
+    estimated parameter error.
 
     Step 1. (method_glb)
     Use global optimization to find rough global minimum of our objective function.
@@ -63,7 +63,7 @@ def fit_static_thy(thy_peak: Sequence[np.ndarray],
      thy_peak (sequence of np.ndarray): peak position and intensity for theoretically calculated spectrum
      fwhm_G_init (float): initial gaussian part of fwhm parameter
      fwhm_L_init (float): initial lorenzian part of fwhm parameter
-     policy ({'shift', 'scale', 'both'}): policy to match discrepancy between thoretical spectrum and experimental one 
+     policy ({'shift', 'scale', 'both'}): policy to match discrepancy between thoretical spectrum and experimental one
      peak_shift (np.ndarray): peak shift parameter for each species
      peak_scale (np.ndarray): peak scale parameter for each species
      edge ({'g', 'l'}): type of edge function. If edge is not set, edge feature is not included.

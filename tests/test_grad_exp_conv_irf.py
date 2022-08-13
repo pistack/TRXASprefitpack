@@ -20,9 +20,6 @@ def tmp_fun(t, fwhm_G, fwhm_L, k):
     return gau + eta*(cauchy-gau)
 
 def test_deriv_exp_conv_gau_1():
-    '''
-    Test gradient of convolution of exponenetial decay and gaussian irf (tau: 1, fwhm: 0.15)
-    '''
     tau = 1
     fwhm = 0.15
     t = np.linspace(-1, 100, 2001)
@@ -32,9 +29,6 @@ def test_deriv_exp_conv_gau_1():
     assert result is True
 
 def test_deriv_exp_sum_conv_gau_1():
-    '''
-    Test gradient of convolution of sum of exponenetial decay and gaussian irf (tau1: 1, tau2: 100, fwhm: 0.15, base: True)
-    '''
     tau_1 = 1
     tau_2 = 100
     k = np.array([1/tau_1, 1/tau_2])
@@ -49,9 +43,6 @@ def test_deriv_exp_sum_conv_gau_1():
     assert result is True
 
 def test_deriv_exp_sum_conv_gau_2():
-    '''
-    Test gradient of convolution of sum of exponenetial decay and gaussian irf (tau1: 1, tau2: 100, fwhm: 0.15, base: False)
-    '''
     tau_1 = 1
     tau_2 = 100
     k = np.array([1/tau_1, 1/tau_2])
@@ -66,9 +57,6 @@ def test_deriv_exp_sum_conv_gau_2():
     assert result is True
 
 def test_deriv_exp_conv_cauchy():
-    '''
-    Test gradient of convolution of exponenetial decay and cauchy irf (tau: 1, fwhm: 0.15)
-    '''
     tau = 1
     fwhm = 0.15
     t = np.linspace(-1, 100, 2001)
@@ -78,9 +66,6 @@ def test_deriv_exp_conv_cauchy():
     assert result is True
 
 def test_deriv_exp_sum_conv_cauchy_1():
-    '''
-    Test gradient of convolution of sum of exponenetial decay and cauchy irf (tau1: 1, tau2: 100, fwhm: 0.15, base: True)
-    '''
     tau_1 = 1
     tau_2 = 100
     k = np.array([1/tau_1, 1/tau_2])
@@ -96,9 +81,6 @@ def test_deriv_exp_sum_conv_cauchy_1():
     assert result is True
 
 def test_deriv_exp_sum_conv_cauchy_2():
-    '''
-    Test gradient of convolution of sum of exponenetial decay and gaussian irf (tau1: 1, tau2: 100, fwhm: 0.15, base: False)
-    '''
     tau_1 = 1
     tau_2 = 100
     k = np.array([1/tau_1, 1/tau_2])
@@ -114,12 +96,6 @@ def test_deriv_exp_sum_conv_cauchy_2():
     assert result is True
 
 def test_deriv_exp_conv_pvoigt():
-    '''
-    Test gradient of convolution of exponenetial decay and pseudo voigt irf (tau: 1, fwhm_G: 0.1, fwhm_L: 0.15)
-    Note.
-     Not implemented in mathfun module, check implemenetation in res_grad_decay function
-    '''
-
     tau_1 = 1
     fwhm_G = 0.1
     fwhm_L = 0.15

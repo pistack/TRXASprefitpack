@@ -55,9 +55,6 @@ def test_dmp_osc_conv_cauchy():
 
 
 def test_dmp_osc_conv_pvoigt():
-    '''
-    Test pseudo voigt approximation.
-    '''
     fwhm_L = 0.05
     fwhm_G = 0.15
     tau = 0.5

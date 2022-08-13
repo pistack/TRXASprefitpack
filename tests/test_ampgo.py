@@ -51,9 +51,6 @@ def test_grad_six_hump_camelback():
 
 
 def test_ampgo_1():
-    '''
-    numerical gradient
-    '''
     cond_f = True
     cond_x = True
     x0 = np.random.uniform(-5, 5, 2)
@@ -67,9 +64,6 @@ def test_ampgo_1():
 
 
 def test_ampgo_2():
-    '''
-    analytical gradient
-    '''
     cond_f = True
     cond_x = True
     for _ in range(n_try):
@@ -86,9 +80,6 @@ def test_ampgo_2():
 
 
 def test_ampgo_3():
-    '''
-    jac == True
-    '''
     cond_f = True
     cond_x = True
     for _ in range(n_try):

@@ -17,9 +17,6 @@ epsilon = 5e-8
 
 
 def test_res_grad_voigt_1():
-    '''
-    Gaussian Edge
-    '''
     e0_1 = 8987
     e0_2 = 9000
     e0_edge = 8992
@@ -57,9 +54,6 @@ def test_res_grad_voigt_1():
     assert (cond_res, cond_grad) == (True, True)
 
 def test_res_grad_voigt_2():
-    '''
-    Lorenzian Edge
-    '''
     e0_1 = 8987
     e0_2 = 9000
     e0_edge = 8992
@@ -97,9 +91,6 @@ def test_res_grad_voigt_2():
     assert (cond_res, cond_grad) == (True, True)
 
 def test_res_grad_voigt_3():
-    '''
-    Gaussian Edge + 2nd order polynomial baseline
-    '''
     e0_1 = 8987
     e0_2 = 9000
     e0_edge = 8992
@@ -138,9 +129,6 @@ def test_res_grad_voigt_3():
     assert (cond_res, cond_grad) == (True, True)
 
 def test_res_grad_voigt_4():
-    '''
-    Lorenzian Edge + 2nd order polynomial baseline
-    '''
     e0_1 = 8987
     e0_2 = 9000
     e0_edge = 8992
@@ -179,10 +167,6 @@ def test_res_grad_voigt_4():
     assert (cond_res, cond_grad) == (True, True)
 
 def test_res_grad_thy_1():
-    '''
-    two thy component and two gaussian edge and 2nd order polynomial baseline (policy shift)
-    '''
-
     e0_edge = np.array([860.5, 862])
     fwhm_edge = np.array([1, 1.5])
     peak_shift = np.array([862.5, 863])
@@ -225,10 +209,6 @@ def test_res_grad_thy_1():
     assert (cond_res, cond_grad) == (True, True)
 
 def test_res_grad_thy_2():
-    '''
-    two thy component and two gaussian edge and 2nd order polynomial baseline (policy scale)
-    '''
-
     e0_edge = np.array([860.5, 862])
     fwhm_edge = np.array([1, 1.5])
     peak_shift = np.array([862.5, 863])
@@ -271,10 +251,6 @@ def test_res_grad_thy_2():
     assert (cond_res, cond_grad) == (True, True)
 
 def test_res_grad_thy_3():
-    '''
-    two thy component and two gaussian edge and 2nd order polynomial baseline (policy both)
-    '''
-
     e0_edge = np.array([860.5, 862])
     fwhm_edge = np.array([1, 1.5])
     peak_shift = np.array([862.5, 863])
@@ -317,10 +293,6 @@ def test_res_grad_thy_3():
     assert (cond_res, cond_grad) == (True, True)
 
 def test_res_grad_thy_4():
-    '''
-    two thy component and two lorenzian edge and 2nd order polynomial baseline (policy both)
-    '''
-
     e0_edge = np.array([860.5, 862])
     fwhm_edge = np.array([1, 1.5])
     peak_shift = np.array([862.5, 863])

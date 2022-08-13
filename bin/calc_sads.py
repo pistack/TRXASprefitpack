@@ -1,3 +1,4 @@
+# pylint: disable = missing-module-docstring, wrong-import-position
 # calc_sads.py
 # Wrapper script for calc_sads()
 # Date: 2022. 7. 25.

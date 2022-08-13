@@ -29,9 +29,6 @@ def tmp_fun_2(t, fwhm_G, fwhm_L, k, period, c_pair):
 
 
 def test_deriv_dmp_osc_conv_gau_1():
-    '''
-    Test gradient of convolution of damped oscillation and gaussian irf (tau: 1, fwhm: 0.15, period: 0.5, phase: pi/3)
-    '''
     tau = 1
     fwhm = 0.15
     period = 0.5
@@ -44,9 +41,6 @@ def test_deriv_dmp_osc_conv_gau_1():
     assert result is True
 
 def test_deriv_dmp_osc_conv_gau_2():
-    '''
-    Test gradient of convolution of damped oscillation and gaussian irf (tau: 1, fwhm: 0.15, period: 0.5)
-    '''
     tau=1
     fwhm=0.15
     period=0.5
@@ -60,9 +54,6 @@ def test_deriv_dmp_osc_conv_gau_2():
     assert result is True
 
 def test_deriv_dmp_osc_conv_cauchy_1():
-    '''
-    Test gradient of convolution of damped oscillation and cauchy irf (tau: 1, fwhm: 0.15, period: 0.5, phase: pi/3)
-    '''
     tau=1
     fwhm=0.15
     period=0.5
@@ -74,9 +65,6 @@ def test_deriv_dmp_osc_conv_cauchy_1():
     assert result is True
 
 def test_deriv_dmp_osc_conv_cauchy_2():
-    '''
-    Test gradient of convolution of damped oscillation and cauchy irf (tau: 1, fwhm: 0.15, period: 0.5)
-    '''
     tau=1
     fwhm=0.15
     period=0.5
@@ -90,11 +78,6 @@ def test_deriv_dmp_osc_conv_cauchy_2():
     assert result is True
 
 def test_deriv_exp_conv_pvoigt():
-    '''
-    Test gradient of convolution of damped oscillation and pseudo voigt irf (tau: 1, fwhm_G: 0.1, fwhm_L: 0.15, period: 0.5, phase: pi/3)
-     Note. not implemented in mathfun module, check implementation in res_grad_osc function
-    '''
-
     tau_1=1
     fwhm_G=0.1
     fwhm_L=0.15
@@ -125,10 +108,6 @@ def test_deriv_exp_conv_pvoigt():
     assert result is True
 
 def test_deriv_exp_conv_pvoigt_2():
-    '''
-    Test gradient of convolution of damped oscillation and pseudo voigt irf (tau: 1, fwhm_G: 0.1, fwhm_L: 0.15, period: 0.5)
-    Note. not implemented in mathfun module, check implementation in res_grad_osc function
-    '''
     c_pair=(0.3, 0.7)
 
     tau_1=1

@@ -40,7 +40,7 @@ def fit_static_voigt(e0_init: np.ndarray, fwhm_G_init: np.ndarray, fwhm_L_init: 
                      intensity: Optional[np.ndarray] = None,
                      eps: Optional[np.ndarray] = None) -> StaticResult:
     '''
-    driver routine for fitting static spectrum with sum of voigt component, edge and 
+    driver routine for fitting static spectrum with sum of voigt component, edge and
     polynomial baseline.
 
     It separates linear and non-linear part of the optimization problem to solve non linear least sequare
@@ -56,7 +56,7 @@ def fit_static_voigt(e0_init: np.ndarray, fwhm_G_init: np.ndarray, fwhm_L_init: 
     Step 2. (method_lsq)
     Use least squares optimization algorithm to refine global minimum of objective function and approximate covariance matrix.
     Because of linear and non-linear seperation scheme, the analytic jacobian for vector residual function is hard to optain.
-    Thus, in this stage, it uses numerical jacobian. 
+    Thus, in this stage, it uses numerical jacobian.
 
     Args:
      e0_init (np.ndarray): initial peak position of each voigt component
@@ -70,16 +70,16 @@ def fit_static_voigt(e0_init: np.ndarray, fwhm_G_init: np.ndarray, fwhm_L_init: 
                                            minimization (refinement of global optimization solution)
      kwargs_glb: keyward arguments for global optimization solver
      kwargs_lsq: keyward arguments for least square optimization solver
-     bound_e0 (sequence of tuple): boundary for each voigt componet. If upper and lower bound are same, 
-      driver assumes that the parameter is fixed during optimization. If `bound_e0` is `None`, 
+     bound_e0 (sequence of tuple): boundary for each voigt componet. If upper and lower bound are same,
+      driver assumes that the parameter is fixed during optimization. If `bound_e0` is `None`,
       the upper and lower bound are given by `set_bound_e0`.
-     bound_fwhm_G (sequence of tuple): boundary for fwhm_G parameter. 
+     bound_fwhm_G (sequence of tuple): boundary for fwhm_G parameter.
       If `bound_fwhm_G` is `None`, the upper and lower bound are given as `(fwhm_G/2, 2*fwhm_G)`.
-     bound_fwhm_L (sequence of tuple): boundary for fwhm_L parameter. 
+     bound_fwhm_L (sequence of tuple): boundary for fwhm_L parameter.
       If `bound_fwhm_L` is `None`, the upper and lower bound are given as `(fwhm_L/2, 2*fwhm_L)`.
-     bound_edge_pos (sequence of tuple): boundary for edge position, 
+     bound_edge_pos (sequence of tuple): boundary for edge position,
       if `bound_edge_pos` is `None` and `edge` is set, the upper and lower bound are given by `set_bound_t0`.
-     bound_edge_fwhm (sequence of tuple): boundary for fwhm parameter of edge feature. 
+     bound_edge_fwhm (sequence of tuple): boundary for fwhm parameter of edge feature.
       If `bound_edge_fwhm` is `None`, the upper and lower bound are given as `(edge_fwhm/2, 2*edge_fwhm)`.
      e (np.narray): energy range for data
      intensity (np.ndarray): intensity of static spectrum data
