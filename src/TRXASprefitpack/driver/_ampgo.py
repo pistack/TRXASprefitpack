@@ -85,6 +85,7 @@ def ampgo(fun: Callable, x0: np.ndarray,
     if minimizer_kwargs is None:
         method = 'L-BFGS-B'; args=(); bounds = None
         jac = None; hess = None; hessp = None; tol = 1e-8
+        minimizer_kwargs = {}
     else:
         method = minimizer_kwargs.pop('method', 'L-BFGS-B')
         args = minimizer_kwargs.pop('args', ())
@@ -108,8 +109,8 @@ def ampgo(fun: Callable, x0: np.ndarray,
         fargs[3:] = args
         ttf = fun_grad_tunnel; jac_ttf = True
     else:
-        fargs = (len(args)+3)*[None]
-        fargs[0] = fun; fargs[3:] = args
+        fargs = (len(args)+4)*[None]
+        fargs[0] = fun; fargs[4:] = args
         ttf = tunnel; jac_ttf = None
 
     
@@ -169,7 +170,7 @@ def ampgo(fun: Callable, x0: np.ndarray,
             vaild = False
             while not vaild:
                 r = np.random.uniform(-1, 1, n_param)
-                beta = eps2*(1e-8+np.linalg.norm(x0))/np.linalg.norm(r)
+                beta = (eps2*np.linalg.norm(x0)+1e-8)/np.linalg.norm(r)
                 x_try = x0 + beta*r
                 x_try = np.where(x_try < lb, lb, x_try)
                 x_try = np.where(x_try > ub, ub, x_try)
@@ -215,7 +216,7 @@ def ampgo(fun: Callable, x0: np.ndarray,
     result['nfev'] = nfev
     result['success'] = True
     result['message'] = \
-        [f'Requested Number of global iteration is finished with {success_tunnel} number of successful tunneling phase']
+        [f'Requested Number of global iteration is finished.']
 
     return result
 
@@ -227,7 +228,7 @@ def check_vaild(x_try, tabulist):
     '''
     dist = np.sum((tabulist-x_try)**2, axis=1)
     min_dist = np.min(dist)
-    return min_dist > 1e-14
+    return min_dist > 1e-18
     
 
 def delete_element(x_local, tabulist, strategy):
@@ -248,10 +249,10 @@ def tunnel(x0, *args):
     '''
     Tabu Tunneling function (lambda = 2)
     '''
-    fun, aspiration, tabulist = args[:3]
+    fun, aspiration, tabulist, _ = args[:4]
     fun_args = ()
-    if len(args)>3:
-        fun_args = tuple(args[3:])
+    if len(args)>4:
+        fun_args = tuple(args[4:])
     
     numerator = (fun(x0, *fun_args)-aspiration)**2
     denominator = 1

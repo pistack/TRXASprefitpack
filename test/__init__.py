@@ -8,8 +8,9 @@ from .test_grad_res_static import TestGradResStatic
 from .test_grad_peak_shape import TestDerivPeakShape
 from .test_fact_anal import TestFactAnal
 from .test_rate_eq import TestRateEqSolver
+from .test_ampgo import TestAMPGO
 
 __all__ = ['TestPvoigtIRF', 'TestExpConvIRF', 'TestDmpOscConvIRF',
 'TestDerivExpConvIRF', 'TestDerivDmpOscConvIRF', 'TestDerivPeakShape',
 'TestGradResTransient', 'TestGradResStatic',
-'TestFactAnal', 'TestRateEqSolver']
+'TestFactAnal', 'TestRateEqSolver', 'TestAMPGO']
