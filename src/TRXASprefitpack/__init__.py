@@ -11,8 +11,4 @@ from .mathfun import *
 from .driver import *
 from .res import *
 
-<<<<<<< HEAD
-__version__ = '0.7.0.dev'
-=======
 __version__ = '0.6.1.2'
->>>>>>> origin/test_res
