@@ -137,10 +137,11 @@ def ampgo(fun: Callable, x0: np.ndarray,
             print('='*72)
             print(f'local minimum is found in global iteration: {i}')
         if f_opt < f_best:
-            f_best = f_opt; x_best = x0
             if disp:
                 print(f'local minimum improves solution at global iteration: {i}')
-                print(f'Current: {f_opt} | Best: {f_best}')
+                print(f'Current: {f_opt} | previous: {f_best}')
+            f_best = f_opt; x_best = x0
+
         
 
         # If size of tabulist exceeds n_tabu then delete element
@@ -193,10 +194,10 @@ def ampgo(fun: Callable, x0: np.ndarray,
             if disp and success:
                 print('Tunneling phase is successful')
             if f_opt < f_best:
-                f_best = f_opt; x_best = x0
                 if disp:
                     print(f'Tunneling phase {i}-{j+1} improves solution')
-                    print(f'Current: {f_opt} | Best: {f_best}')
+                    print(f'Current: {f_opt} | previous: {f_best}')
+                f_best = f_opt; x_best = x0
             
             # update tabulist
             if tabu_size > n_tabu-1:
