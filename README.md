@@ -12,7 +12,7 @@
 
 stable version:  0.6.1.2
 
-current development version: 0.7.x
+current development version: 0.7.dev
 
 Copyright: (C) 2021-2022  Junho Lee (@pistack) (Email: pistack@yonsei.ac.kr)
 

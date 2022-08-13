@@ -206,9 +206,11 @@ full width at half maximum for cauchy shape
 It would not be used when you did not set irf or use gaussian irf function
 '''
 
-do_glb_help='''
-Whether or not use Global optimization Method.
-When do_glb option is set then `basinhopping` global optimization algorithm will be used.
+method_glb_help='''
+Global optimization Method.
+* 'basinhopping' : basinhopping
+* 'ampgo' : adaptive memory programming for global optimization
+If method_glb is not set, global optimization algorithm is not used.
 '''
 
 
@@ -247,8 +249,8 @@ def fit_tscan():
     help='fix irf parameter (fwhm_G, fwhm_L) during fitting process')
     parser.add_argument('--fix_t0', action='store_true',
     help='fix time zero parameter during fitting process.')
-    parser.add_argument('--do_glb', action='store_true',
-    help=do_glb_help)
+    parser.add_argument('--method_glb', choices=['basinhopping', 'ampgo'],
+    help=method_glb_help)
     parser.add_argument('-o', '--outdir', default='out',
                         help='name of directory to store output files')
     parser.add_argument('--save_fig', action='store_true',
@@ -333,7 +335,7 @@ def fit_tscan():
     if args.mode == 'both':
         dargs.append(base)
 
-    result = FITDRIVER[args.mode](irf, fwhm_init, t0_init, *dargs, do_glb=args.do_glb, 
+    result = FITDRIVER[args.mode](irf, fwhm_init, t0_init, *dargs, method_glb=args.method_glb, 
     bound_fwhm=bound_fwhm, bound_t0=bound_t0, name_of_dset=prefix, t=t, intensity=intensity, eps=eps)
 
     save_TransientResult(result, args.outdir)

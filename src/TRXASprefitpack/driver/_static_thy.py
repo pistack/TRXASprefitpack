@@ -11,12 +11,15 @@ from typing import Optional, Tuple, Sequence
 import numpy as np
 from numpy.polynomial.legendre import legval
 from .static_result import StaticResult
+from ._ampgo import ampgo
 from scipy.optimize import basinhopping
 from scipy.optimize import least_squares
 from ..mathfun.peak_shape import edge_gaussian, edge_lorenzian, voigt_thy
 from ..mathfun.A_matrix import fact_anal_A
 from ..res.parm_bound import set_bound_e0, set_bound_t0
 from ..res.res_thy import residual_thy, res_grad_thy
+
+GLBSOLVER = {'basinhopping' : basinhopping, 'ampgo' : ampgo}
 
 def fit_static_thy(thy_peak: Sequence[np.ndarray], 
                    fwhm_G_init: float, fwhm_L_init: float,
@@ -26,7 +29,7 @@ def fit_static_thy(thy_peak: Sequence[np.ndarray],
                    edge_pos_init: Optional[np.ndarray] = None,
                    edge_fwhm_init: Optional[np.ndarray] = None,
                    base_order: Optional[int] = None,
-                   do_glb: Optional[bool] = False, 
+                   method_glb: Optional[str] = None, 
                    method_lsq: Optional[str] = 'trf',
                    kwargs_glb: Optional[dict] = None, 
                    kwargs_lsq: Optional[dict] = None,
@@ -47,7 +50,7 @@ def fit_static_thy(thy_peak: Sequence[np.ndarray],
       Moreover this driver uses two step algorithm to search best parameter, its covariance and
       estimated parameter error.              
 
-      Step 1. (basinhopping)
+      Step 1. (method_glb)
       Use global optimization to find rough global minimum of our objective function.
       In this stage, it use analytic gradient for scalar residual function.
 
@@ -66,7 +69,7 @@ def fit_static_thy(thy_peak: Sequence[np.ndarray],
        edge ({'g', 'l'}): type of edge function. If edge is not set, edge feature is not included.
        edge_pos_init (np.ndarray): initial edge position
        edge_fwhm_init (np.ndarray): initial fwhm parameter of edge
-       do_glb (bool): Whether or not use global optimization algorithm. If True then basinhopping algorithm is used.
+       method_glb ({None, 'basinhopping', 'ampgo'}): Method for global optimization
        method_lsq ({'trf', 'dogbox', 'lm'}): method of local optimization for least_squares
                                              minimization (refinement of global optimization solution)
        kwargs_glb: keyward arguments for global optimization solver
@@ -176,7 +179,7 @@ def fit_static_thy(thy_peak: Sequence[np.ndarray],
       for i in range(num_param):
             fix_param_idx[i] = (bound[i][0] == bound[i][1])
       
-      if do_glb:
+      if method_glb is not None:
             go_args = (policy, thy_peak, edge, num_edge, base_order, fix_param_idx, 
             e, intensity, eps)
             min_go_kwargs = {'args': go_args, 'jac': True, 'bounds': bound}
@@ -191,7 +194,8 @@ def fit_static_thy(thy_peak: Sequence[np.ndarray],
                         kwargs_glb['minimizer_kwargs'] = minimizer_kwargs
             else:
                   kwargs_glb = {'minimizer_kwargs' : min_go_kwargs}
-                  res_go = basinhopping(res_grad_thy, param, **kwargs_glb)
+                  
+            res_go = GLBSOLVER[method_glb](res_grad_thy, param, **kwargs_glb)
       else:
             res_go = dict()
             res_go['x'] = param
@@ -336,8 +340,8 @@ def fit_static_thy(thy_peak: Sequence[np.ndarray],
       else:
             result['status'] = -1
       
-      if do_glb:
-            result['method_glb'] = 'basinhopping'
+      if method_glb is not None:
+            result['method_glb'] = method_glb
             result['message_glb'] = res_go['message'][0]  
       else:
             result['method_glb'] = None

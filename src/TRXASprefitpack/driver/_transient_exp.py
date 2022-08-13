@@ -10,15 +10,18 @@ from typing import Optional, Union, Sequence, Tuple
 import numpy as np
 from ..mathfun.irf import calc_eta, calc_fwhm
 from .transient_result import TransientResult
+from ._ampgo import ampgo
 from scipy.optimize import basinhopping
 from scipy.optimize import least_squares
 from ..mathfun.A_matrix import make_A_matrix_exp, fact_anal_A
 from ..res.parm_bound import set_bound_t0, set_bound_tau
 from ..res.res_decay import residual_decay, res_grad_decay
 
+GLBSOLVER = {'basinhopping' : basinhopping, 'ampgo' : ampgo}
+
 def fit_transient_exp(irf: str, fwhm_init: Union[float, np.ndarray], 
                       t0_init: np.ndarray, tau_init: np.ndarray, base: bool, 
-                      do_glb: Optional[bool] = False, 
+                      method_glb: Optional[str] = None, 
                       method_lsq: Optional[str] = 'trf',
                       kwargs_glb: Optional[dict] = None, 
                       kwargs_lsq: Optional[dict] = None,
@@ -65,7 +68,7 @@ def fit_transient_exp(irf: str, fwhm_init: Union[float, np.ndarray],
        t0_init (np.ndarray): time zeros for each scan
        tau_init (np.ndarray): lifetime constant for each decay component
        base (bool): Whether or not include baseline feature (i.e. very long lifetime constant)
-       do_glb (bool): Whether or not use global optimization algorithm. If True then basinhopping algorithm is used.
+       method_glb ({None, 'basinhopping', 'ampgo'}): Method for global optimization
        method_lsq ({'trf', 'dogbox', 'lm'}): method of local optimization for least_squares
                                              minimization (refinement of global optimization solution)
        kwargs_glb: keyward arguments for global optimization solver
@@ -121,7 +124,7 @@ def fit_transient_exp(irf: str, fwhm_init: Union[float, np.ndarray],
       for i in range(num_param):
             fix_param_idx[i] = (bound[i][0] == bound[i][1])
       
-      if do_glb:
+      if method_glb is not None:
             go_args = (num_comp, base, irf, fix_param_idx, 
             t, intensity, eps)
             min_go_kwargs = {'args': go_args, 'jac': True, 'bounds': bound}
@@ -136,7 +139,8 @@ def fit_transient_exp(irf: str, fwhm_init: Union[float, np.ndarray],
                         kwargs_glb['minimizer_kwargs'] = minimizer_kwargs
             else:
                   kwargs_glb = {'minimizer_kwargs' : min_go_kwargs}
-            res_go = basinhopping(res_grad_decay, param, **kwargs_glb)
+            #res_go = basinhopping(res_grad_decay, param, **kwargs_glb)
+            res_go = GLBSOLVER[method_glb](res_grad_decay, param, **kwargs_glb)
       else:
             res_go = dict()
             res_go['x'] = param
@@ -277,8 +281,8 @@ def fit_transient_exp(irf: str, fwhm_init: Union[float, np.ndarray],
       else:
             result['status'] = -1
       
-      if do_glb:
-            result['method_glb'] = 'basinhopping'
+      if method_glb is not None:
+            result['method_glb'] = method_glb
             result['message_glb'] = res_go['message'][0]  
       else:
             result['method_glb'] = None
