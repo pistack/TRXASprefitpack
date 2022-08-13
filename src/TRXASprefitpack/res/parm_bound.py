@@ -43,12 +43,12 @@ def set_bound_e0(e0: float, fwhm_G: float, fwhm_L: float) -> Tuple[float, float]
      Tuple of upper and lower bound of peak position
     '''
     if fwhm_G == 0:
-        bound = (e0-fwhm_L/2, e0+fwhm_L/2)
+        bound = (e0-fwhm_L, e0+fwhm_L)
     elif fwhm_L == 0:
-        bound = (e0-fwhm_G/2, e0+fwhm_G/2)
+        bound = (e0-fwhm_G, e0+fwhm_G)
     else:
         fwhm_eff = 0.5346*fwhm_L+np.sqrt(0.2166*fwhm_L**2+fwhm_G**2)
-        bound = (e0-fwhm_eff/2, e0+fwhm_eff/2)
+        bound = (e0-fwhm_eff, e0+fwhm_eff)
     
     return bound
 
