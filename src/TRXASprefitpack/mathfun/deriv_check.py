@@ -5,10 +5,10 @@ submodule to test derivative routine of mathfun subpackage
 :copyright: 2021-2022 by pistack (Junho Lee).
 :license: LGPL3.
 '''
-
+from typing import Callable
 import numpy as np
 
-def test_num_deriv(func: callable, *args, eps_rel=1e-8, eps_abs=5e-6):
+def check_num_deriv(fun: Callable, *args, eps_rel=1e-8, eps_abs=5e-6):
     '''
     Test implementation of derivative via finite difference
     i th column: derivative of f w.r.t ith argument
@@ -24,7 +24,7 @@ def test_num_deriv(func: callable, *args, eps_rel=1e-8, eps_abs=5e-6):
             f_args = tuple(f_args)
             b_args = tuple(b_args)
             dx = f_args[i] - b_args[i]
-            num_grad[:, i] = (func(*f_args)-func(*b_args))/dx
+            num_grad[:, i] = (fun(*f_args)-fun(*b_args))/dx
     else:
         num_grad = np.empty(n)
         for i in range(n):
@@ -35,6 +35,6 @@ def test_num_deriv(func: callable, *args, eps_rel=1e-8, eps_abs=5e-6):
             f_args = tuple(f_args)
             b_args = tuple(b_args)
             dx  = f_args[i] - b_args[i]
-            num_grad[i] = (func(*f_args)-func(*b_args))/dx
+            num_grad[i] = (fun(*f_args)-fun(*b_args))/dx
     
     return num_grad
