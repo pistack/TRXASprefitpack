@@ -225,7 +225,7 @@ def check_vaild(x_try, tabulist):
     '''
     dist = np.sum((tabulist-x_try)**2, axis=1)
     min_dist = np.min(dist)
-    return min_dist > 1e-16
+    return min_dist > 1e-12
     
 
 def delete_element(x_local, tabulist, strategy):

@@ -194,6 +194,7 @@ def fit_static_thy(thy_peak: Sequence[np.ndarray],
                         kwargs_glb['minimizer_kwargs'] = minimizer_kwargs
             else:
                   kwargs_glb = {'minimizer_kwargs' : min_go_kwargs}
+                  
             res_go = GLBSOLVER[method_glb](res_grad_thy, param, **kwargs_glb)
       else:
             res_go = dict()
