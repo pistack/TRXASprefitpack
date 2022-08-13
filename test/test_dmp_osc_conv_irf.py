@@ -19,7 +19,7 @@ def dmp_osc(t, k, T, phi):
 class TestDmpOscConvIRF(unittest.TestCase):
 
     def test_dmp_osc_conv_gau(self):
-        fwhm_G = 0.15; tau = 0.5; T = 0.3; phi = np.pi/4
+        fwhm_G = 0.15; tau = 0.5; T = 0.3; phi = np.pi/3
         N_ref = 50000; N_sample = 100
         t = np.linspace(-2, 2, N_ref)
         t_sample = np.linspace(-1, 1, N_sample)
@@ -32,8 +32,8 @@ class TestDmpOscConvIRF(unittest.TestCase):
         self.assertEqual(cond, True)
 
     def test_dmp_osc_conv_cauchy(self):
-        fwhm_L = 0.15; tau = 0.5; T = 0.3; phi = np.pi/4
-        N_ref = 50000; N_sample = 100
+        fwhm_L = 0.15; tau = 0.5; T = 0.3; phi = np.pi/3
+        N_ref = 500000; N_sample = 100
         t = np.linspace(-2, 2, N_ref)
         t_sample = np.linspace(-1, 1, N_sample)
         sample_idx = np.searchsorted(t, t_sample)
@@ -48,7 +48,7 @@ class TestDmpOscConvIRF(unittest.TestCase):
         '''
         Test pseudo voigt approximation.
         '''
-        fwhm_L = 0.05; fwhm_G = 0.15; tau = 0.5; T = 0.3; phi = np.pi/4
+        fwhm_L = 0.05; fwhm_G = 0.15; tau = 0.5; T = 0.3; phi = np.pi/3
         fwhm = calc_fwhm(fwhm_G, fwhm_L); eta = calc_eta(fwhm_G, fwhm_L)
         N_ref = 5000; N_sample = 100
         t = np.linspace(-2, 2, N_ref)
