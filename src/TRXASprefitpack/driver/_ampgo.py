@@ -4,10 +4,11 @@ Adaptive Memory Programing For Global Optimization
 Based On Andrea Gavana's Implementation (see: http://infinity77.net/global_optimization/)
 
 For implementation detail see the `Tabu Tunneling Method` section in the below paper.
+L. Lasdon et al. Computers & Operations Research 37 (2010) 1500–1509
 http://leeds-faculty.colorado.edu/glover/fred%20pubs/416%20-%20AMP%20(TS)%20for%20Constrained%20Global%20Opt%20w%20Lasdon%20et%20al%20.pdf
 
 :copyright: 2021-2022 by pistack (Junho Lee).
-:license: LGPL3.
+:license: MIT
 '''
 
 from typing import Callable, Optional
@@ -69,8 +70,9 @@ def ampgo(fun: Callable, x0: np.ndarray,
      * `message`: Description of the cause of the termination
     
     Note:
-     The implementation of ampgo method is based on the following paper
-     `Adaptive Memory Programming for Constrained Global Optimization <https://leeds-faculty.colorado.edu/glover/fred%20pubs/416%20-%20AMP%20(TS)%20for%20Constrained%20Global%20Opt%20w%20Lasdon%20et%20al%20.pdf>`__.
+     The implementation of ampgo method is based on 
+     L. Lasdon et al. Computers & Operations Research 37 (2010) 1500–1509. and
+     Andrea Gavana's Python Implementation.
     '''
 
     # initialize
@@ -225,7 +227,7 @@ def check_vaild(x_try, tabulist):
     '''
     dist = np.sum((tabulist-x_try)**2, axis=1)
     min_dist = np.min(dist)
-    return min_dist > 1e-12
+    return min_dist > 1e-14
     
 
 def delete_element(x_local, tabulist, strategy):
@@ -244,7 +246,7 @@ def delete_element(x_local, tabulist, strategy):
 
 def tunnel(x0, *args):
     '''
-    Tabu Tunneling function
+    Tabu Tunneling function (lambda = 2)
     '''
     fun, aspiration, tabulist = args[:3]
     fun_args = ()
@@ -254,7 +256,7 @@ def tunnel(x0, *args):
     numerator = (fun(x0, *fun_args)-aspiration)**2
     denominator = 1
     for tabu in tabulist:
-        denominator = denominator*np.linalg.norm(x0-tabu)
+        denominator = denominator*np.sum((x0-tabu)**2)
     return numerator/denominator
 
 def grad_tunnel(x0, *args):
@@ -269,17 +271,16 @@ def grad_tunnel(x0, *args):
     
     fval = fun(x0, *fun_args) - aspiration
     numerator = fval**2
-    grad_numerator = 2*fval*jac(x0, *fun_args)
-    denominator = 1.0
+    grad_numerator = fval*jac(x0, *fun_args)
+    denominator = 1
     grad_denom = np.zeros_like(x0)
 
     for tabu in tabulist:
         diff = tabu-x0
-        dist = np.linalg.norm(diff)
+        dist = np.sum(diff**2)
         denominator = denominator*dist
-        grad_denom = grad_denom + diff/dist**2
-    
-    return (grad_numerator+numerator*grad_denom)/denominator
+        grad_denom = grad_denom + diff/dist    
+    return 2*(grad_numerator+numerator*grad_denom)/denominator
 
 
 def fun_grad_tunnel(x0, *args):
@@ -295,17 +296,17 @@ def fun_grad_tunnel(x0, *args):
     f_val, grad_val = fun(x0, *fun_args)
     f_val = f_val-aspiration
     numerator = f_val**2
-    grad_numerator = 2*f_val*grad_val
+    grad_numerator = f_val*grad_val
     denominator = 1
     grad_denominator = np.zeros_like(x0)
     for tabu in tabulist:
         diff = tabu-x0
-        dist = np.linalg.norm(diff)
+        dist = np.sum(diff**2)
         denominator = denominator*dist
         grad_denominator = grad_denominator + \
-            diff/dist**2
+            diff/dist
     
     y_ttf = numerator/denominator
-    deriv_y_ttf = grad_numerator/denominator+\
-        y_ttf*grad_denominator
+    deriv_y_ttf = 2*(grad_numerator/denominator+
+        y_ttf*grad_denominator)
     return y_ttf, deriv_y_ttf
