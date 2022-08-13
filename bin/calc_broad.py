@@ -1,3 +1,4 @@
+# pylint: disable = missing-module-docstring, wrong-import-position
 # calc_broad py
 # Wrapper script for calc_broad()
 # Date: 2022. 7. 25.

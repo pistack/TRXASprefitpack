@@ -1,15 +1,17 @@
-from TRXASprefitpack import deriv_dmp_osc_conv_gau_2, deriv_dmp_osc_conv_cauchy_2
-from TRXASprefitpack import deriv_dmp_osc_conv_gau, deriv_dmp_osc_conv_cauchy
-from TRXASprefitpack import dmp_osc_conv_gau_2, dmp_osc_conv_cauchy_2
-from TRXASprefitpack import dmp_osc_conv_gau, dmp_osc_conv_cauchy
-from TRXASprefitpack.mathfun.deriv_check import check_num_deriv
-from TRXASprefitpack import calc_eta, calc_fwhm, deriv_eta, deriv_fwhm
+# pylint: disable = missing-module-docstring, wrong-import-position, invalid-name
 import os
 import sys
 import numpy as np
 
 path = os.path.dirname(os.path.realpath(__file__))
 sys.path.append(path+"/../src/")
+
+from TRXASprefitpack import deriv_dmp_osc_conv_gau_2, deriv_dmp_osc_conv_cauchy_2
+from TRXASprefitpack import deriv_dmp_osc_conv_gau, deriv_dmp_osc_conv_cauchy
+from TRXASprefitpack import dmp_osc_conv_gau_2, dmp_osc_conv_cauchy_2
+from TRXASprefitpack import dmp_osc_conv_gau, dmp_osc_conv_cauchy
+from TRXASprefitpack.mathfun.deriv_check import check_num_deriv
+from TRXASprefitpack import calc_eta, calc_fwhm, deriv_eta, deriv_fwhm
 
 def tmp_fun(t, fwhm_G, fwhm_L, k, period, phase):
     fwhm=calc_fwhm(fwhm_G, fwhm_L)
@@ -27,9 +29,6 @@ def tmp_fun_2(t, fwhm_G, fwhm_L, k, period, c_pair):
 
 
 def test_deriv_dmp_osc_conv_gau_1():
-    '''
-    Test gradient of convolution of damped oscillation and gaussian irf (tau: 1, fwhm: 0.15, period: 0.5, phase: pi/3)
-    '''
     tau = 1
     fwhm = 0.15
     period = 0.5
@@ -39,12 +38,9 @@ def test_deriv_dmp_osc_conv_gau_1():
     ref = check_num_deriv(dmp_osc_conv_gau, t, fwhm, 1/tau, period, phase)
     result = np.isclose(tst, ref)
     result = np.allclose(tst, ref)
-    assert result == True
+    assert result is True
 
 def test_deriv_dmp_osc_conv_gau_2():
-    '''
-    Test gradient of convolution of damped oscillation and gaussian irf (tau: 1, fwhm: 0.15, period: 0.5)
-    '''
     tau=1
     fwhm=0.15
     period=0.5
@@ -55,12 +51,9 @@ def test_deriv_dmp_osc_conv_gau_2():
      t, fwhm, 1/tau, period)
     result=np.isclose(tst, ref)
     result=np.allclose(tst, ref)
-    assert result == True
+    assert result is True
 
 def test_deriv_dmp_osc_conv_cauchy_1():
-    '''
-    Test gradient of convolution of damped oscillation and cauchy irf (tau: 1, fwhm: 0.15, period: 0.5, phase: pi/3)
-    '''
     tau=1
     fwhm=0.15
     period=0.5
@@ -69,12 +62,9 @@ def test_deriv_dmp_osc_conv_cauchy_1():
     tst=deriv_dmp_osc_conv_cauchy(t, fwhm, 1/tau, period, phase)
     ref=check_num_deriv(dmp_osc_conv_cauchy, t, fwhm, 1/tau, period, phase)
     result=np.allclose(tst, ref)
-    assert result == True
+    assert result is True
 
 def test_deriv_dmp_osc_conv_cauchy_2():
-    '''
-    Test gradient of convolution of damped oscillation and cauchy irf (tau: 1, fwhm: 0.15, period: 0.5)
-    '''
     tau=1
     fwhm=0.15
     period=0.5
@@ -85,14 +75,9 @@ def test_deriv_dmp_osc_conv_cauchy_2():
      t, fwhm, 1/tau, period)
     result=np.isclose(tst, ref)
     result=np.allclose(tst, ref)
-    assert result == True
+    assert result is True
 
 def test_deriv_exp_conv_pvoigt():
-    '''
-    Test gradient of convolution of damped oscillation and pseudo voigt irf (tau: 1, fwhm_G: 0.1, fwhm_L: 0.15, period: 0.5, phase: pi/3)
-     Note. not implemented in mathfun module, check implementation in res_grad_osc function
-    '''
-
     tau_1=1
     fwhm_G=0.1
     fwhm_L=0.15
@@ -110,21 +95,19 @@ def test_deriv_exp_conv_pvoigt():
     grad_gau=deriv_dmp_osc_conv_gau(t, fwhm, 1/tau_1, period, phase)
     grad_cauchy=deriv_dmp_osc_conv_cauchy(t, fwhm, 1/tau_1, period, phase)
     grad_tot=grad_gau + eta*(grad_cauchy-grad_gau)
-    grad[:, 0]=grad_tot[:, 0]; grad[:, 3]=grad_tot[:, 2]
-    grad[:, 4]=grad_tot[:, 3]; grad[:, 5]=grad_tot[:, 4]
+    grad[:, 0]=grad_tot[:, 0]
+    grad[:, 3]=grad_tot[:, 2]
+    grad[:, 4]=grad_tot[:, 3]
+    grad[:, 5]=grad_tot[:, 4]
     grad[:, 1]=dfwhm_G*grad_tot[:, 1] + deta_G*diff
     grad[:, 2]=dfwhm_L*grad_tot[:, 1] + deta_L*diff
 
     ref=check_num_deriv(tmp_fun, t, fwhm_G, fwhm_L, 1/tau_1, period, phase)
 
     result=np.allclose(grad, ref)
-    assert result == True
+    assert result is True
 
 def test_deriv_exp_conv_pvoigt_2():
-    '''
-    Test gradient of convolution of damped oscillation and pseudo voigt irf (tau: 1, fwhm_G: 0.1, fwhm_L: 0.15, period: 0.5)
-    Note. not implemented in mathfun module, check implementation in res_grad_osc function
-    '''
     c_pair=(0.3, 0.7)
 
     tau_1=1
@@ -143,14 +126,15 @@ def test_deriv_exp_conv_pvoigt_2():
     grad_gau=deriv_dmp_osc_conv_gau_2(t, fwhm, 1/tau_1, period, c_pair)
     grad_cauchy=deriv_dmp_osc_conv_cauchy_2(t, fwhm, 1/tau_1, period, c_pair)
     grad_tot=grad_gau + eta*(grad_cauchy-grad_gau)
-    grad[:, 0]=grad_tot[:, 0]; grad[:, 3]=grad_tot[:, 2]
+    grad[:, 0]=grad_tot[:, 0]
+    grad[:, 3]=grad_tot[:, 2]
     grad[:, 4]=grad_tot[:, 3]
     grad[:, 1]=dfwhm_G*grad_tot[:, 1] + deta_G*diff
     grad[:, 2]=dfwhm_L*grad_tot[:, 1] + deta_L*diff
 
     ref=check_num_deriv(lambda t, fwhm_G, fwhm_L, k, period: \
-        tmp_fun_2(t, fwhm_G, fwhm_L, k, period, c_pair), 
+        tmp_fun_2(t, fwhm_G, fwhm_L, k, period, c_pair),
     t, fwhm_G, fwhm_L, 1/tau_1, period)
 
     result=np.allclose(grad, ref)
-    assert result == True
+    assert result is True

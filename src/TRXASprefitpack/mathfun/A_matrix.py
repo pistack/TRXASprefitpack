@@ -32,6 +32,7 @@ def make_A_matrix_gau(t: np.ndarray, fwhm: float,
 
     return A
 
+
 def make_A_matrix_cauchy(t: np.ndarray, fwhm: float,
                          k: np.ndarray) -> np.ndarray:
 
@@ -46,11 +47,12 @@ def make_A_matrix_pvoigt(t: np.ndarray,
                          fwhm: float,
                          eta: float,
                          k: np.ndarray) -> np.ndarray:
-    
+
     u = make_A_matrix_gau(t, fwhm, k)
     v = make_A_matrix_cauchy(t, fwhm, k)
 
     return u + eta*(v-u)
+
 
 def make_A_matrix_exp(t: np.ndarray,
                       fwhm: float,
@@ -59,10 +61,11 @@ def make_A_matrix_exp(t: np.ndarray,
                       irf: Optional[str] = 'g',
                       eta: Optional[float] = None
                       ) -> np.ndarray:
-    
+
     if base:
         k = np.empty(tau.size+1)
-        k[-1] = 0; k[:-1] = 1/tau
+        k[-1] = 0
+        k[:-1] = 1/tau
     else:
         k = 1/tau
 
@@ -75,8 +78,9 @@ def make_A_matrix_exp(t: np.ndarray,
 
     return A
 
+
 def make_A_matrix_gau_osc(t: np.ndarray, fwhm: float,
-k: np.ndarray, T: np.ndarray) -> np.ndarray:
+                          k: np.ndarray, T: np.ndarray) -> np.ndarray:
 
     sigma = fwhm/(2*np.sqrt(2*np.log(2)))
     A = np.empty((2*k.size, t.size))
@@ -86,8 +90,9 @@ k: np.ndarray, T: np.ndarray) -> np.ndarray:
         # cosine, sine
     return A
 
+
 def make_A_matrix_cauchy_osc(t: np.ndarray, fwhm: float,
-k: np.ndarray, T: np.ndarray) -> np.ndarray:
+                             k: np.ndarray, T: np.ndarray) -> np.ndarray:
 
     A = np.empty((2*k.size, t.size))
     for i in range(k.size):
@@ -95,22 +100,23 @@ k: np.ndarray, T: np.ndarray) -> np.ndarray:
             dmp_osc_conv_cauchy_pair(t, fwhm, k[i], T[i])
     return A
 
+
 def make_A_matrix_pvoigt_osc(t: np.ndarray, fwhm: float, eta: float,
-                             k: np.ndarray, 
+                             k: np.ndarray,
                              T: np.ndarray) -> np.ndarray:
-    
+
     u = make_A_matrix_gau_osc(t, fwhm, k, T)
     v = make_A_matrix_cauchy_osc(t, fwhm, k, T)
 
     return u + eta*(v-u)
 
-def make_A_matrix_dmp_osc(t: np.ndarray, fwhm: float,
-                      tau: np.ndarray,
-                      T: np.ndarray,
-                      irf: Optional[str] = 'g',
-                      eta: Optional[float] = None
-                      ) -> np.ndarray:
 
+def make_A_matrix_dmp_osc(t: np.ndarray, fwhm: float,
+                          tau: np.ndarray,
+                          T: np.ndarray,
+                          irf: Optional[str] = 'g',
+                          eta: Optional[float] = None
+                          ) -> np.ndarray:
 
     if irf == 'g':
         A = make_A_matrix_gau_osc(t, fwhm, 1/tau, T)
@@ -121,15 +127,16 @@ def make_A_matrix_dmp_osc(t: np.ndarray, fwhm: float,
 
     return A
 
-def fact_anal_A(A: np.ndarray, 
-                intensity: Optional[np.ndarray] = None, 
+
+def fact_anal_A(A: np.ndarray,
+                intensity: Optional[np.ndarray] = None,
                 eps: Optional[np.ndarray] = None) -> np.ndarray:
 
     if eps is None:
         eps = np.ones_like(intensity)
-    
+
     B = np.einsum('j,ij->ij', 1/eps, A)
     y = intensity/eps
-    
+
     c, _, _, _ = lstsq(B.T, y, cond=1e-2)
     return c

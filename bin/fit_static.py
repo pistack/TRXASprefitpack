@@ -1,3 +1,4 @@
+# pylint: disable = missing-module-docstring, wrong-import-position
 # fit static py
 # Wrapper script for fit_static()
 # Date: 2022. 7. 25.

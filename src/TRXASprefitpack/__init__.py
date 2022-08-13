@@ -1,5 +1,5 @@
 '''
-TRXASprefitpack: 
+TRXASprefitpack:
 package for TRXAS pre- and fitting process which aims for the first order dynamics
 TRXAS stands for Time Resolved X-ray Absorption Spectroscopy
 

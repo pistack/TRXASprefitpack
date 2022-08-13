@@ -17,7 +17,6 @@ from .A_matrix import make_A_matrix_exp, make_A_matrix_dmp_osc
 def exp_conv(t: np.ndarray, fwhm: float, tau: np.ndarray,
              c: np.ndarray, base: Optional[bool] = True,
              irf: Optional[str] = 'g', eta: Optional[float] = None) -> np.ndarray:
-
     '''
     Constructs the model for the convolution of n exponential and
     instrumental response function
@@ -65,18 +64,17 @@ def fact_anal_exp_conv(t: np.ndarray,
                        intensity: Optional[np.ndarray] = None,
                        eps: Optional[np.ndarray] = None
                        ) -> np.ndarray:
-
     '''
     Estimate the best coefficiets when full width at half maximum fwhm
     and life constant tau are given
-    
+
     When you fits your model to tscan data, you need to have
     good initial guess for not only life time of
     each component but also coefficients. To help this it solves
     linear least square problem to find best coefficients when fwhm and
     tau are given.
 
-    Supported instrumental response functions are 
+    Supported instrumental response functions are
 
        1. 'g': gaussian distribution
        2. 'c': cauchy distribution
@@ -109,17 +107,17 @@ def fact_anal_exp_conv(t: np.ndarray,
     A = make_A_matrix_exp(t, fwhm, tau, base, irf, eta)
     if eps is None:
         eps = np.ones_like(intensity)
-    
+
     y = intensity/eps
     A = np.einsum('j,ij->ij', 1/eps, A)
     c, _, _, _ = LA.lstsq(A.T, y, cond=1e-2)
 
     return c
 
-def rate_eq_conv(t: np.ndarray, fwhm: float,
-abs: np.ndarray, eigval: np.ndarray, V: np.ndarray, c: np.ndarray, 
-irf: Optional[str] = 'g', eta: Optional[float] = None) -> np.ndarray:
 
+def rate_eq_conv(t: np.ndarray, fwhm: float,
+                 diff_abs: np.ndarray, eigval: np.ndarray, V: np.ndarray, c: np.ndarray,
+                 irf: Optional[str] = 'g', eta: Optional[float] = None) -> np.ndarray:
     '''
     Constructs signal model rate equation with
     instrumental response function
@@ -132,9 +130,9 @@ irf: Optional[str] = 'g', eta: Optional[float] = None) -> np.ndarray:
     Args:
        t: time
        fwhm: full width at half maximum of instrumental response function
-       abs: coefficient for each excited state
-       eigval: eigenvalue of rate equation matrix 
-       V: eigenvector of rate equation matrix 
+       diff_abs: coefficient for each excited state
+       eigval: eigenvalue of rate equation matrix
+       V: eigenvector of rate equation matrix
        c: coefficient to match initial condition of rate equation
        irf: shape of instrumental
             response function [default: g]
@@ -150,21 +148,21 @@ irf: Optional[str] = 'g', eta: Optional[float] = None) -> np.ndarray:
       response function.
     '''
     A = compute_signal_irf(t, eigval, V, c, fwhm, irf, eta)
-    y = abs@A
+    y = diff_abs@A
 
     return y
 
-def fact_anal_rate_eq_conv(t: np.ndarray, fwhm: float,
-eigval: np.ndarray, V: np.ndarray, c: np.ndarray, 
-exclude: Optional[str] = None, irf: Optional[str] = 'g',
-eta: Optional[float] = None, intensity: Optional[np.ndarray] = None, 
-eps: Optional[np.ndarray] = None) -> np.ndarray:
 
+def fact_anal_rate_eq_conv(t: np.ndarray, fwhm: float,
+                           eigval: np.ndarray, V: np.ndarray, c: np.ndarray,
+                           exclude: Optional[str] = None, irf: Optional[str] = 'g',
+                           eta: Optional[float] = None, intensity: Optional[np.ndarray] = None,
+                           eps: Optional[np.ndarray] = None) -> np.ndarray:
     '''
     Estimate the best coefficiets when full width at half maximum fwhm
     and eigenvector and eigenvalue of rate equation matrix are given
 
-    Supported instrumental response functions are 
+    Supported instrumental response functions are
 
        1. 'g': gaussian distribution
        2. 'c': cauchy distribution
@@ -173,14 +171,14 @@ eps: Optional[np.ndarray] = None) -> np.ndarray:
     Args:
        t: time
        fwhm: full width at half maximum of instrumental response function
-       eigval: eigenvalue of rate equation matrix 
-       V: eigenvector of rate equation matrix 
+       eigval: eigenvalue of rate equation matrix
+       V: eigenvector of rate equation matrix
        c: coefficient to match initial condition of rate equation
        exclude: exclude either 'first' or 'last' element or both 'first' and 'last' element.
-                
+
                 * 'first' : exclude first element
                 * 'last' : exclude last element
-                * 'first_and_last' : exclude both first and last element  
+                * 'first_and_last' : exclude both first and last element
                 * None : Do not exclude any element [default]
        irf: shape of instrumental
             response function [default: g]
@@ -202,46 +200,45 @@ eps: Optional[np.ndarray] = None) -> np.ndarray:
     '''
 
     A = compute_signal_irf(t, eigval, V, c, fwhm, irf, eta)
-    
-    abs = np.zeros(A.shape[0])
+
+    diff_abs = np.zeros(A.shape[0])
 
     if eps is None:
         eps = np.ones_like(intensity)
-    
+
     y = intensity/eps
-    
+
     if exclude == 'first_and_last':
-        B = np.einsum('j,ij->ij', 1/eps, A[1:-1,:])
+        B = np.einsum('j,ij->ij', 1/eps, A[1:-1, :])
     elif exclude == 'first':
-        B = np.einsum('j,ij->ij', 1/eps, A[1:,:])
+        B = np.einsum('j,ij->ij', 1/eps, A[1:, :])
     elif exclude == 'last':
-        B = np.einsum('j,ij->ij', 1/eps, A[:-1,:])
+        B = np.einsum('j,ij->ij', 1/eps, A[:-1, :])
     else:
         B = np.einsum('j,ij->ij', 1/eps, A)
-    
+
     coeff, _, _, _ = LA.lstsq(B.T, y, cond=1e-2)
 
     if exclude == 'first_and_last':
-        abs[1:-1] = coeff
+        diff_abs[1:-1] = coeff
     elif exclude == 'first':
-        abs[1:] = coeff
+        diff_abs[1:] = coeff
     elif exclude == 'last':
-        abs[:-1] = coeff
+        diff_abs[:-1] = coeff
     else:
-        abs = coeff
+        diff_abs = coeff
 
-    return abs
+    return diff_abs
 
 
 def dmp_osc_conv(t: np.ndarray, fwhm: float,
-                      tau: np.ndarray,
-                      T: np.ndarray,
-                      phase: np.ndarray,
-                      c: np.ndarray,
-                      irf: Optional[str] = 'g',
-                      eta: Optional[float] = None
-                      ) -> np.ndarray:
-
+                 tau: np.ndarray,
+                 T: np.ndarray,
+                 phase: np.ndarray,
+                 c: np.ndarray,
+                 irf: Optional[str] = 'g',
+                 eta: Optional[float] = None
+                 ) -> np.ndarray:
     '''
     Constructs convolution of sum of damped oscillation and
     instrumental response function
@@ -273,29 +270,29 @@ def dmp_osc_conv(t: np.ndarray, fwhm: float,
     '''
     c_osc = np.zeros(2*c.size)
     for i in range(c.size):
-      c_osc[i] = c[i]*np.cos(phase[i])
-      c_osc[i+c.size] = -c[i]*np.sin(phase[i])
+        c_osc[i] = c[i]*np.cos(phase[i])
+        c_osc[i+c.size] = -c[i]*np.sin(phase[i])
 
     A = make_A_matrix_dmp_osc(t, fwhm, tau, T, irf, eta)
     y = c_osc@A
 
     return y
 
-def fact_anal_dmp_osc_conv(t: np.ndarray,
-                       fwhm: float,
-                       tau: np.ndarray, T: np.ndarray,
-                       irf: Optional[str] = 'g',
-                       eta: Optional[float] = None,
-                       intensity: Optional[np.ndarray] = None,
-                       eps: Optional[np.ndarray] = None
-                       ) -> Tuple[np.ndarray, np.ndarray]:
 
+def fact_anal_dmp_osc_conv(t: np.ndarray,
+                           fwhm: float,
+                           tau: np.ndarray, T: np.ndarray,
+                           irf: Optional[str] = 'g',
+                           eta: Optional[float] = None,
+                           intensity: Optional[np.ndarray] = None,
+                           eps: Optional[np.ndarray] = None
+                           ) -> Tuple[np.ndarray, np.ndarray]:
     '''
-    Estimate the best coefficiets and phase factor 
+    Estimate the best coefficiets and phase factor
     when full width at half maximum fwhm
     , life constant tau and period of vibration T are given
 
-    Supported instrumental response functions are 
+    Supported instrumental response functions are
 
        1. 'g': gaussian distribution
        2. 'c': cauchy distribution
@@ -324,12 +321,12 @@ def fact_anal_dmp_osc_conv(t: np.ndarray,
     Note:
      the dimension of the intensity should be one.
     '''
-    
+
     A = make_A_matrix_dmp_osc(t, fwhm, tau, T, irf, eta)
 
     if eps is None:
         eps = np.ones_like(intensity)
-    
+
     y = intensity/eps
     A = np.einsum('j,ij->ij', 1/eps, A)
     c, _, _, _ = LA.lstsq(A.T, y, cond=1e-2)
@@ -339,6 +336,7 @@ def fact_anal_dmp_osc_conv(t: np.ndarray,
     phase_factor = -np.arctan2(c_sine, c_cosine)
 
     return phase_factor, c_amp
+
 
 def sum_exp_dmp_osc_conv(t: np.ndarray, fwhm: float,
                          tau: np.ndarray,
@@ -385,14 +383,15 @@ def sum_exp_dmp_osc_conv(t: np.ndarray, fwhm: float,
     '''
     c_osc_2 = np.zeros(2*c_osc.size)
     for i in range(c_osc.size):
-      c_osc_2[i] = c_osc[i]*np.cos(phase[i])
-      c_osc_2[i+c_osc.size] = -c_osc[i]*np.sin(phase[i])
+        c_osc_2[i] = c_osc[i]*np.cos(phase[i])
+        c_osc_2[i+c_osc.size] = -c_osc[i]*np.sin(phase[i])
 
     A = make_A_matrix_exp(t, fwhm, tau, base, irf, eta)
     A_osc = make_A_matrix_dmp_osc(t, fwhm, tau_osc, T, irf, eta)
     y = c@A + c_osc_2@A_osc
 
     return y
+
 
 def fact_anal_sum_exp_dmp_osc_conv(t: np.ndarray, fwhm: float,
                                    tau: np.ndarray, tau_osc: np.ndarray,
@@ -402,14 +401,14 @@ def fact_anal_sum_exp_dmp_osc_conv(t: np.ndarray, fwhm: float,
                                    eta: Optional[float] = None,
                                    intensity: Optional[np.ndarray] = None,
                                    eps: Optional[np.ndarray] = None) -> \
-                                    Tuple[np.ndarray, np.ndarray, np.ndarray]:
+        Tuple[np.ndarray, np.ndarray, np.ndarray]:
     '''
-    Estimate the best coefficiets and phase factor of oscillation part 
+    Estimate the best coefficiets and phase factor of oscillation part
     when full width at half maximum fwhm
-    , lifetime constant of decay component tau, lifetime constant of 
+    , lifetime constant of decay component tau, lifetime constant of
     oscillation component tau_osc and period of vibration T are given
 
-    Supported instrumental response functions are 
+    Supported instrumental response functions are
 
        1. 'g': gaussian distribution
        2. 'c': cauchy distribution
@@ -445,11 +444,12 @@ def fact_anal_sum_exp_dmp_osc_conv(t: np.ndarray, fwhm: float,
 
     A = np.empty((tau.size+1*base+2*tau_osc.size, t.size))
     A[:tau.size+1*base, :] = make_A_matrix_exp(t, fwhm, tau, base, irf, eta)
-    A[tau.size+1*base:, :] = make_A_matrix_dmp_osc(t, fwhm, tau_osc, T, irf, eta)
+    A[tau.size+1*base:,
+        :] = make_A_matrix_dmp_osc(t, fwhm, tau_osc, T, irf, eta)
 
     if eps is None:
         eps = np.ones_like(intensity)
-    
+
     y = intensity/eps
     A = np.einsum('j,ij->ij', 1/eps, A)
     c, _, _, _ = LA.lstsq(A.T, y, cond=1e-2)
@@ -459,4 +459,3 @@ def fact_anal_sum_exp_dmp_osc_conv(t: np.ndarray, fwhm: float,
     phase_osc = -np.arctan2(c_sine, c_cosine)
 
     return c[:tau.size+1*base], phase_osc, c_osc
-

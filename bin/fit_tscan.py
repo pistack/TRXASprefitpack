@@ -1,3 +1,4 @@
+# pylint: disable = missing-module-docstring, wrong-import-position
 # fit tscan py
 # Wrapper script for fit_tscan()
 # Date: 2022. 7. 25.

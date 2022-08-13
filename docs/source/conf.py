@@ -1,3 +1,4 @@
+# pylint: disable = missing-module-docstring, wrong-import-position, invalid-name, redefined-builtin
 # Configuration file for the Sphinx documentation builder.
 #
 # This file only contains a selection of the most common options. For a full
@@ -43,8 +44,8 @@ extensions = [
 ]
 
 myst_enable_extensions = [
-    "amsmath",
-    "dollarmath",
+    'amsmath',
+    'dollarmath',
 ]
 
 # Add any paths that contain templates here, relative to this directory.

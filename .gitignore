@@ -150,3 +150,5 @@ cython_debug/
 Untitled.ipynb
 .vscode
 tst.py
+log
+test-results/

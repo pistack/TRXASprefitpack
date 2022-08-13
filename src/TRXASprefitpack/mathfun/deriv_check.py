@@ -8,6 +8,7 @@ submodule to test derivative routine of mathfun subpackage
 from typing import Callable
 import numpy as np
 
+
 def check_num_deriv(fun: Callable, *args, eps_rel=1e-8, eps_abs=5e-6):
     '''
     Test implementation of derivative via finite difference
@@ -34,7 +35,7 @@ def check_num_deriv(fun: Callable, *args, eps_rel=1e-8, eps_abs=5e-6):
             b_args[i] = b_args[i]*(1-eps_rel)-eps_abs
             f_args = tuple(f_args)
             b_args = tuple(b_args)
-            dx  = f_args[i] - b_args[i]
+            dx = f_args[i] - b_args[i]
             num_grad[i] = (fun(*f_args)-fun(*b_args))/dx
-    
+
     return num_grad

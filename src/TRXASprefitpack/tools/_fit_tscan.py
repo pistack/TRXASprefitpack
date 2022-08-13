@@ -1,11 +1,17 @@
-# fit tscan
-# fitting tscan data
-# Using sum of exponential decay convolved with
-# normalized gaussian distribution
-# normalized cauchy distribution
-# normalized pseudo voigt profile
-# (Mixing parameter eta is fixed according to
-#  Journal of Applied Crystallography. 33 (6): 1311–1316.)
+'''
+fit tscan:
+submodule to fit tscan data
+Using sum of exponential decay convolved with
+normalized gaussian distribution
+normalized cauchy distribution
+normalized pseudo voigt profile
+(Uniform fwhm and Mixing parameter eta is calculated according to
+Journal of Applied Crystallography. 33 (6): 1311–1316.)
+
+:copyright: 2021-2022 by pistack (Junho Lee).
+:license: LGPL3.
+'''
+
 
 from typing import Optional
 import os
@@ -19,135 +25,145 @@ from .misc import read_data
 
 plt.rcParams['figure.figsize'] = (10, 5)
 
-FITDRIVER = {'decay': fit_transient_exp, 'osc': fit_transient_dmp_osc, 'both': fit_transient_both}
+FITDRIVER = {'decay': fit_transient_exp,
+             'osc': fit_transient_dmp_osc, 'both': fit_transient_both}
+
 
 def save_TransientResult_txt(result: TransientResult, dirname: str):
-      '''
-      save fitting result to the text file
+    '''
+    save fitting result to the text file
 
-      Args:
-       result: fitting result
-       dirname: name of the directory in which text files for fitting result are saved.
-       name_of_dset: name of each data sets. If `name_of_dset` is None then it is set to [1,2,3,....]
-       t: sequence of scan range
-       eps: sequence of estimated error of each datasets
-      
-      Returns:
-       `fit_summary.txt`: Summary for the fitting result
-       `weight_{name_of_dset[i]}.txt`: Weight of each model component of i th dataset
-       `phase_{name_of_dset[i]}.txt`: Phase factor of each oscillation component of i th dataset
-       `fit_{name_of_dset[i]}.txt`: fitting curve for i th dataset
-       `fit_osc_{name_of_dset[i]}.txt`: oscillation part of fitting curve for i th dataset [model = 'both']
-       `fit_decay_{name_of_dset[i]}.txt`: decay part of fitting curve for i th dataset [model = 'both']
-       `res_{name_f_dset[i]}_j.txt`: residual (fit-data) curve for j th scan of i th data
-                                     The format of text file is (t, res, eps)
+    Args:
+     result: fitting result
+     dirname: name of the directory in which text files for fitting result are saved.
+     name_of_dset: name of each data sets. If `name_of_dset` is None then it is set to [1,2,3,....]
+     t: sequence of scan range
+     eps: sequence of estimated error of each datasets
 
-      
-      Note:
-       If `dirname` directory is not exists, it creates `dirname` directory.
-      '''
-      if not (Path.cwd()/dirname).exists():
-            os.mkdir(dirname)
-      
-      with open(f'{dirname}/fit_summary.txt', 'w') as f:
-            f.write(str(result))
-      
-      for i in range(len(result['t'])):
-            coeff_fmt = result['eps'][i].shape[1]*['%.8e']
-            fit_fmt = (1+result['eps'][i].shape[1])*['%.8e']
-            coeff_header_lst = []
-            fit_header_lst = ['time_delay']
-            for j in range(result['eps'][i].shape[1]):
-                  res_save = np.vstack((result['t'][i], result['res'][i][:,j], result['eps'][i][:,j])).T
-                  np.savetxt(f"{dirname}/res_{result['name_of_dset'][i]}_{j+1}.txt", res_save,
-                  fmt=['%.8e', '%.8e', '%.8e'], 
-                  header=f"time_delay \t res_{result['name_of_dset'][i]}_{j+1} \t eps")
-                  fit_header_lst.append(f"fit_{result['name_of_dset'][i]}_{j+1}")
-                  coeff_header_lst.append(f"tscan_{result['name_of_dset'][i]}_{j+1}")
-            
-            fit_header = '\t'.join(fit_header_lst)
-            coeff_header = '\t'.join(coeff_header_lst)
+    Returns:
+     `fit_summary.txt`: Summary for the fitting result
+     `weight_{name_of_dset[i]}.txt`: Weight of each model component of i th dataset
+     `phase_{name_of_dset[i]}.txt`: Phase factor of each oscillation component of i th dataset
+     `fit_{name_of_dset[i]}.txt`: fitting curve for i th dataset
+     `fit_osc_{name_of_dset[i]}.txt`: oscillation part of fitting curve for i th dataset [model = 'both']
+     `fit_decay_{name_of_dset[i]}.txt`: decay part of fitting curve for i th dataset [model = 'both']
+     `res_{name_f_dset[i]}_j.txt`: residual (fit-data) curve for j th scan of i th data
+                                   The format of text file is (t, res, eps)
 
-            np.savetxt(f"{dirname}/weight_{result['name_of_dset'][i]}.txt", result['c'][i], fmt=coeff_fmt,
-            header=coeff_header)
-            if result['model'] in ['dmp_osc', 'both']:
-                np.savetxt(f"{dirname}/phase_{result['name_of_dset'][i]}.txt", result['phase'][i], fmt=coeff_fmt,
-                header=coeff_header)   
-            fit_save = np.vstack((result['t'][i], result['fit'][i].T)).T
-            np.savetxt(f"{dirname}/fit_{result['name_of_dset'][i]}.txt", fit_save, fmt=fit_fmt, header=fit_header)
-            if result['model'] == 'both':
-                  fit_decay_save = np.vstack((result['t'][i], result['fit_decay'][i].T)).T
-                  np.savetxt(f"{dirname}/fit_decay_{result['name_of_dset'][i]}.txt", fit_decay_save, fmt=fit_fmt, header=fit_header)
-                  fit_osc_save = np.vstack((result['t'][i], result['fit_osc'][i].T)).T
-                  np.savetxt(f"{dirname}/fit_osc_{result['name_of_dset'][i]}.txt", fit_osc_save, fmt=fit_fmt, header=fit_header)
 
-      return
+    Note:
+     If `dirname` directory is not exists, it creates `dirname` directory.
+    '''
+    if not (Path.cwd()/dirname).exists():
+        os.mkdir(dirname)
+
+    with open(f'{dirname}/fit_summary.txt', 'w') as f:
+        f.write(str(result))
+
+    for i in range(len(result['t'])):
+        coeff_fmt = result['eps'][i].shape[1]*['%.8e']
+        fit_fmt = (1+result['eps'][i].shape[1])*['%.8e']
+        coeff_header_lst = []
+        fit_header_lst = ['time_delay']
+        for j in range(result['eps'][i].shape[1]):
+            res_save = np.vstack(
+                (result['t'][i], result['res'][i][:, j], result['eps'][i][:, j])).T
+            np.savetxt(f"{dirname}/res_{result['name_of_dset'][i]}_{j+1}.txt", res_save,
+                       fmt=['%.8e', '%.8e', '%.8e'],
+                       header=f"time_delay \t res_{result['name_of_dset'][i]}_{j+1} \t eps")
+            fit_header_lst.append(f"fit_{result['name_of_dset'][i]}_{j+1}")
+            coeff_header_lst.append(f"tscan_{result['name_of_dset'][i]}_{j+1}")
+
+        fit_header = '\t'.join(fit_header_lst)
+        coeff_header = '\t'.join(coeff_header_lst)
+
+        np.savetxt(f"{dirname}/weight_{result['name_of_dset'][i]}.txt", result['c'][i], fmt=coeff_fmt,
+                   header=coeff_header)
+        if result['model'] in ['dmp_osc', 'both']:
+            np.savetxt(f"{dirname}/phase_{result['name_of_dset'][i]}.txt", result['phase'][i], fmt=coeff_fmt,
+                       header=coeff_header)
+        fit_save = np.vstack((result['t'][i], result['fit'][i].T)).T
+        np.savetxt(f"{dirname}/fit_{result['name_of_dset'][i]}.txt",
+                   fit_save, fmt=fit_fmt, header=fit_header)
+        if result['model'] == 'both':
+            fit_decay_save = np.vstack(
+                (result['t'][i], result['fit_decay'][i].T)).T
+            np.savetxt(f"{dirname}/fit_decay_{result['name_of_dset'][i]}.txt",
+                       fit_decay_save, fmt=fit_fmt, header=fit_header)
+            fit_osc_save = np.vstack(
+                (result['t'][i], result['fit_osc'][i].T)).T
+            np.savetxt(
+                f"{dirname}/fit_osc_{result['name_of_dset'][i]}.txt", fit_osc_save, fmt=fit_fmt, header=fit_header)
+
+
 
 def plot_TransientResult(result: TransientResult, save_fig: Optional[str] = None):
-      '''
-      plot fitting Result
+    '''
+    plot fitting Result
 
-      Args:
-       result: fitting result
-       save_fig: prefix of saved png plots. If `save_fig` is `None`, plots are displayed instead of being saved.
-      '''
-      
-      start = 0
-      for i in range(len(result['t'])):
-            for j in range(result['intensity'][i].shape[1]):
-                  fig = plt.figure(start+j+1)
-                  title = f'{result["name_of_dset"][i]} scan #{j+1}'
-                  subtitle = f"Chi squared: {result['red_chi2_ind'][i][j]: .2f}"
-                  plt.suptitle(title)
-                  sub1 = fig.add_subplot(221)
-                  sub1.set_title(subtitle)
-                  sub1.errorbar(result['t'][i], result['intensity'][i][:, j], result['eps'][i][:, j], marker='o', mfc='none',
-                  label=f'expt {title}', linestyle='none', color='black')
-                  sub1.plot(result['t'][i], result['fit'][i][:, j], label=f'fit {title}', color='red')
-                  sub1.legend()
-                  sub2 = fig.add_subplot(222)
-                  sub2.set_title(subtitle)
-                  sub2.errorbar(result['t'][i], result['intensity'][i][:, j], result['eps'][i][:, j], marker='o', mfc='none',
-                  label=f'expt {title}', linestyle='none', color='black')
-                  sub2.plot(result['t'][i], result['fit'][i][:, j], label=f'fit {title}', color='red')
-                  sub2.legend()
-                  sub2.set_xlim(-10*result['fwhm'], 20*result['fwhm'])
-                  sub3 = fig.add_subplot(223)
-                  if result['model'] in ['decay', 'osc']:
-                        sub3.errorbar(result['t'][i], result['res'][i][:, j], 
-                        result['eps'][i][:, j], marker='o', mfc='none', 
-                        label=f'res {title}', linestyle='none', color='black')
-                  else:
-                        sub3.errorbar(result['t'][i], result['intensity'][i][:, j]-result['fit_decay'][i][:, j], 
-                        result['eps'][i][:, j], marker='o', mfc='none', label=f'expt osc {title}', 
-                        linestyle='none', color='black')
-                        sub3.plot(result['t'][i], result['fit_osc'][i][:, j], 
-                        label=f'fit osc {title}', color='red')
-                  sub3.legend()
+    Args:
+     result: fitting result
+     save_fig: prefix of saved png plots. If `save_fig` is `None`, plots are displayed instead of being saved.
+    '''
 
-                  sub4 = fig.add_subplot(224)
-                  if result['model'] in ['decay', 'osc']:
-                        sub4.errorbar(result['t'][i], result['res'][i][:, j], 
-                        result['eps'][i][:, j], marker='o', mfc='none', 
-                        label=f'res {title}', linestyle='none', color='black')
-                  else:
-                        sub4.errorbar(result['t'][i], result['intensity'][i][:, j]-result['fit_decay'][i][:, j], 
-                        result['eps'][i][:, j], marker='o', mfc='none', 
-                        label=f'expt osc {title}', linestyle='none', color='black')
-                        sub4.plot(result['t'][i], result['fit_osc'][i][:, j], 
-                        label=f'fit osc {title}', color='red')
-                  sub4.set_xlim(-10*result['fwhm'], 20*result['fwhm'])
-                  sub4.legend()
-                  if save_fig is not None:
-                        plt.savefig(f'./{save_fig}/{result["name_of_dset"][i]}_{j+1}.png')
-            start = start + result['intensity'][i].shape[1]
-      if save_fig is None:
-            plt.show()
-      return
+    start = 0
+    for i in range(len(result['t'])):
+        for j in range(result['intensity'][i].shape[1]):
+            fig = plt.figure(start+j+1)
+            title = f'{result["name_of_dset"][i]} scan #{j+1}'
+            subtitle = f"Chi squared: {result['red_chi2_ind'][i][j]: .2f}"
+            plt.suptitle(title)
+            sub1 = fig.add_subplot(221)
+            sub1.set_title(subtitle)
+            sub1.errorbar(result['t'][i], result['intensity'][i][:, j], result['eps'][i][:, j], marker='o', mfc='none',
+                          label=f'expt {title}', linestyle='none', color='black')
+            sub1.plot(result['t'][i], result['fit'][i][:, j],
+                      label=f'fit {title}', color='red')
+            sub1.legend()
+            sub2 = fig.add_subplot(222)
+            sub2.set_title(subtitle)
+            sub2.errorbar(result['t'][i], result['intensity'][i][:, j], result['eps'][i][:, j], marker='o', mfc='none',
+                          label=f'expt {title}', linestyle='none', color='black')
+            sub2.plot(result['t'][i], result['fit'][i][:, j],
+                      label=f'fit {title}', color='red')
+            sub2.legend()
+            sub2.set_xlim(-10*result['fwhm'], 20*result['fwhm'])
+            sub3 = fig.add_subplot(223)
+            if result['model'] in ['decay', 'osc']:
+                sub3.errorbar(result['t'][i], result['res'][i][:, j],
+                              result['eps'][i][:, j], marker='o', mfc='none',
+                              label=f'res {title}', linestyle='none', color='black')
+            else:
+                sub3.errorbar(result['t'][i], result['intensity'][i][:, j]-result['fit_decay'][i][:, j],
+                              result['eps'][i][:, j], marker='o', mfc='none', label=f'expt osc {title}',
+                              linestyle='none', color='black')
+                sub3.plot(result['t'][i], result['fit_osc'][i][:, j],
+                          label=f'fit osc {title}', color='red')
+            sub3.legend()
+
+            sub4 = fig.add_subplot(224)
+            if result['model'] in ['decay', 'osc']:
+                sub4.errorbar(result['t'][i], result['res'][i][:, j],
+                              result['eps'][i][:, j], marker='o', mfc='none',
+                              label=f'res {title}', linestyle='none', color='black')
+            else:
+                sub4.errorbar(result['t'][i], result['intensity'][i][:, j]-result['fit_decay'][i][:, j],
+                              result['eps'][i][:, j], marker='o', mfc='none',
+                              label=f'expt osc {title}', linestyle='none', color='black')
+                sub4.plot(result['t'][i], result['fit_osc'][i][:, j],
+                          label=f'fit osc {title}', color='red')
+            sub4.set_xlim(-10*result['fwhm'], 20*result['fwhm'])
+            sub4.legend()
+            if save_fig is not None:
+                plt.savefig(
+                    f'./{save_fig}/{result["name_of_dset"][i]}_{j+1}.png')
+        start = start + result['intensity'][i].shape[1]
+    if save_fig is None:
+        plt.show()
 
 
 description = '''
-fit tscan: fitting experimental time trace spectrum data with the convolution of the sum of 
+fit tscan: fitting experimental time trace spectrum data with the convolution of the sum of
 1. exponential decay (mode = decay)
 2. damped oscillation (mode = osc)
 3. exponential decay, damped oscillation (mode=both)
@@ -190,10 +206,10 @@ irf_help = '''
 shape of instrument response functon
 g: gaussian distribution
 c: cauchy distribution
-pv: pseudo voigt profile, linear combination of gaussian distribution and cauchy distribution 
-    pv = eta*c+(1-eta)*g 
-    the uniform fwhm parameter and 
-    mixing parameter are determined according to Journal of Applied Crystallography. 33 (6): 1311–1316. 
+pv: pseudo voigt profile, linear combination of gaussian distribution and cauchy distribution
+    pv = eta*c+(1-eta)*g
+    the uniform fwhm parameter and
+    mixing parameter are determined according to Journal of Applied Crystallography. 33 (6): 1311–1316.
 '''
 
 fwhm_G_help = '''
@@ -206,7 +222,7 @@ full width at half maximum for cauchy shape
 It would not be used when you did not set irf or use gaussian irf function
 '''
 
-method_glb_help='''
+method_glb_help = '''
 Global optimization Method.
 * 'basinhopping' : basinhopping
 * 'ampgo' : adaptive memory programming for global optimization
@@ -221,7 +237,7 @@ def fit_tscan():
                                      description=description,
                                      epilog=epilog)
     parser.add_argument('--mode', default='decay', choices=['decay', 'osc', 'both'],
-    help=mode_help)
+                        help=mode_help)
     parser.add_argument('--irf', default='g', choices=['g', 'c', 'pv'],
                         help=irf_help)
     parser.add_argument('--fwhm_G', type=float,
@@ -232,7 +248,7 @@ def fit_tscan():
                         help='prefix for tscan files ' +
                         'It will read prefix_i.txt')
     parser.add_argument('--num_file', type=int, nargs='+',
-                         help='number of scan file corresponding to each prefix')
+                        help='number of scan file corresponding to each prefix')
     parser.add_argument('-t0', '--time_zeros', type=float, nargs='+',
                         help='time zeros for each tscan')
     parser.add_argument('-t0f', '--time_zeros_file',
@@ -246,15 +262,15 @@ def fit_tscan():
     parser.add_argument('--no_base', action='store_false',
                         help='exclude baseline for fitting [mode: decay, both]')
     parser.add_argument('--fix_irf', action='store_true',
-    help='fix irf parameter (fwhm_G, fwhm_L) during fitting process')
+                        help='fix irf parameter (fwhm_G, fwhm_L) during fitting process')
     parser.add_argument('--fix_t0', action='store_true',
-    help='fix time zero parameter during fitting process.')
+                        help='fix time zero parameter during fitting process.')
     parser.add_argument('--method_glb', choices=['basinhopping', 'ampgo'],
-    help=method_glb_help)
+                        help=method_glb_help)
     parser.add_argument('-o', '--outdir', default='out',
                         help='name of directory to store output files')
     parser.add_argument('--save_fig', action='store_true',
-    help='save plot instead of display')
+                        help='save plot instead of display')
     args = parser.parse_args()
 
     prefix = np.array(args.prefix, dtype=str)
@@ -263,24 +279,26 @@ def fit_tscan():
     irf = args.irf
     if irf == 'g':
         if args.fwhm_G is None:
-            raise Exception('You are using gaussian irf, so you should set fwhm_G!\n')
+            raise Exception(
+                'You are using gaussian irf, so you should set fwhm_G!\n')
         else:
             fwhm_init = args.fwhm_G
     elif irf == 'c':
         if args.fwhm_L is None:
             raise Exception('You are using cauchy/lorenzian irf,' +
-            'so you should set fwhm_L!\n')
+                            'so you should set fwhm_L!\n')
         else:
             fwhm_init = args.fwhm_L
     else:
         if (args.fwhm_G is None) or (args.fwhm_L is None):
             raise Exception('You are using pseudo voigt irf,' +
-            'so you should set both fwhm_G and fwhm_L!\n')
+                            'so you should set both fwhm_G and fwhm_L!\n')
         else:
             fwhm_init = np.array([args.fwhm_G, args.fwhm_L])
 
     if (args.time_zeros is None) and (args.time_zeros_file is None):
-        raise Exception('You should set either time_zeros or time_zeros_file!\n')
+        raise Exception(
+            'You should set either time_zeros or time_zeros_file!\n')
 
     elif args.time_zeros is None:
         t0_init = np.genfromtxt(args.time_zeros_file)
@@ -293,12 +311,14 @@ def fit_tscan():
     num_scan = np.sum(num_file)
 
     if num_scan != t0_init.size:
-        raise Exception('Number of initial time zero parameter should be same as num_file parameter')
+        raise Exception(
+            'Number of initial time zero parameter should be same as num_file parameter')
 
     for i in range(prefix.size):
         t[i] = np.genfromtxt(f'{prefix[i]}_1.txt')[:, 0]
         num_data_pts = t[i].size
-        intensity[i], eps[i] = read_data(prefix[i], num_file[i], num_data_pts, 10)
+        intensity[i], eps[i] = read_data(
+            prefix[i], num_file[i], num_data_pts, 10)
 
     print(f'fitting with total {num_scan} data set!\n')
 
@@ -307,8 +327,9 @@ def fit_tscan():
         if irf in ['g', 'c']:
             bound_fwhm = [(fwhm_init, fwhm_init)]
         else:
-            bound_fwhm = [(fwhm_init[0], fwhm_init[0]), (fwhm_init[1], fwhm_init[1])]
-    
+            bound_fwhm = [(fwhm_init[0], fwhm_init[0]),
+                          (fwhm_init[1], fwhm_init[1])]
+
     bound_t0 = None
     if args.fix_t0:
         bound_t0 = t0_init.size*[None]
@@ -331,12 +352,12 @@ def fit_tscan():
         period_osc_init = np.array(args.period_osc)
         dargs.append(tau_osc_init)
         dargs.append(period_osc_init)
-    
+
     if args.mode == 'both':
         dargs.append(base)
 
-    result = FITDRIVER[args.mode](irf, fwhm_init, t0_init, *dargs, method_glb=args.method_glb, 
-    bound_fwhm=bound_fwhm, bound_t0=bound_t0, name_of_dset=prefix, t=t, intensity=intensity, eps=eps)
+    result = FITDRIVER[args.mode](irf, fwhm_init, t0_init, *dargs, method_glb=args.method_glb,
+                                  bound_fwhm=bound_fwhm, bound_t0=bound_t0, name_of_dset=prefix, t=t, intensity=intensity, eps=eps)
 
     save_TransientResult(result, args.outdir)
     save_TransientResult_txt(result, args.outdir)
@@ -346,4 +367,3 @@ def fit_tscan():
     else:
         plot_TransientResult(result)
 
-    return

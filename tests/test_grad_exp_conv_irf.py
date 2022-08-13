@@ -1,3 +1,4 @@
+# pylint: disable = missing-module-docstring, wrong-import-position, invalid-name
 import os
 import sys
 import numpy as np
@@ -19,21 +20,15 @@ def tmp_fun(t, fwhm_G, fwhm_L, k):
     return gau + eta*(cauchy-gau)
 
 def test_deriv_exp_conv_gau_1():
-    '''
-    Test gradient of convolution of exponenetial decay and gaussian irf (tau: 1, fwhm: 0.15)
-    '''
     tau = 1
     fwhm = 0.15
     t = np.linspace(-1, 100, 2001)
     tst = deriv_exp_conv_gau(t, fwhm, 1/tau)
     ref = check_num_deriv(exp_conv_gau, t, fwhm, 1/tau)
     result = np.allclose(tst, ref)
-    assert result == True
-    
+    assert result is True
+
 def test_deriv_exp_sum_conv_gau_1():
-    '''
-    Test gradient of convolution of sum of exponenetial decay and gaussian irf (tau1: 1, tau2: 100, fwhm: 0.15, base: True)
-    '''
     tau_1 = 1
     tau_2 = 100
     k = np.array([1/tau_1, 1/tau_2])
@@ -45,12 +40,9 @@ def test_deriv_exp_sum_conv_gau_1():
     ref = check_num_deriv(lambda t, fwhm, k1, k2: exp_conv_gau(t, fwhm, k1)+exp_conv_gau(t, fwhm, k2)+exp_conv_gau(t, fwhm, 0),
     t, fwhm, 1/tau_1, 1/tau_2)
     result = np.allclose(tst, ref)
-    assert result == True
+    assert result is True
 
 def test_deriv_exp_sum_conv_gau_2():
-    '''
-    Test gradient of convolution of sum of exponenetial decay and gaussian irf (tau1: 1, tau2: 100, fwhm: 0.15, base: False)
-    '''
     tau_1 = 1
     tau_2 = 100
     k = np.array([1/tau_1, 1/tau_2])
@@ -62,24 +54,18 @@ def test_deriv_exp_sum_conv_gau_2():
     ref = check_num_deriv(lambda t, fwhm, k1, k2: exp_conv_gau(t, fwhm, k1)+exp_conv_gau(t, fwhm, k2),
     t, fwhm, 1/tau_1, 1/tau_2)
     result = np.allclose(tst, ref)
-    assert result == True
+    assert result is True
 
 def test_deriv_exp_conv_cauchy():
-    '''
-    Test gradient of convolution of exponenetial decay and cauchy irf (tau: 1, fwhm: 0.15)
-    '''
     tau = 1
     fwhm = 0.15
     t = np.linspace(-1, 100, 2001)
     tst = deriv_exp_conv_cauchy(t, fwhm, 1/tau)
     ref = check_num_deriv(exp_conv_cauchy, t, fwhm, 1/tau)
     result = np.allclose(tst, ref)
-    assert result == True
-    
+    assert result is True
+
 def test_deriv_exp_sum_conv_cauchy_1():
-    '''
-    Test gradient of convolution of sum of exponenetial decay and cauchy irf (tau1: 1, tau2: 100, fwhm: 0.15, base: True)
-    '''
     tau_1 = 1
     tau_2 = 100
     k = np.array([1/tau_1, 1/tau_2])
@@ -92,12 +78,9 @@ def test_deriv_exp_sum_conv_cauchy_1():
     exp_conv_cauchy(t, fwhm, k2)+exp_conv_cauchy(t, fwhm, 0),
     t, fwhm, 1/tau_1, 1/tau_2)
     result = np.allclose(tst, ref)
-    assert result == True
+    assert result is True
 
 def test_deriv_exp_sum_conv_cauchy_2():
-    '''
-    Test gradient of convolution of sum of exponenetial decay and gaussian irf (tau1: 1, tau2: 100, fwhm: 0.15, base: False)
-    '''
     tau_1 = 1
     tau_2 = 100
     k = np.array([1/tau_1, 1/tau_2])
@@ -110,15 +93,9 @@ def test_deriv_exp_sum_conv_cauchy_2():
     exp_conv_cauchy(t, fwhm, k2),
     t, fwhm, 1/tau_1, 1/tau_2)
     result = np.allclose(tst, ref)
-    assert result == True
-    
+    assert result is True
+
 def test_deriv_exp_conv_pvoigt():
-    '''
-    Test gradient of convolution of exponenetial decay and pseudo voigt irf (tau: 1, fwhm_G: 0.1, fwhm_L: 0.15)
-    Note.
-     Not implemented in mathfun module, check implemenetation in res_grad_decay function
-    '''
-    
     tau_1 = 1
     fwhm_G = 0.1
     fwhm_L = 0.15
@@ -134,11 +111,12 @@ def test_deriv_exp_conv_pvoigt():
     grad_gau = deriv_exp_conv_gau(t, fwhm, 1/tau_1)
     grad_cauchy = deriv_exp_conv_cauchy(t, fwhm, 1/tau_1)
     grad_tot = grad_gau + eta*(grad_cauchy-grad_gau)
-    grad[:, 0] = grad_tot[:, 0]; grad[:, 3] = grad_tot[:, 2]
+    grad[:, 0] = grad_tot[:, 0]
+    grad[:, 3] = grad_tot[:, 2]
     grad[:, 1] = dfwhm_G*grad_tot[:, 1] + deta_G*diff
     grad[:, 2] = dfwhm_L*grad_tot[:, 1] + deta_L*diff
 
     ref = check_num_deriv(tmp_fun, t, fwhm_G, fwhm_L, 1/tau_1)
 
     result = np.allclose(grad, ref)
-    assert result == True
+    assert result is True

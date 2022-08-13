@@ -1,10 +1,11 @@
+# pylint: disable = missing-module-docstring,wrong-import-position,invalid-name
 import os
 import sys
 import numpy as np
 from scipy.optimize import approx_fprime
 
 path = os.path.dirname(os.path.realpath(__file__))
-sys.path.append(path+"/../src/")
+sys.path.append(path+'/../src/')
 
 from TRXASprefitpack import residual_thy, residual_voigt
 from TRXASprefitpack import res_grad_voigt, res_grad_thy
@@ -16,20 +17,18 @@ epsilon = 5e-8
 
 
 def test_res_grad_voigt_1():
-    '''
-    Gaussian Edge
-    '''
-    e0_1 = 8987; e0_2 = 9000
+    e0_1 = 8987
+    e0_2 = 9000
     e0_edge = 8992
     fwhm_G_1 = 0.8
     fwhm_G_2 = 0.9
     fwhm_L_1 = 3
     fwhm_L_2 = 9
     fwhm_edge = 7
-    
+
     # set scan range
     e = np.linspace(8960, 9020, 160)
-    
+
     # generate model spectrum
     model_static = 0.1*voigt(e-e0_1, fwhm_G_1, fwhm_L_1) + \
         0.7*voigt(e-e0_2, fwhm_G_2, fwhm_L_2) + \
@@ -41,11 +40,11 @@ def test_res_grad_voigt_1():
     ref_res = np.sum(residual_voigt(x0, 2, 'g', 1, None,
     e=e, intensity=model_static, eps=eps_static)**2)/2
 
-    ref_grad = approx_fprime(x0, lambda x0: 
+    ref_grad = approx_fprime(x0, lambda x0:
     np.sum(residual_voigt(x0, 2, 'g', 1, None,
     e=e, intensity=model_static, eps=eps_static)**2)/2, 1e-7)
 
-    res_tst, grad_tst = res_grad_voigt(x0, 2, 'g', 1, 
+    res_tst, grad_tst = res_grad_voigt(x0, 2, 'g', 1,
     None, np.zeros(len(x0), dtype=bool),
     e=e, intensity=model_static, eps=eps_static)
 
@@ -55,20 +54,18 @@ def test_res_grad_voigt_1():
     assert (cond_res, cond_grad) == (True, True)
 
 def test_res_grad_voigt_2():
-    '''
-    Lorenzian Edge
-    '''
-    e0_1 = 8987; e0_2 = 9000
+    e0_1 = 8987
+    e0_2 = 9000
     e0_edge = 8992
     fwhm_G_1 = 0.8
     fwhm_G_2 = 0.9
     fwhm_L_1 = 3
     fwhm_L_2 = 9
     fwhm_edge = 7
-    
+
     # set scan range
     e = np.linspace(8960, 9020, 160)
-    
+
     # generate model spectrum
     model_static = 0.1*voigt(e-e0_1, fwhm_G_1, fwhm_L_1) + \
         0.7*voigt(e-e0_2, fwhm_G_2, fwhm_L_2) + \
@@ -80,11 +77,11 @@ def test_res_grad_voigt_2():
     ref_res = np.sum(residual_voigt(x0, 2, 'l', 1, None,
     e=e, intensity=model_static, eps=eps_static)**2)/2
 
-    ref_grad = approx_fprime(x0, lambda x0: 
+    ref_grad = approx_fprime(x0, lambda x0:
     np.sum(residual_voigt(x0, 2, 'l', 1, None,
     e=e, intensity=model_static, eps=eps_static)**2)/2, 1e-7)
 
-    res_tst, grad_tst = res_grad_voigt(x0, 2, 'l', 1, 
+    res_tst, grad_tst = res_grad_voigt(x0, 2, 'l', 1,
     None, np.zeros(len(x0), dtype=bool),
     e=e, intensity=model_static, eps=eps_static)
 
@@ -94,20 +91,18 @@ def test_res_grad_voigt_2():
     assert (cond_res, cond_grad) == (True, True)
 
 def test_res_grad_voigt_3():
-    '''
-    Gaussian Edge + 2nd order polynomial baseline
-    '''
-    e0_1 = 8987; e0_2 = 9000
+    e0_1 = 8987
+    e0_2 = 9000
     e0_edge = 8992
     fwhm_G_1 = 0.8
     fwhm_G_2 = 0.9
     fwhm_L_1 = 3
     fwhm_L_2 = 9
     fwhm_edge = 7
-    
+
     # set scan range
     e = np.linspace(8960, 9020, 160)
-    
+
     # generate model spectrum
     model_static = 0.1*voigt(e-e0_1, fwhm_G_1, fwhm_L_1) + \
         0.7*voigt(e-e0_2, fwhm_G_2, fwhm_L_2) + \
@@ -120,11 +115,11 @@ def test_res_grad_voigt_3():
     ref_res = np.sum(residual_voigt(x0, 2, edge='g', num_edge=1, base_order=2,
     e=e, intensity=model_static, eps=eps_static)**2)/2
 
-    ref_grad = approx_fprime(x0, lambda x0: 
+    ref_grad = approx_fprime(x0, lambda x0:
     np.sum(residual_voigt(x0, 2, 'g', 1, 2,
     e=e, intensity=model_static, eps=eps_static)**2)/2, 1e-6)
 
-    res_tst, grad_tst = res_grad_voigt(x0, 2, 'g', 1, 
+    res_tst, grad_tst = res_grad_voigt(x0, 2, 'g', 1,
     2, np.zeros(len(x0), dtype=bool),
     e=e, intensity=model_static, eps=eps_static)
 
@@ -134,20 +129,18 @@ def test_res_grad_voigt_3():
     assert (cond_res, cond_grad) == (True, True)
 
 def test_res_grad_voigt_4():
-    '''
-    Lorenzian Edge + 2nd order polynomial baseline
-    '''
-    e0_1 = 8987; e0_2 = 9000
+    e0_1 = 8987
+    e0_2 = 9000
     e0_edge = 8992
     fwhm_G_1 = 0.8
     fwhm_G_2 = 0.9
     fwhm_L_1 = 3
     fwhm_L_2 = 9
     fwhm_edge = 7
-    
+
     # set scan range
     e = np.linspace(8960, 9020, 160)
-    
+
     # generate model spectrum
     model_static = 0.1*voigt(e-e0_1, fwhm_G_1, fwhm_L_1) + \
         0.7*voigt(e-e0_2, fwhm_G_2, fwhm_L_2) + \
@@ -160,11 +153,11 @@ def test_res_grad_voigt_4():
     ref_res = np.sum(residual_voigt(x0, 2, edge='l', num_edge=1, base_order=2,
     e=e, intensity=model_static, eps=eps_static)**2)/2
 
-    ref_grad = approx_fprime(x0, lambda x0: 
+    ref_grad = approx_fprime(x0, lambda x0:
     np.sum(residual_voigt(x0, 2, 'l', 1, 2,
     e=e, intensity=model_static, eps=eps_static)**2)/2, 1e-6)
 
-    res_tst, grad_tst = res_grad_voigt(x0, 2, 'l', 1, 
+    res_tst, grad_tst = res_grad_voigt(x0, 2, 'l', 1,
     2, np.zeros(len(x0), dtype=bool),
     e=e, intensity=model_static, eps=eps_static)
 
@@ -174,10 +167,6 @@ def test_res_grad_voigt_4():
     assert (cond_res, cond_grad) == (True, True)
 
 def test_res_grad_thy_1():
-    '''
-    two thy component and two gaussian edge and 2nd order polynomial baseline (policy shift)
-    '''
-
     e0_edge = np.array([860.5, 862])
     fwhm_edge = np.array([1, 1.5])
     peak_shift = np.array([862.5, 863])
@@ -185,14 +174,14 @@ def test_res_grad_thy_1():
     mixing_edge = np.array([0.3, 0.7])
     fwhm_G_thy = 0.3
     fwhm_L_thy = 0.5
-    
+
     thy_peak = np.empty(2, dtype=object)
     thy_peak[0] = np.genfromtxt(path+'/'+'Ni_example_1.stk')
     thy_peak[1] = np.genfromtxt(path+'/'+'Ni_example_2.stk')
-    
+
     # set scan range
     e = np.linspace(852.5, 865, 51)
-    
+
     # generate model spectrum
     model_static = mixing[0]*voigt_thy(e, thy_peak[0], fwhm_G_thy, fwhm_L_thy,
     peak_shift[0], policy='shift')+\
@@ -201,7 +190,7 @@ def test_res_grad_thy_1():
             mixing_edge[0]*edge_gaussian(e-e0_edge[0], fwhm_edge[0])+\
                 mixing_edge[1]*edge_gaussian(e-e0_edge[1], fwhm_edge[1])+\
                     1e-2*(e-860)**2 + 2e-1*(e-860) + 3e-1
-    
+
     eps_static = np.ones_like(model_static)
 
     x0 = [0.2, 0.4, 862.2, 863.3, 860, 861.5, 0.8, 1.2]
@@ -220,10 +209,6 @@ def test_res_grad_thy_1():
     assert (cond_res, cond_grad) == (True, True)
 
 def test_res_grad_thy_2():
-    '''
-    two thy component and two gaussian edge and 2nd order polynomial baseline (policy scale)
-    '''
-
     e0_edge = np.array([860.5, 862])
     fwhm_edge = np.array([1, 1.5])
     peak_shift = np.array([862.5, 863])
@@ -231,14 +216,14 @@ def test_res_grad_thy_2():
     mixing_edge = np.array([0.3, 0.7])
     fwhm_G_thy = 0.3
     fwhm_L_thy = 0.5
-    
+
     thy_peak = np.empty(2, dtype=object)
     thy_peak[0] = np.genfromtxt(path+'/'+'Ni_example_1.stk')
     thy_peak[1] = np.genfromtxt(path+'/'+'Ni_example_2.stk')
-    
+
     # set scan range
     e = np.linspace(852.5, 865, 51)
-    
+
     # generate model spectrum
     model_static = mixing[0]*voigt_thy(e, thy_peak[0], fwhm_G_thy, fwhm_L_thy,
     peak_shift[0], policy='shift')+\
@@ -247,7 +232,7 @@ def test_res_grad_thy_2():
             mixing_edge[0]*edge_gaussian(e-e0_edge[0], fwhm_edge[0])+\
                 mixing_edge[1]*edge_gaussian(e-e0_edge[1], fwhm_edge[1])+\
                     1e-2*(e-860)**2 + 2e-1*(e-860) + 3e-1
-    
+
     eps_static = np.ones_like(model_static)
 
     x0 = [0.2, 0.4, 1.01, 1.05, 1.01, 860, 862.5, 0.8, 1.2]
@@ -266,10 +251,6 @@ def test_res_grad_thy_2():
     assert (cond_res, cond_grad) == (True, True)
 
 def test_res_grad_thy_3():
-    '''
-    two thy component and two gaussian edge and 2nd order polynomial baseline (policy both)
-    '''
-
     e0_edge = np.array([860.5, 862])
     fwhm_edge = np.array([1, 1.5])
     peak_shift = np.array([862.5, 863])
@@ -277,14 +258,14 @@ def test_res_grad_thy_3():
     mixing_edge = np.array([0.3, 0.7])
     fwhm_G_thy = 0.3
     fwhm_L_thy = 0.5
-    
+
     thy_peak = np.empty(2, dtype=object)
     thy_peak[0] = np.genfromtxt(path+'/'+'Ni_example_1.stk')
     thy_peak[1] = np.genfromtxt(path+'/'+'Ni_example_2.stk')
-    
+
     # set scan range
     e = np.linspace(852.5, 865, 51)
-    
+
     # generate model spectrum
     model_static = mixing[0]*voigt_thy(e, thy_peak[0], fwhm_G_thy, fwhm_L_thy,
     peak_shift[0], policy='shift')+\
@@ -293,7 +274,7 @@ def test_res_grad_thy_3():
             mixing_edge[0]*edge_gaussian(e-e0_edge[0], fwhm_edge[0])+\
                 mixing_edge[1]*edge_gaussian(e-e0_edge[1], fwhm_edge[1])+\
                     1e-2*(e-860)**2 + 2e-1*(e-860) + 3e-1
-    
+
     eps_static = np.ones_like(model_static)
 
     x0 = [0.2, 0.4, 862.2, 863.3, 1.01, 1.05, 860.5, 862.5, 0.8, 1.2]
@@ -312,10 +293,6 @@ def test_res_grad_thy_3():
     assert (cond_res, cond_grad) == (True, True)
 
 def test_res_grad_thy_4():
-    '''
-    two thy component and two lorenzian edge and 2nd order polynomial baseline (policy both)
-    '''
-
     e0_edge = np.array([860.5, 862])
     fwhm_edge = np.array([1, 1.5])
     peak_shift = np.array([862.5, 863])
@@ -323,14 +300,14 @@ def test_res_grad_thy_4():
     mixing_edge = np.array([0.3, 0.7])
     fwhm_G_thy = 0.3
     fwhm_L_thy = 0.5
-    
+
     thy_peak = np.empty(2, dtype=object)
     thy_peak[0] = np.genfromtxt(path+'/'+'Ni_example_1.stk')
     thy_peak[1] = np.genfromtxt(path+'/'+'Ni_example_2.stk')
-    
+
     # set scan range
     e = np.linspace(852.5, 865, 51)
-    
+
     # generate model spectrum
     model_static = mixing[0]*voigt_thy(e, thy_peak[0], fwhm_G_thy, fwhm_L_thy,
     peak_shift[0], policy='shift')+\
@@ -339,7 +316,7 @@ def test_res_grad_thy_4():
             mixing_edge[0]*edge_lorenzian(e-e0_edge[0], fwhm_edge[0])+\
                 mixing_edge[1]*edge_lorenzian(e-e0_edge[1], fwhm_edge[1])+\
                     1e-2*(e-860)**2 + 2e-1*(e-860) + 3e-1
-    
+
     eps_static = np.ones_like(model_static)
 
     x0 = [0.2, 0.4, 862.2, 863.3, 1.01, 1.05, 860.5, 862.5, 0.8, 1.2]
@@ -356,3 +333,5 @@ def test_res_grad_thy_4():
     cond_grad = np.allclose(grad_tst, ref_grad, rtol=1e-4, atol=1e-6)
 
     assert (cond_res, cond_grad) == (True, True)
+
+    

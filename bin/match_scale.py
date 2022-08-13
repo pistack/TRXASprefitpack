@@ -1,3 +1,4 @@
+# pylint: disable = missing-module-docstring, wrong-import-position
 # match_scale.py
 # Wrapper script for match_scale()
 # Date: 2022. 7. 25.

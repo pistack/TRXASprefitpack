@@ -1,7 +1,7 @@
 '''
 driver:
 subpackage for driver routine of TRXASprefitpack
-convolution of sum of exponential decay and instrumental response function 
+convolution of sum of exponential decay and instrumental response function
 
 :copyright: 2021-2022 by pistack (Junho Lee).
 :license: LGPL3.
@@ -24,5 +24,4 @@ __all__ = ['sads', 'dads', 'ampgo',
            'StaticResult', 'save_StaticResult', 'load_StaticResult',
            'static_spectrum',
            'fit_transient_exp', 'fit_transient_dmp_osc', 'fit_transient_both',
-           'fit_static_voigt', 'fit_static_thy'
-           ,'CIResult', 'is_better_fit', 'confidence_interval']
+           'fit_static_voigt', 'fit_static_thy', 'CIResult', 'is_better_fit', 'confidence_interval']
