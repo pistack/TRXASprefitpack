@@ -409,7 +409,7 @@ k: float, T: float, c_pair: Tuple[float]) -> Union[float, np.ndarray]:
 
     Returns:
      Convolution of normalized gaussian distribution and 
-     damped oscillation :math:`(\\exp(-kt) \\left( c_1 \\cos(2\\pi t/T) + c_2 \\sin(2\\pi t/T)\\right))`.
+     damped oscillation :math:`(\\exp(-kt) \\cdot (c_1 \\cos(2\\pi t/T) + c_2 \\sin(2\\pi t/T)))`.
     '''
 
     sigma = fwhm/(2*np.sqrt(2*np.log(2)))
@@ -456,7 +456,7 @@ k: float, T: float, c_pair: Tuple[float]) -> Union[float, np.ndarray]:
 
     Returns:
      Convolution of normalized cauchy distribution and 
-     damped oscillation :math:`(\\exp(-kt) \\left(c_1 \\cos(2\\pi t/T) + c_2 \\sin(2\\pi t/T)\\right))`.
+     damped oscillation :math:`(\\exp(-kt) \\cdot (c_1 \\cos(2\\pi t/T) + c_2 \\sin(2\\pi t/T)))`.
     '''
 
     cosine, sine = dmp_osc_conv_cauchy_pair(t, fwhm, k, T)
@@ -511,7 +511,7 @@ k: float, T: float, c_pair: Tuple[float]) -> Union[float, np.ndarray]:
 
     Returns:
      Convolution of normalized pseudo voigt profile and
-     damped oscillation :math:`(\\exp(-kt) \\left(c_1 \\cos(2\\pi t/T) + c_2 \\sin(2\\pi t/T)\\right))`.
+     damped oscillation :math:`(\\exp(-kt) \\cdot (c_1 \\cos(2\\pi t/T) + c_2 \\sin(2\\pi t/T)))`.
     '''
 
     u = dmp_osc_conv_gau_2(t, fwhm, k, T, c_pair)
@@ -588,7 +588,7 @@ k: float, T: float, c_pair: Tuple[float]) -> np.ndarray:
 
     Returns:
      Derivative of Convolution of normalized gaussian distribution and 
-     damped oscillation :math:`(\\exp(-kt) \\left(c_1 \\cos(2\\pi t/T) + c_2 \\sin(2\\pi t/T)\\right))`..
+     damped oscillation :math:`(\\exp(-kt) \\cdot (c_1 \\cos(2\\pi t/T) + c_2 \\sin(2\\pi t/T)))`.
     
     Note:
 
@@ -700,7 +700,7 @@ k: float, T: float, c_pair: Tuple[float]) -> Union[float, np.ndarray]:
 
     Returns:
      Gradient of Convolution of normalized cauchy distribution and 
-     damped oscillation :math:`(\\exp(-kt) \\left(c_1 \\cos(2\\pi t/T) + c_2 \\sin(2\\pi t/T)\\right))`.
+     damped oscillation :math:`(\\exp(-kt) \\cdot (c_1 \\cos(2\\pi t/T) + c_2 \\sin(2\\pi t/T)))`.
 
     Note:
 
@@ -797,7 +797,7 @@ k: np.ndarray, T: np.ndarray, c: np.ndarray) -> np.ndarray:
 
     Returns:
      Derivative of Convolution of normalized gaussian distribution and 
-     damped oscillation :math:`(\\exp(-kt) \\left( c_1 \\cos(2\\pi t/T) + c_2 \\sin(2\\pi t/T)\\right))`.
+     damped oscillation :math:`(\\exp(-kt) \\cdot (c_1 \\cos(2\\pi t/T) + c_2 \\sin(2\\pi t/T)))`.
     Note:
      * 1st column: df/dt
      * 2nd column: df/d(fwhm)
@@ -867,7 +867,7 @@ k: np.ndarray, T: np.ndarray, c: np.ndarray) -> np.ndarray:
 
     Returns:
      Derivative of Convolution of normalized cauchy distribution and 
-     damped oscillation :math:`(\\exp(-kt) \\left(c_1 \\cos(2\\pi t/T) + c_2 \\sin(2\\pi t/T)\\right)`.
+     damped oscillation :math:`(\\exp(-kt) \\cdot (c_1 \\cos(2\\pi t/T) + c_2 \\sin(2\\pi t/T)))`.
     Note:
      * 1st column: df/dt
      * 2nd column: df/d(fwhm)
