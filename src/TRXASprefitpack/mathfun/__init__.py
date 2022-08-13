@@ -16,6 +16,10 @@ from .exp_conv_irf import deriv_exp_conv_gau, deriv_exp_conv_cauchy
 from .exp_conv_irf import deriv_exp_sum_conv_gau, deriv_exp_sum_conv_cauchy
 from .exp_conv_irf import dmp_osc_conv_gau, dmp_osc_conv_cauchy, dmp_osc_conv_pvoigt
 from .exp_conv_irf import deriv_dmp_osc_conv_gau, deriv_dmp_osc_conv_cauchy
+from .exp_conv_irf import deriv_dmp_osc_sum_conv_gau, deriv_dmp_osc_sum_conv_cauchy
+from .exp_conv_irf import dmp_osc_conv_gau_2, dmp_osc_conv_cauchy_2, dmp_osc_conv_pvoigt_2
+from .exp_conv_irf import deriv_dmp_osc_conv_gau_2, deriv_dmp_osc_conv_cauchy_2
+from .exp_conv_irf import deriv_dmp_osc_sum_conv_gau_2, deriv_dmp_osc_sum_conv_cauchy_2
 from .rate_eq import solve_model, solve_seq_model, solve_l_model, compute_model
 from .rate_eq import compute_signal_gau, compute_signal_cauchy
 from .rate_eq import compute_signal_pvoigt
@@ -35,6 +39,10 @@ __all__ = ['voigt', 'edge_gaussian', 'edge_lorenzian', 'voigt_thy',
            'deriv_exp_sum_conv_gau', 'deriv_exp_sum_conv_cauchy',
            'dmp_osc_conv_gau', 'dmp_osc_conv_cauchy', 'dmp_osc_conv_pvoigt',
            'deriv_dmp_osc_conv_gau', 'deriv_dmp_osc_conv_cauchy',
+           'deriv_dmp_osc_sum_conv_gau', 'deriv_dmp_osc_sum_conv_cauchy',
+           'dmp_osc_conv_gau_2', 'dmp_osc_conv_cauchy_2', 'dmp_osc_conv_pvoigt_2',
+           'deriv_dmp_osc_conv_gau_2', 'deriv_dmp_osc_conv_cauchy_2',
+           'deriv_dmp_osc_sum_conv_gau_2', 'deriv_dmp_osc_sum_conv_cauchy_2',
            'solve_model', 'solve_seq_model', 'solve_l_model', 'compute_model',
            'compute_signal_gau', 'compute_signal_cauchy', 'compute_signal_pvoigt', 
            'exp_conv', 'fact_anal_exp_conv',

@@ -12,38 +12,16 @@ from TRXASprefitpack import sum_exp_dmp_osc_conv, fact_anal_sum_exp_dmp_osc_conv
 
 class TestFactAnal(unittest.TestCase):
 
-    def test_fact_anal_exp_conv_1(self):
-        '''
-        Test factor analysis routine (uniform noise level)
-        '''
+    def test_fact_anal_exp_conv(self):
         fwhm = 0.15
         c_ref = np.array([1, -0.5, -0.25])
         tau = np.array([0.3, 10])
         t = np.hstack((np.arange(-1, 1, 0.05), np.linspace(1, 100, 99)))
         model = exp_conv(t, fwhm, tau, c_ref, True, irf='g')
-        noise = np.random.normal(0, np.max(np.abs(model))/10, model.size)
-        eps = np.max(np.abs(model))/10*np.ones_like(noise)
-        expt = model+noise
+        eps = np.ones_like(model)
+        expt = model
         c_tst = fact_anal_exp_conv(t, fwhm, tau, True, irf='g', intensity=expt, eps=eps)
-        cond = np.linalg.norm(c_ref-c_tst)/(np.linalg.norm(c_ref)) < 1e-1
-        self.assertEqual(cond, True)
-
-    def test_fact_anal_exp_conv_2(self):
-        '''
-        Test factor analysis routine (heterogeneous noise)
-        '''
-        fwhm = 0.15
-        c_ref = np.array([1, -0.5, -0.25])
-        tau = np.array([0.3, 10])
-        t = np.hstack((np.arange(-1, 1, 0.05), np.linspace(1, 100, 99)))
-        model = exp_conv(t, fwhm, tau, c_ref, True, irf='g')
-        eps = np.max(np.abs(model))/10*np.random.normal(1, 0.1, model.size)
-        noise = np.empty_like(eps)
-        for i in range(noise.size):
-            noise[i] = np.random.normal(0, eps[i])
-        expt = model+noise
-        c_tst = fact_anal_exp_conv(t, fwhm, tau, True, irf='g', intensity=expt, eps=eps)
-        cond = np.linalg.norm(c_ref-c_tst)/(np.linalg.norm(c_ref)) < 1e-1
+        cond = np.allclose(c_ref, c_tst)
         self.assertEqual(cond, True)
 
     def test_fact_anal_dmp_osc_conv(self):
@@ -51,15 +29,14 @@ class TestFactAnal(unittest.TestCase):
         c_ref = np.array([1, 0.5])
         tau = np.array([0.3, 1])
         period = np.array([0.5, 1])
-        phase = np.array([np.pi/3, -np.pi/4])
+        phase = np.array([-np.pi/17, 2*np.pi/4])
         t = np.hstack((np.arange(-1, 1, 0.02), np.linspace(1, 100, 99)))
         model = dmp_osc_conv(t, fwhm, tau, period, phase, c_ref, irf='g')
-        noise = np.random.normal(0, np.max(np.abs(model))/100, model.size)
-        eps = np.max(np.abs(model))/100*np.ones_like(noise)
-        expt = model+noise
+        eps = np.ones_like(model)
+        expt = model
         phase_tst, c_tst = fact_anal_dmp_osc_conv(t, fwhm, tau, period, irf='g', intensity=expt, eps=eps)
-        cond = np.linalg.norm(c_ref-c_tst)/(np.linalg.norm(c_ref)) < 1e-2
-        cond_phase = np.allclose(phase, phase_tst, rtol=1e-2)
+        cond = np.allclose(c_ref, c_tst)
+        cond_phase = np.allclose(phase, phase_tst)
         self.assertEqual((cond, cond_phase), (True, True))
 
     def test_fact_anal_sum_exp_dmp_osc_conv(self):
@@ -73,15 +50,14 @@ class TestFactAnal(unittest.TestCase):
         t = np.hstack((np.arange(-1, 1, 0.02), np.linspace(1, 100, 99)))
         model = sum_exp_dmp_osc_conv(t, fwhm, tau, tau_osc, period_osc, phase_osc, 
         c_ref_decay, c_ref_osc, base=True, irf='g')
-        noise = np.random.normal(0, np.max(np.abs(model))/100, model.size)
-        eps = np.max(np.abs(model))/100*np.ones_like(noise)
-        expt = model+noise
+        eps = np.ones_like(model)
+        expt = model
         c_tst_decay, phase_tst_osc, c_tst_osc = \
             fact_anal_sum_exp_dmp_osc_conv(t, fwhm, tau, tau_osc, period_osc, base=True,
             irf='g', intensity=expt, eps=eps)
-        cond_decay = np.linalg.norm(c_ref_decay-c_tst_decay)/(np.linalg.norm(c_ref_decay)) < 1e-2
-        cond_osc = np.linalg.norm(c_ref_osc-c_tst_osc)/(np.linalg.norm(c_ref_osc)) < 1e-1
-        cond_phase_osc = np.allclose(phase_osc, phase_tst_osc, rtol=1e-1)
+        cond_decay = np.allclose(c_ref_decay, c_tst_decay)
+        cond_osc = np.allclose(c_ref_osc, c_tst_osc)
+        cond_phase_osc = np.allclose(phase_osc, phase_tst_osc)
         self.assertEqual((cond_decay, cond_phase_osc, cond_osc), (True, True, True))
 
 

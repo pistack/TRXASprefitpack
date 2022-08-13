@@ -80,7 +80,7 @@ def residual_thy(x0: np.ndarray, policy: str, thy_peak: Sequence[np.ndarray],
     if policy in ['scale', 'shift']:
         peak_factor = x0[2:2+thy_comp]
     elif policy == 'both':
-        peak_factor = np.array(thy_comp, dtype=object)
+        peak_factor = np.empty(thy_comp, dtype=object)
         for i in range(thy_comp):
             peak_factor[i] = np.array([x0[2+i], x0[2+thy_comp+i]])
     
@@ -192,7 +192,7 @@ def res_grad_thy(x0: np.ndarray, policy: str, thy_peak: Sequence[np.ndarray],
     if policy in ['scale', 'shift']:
         peak_factor = x0[2:2+thy_comp]
     elif policy == 'both':
-        peak_factor = np.array(thy_comp, dtype=object)
+        peak_factor = np.empty(thy_comp, dtype=object)
         for i in range(thy_comp):
             peak_factor[i] = np.array([x0[2+i], x0[2+thy_comp+i]])
     
