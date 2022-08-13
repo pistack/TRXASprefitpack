@@ -199,7 +199,7 @@ def fit_static_thy(thy_peak: Sequence[np.ndarray],
 
         res_go = GLBSOLVER[method_glb](res_grad_thy, param, **kwargs_glb)
     else:
-        res_go = dict()
+        res_go = {}
         res_go['x'] = param
         res_go['message'] = None
         res_go['nfev'] = 0

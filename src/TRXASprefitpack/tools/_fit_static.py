@@ -37,7 +37,7 @@ def save_StaticResult_txt(result: StaticResult, dirname: str):
     if not (Path.cwd()/dirname).exists():
         os.mkdir(dirname)
 
-    with open(f'{dirname}/fit_summary.txt', 'w') as f:
+    with open(f'{dirname}/fit_summary.txt', 'w', encoding='utf-8') as f:
         f.write(str(result))
 
     tot_comp = result['n_voigt']

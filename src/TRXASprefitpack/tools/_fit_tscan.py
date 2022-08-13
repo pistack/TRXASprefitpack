@@ -57,7 +57,7 @@ def save_TransientResult_txt(result: TransientResult, dirname: str):
     if not (Path.cwd()/dirname).exists():
         os.mkdir(dirname)
 
-    with open(f'{dirname}/fit_summary.txt', 'w') as f:
+    with open(f'{dirname}/fit_summary.txt', 'w', encoding='utf-8') as f:
         f.write(str(result))
 
     for i in range(len(result['t'])):

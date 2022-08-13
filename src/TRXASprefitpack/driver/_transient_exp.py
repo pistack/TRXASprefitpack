@@ -143,7 +143,7 @@ def fit_transient_exp(irf: str, fwhm_init: Union[float, np.ndarray],
         #res_go = basinhopping(res_grad_decay, param, **kwargs_glb)
         res_go = GLBSOLVER[method_glb](res_grad_decay, param, **kwargs_glb)
     else:
-        res_go = dict()
+        res_go = {}
         res_go['x'] = param
         res_go['message'] = None
         res_go['nfev'] = 0
