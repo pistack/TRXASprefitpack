@@ -209,7 +209,7 @@ def test_driver_static_thy_1():
     cond_deriv_ampgo = np.allclose(static_spectrum(e, result_ampgo, deriv_order=1),
     deriv_static_ampgo)
     cond_dderiv_ampgo = np.allclose(static_spectrum(e, result_ampgo, deriv_order=2),
-    dderiv_static_ampgo, rtol=1e-4)
+    dderiv_static_ampgo, rtol=1e-4, atol=1e-2)
 
     save_StaticResult(result_ampgo, 'test_driver_static_thy_1')
     load_result_ampgo = load_StaticResult('test_driver_static_thy_1')
@@ -276,13 +276,12 @@ def test_driver_static_thy_2():
     dderiv_static_ampgo = (static_spectrum(e+epsilon*e, result_ampgo) +
     static_spectrum(e-epsilon*e, result_ampgo)-2*static_ampgo)/(epsilon*e)**2
 
-
     cond_sol_ampgo = np.allclose(result_ampgo['x'], ans)
     cond_static_ampgo = np.allclose(static_ampgo, model_static-base_line)
     cond_deriv_ampgo = np.allclose(static_spectrum(e, result_ampgo, deriv_order=1),
     deriv_static_ampgo)
     cond_dderiv_ampgo = np.allclose(static_spectrum(e, result_ampgo, deriv_order=2),
-    dderiv_static_ampgo, rtol=1e-4)
+    dderiv_static_ampgo, rtol=1e-4, atol=1e-2)
 
     save_StaticResult(result_ampgo, 'test_driver_static_thy_1')
     load_result_ampgo = load_StaticResult('test_driver_static_thy_1')
