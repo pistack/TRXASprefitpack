@@ -244,7 +244,7 @@ def fit_transient_dmp_osc(irf: str, fwhm_init: Union[float, np.ndarray],
             A = make_A_matrix_dmp_osc(
                 t[i]-param_opt[t0_idx], fwhm_pv, tau_opt, period_opt, irf, eta)
             tmp = fact_anal_A(A, intensity[i][:, j], eps[i][:, j])
-            c[i][:, j] = np.sqrt(tmp[:num_comp]**2+tmp[num_comp:])
+            c[i][:, j] = np.sqrt(tmp[:num_comp]**2+tmp[num_comp:]**2)
             phase[i][:, j] = -np.arctan2(tmp[num_comp:], tmp[:num_comp])
             fit[i][:, j] = tmp @ A
             param_name[t0_idx] = f't_0_{i+1}_{j+1}'
