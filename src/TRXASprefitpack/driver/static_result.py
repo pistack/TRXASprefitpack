@@ -240,7 +240,10 @@ def save_StaticResult(result: StaticResult, filename: str):
         fit_res_param.create_dataset('param_opt', data=result['x'])
         fit_res_param.create_dataset('param_eps', data=result['x_eps'])
         fit_res_param.create_dataset(
-            'param_name', data=result['param_name'].astype('S100'), dtype='S100')
+            'param_name',
+            data=np.char.encode(result['param_name'].astype('str'),
+            encoding='utf-8').astype('S100'),
+            dtype='S100')
         fit_res_param.create_dataset('param_bounds', data=result['bounds'])
         fit_res_param.create_dataset('correlation', data=result['corr'])
         fit_res_mis = fit_res.create_group('miscellaneous')
@@ -313,7 +316,9 @@ def load_StaticResult(filename: str) -> StaticResult:
         fit_res_param = fit_res['parameter']
         result['x'] = np.atleast_1d(fit_res_param['param_opt'])
         result['x_eps'] = np.atleast_1d(fit_res_param['param_eps'])
-        result['param_name'] = np.atleast_1d(fit_res_param['param_name'])
+        result['param_name'] = \
+            np.char.decode(np.atleast_1d(fit_res_param['param_name']),
+            encoding='utf-8')
         tmp = np.atleast_2d(fit_res_param['param_bounds'])
         lst = tmp.shape[0]*[None]
         for i in range(tmp.shape[0]):

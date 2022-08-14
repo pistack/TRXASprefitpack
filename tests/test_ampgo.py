@@ -46,7 +46,7 @@ def test_grad_six_hump_camelback():
         grad_ref[i, :] = approx_fprime(x0, six_hump_camelback, 5e-8)
         grad_tst[i, :] = grad_six_hump_camelback(x0)
 
-    cond = np.allclose(grad_ref, grad_tst)
+    cond = np.allclose(grad_ref, grad_tst, rtol=1e-3, atol=1e-6)
     assert cond is True
 
 

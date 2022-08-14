@@ -12,7 +12,7 @@ from TRXASprefitpack import res_grad_voigt, res_grad_thy
 from TRXASprefitpack import voigt, voigt_thy
 from TRXASprefitpack import edge_gaussian, edge_lorenzian
 
-rel = 1e-4
+rel = 1e-3
 epsilon = 5e-8
 
 

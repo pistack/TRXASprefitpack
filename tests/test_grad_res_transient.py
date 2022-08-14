@@ -12,7 +12,7 @@ from TRXASprefitpack import res_grad_decay, res_grad_dmp_osc, res_grad_both
 from TRXASprefitpack import solve_seq_model, rate_eq_conv
 from TRXASprefitpack import dmp_osc_conv
 
-rel = 1e-4
+rel = 1e-3
 epsilon = 5e-8
 
 
