@@ -175,12 +175,13 @@ def test_driver_static_thy_1():
     # set boundary
     bound_fwhm_G_thy = (0.15, 0.6)
     bound_fwhm_L_thy = (0.25, 1)
-    bound_peak_shift = [(860.5, 863.5), (860.5, 863.5)]
+    bound_peak_shift = [(860.5, 863.0), (862, 864)]
     bound_e0_edge = [(859, 861), (861, 863)]
     bound_fwhm_edge = [(0.5, 2), (0.75, 3)]
     fwhm_G_thy_init = np.random.uniform(0.15, 0.6)
     fwhm_L_thy_init = np.random.uniform(0.25, 1)
-    peak_shift_init = np.random.uniform(860.5, 863.5, 2)
+    peak_shift_init = np.array([np.random.uniform(860.5, 863.0),
+    np.random.uniform(862,864)])
     e0_edge_init = np.array([np.random.uniform(859, 861),
     np.random.uniform(861, 863)])
     fwhm_edge_init = np.array([np.random.uniform(0.5, 2),
@@ -247,12 +248,13 @@ def test_driver_static_thy_2():
     # set boundary
     bound_fwhm_G_thy = (0.15, 0.6)
     bound_fwhm_L_thy = (0.25, 1)
-    bound_peak_shift = [(860.5, 863.5), (860.5, 863.5)]
+    bound_peak_shift = [(860.5, 863.0), (862, 864)]
     bound_e0_edge = [(859, 861), (861, 863)]
     bound_fwhm_edge = [(0.5, 2), (0.75, 3)]
     fwhm_G_thy_init = np.random.uniform(0.15, 0.6)
     fwhm_L_thy_init = np.random.uniform(0.25, 1)
-    peak_shift_init = np.random.uniform(860.5, 863.5, 2)
+    peak_shift_init = np.array([np.random.uniform(860.5, 863.0),
+    np.random.uniform(862,864)])
     e0_edge_init = np.array([np.random.uniform(859, 861),
     np.random.uniform(861, 863)])
     fwhm_edge_init = np.array([np.random.uniform(0.5, 2),
