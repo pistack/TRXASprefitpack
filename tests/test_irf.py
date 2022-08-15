@@ -72,105 +72,94 @@ def test_deriv_eta_1():
     fwhm_L = 0.3
     d_G, d_L = deriv_eta(fwhm_G, fwhm_L)
 
-    result = np.allclose(np.array([d_G, d_L]),
+    assert np.allclose(np.array([d_G, d_L]),
     check_num_deriv(calc_eta, fwhm_G, fwhm_L))
-    assert result is True
 
 def test_deriv_eta_2():
     fwhm_G = 0.1
     fwhm_L = 0.15
     d_G, d_L = deriv_eta(fwhm_G, fwhm_L)
 
-    result = np.allclose(np.array([d_G, d_L]),
+    assert np.allclose(np.array([d_G, d_L]),
     check_num_deriv(calc_eta, fwhm_G, fwhm_L))
-    assert result is True
 
 def test_deriv_eta_3():
     fwhm_G = 0.1
     fwhm_L = 0.1
     d_G, d_L = deriv_eta(fwhm_G, fwhm_L)
 
-    result = np.allclose(np.array([d_G, d_L]),
+    assert np.allclose(np.array([d_G, d_L]),
     check_num_deriv(calc_eta, fwhm_G, fwhm_L))
-    assert result is True
 
 def test_deriv_eta_4():
     fwhm_G = 0.15
     fwhm_L = 0.1
     d_G, d_L = deriv_eta(fwhm_G, fwhm_L)
 
-    result = np.allclose(np.array([d_G, d_L]),
+    assert np.allclose(np.array([d_G, d_L]),
     check_num_deriv(calc_eta, fwhm_G, fwhm_L))
-    assert result is True
 
 def test_deriv_eta_5():
     fwhm_G = 0.3
     fwhm_L = 0.1
     d_G, d_L = deriv_eta(fwhm_G, fwhm_L)
 
-    result = np.allclose(np.array([d_G, d_L]),
+    assert np.allclose(np.array([d_G, d_L]),
     check_num_deriv(calc_eta, fwhm_G, fwhm_L))
-    assert result is True
 
 def test_deriv_eta_6():
     fwhm_G = 0.15
     fwhm_L = 0.3
     d_G, d_L = deriv_eta(fwhm_G, fwhm_L)
 
-    result = np.allclose(np.array([d_G, d_L]),
+    assert np.allclose(np.array([d_G, d_L]),
     check_num_deriv(calc_eta, fwhm_G, fwhm_L))
-    assert result is True
 
 def test_deriv_fwhm_1():
     fwhm_G = 0.1
     fwhm_L = 0.3
     d_G, d_L = deriv_fwhm(fwhm_G, fwhm_L)
 
-    result = np.allclose(np.array([d_G, d_L]),
+    assert np.allclose(np.array([d_G, d_L]),
     check_num_deriv(calc_fwhm, fwhm_G, fwhm_L))
-    assert result is True
 
 def test_deriv_fwhm_2():
     fwhm_G = 0.1
     fwhm_L = 0.15
     d_G, d_L = deriv_fwhm(fwhm_G, fwhm_L)
 
-    result = np.allclose(np.array([d_G, d_L]),
+    assert np.allclose(np.array([d_G, d_L]),
     check_num_deriv(calc_fwhm, fwhm_G, fwhm_L))
-    assert result is True
 
 def test_deriv_fwhm_3():
     fwhm_G = 0.1
     fwhm_L = 0.1
     d_G, d_L = deriv_fwhm(fwhm_G, fwhm_L)
 
-    result = np.allclose(np.array([d_G, d_L]),
+    assert np.allclose(np.array([d_G, d_L]),
     check_num_deriv(calc_fwhm, fwhm_G, fwhm_L))
-    assert result is True
 
 def test_deriv_fwhm_4():
     fwhm_G = 0.15
     fwhm_L = 0.1
     d_G, d_L = deriv_fwhm(fwhm_G, fwhm_L)
 
-    result = np.allclose(np.array([d_G, d_L]),
+    assert np.allclose(np.array([d_G, d_L]),
     check_num_deriv(calc_fwhm, fwhm_G, fwhm_L))
-    assert result is True
 
 def test_deriv_fwhm_5():
     fwhm_G = 0.3
     fwhm_L = 0.1
     d_G, d_L = deriv_fwhm(fwhm_G, fwhm_L)
 
-    result = np.allclose(np.array([d_G, d_L]),
+    assert np.allclose(np.array([d_G, d_L]),
     check_num_deriv(calc_fwhm, fwhm_G, fwhm_L))
-    assert result is True
 
 def test_deriv_fwhm_6():
     fwhm_G = 0.15
     fwhm_L = 0.3
     d_G, d_L = deriv_fwhm(fwhm_G, fwhm_L)
 
-    result = np.allclose(np.array([d_G, d_L]),
+    assert np.allclose(np.array([d_G, d_L]),
     check_num_deriv(calc_fwhm, fwhm_G, fwhm_L))
-    assert result is True
+

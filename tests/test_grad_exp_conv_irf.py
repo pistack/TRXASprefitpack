@@ -25,8 +25,7 @@ def test_deriv_exp_conv_gau_1():
     t = np.linspace(-1, 100, 2001)
     tst = deriv_exp_conv_gau(t, fwhm, 1/tau)
     ref = check_num_deriv(exp_conv_gau, t, fwhm, 1/tau)
-    result = np.allclose(tst, ref)
-    assert result is True
+    assert np.allclose(tst, ref)
 
 def test_deriv_exp_sum_conv_gau_1():
     tau_1 = 1
@@ -39,8 +38,7 @@ def test_deriv_exp_sum_conv_gau_1():
     tst = deriv_exp_sum_conv_gau(t, fwhm, k, c, base)
     ref = check_num_deriv(lambda t, fwhm, k1, k2: exp_conv_gau(t, fwhm, k1)+exp_conv_gau(t, fwhm, k2)+exp_conv_gau(t, fwhm, 0),
     t, fwhm, 1/tau_1, 1/tau_2)
-    result = np.allclose(tst, ref)
-    assert result is True
+    assert np.allclose(tst, ref)
 
 def test_deriv_exp_sum_conv_gau_2():
     tau_1 = 1
@@ -53,8 +51,7 @@ def test_deriv_exp_sum_conv_gau_2():
     tst = deriv_exp_sum_conv_gau(t, fwhm, k, c, base)
     ref = check_num_deriv(lambda t, fwhm, k1, k2: exp_conv_gau(t, fwhm, k1)+exp_conv_gau(t, fwhm, k2),
     t, fwhm, 1/tau_1, 1/tau_2)
-    result = np.allclose(tst, ref)
-    assert result is True
+    assert np.allclose(tst, ref)
 
 def test_deriv_exp_conv_cauchy():
     tau = 1
@@ -62,8 +59,7 @@ def test_deriv_exp_conv_cauchy():
     t = np.linspace(-1, 100, 2001)
     tst = deriv_exp_conv_cauchy(t, fwhm, 1/tau)
     ref = check_num_deriv(exp_conv_cauchy, t, fwhm, 1/tau)
-    result = np.allclose(tst, ref)
-    assert result is True
+    assert np.allclose(tst, ref)
 
 def test_deriv_exp_sum_conv_cauchy_1():
     tau_1 = 1
@@ -77,8 +73,7 @@ def test_deriv_exp_sum_conv_cauchy_1():
     ref = check_num_deriv(lambda t, fwhm, k1, k2: exp_conv_cauchy(t, fwhm, k1)+
     exp_conv_cauchy(t, fwhm, k2)+exp_conv_cauchy(t, fwhm, 0),
     t, fwhm, 1/tau_1, 1/tau_2)
-    result = np.allclose(tst, ref)
-    assert result is True
+    assert np.allclose(tst, ref)
 
 def test_deriv_exp_sum_conv_cauchy_2():
     tau_1 = 1
@@ -92,8 +87,7 @@ def test_deriv_exp_sum_conv_cauchy_2():
     ref = check_num_deriv(lambda t, fwhm, k1, k2: exp_conv_cauchy(t, fwhm, k1)+
     exp_conv_cauchy(t, fwhm, k2),
     t, fwhm, 1/tau_1, 1/tau_2)
-    result = np.allclose(tst, ref)
-    assert result is True
+    assert np.allclose(tst, ref)
 
 def test_deriv_exp_conv_pvoigt():
     tau_1 = 1
@@ -118,5 +112,5 @@ def test_deriv_exp_conv_pvoigt():
 
     ref = check_num_deriv(tmp_fun, t, fwhm_G, fwhm_L, 1/tau_1)
 
-    result = np.allclose(grad, ref)
-    assert result is True
+    assert np.allclose(grad, ref)
+

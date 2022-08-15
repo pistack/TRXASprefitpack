@@ -27,6 +27,7 @@ jobs:
     # Here we're making sure we use just use the system-wide pip. By default it uses the project root's requirements.txt.
     # Then run your tests!
     # CircleCI will report the results back to your VCS provider.
+    parallelism: 3
     steps:
       - checkout
       - python/install-packages:
@@ -37,8 +38,13 @@ jobs:
           name: Run tests
           # This assumes pytest is installed via the install-package step above
           command: |
+           export OMP_NUM_THREADS=1
            mkdir test-results
-           pytest --junitxml=test-results/junit.xml
+           TESTFILES=$(circleci tests glob tests/*.py \
+           | sed -e 's;/;.;g' -e 's/\.py$//' \
+           | circleci tests split --split-by=timings \
+           | sed -e 's;\.;/;g' -e 's/$/.py/')
+           pytest $TESTFILES --junitxml='test-results/junit.xml'
       - store_test_results:
           path: test-results
 

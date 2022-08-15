@@ -21,8 +21,7 @@ def test_fact_anal_exp_conv():
     eps = np.ones_like(model)
     expt = model
     c_tst = fact_anal_exp_conv(t, fwhm, tau, True, irf='g', intensity=expt, eps=eps)
-    cond = np.allclose(c_ref, c_tst)
-    assert cond is True
+    assert np.allclose(c_ref, c_tst)
 
 def test_fact_anal_dmp_osc_conv():
     fwhm = 0.15
@@ -35,9 +34,9 @@ def test_fact_anal_dmp_osc_conv():
     eps = np.ones_like(model)
     expt = model
     phase_tst, c_tst = fact_anal_dmp_osc_conv(t, fwhm, tau, period, irf='g', intensity=expt, eps=eps)
-    cond = np.allclose(c_ref, c_tst)
-    cond_phase = np.allclose(phase, phase_tst)
-    assert (cond, cond_phase) == (True, True)
+
+    assert np.allclose(c_ref, c_tst)
+    assert np.allclose(phase, phase_tst)
 
 def test_fact_anal_sum_exp_dmp_osc_conv():
     fwhm = 0.15
@@ -53,11 +52,11 @@ def test_fact_anal_sum_exp_dmp_osc_conv():
     eps = np.ones_like(model)
     expt = model
     c_tst_decay, phase_tst_osc, c_tst_osc = \
-   fact_anal_sum_exp_dmp_osc_conv(t, fwhm, tau, tau_osc, period_osc, base=True,
-   irf='g', intensity=expt, eps=eps)
-    cond_decay = np.allclose(c_ref_decay, c_tst_decay)
-    cond_osc = np.allclose(c_ref_osc, c_tst_osc)
-    cond_phase_osc = np.allclose(phase_osc, phase_tst_osc)
-    assert (cond_decay, cond_phase_osc, cond_osc) == (True, True, True)
+        fact_anal_sum_exp_dmp_osc_conv(t, fwhm, tau, tau_osc, period_osc, base=True,
+        irf='g', intensity=expt, eps=eps)
+    assert np.allclose(c_ref_decay, c_tst_decay)
+    assert np.allclose(c_ref_osc, c_tst_osc)
+    assert np.allclose(phase_osc, phase_tst_osc)
+
 
 
