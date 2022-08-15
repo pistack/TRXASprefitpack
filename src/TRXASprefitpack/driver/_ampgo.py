@@ -10,7 +10,7 @@ http://leeds-faculty.colorado.edu/glover/fred%20pubs/416%20-%20AMP%20(TS)%20for%
 :copyright: 2021-2022 by pistack (Junho Lee).
 '''
 
-from typing import Callable, Optional
+from typing import Callable, Optional, Union
 import numpy as np
 from scipy.optimize import minimize, OptimizeResult
 
@@ -21,6 +21,8 @@ def ampgo(fun: Callable, x0: np.ndarray,
           minimizer_kwargs: Optional[dict] = None,
           eps1: Optional[float] = 0.02, eps2: Optional[float] = 0.1,
           n_tabu: Optional[int] = 5, strategy: Optional[str] = 'farthest',
+          seed: Optional[Union[int, np.random.RandomState]] = None,
+          callback: Optional[Callable] = None,
           disp: Optional[bool] = False) -> OptimizeResult:
     '''
     ampgo: Adaptive Memory Programming for Global Optimization
@@ -41,8 +43,7 @@ def ampgo(fun: Callable, x0: np.ndarray,
       `scipy.optimize.minimize`. Some important options could be:
 
         * method (str): The minimization Method (default: `L-BFGS-B`)
-        * args (tuple): The extra arguments passed to the objective function (`fun`) and
-         its derivatives (`jac`, `hess`)
+        * args (tuple): The extra arguments passed to the objective function (`fun`) and its derivatives (`jac`, `hess`)
         * jac: jacobian of objective function (see scipy.optimize.minimize)
         * hess: hessian of objective function (see scipy.optimize.minimize)
         * bounds (Sequence of Tuple): Boundary of variable (see scipy.optimize.minimize)
@@ -55,6 +56,10 @@ def ampgo(fun: Callable, x0: np.ndarray,
 
       * `farthest`: Delete farthest point from the latest local minimum point
       * `oldest`: Delete oldest point
+     seed: seed used for random perturbation of local minimum. This argument is useful when
+      someone wants to reproduce optimization results.
+     callback: callback function to monitor each global iteration and tunneling phase.
+      function signature should be `callback(x, f_val)`
      disp: display level, If zero or `None`, then no output is printed on screen.
       If postive number then status messages are printed.
 
@@ -85,6 +90,16 @@ def ampgo(fun: Callable, x0: np.ndarray,
     n_param = x0.size
     ub = np.empty(n_param)
     lb = np.empty(n_param)
+
+    monitor = False
+
+    if isinstance(seed, np.random.RandomState):
+        rng = seed
+    else:
+        rng = np.random.RandomState(seed)
+
+    if callable(callback):
+        monitor = True
 
     # Setting local minimizer
     if minimizer_kwargs is None:
@@ -155,9 +170,13 @@ def ampgo(fun: Callable, x0: np.ndarray,
         f_opt = res['fun']
         x0 = res['x']
         nfev = nfev + res['nfev']
+        if monitor:
+            callable(x0, f_opt)
         if disp:
             print('='*72)
             print(f'local minimum is found in global iteration: {i}')
+            if not res['success']:
+                print('Warning: local optimization is failed')
         if f_opt < f_best:
             if disp:
                 print(
@@ -189,7 +208,7 @@ def ampgo(fun: Callable, x0: np.ndarray,
             # Perturbe local minimum point x0
             vaild = False
             while not vaild:
-                r = np.random.uniform(-1, 1, n_param)
+                r = rng.uniform(-1, 1, n_param)
                 beta = (eps2*np.linalg.norm(x0)+1e-8)/np.linalg.norm(r)
                 x_try = x0 + beta*r
                 x_try = np.where(x_try < lb, lb, x_try)
@@ -215,8 +234,15 @@ def ampgo(fun: Callable, x0: np.ndarray,
                 success = True
                 success_tunnel = success_tunnel+1
 
+            if monitor:
+                callback(x0, f_opt)
+
+            if disp and not res['success']:
+                print('Warning: local optimization is failed')
+
             if disp and success:
                 print('Tunneling phase is successful')
+
             if f_opt < f_best:
                 if disp:
                     print(f'Tunneling phase {i}-{j+1} improves solution')
