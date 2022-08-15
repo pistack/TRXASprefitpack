@@ -44,7 +44,7 @@ jobs:
            | sed -e 's;/;.;g' -e 's/\.py$//' \
            | circleci tests split --split-by=timings \
            | sed -e 's;\.;/;g' -e 's/$/.py/')
-           pytest $TESTFILES --junitxml=junit.xml
+           pytest $TESTFILES --junitxml='test-results/junit.xml'
       - store_test_results:
           path: test-results
 
