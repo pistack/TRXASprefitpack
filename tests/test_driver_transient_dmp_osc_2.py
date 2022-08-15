@@ -14,10 +14,10 @@ def test_driver_transient_dmp_osc_2():
     fwhm = 0.100
     tau = np.array([0.5, 10, 1000])
     period = np.array([0.2, 3, 200])
-    phase_1 = np.array([np.pi/17, -np.pi/6, np.pi/2])
-    phase_2 = np.array([np.pi/10, -np.pi/3, np.pi])
-    phase_3 = np.array([np.pi/8, -np.pi/2, 2*np.pi/3])
-    phase_4 = np.array([np.pi/2, -np.pi, np.pi/18])
+    phase_1 = np.random.uniform(-np.pi, np.pi, 3)
+    phase_2 = np.random.uniform(-np.pi, np.pi, 3)
+    phase_3 = np.random.uniform(-np.pi, np.pi, 3)
+    phase_4 = np.random.uniform(-np.pi, np.pi, 3)
 
     # set time range (mixed step)
     t_seq1 = np.arange(-2, -1, 0.2)
@@ -34,8 +34,9 @@ def test_driver_transient_dmp_osc_2():
     # Last element is ground state
     abs_1 = np.array([1, 1, 1])
     abs_2 = np.array([0.5, 0.8, 0.2])
-    abs_3 = np.array([-0.5, 0.7, 0.9])
-    abs_4 = np.array([0.6, 0.3, -1])
+    abs_3 = np.array([0.5, 0.7, 0.9])
+    abs_4 = np.array([0.6, 0.3, 1])
+    abs_osc = np.vstack((abs_1, abs_2, abs_3, abs_4))
 
     t0 = np.random.uniform(-0.2, 0.2, 4) # perturb time zero of each scan
 
@@ -83,6 +84,7 @@ def test_driver_transient_dmp_osc_2():
     os.remove('test_driver_transient_dmp_osc_2.h5')
 
     assert np.allclose(result_ampgo['x'], ans)
+    assert np.allclose(result_ampgo['c'][0], abs_osc.T)
     assert str(result_ampgo) == str(load_result_ampgo)
 
 
