@@ -13,7 +13,7 @@ from TRXASprefitpack import save_TransientResult, load_TransientResult
 def test_driver_transient_dmp_osc_2():
     fwhm = 0.100
     tau = np.array([0.5, 10, 1000])
-    period = np.array([0.2, 3, 200])
+    period = np.array([0.3, 3, 200])
     phase_1 = np.random.uniform(-np.pi, np.pi, 3)
     phase_2 = np.random.uniform(-np.pi, np.pi, 3)
     phase_3 = np.random.uniform(-np.pi, np.pi, 3)
@@ -67,12 +67,12 @@ def test_driver_transient_dmp_osc_2():
     bound_fwhm = [(0.05, 0.2)]
     bound_t0 = [(-0.2, 0.2), (-0.2, 0.2), (-0.2, 0.2), (-0.2, 0.2)]
     bound_tau = [(0.1, 1), (1, 100), (100, 10000)]
-    bound_period = [(0.1, 1), (1, 10), (100, 1000)]
+    bound_period = [(0.1, 0.5), (1, 10), (100, 1000)]
     fwhm_init = np.random.uniform(0.05, 0.2)
     t0_init = np.random.uniform(-0.2, 0.2, 4)
     tau_init = np.array([np.random.uniform(0.1, 1),
     np.random.uniform(1, 100), np.random.uniform(100, 10000)])
-    period_init = np.array([np.random.uniform(0.1, 1),
+    period_init = np.array([np.random.uniform(0.1, 0.5),
     np.random.uniform(1, 10), np.random.uniform(100, 1000)])
 
     result_ampgo = fit_transient_dmp_osc('c', fwhm_init, t0_init, tau_init, period_init,
