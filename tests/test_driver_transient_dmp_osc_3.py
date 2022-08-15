@@ -12,8 +12,8 @@ from TRXASprefitpack import fit_transient_dmp_osc
 from TRXASprefitpack import save_TransientResult, load_TransientResult
 
 def test_driver_transient_dmp_osc_3():
-    fwhm_G = 0.100
-    fwhm_L = 0.05
+    fwhm_G = 0.05
+    fwhm_L = 0.03
     fwhm = calc_fwhm(fwhm_G, fwhm_L)
     eta = calc_eta(fwhm_G, fwhm_L)
     tau = np.array([0.5, 10, 1000])
@@ -42,7 +42,7 @@ def test_driver_transient_dmp_osc_3():
     abs_4 = np.array([0.6, 0.3, 1])
     abs_osc = np.vstack((abs_1, abs_2, abs_3, abs_4))
 
-    t0 = np.random.uniform(-0.2, 0.2, 4) # perturb time zero of each scan
+    t0 = np.random.uniform(-0.1, 0.1, 4) # perturb time zero of each scan
 
     # generate measured data
     y_obs_1 = dmp_osc_conv(t_seq-t0[0], fwhm, tau, period, phase_1, abs_1,
@@ -72,13 +72,12 @@ def test_driver_transient_dmp_osc_3():
     ans = np.array([fwhm_G, fwhm_L, t0[0], t0[1], t0[2], t0[3],
     tau[0], tau[1], tau[2], period[0], period[1], period[2]])
 
-    bound_fwhm = [(0.05, 0.2), (0.025, 0.1)]
-    bound_t0 = [(-0.2, 0.2), (-0.2, 0.2), (-0.2, 0.2), (-0.2, 0.2)]
+    bound_fwhm = [(0.025, 0.1), (0.025, 0.1)]
+    bound_t0 = [(-0.1, 0.1), (-0.1, 0.1), (-0.1, 0.1), (-0.1, 0.1)]
     bound_tau = [(0.1, 1), (1, 100), (100, 5000)]
     bound_period = [(0.1, 0.5), (1, 10), (100, 1000)]
-    fwhm_init = np.array([np.random.uniform(0.05, 0.2),
-    np.random.uniform(0.025, 0.1)])
-    t0_init = np.random.uniform(-0.2, 0.2, 4)
+    fwhm_init = np.random.uniform(0.025, 0.1)
+    t0_init = np.random.uniform(-0.1, 0.1, 4)
     tau_init = np.array([np.random.uniform(0.1, 1),
     np.random.uniform(1, 100), np.random.uniform(100, 5000)])
     period_init = np.array([np.random.uniform(0.1, 0.5),
