@@ -55,21 +55,21 @@ def test_driver_transient_both_3():
     t0 = np.random.uniform(-0.2, 0.2, 4) # perturb time zero of each scan
 
     # generate measured data
-    y_obs_1 = rate_eq_conv(t_seq-t0[0], fwhm, abs_1, eigval_seq, V_seq, c_seq, 
+    y_obs_1 = rate_eq_conv(t_seq-t0[0], fwhm, abs_1, eigval_seq, V_seq, c_seq,
     irf='pv', eta=eta) + \
-        dmp_osc_conv(t_seq-t0[0], fwhm, tau_osc, period_osc, phase_1, abs_osc_1, 
+        dmp_osc_conv(t_seq-t0[0], fwhm, tau_osc, period_osc, phase_1, abs_osc_1,
         irf='pv', eta=eta)
-    y_obs_2 = rate_eq_conv(t_seq-t0[1], fwhm, abs_2, eigval_seq, V_seq, c_seq, 
+    y_obs_2 = rate_eq_conv(t_seq-t0[1], fwhm, abs_2, eigval_seq, V_seq, c_seq,
     irf='pv', eta=eta) + \
-        dmp_osc_conv(t_seq-t0[1], fwhm, tau_osc, period_osc, phase_2, abs_osc_2, 
+        dmp_osc_conv(t_seq-t0[1], fwhm, tau_osc, period_osc, phase_2, abs_osc_2,
         irf='pv', eta=eta)
-    y_obs_3 = rate_eq_conv(t_seq-t0[2], fwhm, abs_3, eigval_seq, V_seq, c_seq, 
+    y_obs_3 = rate_eq_conv(t_seq-t0[2], fwhm, abs_3, eigval_seq, V_seq, c_seq,
     irf='pv', eta=eta) + \
-        dmp_osc_conv(t_seq-t0[2], fwhm, tau_osc, period_osc, phase_3, abs_osc_3, 
+        dmp_osc_conv(t_seq-t0[2], fwhm, tau_osc, period_osc, phase_3, abs_osc_3,
         irf='pv', eta=eta)
-    y_obs_4 = rate_eq_conv(t_seq-t0[3], fwhm, abs_4, eigval_seq, V_seq, c_seq, 
+    y_obs_4 = rate_eq_conv(t_seq-t0[3], fwhm, abs_4, eigval_seq, V_seq, c_seq,
     irf='pv', eta=eta) + \
-        dmp_osc_conv(t_seq-t0[3], fwhm, tau_osc, period_osc, phase_4, abs_osc_4, 
+        dmp_osc_conv(t_seq-t0[3], fwhm, tau_osc, period_osc, phase_4, abs_osc_4,
         irf='pv', eta=eta)
 
     eps_obs_1 = np.ones_like(y_obs_1)/1000
