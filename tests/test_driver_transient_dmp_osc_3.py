@@ -74,15 +74,15 @@ def test_driver_transient_dmp_osc_3():
 
     bound_fwhm = [(0.05, 0.2), (0.025, 0.1)]
     bound_t0 = [(-0.2, 0.2), (-0.2, 0.2), (-0.2, 0.2), (-0.2, 0.2)]
-    bound_tau = [(0.1, 1), (1, 100), (100, 10000)]
+    bound_tau = [(0.1, 1), (1, 100), (100, 5000)]
     bound_period = [(0.1, 0.5), (1, 10), (100, 1000)]
     fwhm_init = np.array([np.random.uniform(0.05, 0.2),
     np.random.uniform(0.025, 0.1)])
     t0_init = np.random.uniform(-0.2, 0.2, 4)
     tau_init = np.array([np.random.uniform(0.1, 1),
-    np.random.uniform(1, 100), np.random.uniform(100, 10000)])
+    np.random.uniform(1, 100), np.random.uniform(100, 5000)])
     period_init = np.array([np.random.uniform(0.1, 0.5),
-    np.random.uniform(1, 100), np.random.uniform(100, 10000)])
+    np.random.uniform(1, 10), np.random.uniform(100, 500)])
 
     result_ampgo = fit_transient_dmp_osc('pv', fwhm_init, t0_init, tau_init, period_init,
     method_glb='ampgo', bound_fwhm=bound_fwhm, bound_t0=bound_t0,
