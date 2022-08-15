@@ -12,7 +12,8 @@ from TRXASprefitpack import res_grad_decay, res_grad_dmp_osc, res_grad_both
 from TRXASprefitpack import solve_seq_model, rate_eq_conv
 from TRXASprefitpack import dmp_osc_conv
 
-rel = 1e-3
+rel_tol = 1e-3
+abs_tol = 1e-6
 epsilon = 5e-8
 
 
@@ -77,11 +78,9 @@ def test_res_grad_decay_1():
     res_tst, grad_tst = res_grad_decay(x0, 3, False, 'g',
     np.zeros_like(x0, dtype=bool), t, intensity, eps)
 
-    check_res = np.allclose(res_ref, res_tst)
-    check_grad = np.allclose(grad_ref, grad_tst, rtol=rel,
-    atol=epsilon) # noise field
-
-    assert (check_res, check_grad) == (True, True)
+    assert np.allclose(res_ref, res_tst)
+    assert np.allclose(grad_ref, grad_tst, rtol=rel_tol,
+    atol=abs_tol)
 
 def test_res_grad_decay_2():
     tau_1 = 0.5
@@ -144,11 +143,9 @@ def test_res_grad_decay_2():
     res_tst, grad_tst = res_grad_decay(x0, 3, False, 'c',
     np.zeros_like(x0, dtype=bool), t, intensity, eps)
 
-    check_res = np.allclose(res_ref, res_tst)
-    check_grad = np.allclose(grad_ref, grad_tst, rtol=rel,
-    atol=epsilon) # noise field
-
-    assert (check_res, check_grad) == (True, True)
+    assert np.allclose(res_ref, res_tst)
+    assert np.allclose(grad_ref, grad_tst, rtol=rel_tol,
+    atol=abs_tol)
 
 def test_res_grad_decay_3():
     tau_1 = 0.5
@@ -216,11 +213,9 @@ def test_res_grad_decay_3():
     res_tst, grad_tst = res_grad_decay(x0, 3, True, 'pv',
     np.zeros_like(x0, dtype=bool), t, intensity, eps)
 
-    check_res = np.allclose(res_ref, res_tst)
-    check_grad = np.allclose(grad_ref, grad_tst, rtol=rel,
-    atol=epsilon) # noise field
-
-    assert (check_res, check_grad) == (True, True)
+    assert np.allclose(res_ref, res_tst)
+    assert np.allclose(grad_ref, grad_tst, rtol=rel_tol,
+    atol=abs_tol)
 
 def test_res_grad_dmp_osc_1():
     fwhm = 0.100
@@ -280,11 +275,9 @@ def test_res_grad_dmp_osc_1():
     res_tst, grad_tst = res_grad_dmp_osc(x0, 3, 'g',
     np.zeros_like(x0, dtype=bool), t, intensity, eps)
 
-    check_res = np.allclose(res_ref, res_tst)
-    check_grad = np.allclose(grad_ref, grad_tst, rtol=rel,
-    atol=epsilon) # noise field
-
-    assert (check_res, check_grad) == (True, True)
+    assert np.allclose(res_ref, res_tst)
+    assert np.allclose(grad_ref, grad_tst, rtol=rel_tol,
+    atol=abs_tol)
 
 def test_res_grad_dmp_osc_2():
     fwhm = 0.100
@@ -344,11 +337,9 @@ def test_res_grad_dmp_osc_2():
     res_tst, grad_tst = res_grad_dmp_osc(x0, 3, 'c',
     np.zeros_like(x0, dtype=bool), t, intensity, eps)
 
-    check_res = np.allclose(res_ref, res_tst)
-    check_grad = np.allclose(grad_ref, grad_tst, rtol=rel,
-    atol=epsilon) # noise field
-
-    assert (check_res, check_grad) == (True, True)
+    assert np.allclose(res_ref, res_tst)
+    assert np.allclose(grad_ref, grad_tst, rtol=rel_tol,
+    atol=abs_tol)
 
 def test_res_grad_dmp_osc_3():
     fwhm = 0.100
@@ -413,11 +404,9 @@ def test_res_grad_dmp_osc_3():
     res_tst, grad_tst = res_grad_dmp_osc(x0, 3, 'pv',
     np.zeros_like(x0, dtype=bool), t, intensity, eps)
 
-    check_res = np.allclose(res_ref, res_tst)
-    check_grad = np.allclose(grad_ref, grad_tst, rtol=rel,
-    atol=epsilon) # noise field
-
-    assert (check_res, check_grad) == (True, True)
+    assert np.allclose(res_ref, res_tst)
+    assert np.allclose(grad_ref, grad_tst, rtol=rel_tol,
+    atol=abs_tol)
 
 
 def test_res_grad_both_1():
@@ -492,11 +481,9 @@ def test_res_grad_both_1():
     res_tst, grad_tst = res_grad_both(x0, 3, 3, False, 'g',
     np.zeros_like(x0, dtype=bool), t, intensity, eps)
 
-    check_res = np.allclose(res_ref, res_tst)
-    check_grad = np.allclose(grad_ref, grad_tst, rtol=rel,
-    atol=epsilon)
-
-    assert (check_res, check_grad) == (True, True)
+    assert np.allclose(res_ref, res_tst)
+    assert np.allclose(grad_ref, grad_tst, rtol=rel_tol,
+    atol=abs_tol)
 
 def test_res_grad_both_2():
     tau_1 = 0.5
@@ -570,11 +557,9 @@ def test_res_grad_both_2():
     res_tst, grad_tst = res_grad_both(x0, 3, 3, False, 'c',
     np.zeros_like(x0, dtype=bool), t, intensity, eps)
 
-    check_res = np.allclose(res_ref, res_tst)
-    check_grad = np.allclose(grad_ref, grad_tst, rtol=rel,
-    atol=epsilon)
-
-    assert (check_res, check_grad) == (True, True)
+    assert np.allclose(res_ref, res_tst)
+    assert np.allclose(grad_ref, grad_tst, rtol=rel_tol,
+    atol=abs_tol)
 
 def test_res_grad_both_3():
     tau_1 = 0.5
@@ -657,10 +642,9 @@ def test_res_grad_both_3():
     res_tst, grad_tst = res_grad_both(x0, 3, 3, False, 'pv',
     np.zeros_like(x0, dtype=bool), t, intensity, eps)
 
-    check_res = np.allclose(res_ref, res_tst)
-    check_grad = np.allclose(grad_ref, grad_tst, rtol=rel,
-    atol=epsilon)
+    assert np.allclose(res_ref, res_tst)
+    assert np.allclose(grad_ref, grad_tst, rtol=rel_tol,
+    atol=abs_tol)
 
-    assert (check_res, check_grad) == (True, True)
 
     

@@ -20,10 +20,9 @@ def test_solve_seq_1():
     eigval_tst, V_tst, c_tst = solve_seq_model(np.array([tau1, tau2]), y0)
     lV_tst = np.einsum('j,ij->ij', eigval_ref, V_tst)
 
-    tst1 = np.allclose(eigval_ref, eigval_tst)
-    tst2 = np.allclose(V_tst@c_tst, y0)
-    tst3 = np.allclose(A@V_tst, lV_tst)
-    assert (tst1, tst2, tst3) == (True, True, True)
+    assert np.allclose(eigval_ref, eigval_tst)
+    assert np.allclose(V_tst@c_tst, y0)
+    assert np.allclose(A@V_tst, lV_tst)
 
 def test_solve_seq_2():
     tau1 = 1
@@ -38,10 +37,9 @@ def test_solve_seq_2():
     eigval_tst, V_tst, c_tst = solve_seq_model(np.array([tau1, tau2, tau3]), y0)
     lV_tst = np.einsum('j,ij->ij', eigval_ref, V_tst)
 
-    tst1 = np.allclose(eigval_ref, eigval_tst)
-    tst2 = np.allclose(V_tst@c_tst, y0)
-    tst3 = np.allclose(A@V_tst, lV_tst)
-    assert (tst1, tst2, tst3) == (True, True, True)
+    assert np.allclose(eigval_ref, eigval_tst)
+    assert np.allclose(V_tst@c_tst, y0)
+    assert np.allclose(A@V_tst, lV_tst)
 
 def test_solve_l_1():
     tau1 = 1
@@ -54,10 +52,9 @@ def test_solve_l_1():
     eigval_tst, V_tst, c_tst = solve_l_model(A, y0)
     lV_tst = np.einsum('j,ij->ij', eigval_ref, V_tst)
 
-    tst1 = np.allclose(eigval_ref, eigval_tst)
-    tst2 = np.allclose(V_tst@c_tst, y0)
-    tst3 = np.allclose(A@V_tst, lV_tst)
-    assert (tst1, tst2, tst3) == (True, True, True)
+    assert np.allclose(eigval_ref, eigval_tst)
+    assert np.allclose(V_tst@c_tst, y0)
+    assert np.allclose(A@V_tst, lV_tst)
 
 def test_solve_l_2():
     tau1 = 1
@@ -71,10 +68,9 @@ def test_solve_l_2():
     eigval_tst, V_tst, c_tst = solve_l_model(A, y0)
     lV_tst = np.einsum('j,ij->ij', eigval_ref, V_tst)
 
-    tst1 = np.allclose(eigval_ref, eigval_tst)
-    tst2 = np.allclose(V_tst@c_tst, y0)
-    tst3 = np.allclose(A@V_tst, lV_tst)
-    assert (tst1, tst2, tst3) == (True, True, True)
+    assert np.allclose(eigval_ref, eigval_tst)
+    assert np.allclose(V_tst@c_tst, y0)
+    assert np.allclose(A@V_tst, lV_tst)
 
 def test_solve_l_3():
     tau1 = 1
@@ -88,10 +84,9 @@ def test_solve_l_3():
     eigval_tst, V_tst, c_tst = solve_l_model(A, y0)
     lV_tst = np.einsum('j,ij->ij', eigval_ref, V_tst)
 
-    tst1 = np.allclose(eigval_ref, eigval_tst)
-    tst2 = np.allclose(V_tst@c_tst, y0)
-    tst3 = np.allclose(A@V_tst, lV_tst)
-    assert (tst1, tst2, tst3) == (True, True, True)
+    assert np.allclose(eigval_ref, eigval_tst)
+    assert np.allclose(V_tst@c_tst, y0)
+    assert np.allclose(A@V_tst, lV_tst)
 
 def test_solve_l_4():
     tau1 = 1
@@ -107,10 +102,10 @@ def test_solve_l_4():
     eigval_tst, V_tst, c_tst = solve_l_model(A, y0)
     lV_tst = np.einsum('j,ij->ij', eigval_ref, V_tst)
 
-    tst1 = np.allclose(eigval_ref, eigval_tst)
-    tst2 = np.allclose(V_tst@c_tst, y0)
-    tst3 = np.allclose(A@V_tst, lV_tst)
-    assert (tst1, tst2, tst3) == (True, True, True)
+    assert np.allclose(eigval_ref, eigval_tst)
+    assert np.allclose(V_tst@c_tst, y0)
+    assert np.allclose(A@V_tst, lV_tst)
+
 
 
 

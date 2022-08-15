@@ -16,9 +16,6 @@ from TRXASprefitpack import ampgo
 # Bound x0: [-5, 5], x1: [-5, 5]
 
 f_opt = -1.0316
-x_opt_1 = np.array([0.0898, -0.7126])
-x_opt_2 = np.array([-0.0898, 0.7126])
-n_try = 5
 bounds = [[-5, 5], [-5, 5]]
 
 
@@ -39,59 +36,37 @@ def fun_grad_six_hump_camelback(x):
 
 
 def test_grad_six_hump_camelback():
-    grad_ref = np.empty((n_try, 2))
-    grad_tst = np.empty((n_try, 2))
-    for i in range(n_try):
+    grad_ref = np.empty((10, 2))
+    grad_tst = np.empty((10, 2))
+    for i in range(10):
         x0 = np.random.uniform(-5, 5, 2)
         grad_ref[i, :] = approx_fprime(x0, six_hump_camelback, 5e-8)
         grad_tst[i, :] = grad_six_hump_camelback(x0)
 
-    cond = np.allclose(grad_ref, grad_tst, rtol=1e-3, atol=1e-6)
-    assert cond is True
+    assert np.allclose(grad_ref, grad_tst, rtol=1e-3, atol=1e-6)
 
 
 def test_ampgo_1():
-    cond_f = True
-    cond_x = True
     x0 = np.random.uniform(-5, 5, 2)
     res = ampgo(six_hump_camelback, x0)
-    tmp_cond_f = np.allclose(res['fun'], f_opt, atol=1e-4)
-    tmp_cond_x = np.allclose(res['x'], x_opt_1, atol=1e-4) or \
-        np.allclose(res['x'], x_opt_2, atol=1e-4)
-    cond_f = cond_f and tmp_cond_f
-    cond_x = cond_x and tmp_cond_x
-    assert (cond_f, cond_x) == (True, True)
+
+    assert np.allclose(res['fun'], f_opt, atol=1e-4)
 
 
 def test_ampgo_2():
-    cond_f = True
-    cond_x = True
-    for _ in range(n_try):
-        x0 = np.random.uniform(-5, 5, 2)
-        res = ampgo(six_hump_camelback, x0,
-                    minimizer_kwargs={'jac': grad_six_hump_camelback})
-        tmp_cond_f = np.allclose(res['fun'], f_opt, atol=1e-4)
-        tmp_cond_x = np.allclose(res['x'], x_opt_1, atol=1e-4) or \
-            np.allclose(res['x'], x_opt_2, atol=1e-4)
-        cond_f = cond_f and tmp_cond_f
-        cond_x = cond_x and tmp_cond_x
+    x0 = np.random.uniform(-5, 5, 2)
+    res = ampgo(six_hump_camelback, x0,
+    minimizer_kwargs={'jac': grad_six_hump_camelback})
 
-    assert (cond_f, cond_x) == (True, True)
+    assert  np.allclose(res['fun'], f_opt, atol=1e-4)
 
 
 def test_ampgo_3():
-    cond_f = True
-    cond_x = True
-    for _ in range(n_try):
-        x0 = np.random.uniform(-5, 5, 2)
-        res = ampgo(fun_grad_six_hump_camelback, x0,
-                    minimizer_kwargs={'jac': True})
-        tmp_cond_f = np.allclose(res['fun'], f_opt, atol=1e-4)
-        tmp_cond_x = np.allclose(res['x'], x_opt_1, atol=1e-4) or \
-            np.allclose(res['x'], x_opt_2, atol=1e-4)
-        cond_f = cond_f and tmp_cond_f
-        cond_x = cond_x and tmp_cond_x
-        assert (cond_f, cond_x) == (True, True)
+    x0 = np.random.uniform(-5, 5, 2)
+    res = ampgo(fun_grad_six_hump_camelback, x0,
+    minimizer_kwargs={'jac': True})
+
+    assert np.allclose(res['fun'], f_opt, atol=1e-4)
 
 
 def test_grad_tunnel():
@@ -110,8 +85,7 @@ def test_grad_tunnel():
 
     grad_ref = approx_fprime(x0, lambda x0: tunnel(x0, *ttf_args), 5e-8)
     grad = grad_tunnel(x0, *ttf_args)
-    cond = np.allclose(grad, grad_ref)
-    assert cond is True
+    assert np.allclose(grad, grad_ref)
 
 
 def test_fun_grad_tunnel():
@@ -132,6 +106,6 @@ def test_fun_grad_tunnel():
     ttf_ref = tunnel(x0, *ttf_args_ref)
     grad_ref = approx_fprime(x0, lambda x0: tunnel(x0, *ttf_args_ref), 5e-8)
     ttf_tst, grad_tst = fun_grad_tunnel(x0, *ttf_args_tst)
-    cond_ttf = np.allclose(ttf_tst, ttf_ref)
-    cond_grad = np.allclose(grad_tst, grad_ref)
-    assert (cond_ttf, cond_grad) == (True, True)
+
+    assert np.allclose(ttf_tst, ttf_ref)
+    assert np.allclose(grad_tst, grad_ref)

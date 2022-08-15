@@ -48,10 +48,9 @@ def test_res_grad_voigt_1():
     None, np.zeros(len(x0), dtype=bool),
     e=e, intensity=model_static, eps=eps_static)
 
-    cond_res = np.allclose(res_tst, ref_res)
-    cond_grad = np.allclose(grad_tst, ref_grad, rtol=1e-4)
+    assert np.allclose(res_tst, ref_res)
+    assert np.allclose(grad_tst, ref_grad, rtol=1e-4)
 
-    assert (cond_res, cond_grad) == (True, True)
 
 def test_res_grad_voigt_2():
     e0_1 = 8987
@@ -85,10 +84,9 @@ def test_res_grad_voigt_2():
     None, np.zeros(len(x0), dtype=bool),
     e=e, intensity=model_static, eps=eps_static)
 
-    cond_res = np.allclose(res_tst, ref_res)
-    cond_grad = np.allclose(grad_tst, ref_grad, rtol=1e-4)
+    assert np.allclose(res_tst, ref_res)
+    assert np.allclose(grad_tst, ref_grad, rtol=1e-4)
 
-    assert (cond_res, cond_grad) == (True, True)
 
 def test_res_grad_voigt_3():
     e0_1 = 8987
@@ -123,10 +121,8 @@ def test_res_grad_voigt_3():
     2, np.zeros(len(x0), dtype=bool),
     e=e, intensity=model_static, eps=eps_static)
 
-    cond_res = np.allclose(res_tst, ref_res)
-    cond_grad = np.allclose(grad_tst, ref_grad, rtol=1e-4, atol=1e-6)
-
-    assert (cond_res, cond_grad) == (True, True)
+    assert np.allclose(res_tst, ref_res)
+    assert np.allclose(grad_tst, ref_grad, rtol=1e-4, atol=1e-6)
 
 def test_res_grad_voigt_4():
     e0_1 = 8987
@@ -161,10 +157,8 @@ def test_res_grad_voigt_4():
     2, np.zeros(len(x0), dtype=bool),
     e=e, intensity=model_static, eps=eps_static)
 
-    cond_res = np.allclose(res_tst, ref_res)
-    cond_grad = np.allclose(grad_tst, ref_grad, rtol=1e-4, atol=1e-6)
-
-    assert (cond_res, cond_grad) == (True, True)
+    assert np.allclose(res_tst, ref_res)
+    assert np.allclose(grad_tst, ref_grad, rtol=1e-4, atol=1e-6)
 
 def test_res_grad_thy_1():
     e0_edge = np.array([860.5, 862])
@@ -203,10 +197,8 @@ def test_res_grad_thy_1():
     res_tst, grad_tst = res_grad_thy(x0, 'shift', thy_peak, 'g', 2, 2,
     np.zeros(len(x0), dtype=bool), e=e, intensity=model_static, eps=eps_static)
 
-    cond_res = np.allclose(res_tst, ref_res)
-    cond_grad = np.allclose(grad_tst, ref_grad, rtol=1e-4, atol=1e-6)
-
-    assert (cond_res, cond_grad) == (True, True)
+    assert np.allclose(res_tst, ref_res)
+    assert np.allclose(grad_tst, ref_grad, rtol=1e-4, atol=1e-6)
 
 def test_res_grad_thy_2():
     e0_edge = np.array([860.5, 862])
@@ -245,10 +237,8 @@ def test_res_grad_thy_2():
     res_tst, grad_tst = res_grad_thy(x0, 'scale', thy_peak, 'g', 2, 2,
     np.zeros(len(x0), dtype=bool), e=e, intensity=model_static, eps=eps_static)
 
-    cond_res = np.allclose(res_tst, ref_res)
-    cond_grad = np.allclose(grad_tst, ref_grad, rtol=1e-4, atol=1e-6)
-
-    assert (cond_res, cond_grad) == (True, True)
+    assert np.allclose(res_tst, ref_res)
+    assert np.allclose(grad_tst, ref_grad, rtol=1e-4, atol=1e-6)
 
 def test_res_grad_thy_3():
     e0_edge = np.array([860.5, 862])
@@ -287,10 +277,8 @@ def test_res_grad_thy_3():
     res_tst, grad_tst = res_grad_thy(x0, 'both', thy_peak, 'g', 2, 2,
     np.zeros(len(x0), dtype=bool), e=e, intensity=model_static, eps=eps_static)
 
-    cond_res = np.allclose(res_tst, ref_res)
-    cond_grad = np.allclose(grad_tst, ref_grad, rtol=1e-4, atol=1e-6)
-
-    assert (cond_res, cond_grad) == (True, True)
+    assert np.allclose(res_tst, ref_res)
+    assert np.allclose(grad_tst, ref_grad, rtol=1e-4, atol=1e-6)
 
 def test_res_grad_thy_4():
     e0_edge = np.array([860.5, 862])
@@ -329,9 +317,8 @@ def test_res_grad_thy_4():
     res_tst, grad_tst = res_grad_thy(x0, 'both', thy_peak, 'l', 2, 2,
     np.zeros(len(x0), dtype=bool), e=e, intensity=model_static, eps=eps_static)
 
-    cond_res = np.allclose(res_tst, ref_res)
-    cond_grad = np.allclose(grad_tst, ref_grad, rtol=1e-4, atol=1e-6)
+    assert np.allclose(res_tst, ref_res)
+    assert np.allclose(grad_tst, ref_grad, rtol=1e-4, atol=1e-6)
 
-    assert (cond_res, cond_grad) == (True, True)
 
     

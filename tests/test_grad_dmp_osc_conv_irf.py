@@ -36,9 +36,7 @@ def test_deriv_dmp_osc_conv_gau_1():
     t = np.linspace(-1, 100, 2001)
     tst = deriv_dmp_osc_conv_gau(t, fwhm, 1/tau, period, phase)
     ref = check_num_deriv(dmp_osc_conv_gau, t, fwhm, 1/tau, period, phase)
-    result = np.isclose(tst, ref)
-    result = np.allclose(tst, ref)
-    assert result is True
+    assert np.allclose(tst, ref)
 
 def test_deriv_dmp_osc_conv_gau_2():
     tau=1
@@ -49,9 +47,7 @@ def test_deriv_dmp_osc_conv_gau_2():
     tst=deriv_dmp_osc_conv_gau_2(t, fwhm, 1/tau, period, c_pair)
     ref=check_num_deriv(lambda t, fwhm, k, period: dmp_osc_conv_gau_2(t, fwhm, k, period, c_pair),
      t, fwhm, 1/tau, period)
-    result=np.isclose(tst, ref)
-    result=np.allclose(tst, ref)
-    assert result is True
+    assert np.allclose(tst, ref)
 
 def test_deriv_dmp_osc_conv_cauchy_1():
     tau=1
@@ -61,8 +57,7 @@ def test_deriv_dmp_osc_conv_cauchy_1():
     t=np.linspace(-1, 100, 2001)
     tst=deriv_dmp_osc_conv_cauchy(t, fwhm, 1/tau, period, phase)
     ref=check_num_deriv(dmp_osc_conv_cauchy, t, fwhm, 1/tau, period, phase)
-    result=np.allclose(tst, ref)
-    assert result is True
+    assert np.allclose(tst, ref)
 
 def test_deriv_dmp_osc_conv_cauchy_2():
     tau=1
@@ -73,9 +68,7 @@ def test_deriv_dmp_osc_conv_cauchy_2():
     tst=deriv_dmp_osc_conv_cauchy_2(t, fwhm, 1/tau, period, c_pair)
     ref=check_num_deriv(lambda t, fwhm, k, period: dmp_osc_conv_cauchy_2(t, fwhm, k, period, c_pair),
      t, fwhm, 1/tau, period)
-    result=np.isclose(tst, ref)
-    result=np.allclose(tst, ref)
-    assert result is True
+    assert np.allclose(tst, ref)
 
 def test_deriv_exp_conv_pvoigt():
     tau_1=1
@@ -104,8 +97,7 @@ def test_deriv_exp_conv_pvoigt():
 
     ref=check_num_deriv(tmp_fun, t, fwhm_G, fwhm_L, 1/tau_1, period, phase)
 
-    result=np.allclose(grad, ref)
-    assert result is True
+    assert np.allclose(grad, ref)
 
 def test_deriv_exp_conv_pvoigt_2():
     c_pair=(0.3, 0.7)
@@ -136,5 +128,4 @@ def test_deriv_exp_conv_pvoigt_2():
         tmp_fun_2(t, fwhm_G, fwhm_L, k, period, c_pair),
     t, fwhm_G, fwhm_L, 1/tau_1, period)
 
-    result=np.allclose(grad, ref)
-    assert result is True
+    assert np.allclose(grad, ref)

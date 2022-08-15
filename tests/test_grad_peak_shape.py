@@ -18,16 +18,14 @@ def test_deriv_voigt_1():
     fwhm_L = 1
     tst = deriv_voigt(e, 0, fwhm_L)
     ref = check_num_deriv(voigt, e, 0, fwhm_L)
-    result = np.allclose(tst[:, [0, 2]], ref[:, [0, 2]])
-    assert result is True
+    assert np.allclose(tst[:, [0, 2]], ref[:, [0, 2]])
 
 def test_deriv_voigt_2():
     e = np.linspace(-5, 5, 1001)
     fwhm_G = 1
     tst = deriv_voigt(e, fwhm_G, 0)
     ref = check_num_deriv(voigt, e, fwhm_G, 0)
-    result = np.allclose(tst[:, [0, 1]], ref[:, [0, 1]])
-    assert result is True
+    assert np.allclose(tst[:, [0, 1]], ref[:, [0, 1]])
 
 def test_deriv_voigt_3():
     e = np.linspace(-5, 5, 1001)
@@ -35,8 +33,8 @@ def test_deriv_voigt_3():
     fwhm_L = 0.5
     tst = deriv_voigt(e, fwhm_G, fwhm_L)
     ref = check_num_deriv(voigt, e, fwhm_G, fwhm_L)
-    result = np.allclose(tst, ref)
-    assert result is True
+    assert np.allclose(tst, ref)
+
 
 def test_deriv_edge_1():
     e = np.linspace(-5, 5, 1001)
@@ -44,8 +42,7 @@ def test_deriv_edge_1():
     tst = deriv_edge_gaussian(e, fwhm_G)
     ref = check_num_deriv(edge_gaussian,
     e, fwhm_G)
-    result = np.allclose(tst, ref)
-    assert result is True
+    assert np.allclose(tst, ref)
 
 def test_deriv_edge_2():
     e = np.linspace(-5, 5, 1001)
@@ -53,8 +50,7 @@ def test_deriv_edge_2():
     tst = deriv_edge_lorenzian(e, fwhm_L)
     ref = check_num_deriv(edge_lorenzian,
     e, fwhm_L)
-    result = np.allclose(tst, ref)
-    assert result is True
+    assert np.allclose(tst, ref)
 
 def test_deriv_voigt_thy_1():
     e = np.linspace(-10, 20, 300)
@@ -65,8 +61,7 @@ def test_deriv_voigt_thy_1():
     ref = check_num_deriv(lambda e, fwhm_G, fwhm_L, peak_shift: \
         voigt_thy(e, thy_peak, fwhm_G, fwhm_L, peak_shift, 'shift'),
         e, 0.3, 0.5, -1.5)
-    result = np.allclose(tst, ref[:, 1:])
-    assert result is True
+    assert np.allclose(tst, ref[:, 1:])
 
 def test_deriv_voigt_thy_2():
     e = np.linspace(-10, 20, 300)
@@ -77,8 +72,7 @@ def test_deriv_voigt_thy_2():
     ref = check_num_deriv(lambda e, fwhm_G, fwhm_L, peak_scale: \
         voigt_thy(e, thy_peak, fwhm_G, fwhm_L, peak_scale, 'scale'),
         e, 0.3, 0.5, 0.996)
-    result = np.allclose(tst, ref[:, 1:])
-    assert result is True
+    assert np.allclose(tst, ref[:, 1:])
 
 def test_deriv_voigt_thy_3():
     e = np.linspace(-10, 20, 300)
@@ -91,6 +85,5 @@ def test_deriv_voigt_thy_3():
         voigt_thy(e, thy_peak, fwhm_G, fwhm_L,
         np.array([peak_shift, peak_scale]), 'both'),
         e, 0.3, 0.5, -1.5, 0.996)
-    result = np.allclose(tst, ref[:, 1:])
-    assert result is True
+    assert np.allclose(tst, ref[:, 1:])
 
