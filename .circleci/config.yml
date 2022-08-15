@@ -41,7 +41,8 @@ jobs:
            export OMP_NUM_THREADS=1
            mkdir test-results
            TESTFILES=$(circleci tests glob tests/*.py | circleci tests split --split-by=timings --timings-type=classname)
-           pytest $TESTFILES --junitxml=test-results/junit.xml
+           pytest $TESTFILES --junitxml=junit.xml
+           cp junit.xml test-results
       - store_test_results:
           path: test-results
 
