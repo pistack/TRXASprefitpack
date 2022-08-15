@@ -40,7 +40,7 @@ jobs:
           command: |
            export OMP_NUM_THREADS=1
            mkdir test-results
-           TESTFILES=$(circleci tests glob tests/*.py" \
+           TESTFILES=$(circleci tests glob tests/*.py \
            | sed -e 's;/;.;g' -e 's/\.py$//' \
            | circleci tests split --split-by=timings \
            | sed -e 's;\.;/;g' -e 's/$/.py/')
