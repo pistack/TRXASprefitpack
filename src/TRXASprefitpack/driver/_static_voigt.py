@@ -93,6 +93,13 @@ def fit_static_voigt(e0_init: np.ndarray, fwhm_G_init: np.ndarray, fwhm_L_init: 
       * if initial fwhm_L is zero then such voigt component is treated as gaussian component
     '''
 
+    if method_glb is not None and method_glb not in ['basinhopping', 'ampgo']:
+        raise Exception('Unsupported global optimization Method, Supported global optimization Methods are ampgo and basinhopping')
+    if method_lsq not in ['trf', 'lm', 'dogbox']:
+        raise Exception('Invalid local least square minimizer solver. It should be one of [trf, lm, dogbox]')
+    if edge is not None and edge not in  ['g', 'l']:
+        raise Exception('Invalid Edge type.')
+
     if e0_init is None:
         num_voigt = 0
         num_param = 0

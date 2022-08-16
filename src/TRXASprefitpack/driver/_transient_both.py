@@ -101,6 +101,13 @@ def fit_transient_both(irf: str, fwhm_init: Union[float, np.ndarray],
       TransientResult class object
     '''
 
+    if method_glb is not None and method_glb not in ['basinhopping', 'ampgo']:
+        raise Exception('Unsupported global optimization Method, Supported global optimization Methods are ampgo and basinhopping')
+    if method_lsq not in ['trf', 'lm', 'dogbox']:
+        raise Exception('Invalid local least square minimizer solver. It should be one of [trf, lm, dogbox]')
+    if irf is not None and irf not in  ['g', 'c', 'pv']:
+        raise Exception('Unsupported shape of instrumental response function Edge.')
+
     num_irf = 1*(irf in ['g', 'c'])+2*(irf == 'pv')
     num_param = num_irf+t0_init.size+tau_init.size+2*tau_osc_init.size
     param = np.empty(num_param, dtype=float)

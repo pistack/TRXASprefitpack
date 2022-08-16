@@ -98,6 +98,14 @@ def fit_static_thy(thy_peak: Sequence[np.ndarray],
       * if initial fwhm_L is zero then such voigt component is treated as gaussian component
       * Every theoretical spectrum is normalize.
     '''
+
+    if method_glb is not None and method_glb not in ['basinhopping', 'ampgo']:
+        raise Exception('Unsupported global optimization Method, Supported global optimization Methods are ampgo and basinhopping')
+    if method_lsq not in ['trf', 'lm', 'dogbox']:
+        raise Exception('Invalid local least square minimizer solver. It should be one of [trf, lm, dogbox]')
+    if edge is not None and edge not in  ['g', 'l']:
+        raise Exception('Invalid Edge type.')
+
     num_voigt = len(thy_peak)
     num_param = 2 + num_voigt*(1+(policy == 'both'))
 
