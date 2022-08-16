@@ -6,6 +6,7 @@ fitting static spectrum with sum of voigt or voigt broadned theoretical spectrum
 :license: LGPL3.
 '''
 
+from typing import Optional
 import os
 from pathlib import Path
 import argparse
@@ -72,19 +73,13 @@ def save_StaticResult_txt(result: StaticResult, dirname: str):
 
 
 
-def plot_StaticResult(result: StaticResult):
+def plot_StaticResult(result: StaticResult, save_fig: Optional[str] = None):
     '''
     plot static fitting Result
 
     Args:
      result: static fitting result
-     name_of_dset: name of each dataset
-     x_min: minimum x range
-     x_max: maximum x range
-     save_fig: prefix of saved png plots. If `save_fig` is `None`, plots are displayed istead of being saved.
-     e: scan range of data
-     data: static spectrum (it should not contain energy scan range)
-     eps: estimated errors of static spectrum
+     save_fig: prefix of saved png plots. If `save_fig` is `None`, plots are displayed instead of being saved.
     '''
 
     fig = plt.figure(0)
@@ -111,7 +106,10 @@ def plot_StaticResult(result: StaticResult):
     sub2.errorbar(result['e'], result['res'], result['eps'],
                   marker='o', mfc='none', label=f'res {title}', linestyle='none')
     sub2.legend()
-    plt.show()
+    if save_fig is None:
+        plt.show()
+    else:
+        plt.savefig('./{save_fig}/static_fitting.png')
 
 
 description = '''
@@ -129,25 +127,30 @@ epilog = '''
 
 method_glb_help = '''
 Global optimization Method.
-* 'basinhopping' : basinhopping
-* 'ampgo' : adaptive memory programming for global optimization
+
+ * 'basinhopping' : basinhopping
+ * 'ampgo' : adaptive memory programming for global optimization
+
 If method_glb is not set, global optimization algorithm is not used.
 '''
 
 edge_help = '''
 Type of edge function if not set, edge is not included.
+
  'g': gaussian type edge function
  'l': lorenzian type edge function
 '''
 
 mode_help = '''
 Mode of static spectrum fitting
- 'voigt': fitting with sum of voigt componenty
+
+ 'voigt': fitting with sum of voigt component
  'thy': fitting with voigt broadend thoretical spectrum
 '''
 
 policy_help = '''
 Policy to match discrepency between experimental data and theoretical spectrum.
+
  'shift': constant shift peak position
  'scale': constant scale peak position
  'both': shift and scale peak position
@@ -156,7 +159,7 @@ Policy to match discrepency between experimental data and theoretical spectrum.
 
 def fit_static():
 
-    tmp = argparse.RawDescriptionHelpFormatter
+    tmp = argparse.RawTextHelpFormatter
     parse = argparse.ArgumentParser(formatter_class=tmp,
                                     description=description,
                                     epilog=epilog)
@@ -192,10 +195,12 @@ def fit_static():
                        help='full width at half maximum parameter of edge')
     parse.add_argument('--base_order', type=int,
                        help='Order of polynomial to correct baseline feature. If it is not set then baseline is not corrected')
-    parse.add_argument('-o', '--outdir', default='out',
-                       help='directory to store output file')
     parse.add_argument(
         '--method_glb', choices=['basinhopping', 'ampgo'], help=method_glb_help)
+    parse.add_argument('-o', '--outdir', default='out',
+                       help='directory to store output file')
+    parse.add_argument('--save_fig', action='store_true',
+                        help='save plot instead of display')
 
     args = parse.parse_args()
 
@@ -262,5 +267,9 @@ def fit_static():
     save_StaticResult_txt(result, outdir)
     save_StaticResult(result, outdir)
     print(result)
-    plot_StaticResult(result)
+    if args.save_fig:
+        plot_StaticResult(result, outdir)
+    else:
+        plot_StaticResult(result)
+
 

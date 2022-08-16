@@ -14,6 +14,9 @@ from typing import Callable, Optional, Union
 import numpy as np
 from scipy.optimize import minimize, OptimizeResult
 
+SCIPY_LOCAL_SOLVER = ['Nelder-Mead', 'Powell', 'CG', 'BFGS', 'Newton-CG',
+'L-BFGS-B', 'TNC', 'COBYLA', 'SLSQP', 'dogleg', 'trust-ncg']
+
 
 def ampgo(fun: Callable, x0: np.ndarray,
           tot_iter: Optional[int] = 20, max_tunnel: Optional[int] = 5,
@@ -95,8 +98,12 @@ def ampgo(fun: Callable, x0: np.ndarray,
 
     if isinstance(seed, np.random.RandomState):
         rng = seed
-    else:
+    elif isinstance(seed, int):
         rng = np.random.RandomState(seed)
+    elif seed is None:
+        rng = np.random.RandomState(None)
+    else:
+        raise Exception('Invalid seed for random generator')
 
     if callable(callback):
         monitor = True
@@ -119,6 +126,10 @@ def ampgo(fun: Callable, x0: np.ndarray,
         hess = minimizer_kwargs.pop('hess', None)
         hessp = minimizer_kwargs.pop('hessp', None)
         tol = minimizer_kwargs.pop('tol', 1e-8)
+    
+    if method not in SCIPY_LOCAL_SOLVER:
+        raise Exception('Invalid local solver, local solver should be one of' + 
+        '[' + ', '.join(SCIPY_LOCAL_SOLVER) + ']')
 
     # Setting Arguments For tabu tunneling Function
     if callable(jac):

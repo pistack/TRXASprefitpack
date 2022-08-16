@@ -58,12 +58,12 @@ class TransientResult(dict):
      n_param_ind (int): number of parameter which affects fitting quality of indiviual time delay scan
      num_pts (int): total number of data points
      jac (np.ndarray): jacobian of objective function at optimal point
-     cov (np.ndarray): covariance matrix (i.e. inverse of (jac.T @ jac))
-     cov_scaled (np.ndarray): scaled covariance matrix (i.e. `red_chi2` * `cov`)
+     cov (np.ndarray): covariance matrix (i.e. inverse of :math:`J^T J`)
+     cov_scaled (np.ndarray): scaled covariance matrix (i.e. :math:`\\chi^2_{red} \cdot {cov}`)
      corr (np.ndarray): parameter correlation matrix
      x_eps (np.ndarray): estimated error of parameter
       (i.e. square root of diagonal element of `conv_scaled`)
-     method_glb ({'basinhopping'}):
+     method_glb ({'ampgo', 'basinhopping'}):
       method of global optimization used in fitting process
      message_glb (str): messages from global optimization process
      method_lsq ({'trf', 'dogbox', 'lm'}): method of local optimization for least_squares

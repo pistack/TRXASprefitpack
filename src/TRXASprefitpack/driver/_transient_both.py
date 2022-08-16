@@ -85,7 +85,7 @@ def fit_transient_both(irf: str, fwhm_init: Union[float, np.ndarray],
       driver assumes that the parameter is fixed during optimization. If `bound_fwhm` is `None`,
       the upper and lower bound are given as `(fwhm_init/2, 2*fwhm_init)`.
      bound_t0 (sequence of tuple): boundary for time zero parameter.
-      If `bound_t0` is `None`, the upper and lower bound are given as `(t0-2*fwhm_init, t0+2*fwhm_init)`.
+      If `bound_t0` is `None`, the upper and lower bound are given by `set_bound_t0`.
      bound_tau (sequence of tuple): boundary for lifetime constant for decay component,
       if `bound_tau` is `None`, the upper and lower bound are given by ``set_bound_tau``.
      bound_tau_osc (sequence of tuple): boundary for lifetime constant for damped oscillation component,
@@ -100,6 +100,13 @@ def fit_transient_both(irf: str, fwhm_init: Union[float, np.ndarray],
      Returns:
       TransientResult class object
     '''
+
+    if method_glb is not None and method_glb not in ['basinhopping', 'ampgo']:
+        raise Exception('Unsupported global optimization Method, Supported global optimization Methods are ampgo and basinhopping')
+    if method_lsq not in ['trf', 'lm', 'dogbox']:
+        raise Exception('Invalid local least square minimizer solver. It should be one of [trf, lm, dogbox]')
+    if irf is not None and irf not in  ['g', 'c', 'pv']:
+        raise Exception('Unsupported shape of instrumental response function Edge.')
 
     num_irf = 1*(irf in ['g', 'c'])+2*(irf == 'pv')
     num_param = num_irf+t0_init.size+tau_init.size+2*tau_osc_init.size
