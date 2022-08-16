@@ -126,9 +126,9 @@ def ampgo(fun: Callable, x0: np.ndarray,
         hess = minimizer_kwargs.pop('hess', None)
         hessp = minimizer_kwargs.pop('hessp', None)
         tol = minimizer_kwargs.pop('tol', 1e-8)
-    
+
     if method not in SCIPY_LOCAL_SOLVER:
-        raise Exception('Invalid local solver, local solver should be one of' + 
+        raise Exception('Invalid local solver, local solver should be one of' +
         '[' + ', '.join(SCIPY_LOCAL_SOLVER) + ']')
 
     # Setting Arguments For tabu tunneling Function

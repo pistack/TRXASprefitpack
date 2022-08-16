@@ -148,7 +148,6 @@ def fit_transient_exp(irf: str, fwhm_init: Union[float, np.ndarray],
                 kwargs_glb['minimizer_kwargs'] = minimizer_kwargs
         else:
             kwargs_glb = {'minimizer_kwargs': min_go_kwargs}
-        #res_go = basinhopping(res_grad_decay, param, **kwargs_glb)
         res_go = GLBSOLVER[method_glb](res_grad_decay, param, **kwargs_glb)
     else:
         res_go = {}
