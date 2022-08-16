@@ -78,7 +78,7 @@ def fit_transient_dmp_osc(irf: str, fwhm_init: Union[float, np.ndarray],
       driver assumes that the parameter is fixed during optimization. If `bound_fwhm` is `None`,
       the upper and lower bound are given as `(fwhm_init/2, 2*fwhm_init)`.
      bound_t0 (sequence of tuple): boundary for time zero parameter.
-      If `bound_t0` is `None`, the upper and lower bound are given as `(t0-2*fwhm_init, t0+2*fwhm_init)`.
+      If `bound_t0` is `None`, the upper and lower bound are given by `set_bound_t0`.
      bound_tau (sequence of tuple): boundary for lifetime constant for damped oscillation component,
       if `bound_tau` is `None`, the upper and lower bound are given by `set_bound_tau`.
      bound_period (sequence of tuple): boundary for period of damped oscillation component,

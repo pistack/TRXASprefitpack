@@ -15,7 +15,7 @@ It also include edge and polynomial type baseline feature.
 
 * usage: fit_static
                      [-h] [--mode {voigt,thy}] [--e0_voigt [E0_VOIGT ...]] [--fwhm_G_voigt [FWHM_G_VOIGT ...]] [--fwhm_L_voigt [FWHM_L_VOIGT ...]] [--thy_file THY_FILE] [--fwhm_G_thy FWHM_G_THY] [--fwhm_L_thy FWHM_L_THY] [--policy {shift,scale,both}] [--peak_scale PEAK_SCALE] [--peak_shift PEAK_SHIFT] [--edge {g,l}] [--e0_edge E0_EDGE] [--fwhm_edge FWHM_EDGE]
-                     [--base_order BASE_ORDER] [-o OUTDIR] [--do_glb]
+                     [--base_order BASE_ORDER] [--method_glb {basinhopping, ampgo}] [-o OUTDIR] [--save_fig]
                      filename
 
 
@@ -61,6 +61,11 @@ It also include edge and polynomial type baseline feature.
                         full width at half maximum parameter of edge
   * --base_order BASE_ORDER
                         Order of polynomial to correct baseline feature. If it is not set then baseline is not corrected
+  * --method_glb {basinhopping, ampgo}
+                          Global Optimization Method
+                          * 'basinhopping' : basinhopping Method
+                          * 'ampgo' : Adaptive Memory Programming for Global Optimization
   * -o OUTDIR, --outdir OUTDIR
                         directory to store output file
-  * --do_glb              Whether or not use Global optimization Method. When do_glb option is set then `basinhopping` global optimization algorithm will be used.
+  * --save_fig save plot instead of display
+

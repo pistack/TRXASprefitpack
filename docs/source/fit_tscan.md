@@ -11,8 +11,8 @@ To calculate the contribution of each life time component, it solve least linear
 
 * usage: fit_tscan 
                     [-h] [--mode {decay,osc,both}] [--irf {g,c,pv}] [--fwhm_G FWHM_G] [--fwhm_L FWHM_L] [--num_file NUM_FILE [NUM_FILE ...]] [-t0 TIME_ZEROS [TIME_ZEROS ...]] [-t0f TIME_ZEROS_FILE]
-                    [--tau [TAU ...]] [--tau_osc TAU_OSC [TAU_OSC ...]] [--period_osc PERIOD_OSC [PERIOD_OSC ...]] [--no_base] [--fix_irf] [--fix_t0] [--do_glb]
-                    [-o OUTDIR] [--save_fig]
+                    [--tau [TAU ...]] [--tau_osc TAU_OSC [TAU_OSC ...]] [--period_osc PERIOD_OSC [PERIOD_OSC ...]] [--no_base] [--fix_irf] [--fix_t0] 
+                    [--method_glb {basinhopping, ampgo}] [-o OUTDIR] [--save_fig]
                     prefix [prefix ...]
 
 
@@ -55,9 +55,9 @@ To calculate the contribution of each life time component, it solve least linear
   * --no_base             exclude baseline for fitting [mode: decay, both]
   * --fix_irf             fix irf parameter (fwhm_G, fwhm_L) during fitting process
   * --fix_t0              fix time zero parameter during fitting process.
-  * --do_glb
-   Whether or not use Global optimization Method. 
-   When do_glb option is set then `basinhopping` global optimization algorithm will be used.
+  * --method_glb {basinhopping,ampgo} Global Optimization Method
+   * 'basinhopping' : basinhopping
+   * 'ampgo' : Adaptive Memory Programming for Global Optimization
   * -o OUTDIR, --outdir OUTDIR
    name of directory to store output files
   * --save_fig            save plot instead of display

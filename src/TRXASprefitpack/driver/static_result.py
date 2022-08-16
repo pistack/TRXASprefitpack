@@ -61,7 +61,7 @@ class StaticResult(dict):
      corr (np.ndarray): parameter correlation matrix
      x_eps (np.ndarray): estimated error of parameter
       (i.e. square root of diagonal element of `conv_scaled`)
-     method_glb ({'basinhopping'}):
+     method_glb ({'ampgo', 'basinhopping'}):
       method of global optimization used in fitting process
      message_glb (str): messages from global optimization process
      method_lsq ({'trf', 'dogbox', 'lm'}): method of local optimization for least_squares
