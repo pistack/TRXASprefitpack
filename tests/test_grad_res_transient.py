@@ -853,13 +853,11 @@ def test_res_grad_decay_same_t0_3():
         1/2*np.sum(residual_decay_same_t0(x0, True, 'pv',
         t=t, intensity=intensity, eps=eps)**2), epsilon)
 
-    res_tst_2, grad_tst = res_grad_decay_same_t0(x0, 3, True, 'pv',
+    res_tst_2, grad_tst = res_grad_decay_same_t0(x0_tst, 3, True, 'pv',
     np.zeros_like(x0_tst, dtype=bool), t, intensity, eps)
 
     assert np.allclose(res_ref, res_tst)
     assert np.allclose(res_tst, res_tst_2)
-
-
     assert np.allclose(grad_ref, grad_tst, rtol=rel_tol,
     atol=abs_tol)
 
