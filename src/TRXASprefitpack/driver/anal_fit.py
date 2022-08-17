@@ -6,13 +6,17 @@ submodule for
 based on f_test
 
 :copyright: 2021-2022 by pistack (Junho Lee).
-:license: LGPL3.
 '''
+
 import numpy as np
 from scipy.stats import f, norm
 from scipy.optimize import brenth, minimize
 from ..res import res_grad_decay, res_grad_dmp_osc, res_grad_both
+from ..res import res_grad_decay_same_t0
+from ..res import res_grad_dmp_osc_same_t0
+from ..res import res_grad_both_same_t0
 from ..res import res_grad_voigt, res_grad_thy
+
 
 def res_scan_opt(p, *args) -> float:
     '''
@@ -49,6 +53,8 @@ def res_scan_opt(p, *args) -> float:
     fargs_lst[-4] = fixed_param_idx
     fargs = tuple(fargs_lst)
     res = minimize(func, param, args=fargs, bounds=bounds, method='L-BFGS-B', jac=True)
+    if not res['success']:
+        print('Warning local minimization is failed')
 
     return res['fun']
 
@@ -177,20 +183,40 @@ def confidence_interval(result, alpha: float) -> CIResult:
     norm_alpha = np.ceil(norm.ppf(1-alpha/2))
 
     if result['model'] == 'decay':
-        args = [F_alpha, dfn, dfd, chi2_opt, 0, params, result['bounds'],
-        res_grad_decay, result['n_decay'],
-        result['base'], result['irf'], fix_param_idx,
-        result['t'], result['intensity'], result['eps']]
+        if result['same_t0']:
+            args = [F_alpha, dfn, dfd, chi2_opt, 0, params, result['bounds'],
+            res_grad_decay_same_t0, result['n_decay'],
+            result['base'], result['irf'], fix_param_idx,
+            result['t'], result['intensity'], result['eps']]
+        else:
+            args = [F_alpha, dfn, dfd, chi2_opt, 0, params, result['bounds'],
+            res_grad_decay, result['n_decay'],
+            result['base'], result['irf'], fix_param_idx,
+            result['t'], result['intensity'], result['eps']]
     elif result['model'] == 'dmp_osc':
-        args = [F_alpha, dfn, dfd, chi2_opt, 0, params, result['bounds'],
-        res_grad_dmp_osc, result['n_osc'],
-        result['irf'], fix_param_idx,
-        result['t'], result['intensity'], result['eps']]
+        if result['same_t0']:
+            args = [F_alpha, dfn, dfd, chi2_opt, 0, params, result['bounds'],
+            res_grad_dmp_osc_same_t0, result['n_osc'],
+            result['irf'], fix_param_idx,
+            result['t'], result['intensity'], result['eps']]
+        else:
+            args = [F_alpha, dfn, dfd, chi2_opt, 0, params, result['bounds'],
+            res_grad_dmp_osc, result['n_osc'],
+            result['irf'], fix_param_idx,
+            result['t'], result['intensity'], result['eps']]
     elif result['model'] == 'both':
-        args = [F_alpha, dfn, dfd, chi2_opt, 0, params, result['bounds'],
-        res_grad_both,
-        result['n_decay'], result['n_osc'], result['base'], result['irf'], fix_param_idx,
-        result['t'], result['intensity'], result['eps']]
+        if result['same_t0']:
+            args = [F_alpha, dfn, dfd, chi2_opt, 0, params, result['bounds'],
+            res_grad_both_same_t0,
+            result['n_decay'], result['n_osc'], result['base'], result['irf'],
+            fix_param_idx,
+            result['t'], result['intensity'], result['eps']]
+        else:
+            args = [F_alpha, dfn, dfd, chi2_opt, 0, params, result['bounds'],
+            res_grad_both,
+            result['n_decay'], result['n_osc'], result['base'], result['irf'],
+            fix_param_idx,
+            result['t'], result['intensity'], result['eps']]
     elif result['model'] == 'voigt':
         args = [F_alpha, dfn, dfd, chi2_opt, 0, params, result['bounds'],
         res_grad_voigt,

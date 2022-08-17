@@ -7,11 +7,15 @@ path = os.path.dirname(os.path.realpath(__file__))
 sys.path.append(path+'/../src/')
 
 from TRXASprefitpack import dmp_osc_conv
+from TRXASprefitpack import calc_eta, calc_fwhm
 from TRXASprefitpack import fit_transient_dmp_osc
 from TRXASprefitpack import save_TransientResult, load_TransientResult
 
-def test_driver_transient_dmp_osc_2():
-    fwhm = 0.08
+def test_driver_transient_dmp_osc_6():
+    fwhm_G = 0.05
+    fwhm_L = 0.03
+    fwhm = calc_fwhm(fwhm_G, fwhm_L)
+    eta = calc_eta(fwhm_G, fwhm_L)
     tau = np.array([0.5, 10, 1000])
     period = np.array([0.3, 3, 200])
     phase_1 = np.random.uniform(-np.pi, np.pi, 3)
@@ -38,13 +42,17 @@ def test_driver_transient_dmp_osc_2():
     abs_4 = np.array([0.6, 0.3, 1])
     abs_osc = np.vstack((abs_1, abs_2, abs_3, abs_4))
 
-    t0 = np.random.uniform(-0.1, 0.1, 4) # perturb time zero of each scan
+    t0 = np.random.uniform(-0.1, 0.1, 1) # perturb time zero of each scan
 
     # generate measured data
-    y_obs_1 = dmp_osc_conv(t_seq-t0[0], fwhm, tau, period, phase_1, abs_1, irf='c')
-    y_obs_2 = dmp_osc_conv(t_seq-t0[1], fwhm, tau, period, phase_2, abs_2, irf='c')
-    y_obs_3 = dmp_osc_conv(t_seq-t0[2], fwhm, tau, period, phase_3, abs_3, irf='c')
-    y_obs_4 = dmp_osc_conv(t_seq-t0[3], fwhm, tau, period, phase_4, abs_4, irf='c')
+    y_obs_1 = dmp_osc_conv(t_seq-t0[0], fwhm, tau, period, phase_1, abs_1,
+    irf='pv', eta=eta)
+    y_obs_2 = dmp_osc_conv(t_seq-t0[0], fwhm, tau, period, phase_2, abs_2,
+    irf='pv', eta=eta)
+    y_obs_3 = dmp_osc_conv(t_seq-t0[0], fwhm, tau, period, phase_3, abs_3,
+    irf='pv', eta=eta)
+    y_obs_4 = dmp_osc_conv(t_seq-t0[0], fwhm, tau, period, phase_4, abs_4,
+    irf='pv', eta=eta)
 
     eps_obs_1 = np.ones_like(y_obs_1)
     eps_obs_2 = np.ones_like(y_obs_2)
@@ -61,30 +69,31 @@ def test_driver_transient_dmp_osc_2():
     intensity = [np.vstack((i_obs_1, i_obs_2, i_obs_3, i_obs_4)).T]
     eps = [np.vstack((eps_obs_1, eps_obs_2, eps_obs_3, eps_obs_4)).T]
 
-    ans = np.array([fwhm, t0[0], t0[1], t0[2], t0[3],
+    ans = np.array([fwhm_G, fwhm_L, t0[0],
     tau[0], tau[1], tau[2], period[0], period[1], period[2]])
 
-    bound_fwhm = [(0.05, 0.2)]
-    bound_t0 = [(-0.1, 0.1), (-0.1, 0.1), (-0.1, 0.1), (-0.1, 0.1)]
-    bound_tau = [(0.1, 1), (1, 100), (500, 5000)]
-    bound_period = [(0.1, 0.5), (1, 10), (100, 500)]
-    fwhm_init = np.random.uniform(0.05, 0.2)
-    t0_init = np.random.uniform(-0.1, 0.1, 4)
+    bound_fwhm = [(0.025, 0.1), (0.025, 0.1)]
+    bound_t0 = [(-0.1, 0.1)]
+    bound_tau = [(0.1, 1), (1, 100), (100, 5000)]
+    bound_period = [(0.1, 0.5), (1, 10), (100, 1000)]
+    fwhm_init = np.random.uniform(0.025, 0.1)
+    t0_init = np.random.uniform(-0.1, 0.1, 1)
     tau_init = np.array([np.random.uniform(0.1, 1),
-    np.random.uniform(1, 100), np.random.uniform(500, 5000)])
+    np.random.uniform(1, 100), np.random.uniform(100, 5000)])
     period_init = np.array([np.random.uniform(0.1, 0.5),
     np.random.uniform(1, 10), np.random.uniform(100, 500)])
 
-    result_ampgo = fit_transient_dmp_osc('c', fwhm_init, t0_init, tau_init, period_init,
+    result_ampgo = fit_transient_dmp_osc('pv', fwhm_init, t0_init, tau_init, period_init,
     method_glb='ampgo', bound_fwhm=bound_fwhm, bound_t0=bound_t0,
-    bound_tau=bound_tau, bound_period=bound_period, t=t, intensity=intensity, eps=eps)
+    bound_tau=bound_tau, bound_period=bound_period,
+    same_t0=True,
+    t=t, intensity=intensity, eps=eps)
 
-    save_TransientResult(result_ampgo, 'test_driver_transient_dmp_osc_2')
-    load_result_ampgo = load_TransientResult('test_driver_transient_dmp_osc_2')
-    os.remove('test_driver_transient_dmp_osc_2.h5')
+    save_TransientResult(result_ampgo, 'test_driver_transient_dmp_osc_3')
+    load_result_ampgo = load_TransientResult('test_driver_transient_dmp_osc_3')
+    os.remove('test_driver_transient_dmp_osc_3.h5')
 
     assert np.allclose(result_ampgo['x'][-6:], ans[-6:], rtol=1e-2)
     assert np.allclose(result_ampgo['c'][0], abs_osc.T, rtol=1e-2)
     assert str(result_ampgo) == str(load_result_ampgo)
-
 

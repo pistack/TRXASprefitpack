@@ -16,6 +16,7 @@ from scipy.optimize import least_squares
 from ..mathfun.A_matrix import make_A_matrix_exp, fact_anal_A
 from ..res.parm_bound import set_bound_t0, set_bound_tau
 from ..res.res_decay import residual_decay, res_grad_decay
+from ..res.res_decay import residual_decay_same_t0, res_grad_decay_same_t0
 
 GLBSOLVER = {'basinhopping': basinhopping, 'ampgo': ampgo}
 
@@ -29,6 +30,7 @@ def fit_transient_exp(irf: str, fwhm_init: Union[float, np.ndarray],
                       bound_fwhm: Optional[Sequence[Tuple[float, float]]] = None,
                       bound_t0: Optional[Sequence[Tuple[float, float]]] = None,
                       bound_tau: Optional[Sequence[Tuple[float, float]]] = None,
+                      same_t0: Optional[bool] = False,
                       name_of_dset: Optional[Sequence[str]] = None,
                       t: Optional[Sequence[np.ndarray]] = None,
                       intensity: Optional[Sequence[np.ndarray]] = None,
@@ -80,6 +82,7 @@ def fit_transient_exp(irf: str, fwhm_init: Union[float, np.ndarray],
       If `bound_t0` is `None`, the upper and lower bound are given by ``set_bound_t0``.
      bound_tau (sequence of tuple): boundary for lifetime constant for decay component,
       if `bound_tau` is `None`, the upper and lower bound are given by ``set_bound_tau``.
+     same_t0 (bool): Whether or not time zero of every time delay scan in the same dataset should be same
      name_of_dset (sequence of str): name of each dataset
      t (sequence of np.narray): time scan range for each datasets
      intensity (sequence of np.ndarray): sequence of intensity of datasets for time delay scan
@@ -148,7 +151,10 @@ def fit_transient_exp(irf: str, fwhm_init: Union[float, np.ndarray],
                 kwargs_glb['minimizer_kwargs'] = minimizer_kwargs
         else:
             kwargs_glb = {'minimizer_kwargs': min_go_kwargs}
-        res_go = GLBSOLVER[method_glb](res_grad_decay, param, **kwargs_glb)
+        if same_t0:
+            res_go = GLBSOLVER[method_glb](res_grad_decay_same_t0, param, **kwargs_glb)
+        else:
+            res_go = GLBSOLVER[method_glb](res_grad_decay, param, **kwargs_glb)
     else:
         res_go = {}
         res_go['x'] = param
@@ -175,9 +181,12 @@ def fit_transient_exp(irf: str, fwhm_init: Union[float, np.ndarray],
             else:
                 bound_tuple[1][i] = bound[i][1]*(1-1e-8)+1e-16
 
-    # Since jacobian of vector residual function is inaccurate
-    res_lsq = least_squares(residual_decay, param_gopt,
-                            method=method_lsq, bounds=bound_tuple, **kwargs_lsq)
+    if same_t0:
+        res_lsq = least_squares(residual_decay_same_t0, param_gopt,
+        method=method_lsq, bounds=bound_tuple, **kwargs_lsq)
+    else:
+        res_lsq = least_squares(residual_decay, param_gopt,
+        method=method_lsq, bounds=bound_tuple, **kwargs_lsq)
     param_opt = res_lsq['x']
 
     fwhm_opt = param_opt[:num_irf]
@@ -237,12 +246,25 @@ def fit_transient_exp(irf: str, fwhm_init: Union[float, np.ndarray],
     for i in range(len(t)):
         c[i] = np.empty((num_comp+1*base, intensity[i].shape[1]))
 
+        if same_t0:
+            A = \
+                 make_A_matrix_exp(t[i]-param_opt[t0_idx],
+                 fwhm_pv, tau_opt, base, irf, eta)
+
+
         for j in range(intensity[i].shape[1]):
-            A = make_A_matrix_exp(t[i]-param_opt[t0_idx],
-                                  fwhm_pv, tau_opt, base, irf, eta)
+            if not same_t0:
+                A = \
+                    make_A_matrix_exp(t[i]-param_opt[t0_idx],
+                    fwhm_pv, tau_opt, base, irf, eta)
             c[i][:, j] = fact_anal_A(A, intensity[i][:, j], eps[i][:, j])
             fit[i][:, j] = c[i][:, j] @ A
-            param_name[t0_idx] = f't_0_{i+1}_{j+1}'
+            if not same_t0:
+                param_name[t0_idx] = f't_0_{i+1}_{j+1}'
+                t0_idx = t0_idx + 1
+
+        if same_t0:
+            param_name[t0_idx] = f't_0_{i}'
             t0_idx = t0_idx + 1
 
         res[i] = intensity[i] - fit[i]
@@ -265,6 +287,7 @@ def fit_transient_exp(irf: str, fwhm_init: Union[float, np.ndarray],
 
     result = TransientResult()
     result['model'] = 'decay'
+    result['same_t0'] = same_t0
     result['fit'] = fit
     result['res'] = res
     result['irf'] = irf
