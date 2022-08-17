@@ -258,9 +258,16 @@ def fit_transient_dmp_osc(irf: str, fwhm_init: Union[float, np.ndarray],
         c[i] = np.empty((num_comp, intensity[i].shape[1]))
         phase[i] = np.empty((num_comp, intensity[i].shape[1]))
 
+        if same_t0:
+            A = \
+                make_A_matrix_dmp_osc(t[i]-param_opt[t0_idx],
+                fwhm_pv, tau_opt, period_opt, irf, eta)
+
         for j in range(intensity[i].shape[1]):
-            A = make_A_matrix_dmp_osc(
-                t[i]-param_opt[t0_idx], fwhm_pv, tau_opt, period_opt, irf, eta)
+            if not same_t0:
+                A = \
+                     make_A_matrix_dmp_osc(t[i]-param_opt[t0_idx],
+                     fwhm_pv, tau_opt, period_opt, irf, eta)
             tmp = fact_anal_A(A, intensity[i][:, j], eps[i][:, j])
             c[i][:, j] = np.sqrt(tmp[:num_comp]**2+tmp[num_comp:]**2)
             phase[i][:, j] = -np.arctan2(tmp[num_comp:], tmp[:num_comp])
@@ -268,7 +275,7 @@ def fit_transient_dmp_osc(irf: str, fwhm_init: Union[float, np.ndarray],
             if not same_t0:
                 param_name[t0_idx] = f't_0_{i+1}_{j+1}'
                 t0_idx = t0_idx + 1
-        
+
         if same_t0:
             param_name[t0_idx] = f't_0_{i}'
             t0_idx = t0_idx + 1

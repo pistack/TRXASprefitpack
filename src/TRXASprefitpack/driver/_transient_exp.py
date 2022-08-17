@@ -180,7 +180,7 @@ def fit_transient_exp(irf: str, fwhm_init: Union[float, np.ndarray],
                 bound_tuple[1][i] = bound[i][1]*(1+1e-8)+1e-16
             else:
                 bound_tuple[1][i] = bound[i][1]*(1-1e-8)+1e-16
-    
+
     if same_t0:
         res_lsq = least_squares(residual_decay_same_t0, param_gopt,
         method=method_lsq, bounds=bound_tuple, **kwargs_lsq)
@@ -246,19 +246,27 @@ def fit_transient_exp(irf: str, fwhm_init: Union[float, np.ndarray],
     for i in range(len(t)):
         c[i] = np.empty((num_comp+1*base, intensity[i].shape[1]))
 
+        if same_t0:
+            A = \
+                 make_A_matrix_exp(t[i]-param_opt[t0_idx],
+                 fwhm_pv, tau_opt, base, irf, eta)
+
+
         for j in range(intensity[i].shape[1]):
-            A = make_A_matrix_exp(t[i]-param_opt[t0_idx],
-                                  fwhm_pv, tau_opt, base, irf, eta)
+            if not same_t0:
+                A = \
+                    make_A_matrix_exp(t[i]-param_opt[t0_idx],
+                    fwhm_pv, tau_opt, base, irf, eta)
             c[i][:, j] = fact_anal_A(A, intensity[i][:, j], eps[i][:, j])
             fit[i][:, j] = c[i][:, j] @ A
             if not same_t0:
                 param_name[t0_idx] = f't_0_{i+1}_{j+1}'
                 t0_idx = t0_idx + 1
-        
+
         if same_t0:
             param_name[t0_idx] = f't_0_{i}'
             t0_idx = t0_idx + 1
-        
+
         res[i] = intensity[i] - fit[i]
 
     for i in range(num_comp):

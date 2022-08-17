@@ -207,7 +207,7 @@ def fit_transient_both(irf: str, fwhm_init: Union[float, np.ndarray],
                 bound_tuple[1][i] = bound[i][1]*(1+1e-8)+1e-16
             else:
                 bound_tuple[1][i] = bound[i][1]*(1-1e-8)+1e-16
-    
+
     if same_t0:
         res_lsq = least_squares(residual_both_same_t0, param_gopt,
         method=method_lsq, bounds=bound_tuple, **kwargs_lsq)
@@ -284,11 +284,23 @@ def fit_transient_both(irf: str, fwhm_init: Union[float, np.ndarray],
             (tau_init.size+1*base+tau_osc_init.size, intensity[i].shape[1]))
         phase[i] = np.empty((tau_osc_init.size, intensity[i].shape[1]))
 
+        if same_t0:
+            A[:tau_init.size+1*base, :] = \
+                make_A_matrix_exp(t[i]-param_opt[t0_idx],
+                fwhm_pv, tau_opt, base, irf, eta)
+            A[tau_init.size+1*base:, :] = \
+                make_A_matrix_dmp_osc(t[i]-param_opt[t0_idx], fwhm_pv,
+                tau_osc_opt, period_osc_opt, irf, eta)
+
         for j in range(intensity[i].shape[1]):
-            A[:tau_init.size+1*base, :] = make_A_matrix_exp(
-                t[i]-param_opt[t0_idx], fwhm_pv, tau_opt, base, irf, eta)
-            A[tau_init.size+1*base:, :] = make_A_matrix_dmp_osc(t[i]-param_opt[t0_idx], fwhm_pv,
-                                                                tau_osc_opt, period_osc_opt, irf, eta)
+            if not same_t0:
+                A[:tau_init.size+1*base, :] = \
+                    make_A_matrix_exp(t[i]-param_opt[t0_idx],
+                    fwhm_pv, tau_opt, base, irf, eta)
+                A[tau_init.size+1*base:, :] = \
+                    make_A_matrix_dmp_osc(t[i]-param_opt[t0_idx], fwhm_pv,
+                    tau_osc_opt, period_osc_opt, irf, eta)
+
             tmp = fact_anal_A(A, intensity[i][:, j], eps[i][:, j])
             fit[i][:, j] = tmp @ A
             fit_decay[i][:, j] = tmp[:tau_init.size +
@@ -305,7 +317,7 @@ def fit_transient_both(irf: str, fwhm_init: Union[float, np.ndarray],
             if not same_t0:
                 param_name[t0_idx] = f't_0_{i+1}_{j+1}'
                 t0_idx = t0_idx + 1
-        
+
         if same_t0:
             param_name[t0_idx] = f't_0_{i}'
             t0_idx = t0_idx + 1
