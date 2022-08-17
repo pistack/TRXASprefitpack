@@ -22,6 +22,7 @@ class TransientResult(dict):
             `dmp_osc`: sum of the convolution of damped oscillation and instrumental response function
 
             `both`: sum of `decay` and `dmp_osc` model
+     same_t0 (bool): whether or not time zero set to same for every time delay scan in same dataset
      name_of_dset (sequence of str): name of each dataset
      t (sequence of np.ndarray): time range for each dataset
      intensity (sequence of np.ndarray): sequence of datasets of intensity of time delay scan
@@ -263,6 +264,7 @@ def save_TransientResult(result: TransientResult, filename: str):
 
         for k in model_key_lst:
             fit_res.attrs[k] = result[k]
+        fit_res.attrs['same_t0'] = result['same_t0']
         if result['method_glb'] is None:
             fit_res.attrs['method_glb'] = 'no'
         else:
@@ -313,6 +315,11 @@ def load_TransientResult(filename: str) -> TransientResult:
 
         for k in model_key_lst:
             result[k] = fit_res.attrs[k]
+        
+        try: 
+            result['same_t0'] = fit_res.attrs['same_t0']
+        except:
+            result['same_t0'] = False
 
         if fit_res.attrs['method_glb'] == 'no':
             result['method_glb'] = None

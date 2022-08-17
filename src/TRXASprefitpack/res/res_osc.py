@@ -22,7 +22,8 @@ def residual_dmp_osc(x0: np.ndarray, num_comp: int, irf: str,
                      intensity: Optional[Sequence[np.ndarray]] = None, eps: Optional[Sequence[np.ndarray]] = None) -> np.ndarray:
     '''
     residual_dmp_osc
-    `scipy.optimize.least_squares` compatible gradient of vector residual function for fitting multiple set of time delay scan with the
+    `scipy.optimize.least_squares` compatible gradient of vector residual function 
+    for fitting multiple set of time delay scan with the
     sum of convolution of damped oscillation and instrumental response function
 
     Args:
@@ -108,7 +109,8 @@ def res_grad_dmp_osc(x0: np.ndarray, num_comp: int, irf: str,
                      eps: Optional[Sequence[np.ndarray]] = None) -> Tuple[np.ndarray, np.ndarray]:
     '''
     res_grad_dmp_osc
-    scipy.optimize.minimize compatible pair of scalar residual function and its gradient for fitting multiple set of time delay scan with the
+    scipy.optimize.minimize compatible pair of scalar residual function 
+    and its gradient for fitting multiple set of time delay scan with the
     sum of convolution of damped oscillation and instrumental response function
 
     Args:
@@ -226,3 +228,145 @@ def res_grad_dmp_osc(x0: np.ndarray, num_comp: int, irf: str,
         grad[fix_param_idx] = 0
 
     return np.sum(chi**2)/2, grad
+
+def residual_dmp_osc_same_t0(x0: np.ndarray, num_comp: int, irf: str,
+                             t: Optional[Sequence[np.ndarray]] = None,
+                             intensity: Optional[Sequence[np.ndarray]] = None, 
+                             eps: Optional[Sequence[np.ndarray]] = None) -> np.ndarray:
+    '''
+    residual_dmp_osc_same_t0
+    `scipy.optimize.least_squares` compatible gradient of vector residual function 
+    for fitting multiple set of time delay scan with the
+    sum of convolution of damped oscillation and instrumental response function
+
+    Args:
+     x0: initial parameter,
+      if irf == 'g','c':
+
+        * 1st: fwhm_(G/L)
+        * 2nd to :math:`2+N_{dset}`: time zero of each data set
+        * :math:`2+N_{dset}+i`: time constant of each damped oscillation
+        * :math:`2+N_{dset}+N_{osc}+i`: period of each damped oscillation
+
+      if irf == 'pv':
+
+        * 1st and 2nd: fwhm_G, fwhm_L
+        * 3rd to :math:`3+N_{dset}`: time zero of each data set
+        * :math:`3+N_{dset}+i`: time constant of each damped oscillation
+        * :math:`3+N_{dset}+N_{osc}+i`: period of each damped oscillation
+
+     num_comp: number of damped oscillation component
+     irf: shape of instrumental response function
+
+          * 'g': normalized gaussian distribution,
+          * 'c': normalized cauchy distribution,
+          * 'pv': pseudo voigt profile :math:`(1-\\eta)g(f) + \\eta c(f)`
+
+        For pseudo voigt profile, the mixing parameter :math:`\\eta(f_G, f_L)` and
+        uniform fwhm paramter :math:`f(f_G, f_L)` are calculated by `calc_eta` and `calc_fwhm` routine
+     t: time points for each data set
+     intensity: sequence of intensity of datasets
+     eps: sequence of estimated error of datasets
+
+    Returns:
+     Residual vector
+    '''
+
+    num_irf = 1 + 1*(irf == 'pv')
+    num_dset = len(t)
+    num_dset_each = np.empty(num_dset, dtype=int)
+    for i in range(num_dset):
+        num_dset_each[i] = intensity[i].shape[1]
+    num_dset_tot = np.sum(num_dset_each)
+    x0 = np.atleast_1d(x0)
+    x1 = np.empty(x0.size-num_dset+num_dset_tot)
+    x1[:num_irf] = x0[:num_irf]
+    x1[num_irf+num_dset_tot:] = x0[num_irf+num_dset:]
+    start_t0_idx = num_irf
+    for i in range(num_dset):
+        for j in range(num_dset_each[i]):
+            x1[start_t0_idx+j] = x0[i]
+        start_t0_idx = start_t0_idx + num_dset_each[i]
+
+    return residual_dmp_osc(x1, num_comp, irf, 
+    t=t, intensity=intensity, eps=eps)
+
+def res_grad_dmp_osc_same_t0(x0: np.ndarray, num_comp: int, irf: str,
+                             fix_param_idx: Optional[np.ndarray] = None,
+                             t: Optional[Sequence[np.ndarray]] = None,
+                             intensity: Optional[Sequence[np.ndarray]] = None,
+                             eps: Optional[Sequence[np.ndarray]] = None) -> Tuple[np.ndarray, np.ndarray]:
+    '''
+    res_grad_dmp_osc_same_t0
+    scipy.optimize.minimize compatible pair of scalar residual function 
+    and its gradient for fitting multiple set of time delay scan with the
+    sum of convolution of damped oscillation and instrumental response function
+
+    Args:
+     x0: initial parameter,
+      if irf == 'g','c':
+
+        * 1st: fwhm_(G/L)
+        * 2nd to :math:`2+N_{dset}`: time zero of each data set
+        * :math:`2+N_{dset}+i`: time constant of each damped oscillation
+        * :math:`2+N_{dset}+N_{osc}+i`: period of each damped oscillation
+
+      if irf == 'pv':
+
+        * 1st and 2nd: fwhm_G, fwhm_L
+        * 3rd to :math:`3+N_{dset}`: time zero of each data set
+        * :math:`3+N_{dset}+i`: time constant of each damped oscillation
+        * :math:`3+N_{dset}+N_{osc}+i`: period of each damped oscillation
+
+     num_comp: number of damped oscillation component
+     irf: shape of instrumental response function
+
+          * 'g': normalized gaussian distribution,
+          * 'c': normalized cauchy distribution,
+          * 'pv': pseudo voigt profile :math:`(1-\\eta)g(f) + \\eta c(f)`
+
+        For pseudo voigt profile, the mixing parameter :math:`\\eta(f_G, f_L)` and
+        uniform fwhm paramter :math:`f(f_G, f_L)` are calculated by `calc_eta` and `calc_fwhm` routine
+     fix_param_idx: index for fixed parameter (masked array for `x0`)
+     t: time points for each data set
+     intensity: sequence of intensity of datasets
+     eps: sequence of estimated error of datasets
+
+    Returns:
+     Tuple of scalar residual function :math:`(\\frac{1}{2}\\sum_i {res}^2_i)` and its gradient
+    '''
+
+    num_irf = 1 + 1*(irf == 'pv')
+    num_dset = len(t)
+    num_dset_each = np.empty(num_dset, dtype=int)
+    for i in range(num_dset):
+        num_dset_each[i] = intensity[i].shape[1]
+    num_dset_tot = np.sum(num_dset_each)
+    x0 = np.atleast_1d(x0)
+    x1 = np.empty(x0.size-num_dset+num_dset_tot)
+    fix_param_idx_1 = np.empty(x0.size-num_dset+num_dset_tot, dtype=bool)
+    x1[:num_irf] = x0[:num_irf]
+    x1[num_irf+num_dset_tot:] = x0[num_irf+num_dset:]
+    fix_param_idx_1[:num_irf] = fix_param_idx_1[:num_irf]
+    fix_param_idx_1[num_irf+num_dset_tot:] = fix_param_idx_1[num_irf+num_dset:]
+    start_t0_idx = num_irf
+
+    for i in range(num_dset):
+        for j in range(num_dset_each[i]):
+            x1[start_t0_idx+j] = x0[i]
+            fix_param_idx_1[start_t0_idx+j] = fix_param_idx[i]
+        start_t0_idx = start_t0_idx + num_dset_each[i]
+    
+    res, grad_0 = res_grad_dmp_osc(x1, num_comp, irf, fix_param_idx_1,
+    t=t, intensity=intensity, eps=eps)
+    grad = np.empty(x0.size)
+    grad[:num_irf] = grad_0[:num_irf]
+    grad[num_irf+num_dset:] = grad_0[num_irf+num_dset_tot:]
+    start_t0_idx = num_irf
+    for i in range(num_dset):
+        grad[num_irf+i] = 0
+        for j in range(num_dset_each[i]):
+            grad[num_irf+i] = grad[num_irf+i] + grad_0[start_t0_idx+j]
+        start_t0_idx = start_t0_idx + num_dset_each[i]
+        
+    return res, grad

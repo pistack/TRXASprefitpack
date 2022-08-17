@@ -16,6 +16,7 @@ from scipy.optimize import least_squares
 from ..mathfun.A_matrix import make_A_matrix_dmp_osc, fact_anal_A
 from ..res.parm_bound import set_bound_t0, set_bound_tau
 from ..res.res_osc import residual_dmp_osc, res_grad_dmp_osc
+from ..res.res_osc import residual_dmp_osc_same_t0, res_grad_dmp_osc_same_t0
 
 GLBSOLVER = {'basinhopping': basinhopping, 'ampgo': ampgo}
 
@@ -31,6 +32,7 @@ def fit_transient_dmp_osc(irf: str, fwhm_init: Union[float, np.ndarray],
                           bound_tau: Optional[Sequence[Tuple[float, float]]] = None,
                           bound_period: Optional[Sequence[Tuple[float, float]]] = None,
                           name_of_dset: Optional[Sequence[str]] = None,
+                          same_t0: Optional[bool] = False,
                           t: Optional[Sequence[np.ndarray]] = None,
                           intensity: Optional[Sequence[np.ndarray]] = None,
                           eps: Optional[Sequence[np.ndarray]] = None) -> TransientResult:
@@ -84,6 +86,7 @@ def fit_transient_dmp_osc(irf: str, fwhm_init: Union[float, np.ndarray],
      bound_period (sequence of tuple): boundary for period of damped oscillation component,
       if `bound_period` is `None`, the upper and lower bound are given by `set_bound_tau`.
      name_of_dset (sequence of str): name of each dataset
+     same_t0 (bool): Whether or not time zero of every time delay scan in the same dataset should be same
      t (sequence of np.narray): time scan range for each datasets
      intensity (sequence of np.ndarray): sequence of intensity pf datasets for time delay scan (it should not contain time scan range)
      eps (sequence of np.ndarray): sequence of estimated errors of each dataset
@@ -157,7 +160,10 @@ def fit_transient_dmp_osc(irf: str, fwhm_init: Union[float, np.ndarray],
                 kwargs_glb['minimizer_kwargs'] = minimizer_kwargs
         else:
             kwargs_glb = {'minimizer_kwargs': min_go_kwargs}
-        res_go = GLBSOLVER[method_glb](res_grad_dmp_osc, param, **kwargs_glb)
+        if same_t0:
+            res_go = GLBSOLVER(res_grad_dmp_osc_same_t0, param, **kwargs_glb)
+        else:
+            res_go = GLBSOLVER[method_glb](res_grad_dmp_osc, param, **kwargs_glb)
     else:
         res_go = {}
         res_go['x'] = param
@@ -184,9 +190,13 @@ def fit_transient_dmp_osc(irf: str, fwhm_init: Union[float, np.ndarray],
             else:
                 bound_tuple[1][i] = bound[i][1]*(1-1e-8)+1e-16
 
-    # jacobian of vector residual function is inaccurate
-    res_lsq = least_squares(residual_dmp_osc, param_gopt,
-                            method=method_lsq, bounds=bound_tuple, **kwargs_lsq)
+    if same_t0:
+        res_lsq = least_squares(residual_dmp_osc_same_t0, param_gopt,
+        method=method_lsq, bounds=bound_tuple, **kwargs_lsq)
+    else:
+        res_lsq = least_squares(residual_dmp_osc, param_gopt,
+        method=method_lsq, bounds=bound_tuple, **kwargs_lsq)
+
     param_opt = res_lsq['x']
 
     fwhm_opt = param_opt[:num_irf]
@@ -255,7 +265,12 @@ def fit_transient_dmp_osc(irf: str, fwhm_init: Union[float, np.ndarray],
             c[i][:, j] = np.sqrt(tmp[:num_comp]**2+tmp[num_comp:]**2)
             phase[i][:, j] = -np.arctan2(tmp[num_comp:], tmp[:num_comp])
             fit[i][:, j] = tmp @ A
-            param_name[t0_idx] = f't_0_{i+1}_{j+1}'
+            if not same_t0:
+                param_name[t0_idx] = f't_0_{i+1}_{j+1}'
+                t0_idx = t0_idx + 1
+        
+        if same_t0:
+            param_name[t0_idx] = f't_0_{i}'
             t0_idx = t0_idx + 1
 
         res[i] = intensity[i] - fit[i]
@@ -278,6 +293,7 @@ def fit_transient_dmp_osc(irf: str, fwhm_init: Union[float, np.ndarray],
     corr[mask_2d] = corr[mask_2d]/weight[mask_2d]
 
     result = TransientResult()
+    result['same_t0'] = same_t0
     # save experimental fitting data
     if name_of_dset is None:
         name_of_dset = np.empty(len(t), dtype=object)

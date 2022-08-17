@@ -174,25 +174,16 @@ To calculate the contribution of each life time component, it solve least linear
 
 epilog = '''
 *Note
-
-1. The number of time zero parameter should be same as the
-   total number of scan to fit.
-
-2. Every scan file whose prefix of filename is same should have same scan range
-
-3. if you set shape of irf to pseudo voigt (pv), then
-   you should provide two full width at half maximum
+1. The number of time zero parameter should be same as the total number of scan to fit.
+2. However if you set `same_t0` then number of time zero parameter should be same as the total number of dataset
+3. Every scan file whose prefix of filename is same should have same scan range
+4. if you set shape of irf to pseudo voigt (pv), then you should provide two full width at half maximum
    value for gaussian and cauchy parts, respectively.
-
-4. If you did not set tau and `mode=decay` then `--no_base` option is discouraged.
-
-5. If you set `mode=decay` then any parameter whoose subscript is `osc` is discarded (i.e. tau_osc, period_osc).
-
-6. If you set `mode=osc` then `tau` parameter is discarded. Also, baseline feature is not included in fitting function.
-
-7. The number of tau_osc and period_osc parameter should be same
-
-8. If you set `mode=both` then you should set `tau`, `tau_osc` and `period_osc`. However the number of `tau` and `tau_osc` need not to be same.
+5. If you did not set tau and `mode=decay` then `--no_base` option is discouraged.
+6. If you set `mode=decay` then any parameter whoose subscript is `osc` is discarded (i.e. tau_osc, period_osc).
+7. If you set `mode=osc` then `tau` parameter is discarded. Also, baseline feature is not included in fitting function.
+8. The number of tau_osc and period_osc parameter should be same
+9. If you set `mode=both` then you should set `tau`, `tau_osc` and `period_osc`. However the number of `tau` and `tau_osc` need not to be same.
 '''
 
 mode_help = '''
@@ -261,6 +252,8 @@ def fit_tscan():
                         help='period of the vibration of each damped oscillation component [mode: osc, both]')
     parser.add_argument('--no_base', action='store_false',
                         help='exclude baseline for fitting [mode: decay, both]')
+    parser.add_argument('--same_t0', action='store_true',
+                        help='set time zero of every time delay scan belong to the same dataset same')
     parser.add_argument('--fix_irf', action='store_true',
                         help='fix irf parameter (fwhm_G, fwhm_L) during fitting process')
     parser.add_argument('--fix_t0', action='store_true',
@@ -310,9 +303,12 @@ def fit_tscan():
     eps = np.empty(prefix.size, dtype=object)
     num_scan = np.sum(num_file)
 
-    if num_scan != t0_init.size:
+    if (not args.same_t0) and (num_scan != t0_init.size):
         raise Exception(
-            'Number of initial time zero parameter should be same as num_file parameter')
+            'the Number of initial time zero parameter should be same as num_file parameter')
+    elif args.same_t0 and (t0_init.size != len(num_file)):
+        raise Exception('You set `same_t0`,'+ 
+        ' so the number of initial time zero paramter should be same as the number of prefix argument')
 
     for i in range(prefix.size):
         t[i] = np.genfromtxt(f'{prefix[i]}_1.txt')[:, 0]
@@ -357,7 +353,8 @@ def fit_tscan():
         dargs.append(base)
 
     result = FITDRIVER[args.mode](irf, fwhm_init, t0_init, *dargs, method_glb=args.method_glb,
-                                  bound_fwhm=bound_fwhm, bound_t0=bound_t0, name_of_dset=prefix, t=t, intensity=intensity, eps=eps)
+                                  bound_fwhm=bound_fwhm, bound_t0=bound_t0, same_t0=args.same_t0,
+                                  name_of_dset=prefix, t=t, intensity=intensity, eps=eps)
 
     save_TransientResult(result, args.outdir)
     save_TransientResult_txt(result, args.outdir)

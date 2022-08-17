@@ -17,6 +17,7 @@ from scipy.optimize import least_squares
 from ..mathfun.A_matrix import make_A_matrix_exp, make_A_matrix_dmp_osc, fact_anal_A
 from ..res.parm_bound import set_bound_t0, set_bound_tau
 from ..res.res_both import residual_both, res_grad_both
+from ..res.res_both import residual_both_same_t0, res_grad_both_same_t0
 
 GLBSOLVER = {'basinhopping': basinhopping, 'ampgo': ampgo}
 
@@ -34,6 +35,7 @@ def fit_transient_both(irf: str, fwhm_init: Union[float, np.ndarray],
                        bound_tau: Optional[Sequence[Tuple[float, float]]] = None,
                        bound_tau_osc: Optional[Sequence[Tuple[float, float]]] = None,
                        bound_period_osc: Optional[Sequence[Tuple[float, float]]] = None,
+                       same_t0: Optional[bool] = False,
                        name_of_dset: Optional[Sequence[str]] = None,
                        t: Optional[Sequence[np.ndarray]] = None,
                        intensity: Optional[Sequence[np.ndarray]] = None,
@@ -92,6 +94,8 @@ def fit_transient_both(irf: str, fwhm_init: Union[float, np.ndarray],
       if `bound_tau_osc` is `None`, the upper and lower bound are given by ``set_bound_tau``.
      bound_period_osc (sequence of tuple): boundary for period of damped oscillation component,
       if `bound_period_osc` is `None`, the upper and lower bound are given by ``set_bound_tau``.
+     same_t0 (bool): Whether or not time zero of every time delay scan in the same dataset should be same
+     name_of_dset (sequence of str): name of each dataset
      t (sequence of np.narray): time scan range for each datasets
      intensity (sequence of np.ndarray): sequence of intensity of datasets
       for time delay scan
@@ -174,7 +178,10 @@ def fit_transient_both(irf: str, fwhm_init: Union[float, np.ndarray],
                 kwargs_glb['minimizer_kwargs'] = minimizer_kwargs
         else:
             kwargs_glb = {'minimizer_kwargs': min_go_kwargs}
-        res_go = GLBSOLVER[method_glb](res_grad_both, param, **kwargs_glb)
+        if same_t0:
+            res_go = GLBSOLVER[method_glb](res_grad_both_same_t0, param, **kwargs_glb)
+        else:
+            res_go = GLBSOLVER[method_glb](res_grad_both, param, **kwargs_glb)
     else:
         res_go = {}
         res_go['x'] = param
@@ -200,10 +207,14 @@ def fit_transient_both(irf: str, fwhm_init: Union[float, np.ndarray],
                 bound_tuple[1][i] = bound[i][1]*(1+1e-8)+1e-16
             else:
                 bound_tuple[1][i] = bound[i][1]*(1-1e-8)+1e-16
+    
+    if same_t0:
+        res_lsq = least_squares(residual_both_same_t0, param_gopt,
+        method=method_lsq, bounds=bound_tuple, **kwargs_lsq)
+    else:
+        res_lsq = least_squares(residual_both, param_gopt,
+        method=method_lsq, bounds=bound_tuple, **kwargs_lsq)
 
-    # jacobian of vector residual function is inaccurate
-    res_lsq = least_squares(residual_both, param_gopt,
-                            method=method_lsq, bounds=bound_tuple, **kwargs_lsq)
     param_opt = res_lsq['x']
 
     fwhm_opt = param_opt[:num_irf]
@@ -290,7 +301,13 @@ def fit_transient_both(irf: str, fwhm_init: Union[float, np.ndarray],
                         tmp[tau_init.size+1*base+tau_osc_init.size:]**2)
             phase[i][:, j] = -np.arctan2(tmp[tau_init.size+1*base+tau_osc_init.size:],
                                          tmp[tau_init.size+1*base:tau_init.size+1*base+tau_osc_init.size])
-            param_name[t0_idx] = f't_0_{i+1}_{j+1}'
+
+            if not same_t0:
+                param_name[t0_idx] = f't_0_{i+1}_{j+1}'
+                t0_idx = t0_idx + 1
+        
+        if same_t0:
+            param_name[t0_idx] = f't_0_{i}'
             t0_idx = t0_idx + 1
 
         res[i] = intensity[i] - fit[i]
@@ -316,6 +333,7 @@ def fit_transient_both(irf: str, fwhm_init: Union[float, np.ndarray],
     corr[mask_2d] = corr[mask_2d]/weight[mask_2d]
 
     result = TransientResult()
+    result['same_t0'] = same_t0
 
     # save experimental fitting data
     if name_of_dset is None:
