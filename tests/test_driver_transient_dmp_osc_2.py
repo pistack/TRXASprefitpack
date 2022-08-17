@@ -83,7 +83,7 @@ def test_driver_transient_dmp_osc_2():
     load_result_ampgo = load_TransientResult('test_driver_transient_dmp_osc_2')
     os.remove('test_driver_transient_dmp_osc_2.h5')
 
-    assert np.allclose(result_ampgo['x'], ans, rtol=1e-2)
+    assert np.allclose(result_ampgo['x'][-6:], ans[-6:], rtol=1e-2)
     assert np.allclose(result_ampgo['c'][0], abs_osc.T, rtol=1e-2)
     assert str(result_ampgo) == str(load_result_ampgo)
 

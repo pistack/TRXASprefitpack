@@ -192,7 +192,7 @@ def confidence_interval(result, alpha: float) -> CIResult:
             args = [F_alpha, dfn, dfd, chi2_opt, 0, params, result['bounds'],
             res_grad_decay, result['n_decay'],
             result['base'], result['irf'], fix_param_idx,
-            result['t'], result['intensity'], result['eps']]            
+            result['t'], result['intensity'], result['eps']]
     elif result['model'] == 'dmp_osc':
         if result['same_t0']:
             args = [F_alpha, dfn, dfd, chi2_opt, 0, params, result['bounds'],
@@ -208,13 +208,13 @@ def confidence_interval(result, alpha: float) -> CIResult:
         if result['same_t0']:
             args = [F_alpha, dfn, dfd, chi2_opt, 0, params, result['bounds'],
             res_grad_both_same_t0,
-            result['n_decay'], result['n_osc'], result['base'], result['irf'], 
+            result['n_decay'], result['n_osc'], result['base'], result['irf'],
             fix_param_idx,
             result['t'], result['intensity'], result['eps']]
         else:
             args = [F_alpha, dfn, dfd, chi2_opt, 0, params, result['bounds'],
             res_grad_both,
-            result['n_decay'], result['n_osc'], result['base'], result['irf'], 
+            result['n_decay'], result['n_osc'], result['base'], result['irf'],
             fix_param_idx,
             result['t'], result['intensity'], result['eps']]
     elif result['model'] == 'voigt':
