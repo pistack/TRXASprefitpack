@@ -77,7 +77,7 @@ def test_driver_transient_dmp_osc_5():
 
     result_ampgo = fit_transient_dmp_osc('c', fwhm_init, t0_init, tau_init, period_init,
     method_glb='ampgo', bound_fwhm=bound_fwhm, bound_t0=bound_t0,
-    bound_tau=bound_tau, bound_period=bound_period, 
+    bound_tau=bound_tau, bound_period=bound_period,
     same_t0=True,
     t=t, intensity=intensity, eps=eps)
 

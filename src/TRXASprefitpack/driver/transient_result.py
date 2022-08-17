@@ -315,10 +315,10 @@ def load_TransientResult(filename: str) -> TransientResult:
 
         for k in model_key_lst:
             result[k] = fit_res.attrs[k]
-        
-        try: 
+
+        try:
             result['same_t0'] = fit_res.attrs['same_t0']
-        except:
+        except KeyError:
             result['same_t0'] = False
 
         if fit_res.attrs['method_glb'] == 'no':

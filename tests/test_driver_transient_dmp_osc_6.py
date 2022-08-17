@@ -11,7 +11,7 @@ from TRXASprefitpack import calc_eta, calc_fwhm
 from TRXASprefitpack import fit_transient_dmp_osc
 from TRXASprefitpack import save_TransientResult, load_TransientResult
 
-def test_driver_transient_dmp_osc_3():
+def test_driver_transient_dmp_osc_6():
     fwhm_G = 0.05
     fwhm_L = 0.03
     fwhm = calc_fwhm(fwhm_G, fwhm_L)
@@ -85,7 +85,7 @@ def test_driver_transient_dmp_osc_3():
 
     result_ampgo = fit_transient_dmp_osc('pv', fwhm_init, t0_init, tau_init, period_init,
     method_glb='ampgo', bound_fwhm=bound_fwhm, bound_t0=bound_t0,
-    bound_tau=bound_tau, bound_period=bound_period, 
+    bound_tau=bound_tau, bound_period=bound_period,
     same_t0=True,
     t=t, intensity=intensity, eps=eps)
 

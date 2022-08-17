@@ -409,17 +409,17 @@ def res_grad_dmp_osc_same_t0(x0: np.ndarray, num_comp: int, irf: str,
                 make_A_matrix_gau_osc(ti-t0, fwhm, 1/tau_osc, period_osc)
             for i in range(num_comp):
                 A_grad_osc[i, :, :] = \
-                    deriv_dmp_osc_conv_gau_2(ti-t0, fwhm, 1/tau_osc[i], period_osc, (1, 0))
+                    deriv_dmp_osc_conv_gau_2(ti-t0, fwhm, 1/tau_osc[i], period_osc[i], (1, 0))
                 A_grad_osc[num_comp+i, :, :] = \
-                    deriv_dmp_osc_conv_gau_2(ti-t0, fwhm, 1/tau_osc[i], period_osc, (0, 1))
+                    deriv_dmp_osc_conv_gau_2(ti-t0, fwhm, 1/tau_osc[i], period_osc[i], (0, 1))
         elif irf == 'c':
             A[:, :] = \
                 make_A_matrix_cauchy_osc(ti-t0, fwhm, 1/tau_osc, period_osc)
             for i in range(num_comp):
                 A_grad_osc[i, :, :] = \
-                    deriv_dmp_osc_conv_cauchy_2(ti-t0, fwhm, 1/tau_osc[i], period_osc, (1, 0))
+                    deriv_dmp_osc_conv_cauchy_2(ti-t0, fwhm, 1/tau_osc[i], period_osc[i], (1, 0))
                 A_grad_osc[num_comp+i, :, :] = \
-                    deriv_dmp_osc_conv_cauchy_2(ti-t0, fwhm, 1/tau_osc[i], period_osc, (0, 1))
+                    deriv_dmp_osc_conv_cauchy_2(ti-t0, fwhm, 1/tau_osc[i], period_osc[i], (0, 1))
         else:
             tmp_gau_osc = \
                 make_A_matrix_gau_osc(ti-t0, fwhm, 1/tau_osc, period_osc)
@@ -463,7 +463,7 @@ def res_grad_dmp_osc_same_t0(x0: np.ndarray, num_comp: int, irf: str,
                 df[end:end+step, 0] = grad_osc[:, 1]
 
             else:
-                cdiff = (diff_osc)/e[:, j]
+                cdiff = (c@diff_osc)/e[:, j]
                 df[end:end+step, 0] = dfwhm_G*grad_osc[:, 1]+deta_G*cdiff
                 df[end:end+step, 1] = dfwhm_L*grad_osc[:, 1]+deta_L*cdiff
 

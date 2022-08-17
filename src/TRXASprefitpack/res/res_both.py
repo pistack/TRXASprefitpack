@@ -539,10 +539,10 @@ def res_grad_both_same_t0(x0: np.ndarray, num_comp: int, num_comp_osc: int, base
         else:
             tmp_gau = make_A_matrix_gau(ti-t0, fwhm, k)
             tmp_gau_osc = \
-                make_A_matrix_gau_osc(ti-t0, fwhm, 1/tau_osc, period_osc[i])
+                make_A_matrix_gau_osc(ti-t0, fwhm, 1/tau_osc, period_osc)
             tmp_cauchy = make_A_matrix_cauchy(ti-t0, fwhm, k)
             tmp_cauchy_osc = \
-                make_A_matrix_cauchy_osc(ti-t0, fwhm, 1/tau_osc, period_osc[i])
+                make_A_matrix_cauchy_osc(ti-t0, fwhm, 1/tau_osc, period_osc)
             diff = tmp_cauchy-tmp_gau
             diff_osc = tmp_cauchy_osc-tmp_gau_osc
             A[:num_comp+1*base, :] = tmp_gau + eta*diff

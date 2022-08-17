@@ -709,7 +709,7 @@ def test_res_grad_decay_same_t0_1():
     grad_ref = approx_fprime(x0_tst, lambda x0: \
         1/2*np.sum(residual_decay_same_t0(x0, False, 'g',
         t=t, intensity=intensity, eps=eps)**2), epsilon)
-    
+
     res_tst_2, grad_tst = res_grad_decay_same_t0(x0_tst, 3, False, 'g',
     np.zeros_like(x0_tst, dtype=bool), t, intensity, eps)
 
@@ -1131,14 +1131,14 @@ def test_res_grad_both_same_t0_1():
 
     res_ref = 1/2*np.sum(residual_both(x0, 3, 3, False, 'g',
     t=t, intensity=intensity, eps=eps)**2)
-    res_tst_1 = 1/2*np.sum(residual_both_same_t0(x0_tst, 3, 3, 
+    res_tst_1 = 1/2*np.sum(residual_both_same_t0(x0_tst, 3, 3,
     False, 'g',
     t=t, intensity=intensity, eps=eps)**2)
     grad_ref = approx_fprime(x0_tst, lambda x0: \
         1/2*np.sum(residual_both_same_t0(x0, 3, 3, False, 'g',
         t=t, intensity=intensity, eps=eps)**2), epsilon)
 
-    res_tst_2, grad_tst = res_grad_both_same_t0(x0_tst, 3, 3, 
+    res_tst_2, grad_tst = res_grad_both_same_t0(x0_tst, 3, 3,
     False, 'g',
     np.zeros_like(x0_tst, dtype=bool), t, intensity, eps)
 
@@ -1191,7 +1191,7 @@ def test_res_grad_both_same_t0_2():
     y_obs_3 = rate_eq_conv(t_seq-t0[0], fwhm, abs_3, eigval_seq, V_seq, c_seq, irf='c')+\
         dmp_osc_conv(t_seq-t0[0], fwhm, tau_osc, period_osc, phase, abs_3_osc, irf='c')
     y_obs_4 = rate_eq_conv(t_seq-t0[0], fwhm, abs_4, eigval_seq, V_seq, c_seq, irf='c')+\
-        dmp_osc_conv(t_seq-t0[0], fwhm, tau_osc, period_osc, phase, abs_4_osc, irf='d')
+        dmp_osc_conv(t_seq-t0[0], fwhm, tau_osc, period_osc, phase, abs_4_osc, irf='c')
 
     eps_obs_1 = np.ones_like(y_obs_1)
     eps_obs_2 = np.ones_like(y_obs_2)
@@ -1213,14 +1213,14 @@ def test_res_grad_both_same_t0_2():
 
     res_ref = 1/2*np.sum(residual_both(x0, 3, 3, False, 'c',
     t=t, intensity=intensity, eps=eps)**2)
-    res_tst_1 = 1/2*np.sum(residual_both_same_t0(x0_tst, 3, 3, 
+    res_tst_1 = 1/2*np.sum(residual_both_same_t0(x0_tst, 3, 3,
     False, 'c',
     t=t, intensity=intensity, eps=eps)**2)
     grad_ref = approx_fprime(x0_tst, lambda x0: \
         1/2*np.sum(residual_both_same_t0(x0, 3, 3, False, 'c',
         t=t, intensity=intensity, eps=eps)**2), epsilon)
 
-    res_tst_2, grad_tst = res_grad_both_same_t0(x0_tst, 3, 3, 
+    res_tst_2, grad_tst = res_grad_both_same_t0(x0_tst, 3, 3,
     False, 'c',
     np.zeros_like(x0_tst, dtype=bool), t, intensity, eps)
 
@@ -1319,4 +1319,3 @@ def test_res_grad_both_same_t0_3():
     atol=abs_tol)
 
 
-    

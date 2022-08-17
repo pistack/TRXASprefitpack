@@ -6,8 +6,8 @@ submodule for
 based on f_test
 
 :copyright: 2021-2022 by pistack (Junho Lee).
-:license: LGPL3.
 '''
+
 import numpy as np
 from scipy.stats import f, norm
 from scipy.optimize import brenth, minimize

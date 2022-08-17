@@ -307,7 +307,7 @@ def fit_tscan():
         raise Exception(
             'the Number of initial time zero parameter should be same as num_file parameter')
     elif args.same_t0 and (t0_init.size != len(num_file)):
-        raise Exception('You set `same_t0`,'+ 
+        raise Exception('You set `same_t0`,'+
         ' so the number of initial time zero paramter should be same as the number of prefix argument')
 
     for i in range(prefix.size):
