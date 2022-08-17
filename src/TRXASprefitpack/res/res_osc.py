@@ -347,8 +347,8 @@ def res_grad_dmp_osc_same_t0(x0: np.ndarray, num_comp: int, irf: str,
     fix_param_idx_1 = np.empty(x0.size-num_dset+num_dset_tot, dtype=bool)
     x1[:num_irf] = x0[:num_irf]
     x1[num_irf+num_dset_tot:] = x0[num_irf+num_dset:]
-    fix_param_idx_1[:num_irf] = fix_param_idx_1[:num_irf]
-    fix_param_idx_1[num_irf+num_dset_tot:] = fix_param_idx_1[num_irf+num_dset:]
+    fix_param_idx_1[:num_irf] = fix_param_idx[:num_irf]
+    fix_param_idx_1[num_irf+num_dset_tot:] = fix_param_idx[num_irf+num_dset:]
     start_t0_idx = num_irf
 
     for i in range(num_dset):
