@@ -429,13 +429,13 @@ def res_grad_dmp_osc_same_t0(x0: np.ndarray, num_comp: int, irf: str,
             A[:, :] = tmp_gau_osc + eta*diff_osc
             for i in range(num_comp):
                 tmp_grad_gau_osc_1 = \
-                    deriv_dmp_osc_conv_gau_2(ti-t0, fwhm, 1/tau_osc[i], period_osc, (1, 0))
+                    deriv_dmp_osc_conv_gau_2(ti-t0, fwhm, 1/tau_osc[i], period_osc[i], (1, 0))
                 tmp_grad_gau_osc_2 = \
-                    deriv_dmp_osc_conv_gau_2(ti-t0, fwhm, 1/tau_osc[i], period_osc, (0, 1))
+                    deriv_dmp_osc_conv_gau_2(ti-t0, fwhm, 1/tau_osc[i], period_osc[i], (0, 1))
                 tmp_grad_cauchy_osc_1 = \
-                    deriv_dmp_osc_conv_cauchy_2(ti-t0, fwhm, 1/tau_osc[i], period_osc, (1, 0))
+                    deriv_dmp_osc_conv_cauchy_2(ti-t0, fwhm, 1/tau_osc[i], period_osc[i], (1, 0))
                 tmp_grad_cauchy_osc_2 = \
-                    deriv_dmp_osc_conv_cauchy_2(ti-t0, fwhm, 1/tau_osc[i], period_osc, (0, 1))
+                    deriv_dmp_osc_conv_cauchy_2(ti-t0, fwhm, 1/tau_osc[i], period_osc[i], (0, 1))
                 A_grad_osc[i, :, :] = \
                     tmp_grad_gau_osc_1 + eta*(tmp_grad_cauchy_osc_1-tmp_grad_gau_osc_1)
                 A_grad_osc[num_comp+i, :, :] = \
