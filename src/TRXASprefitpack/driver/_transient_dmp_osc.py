@@ -161,7 +161,7 @@ def fit_transient_dmp_osc(irf: str, fwhm_init: Union[float, np.ndarray],
         else:
             kwargs_glb = {'minimizer_kwargs': min_go_kwargs}
         if same_t0:
-            res_go = GLBSOLVER(res_grad_dmp_osc_same_t0, param, **kwargs_glb)
+            res_go = GLBSOLVER[method_glb](res_grad_dmp_osc_same_t0, param, **kwargs_glb)
         else:
             res_go = GLBSOLVER[method_glb](res_grad_dmp_osc, param, **kwargs_glb)
     else:

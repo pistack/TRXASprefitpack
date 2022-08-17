@@ -75,7 +75,7 @@ def test_driver_transient_both_5():
     intensity = [np.vstack((i_obs_1, i_obs_2, i_obs_3, i_obs_4)).T]
     eps = [np.vstack((eps_obs_1, eps_obs_2, eps_obs_3, eps_obs_4)).T]
 
-    ans = np.array([fwhm, t0[0], t0[1], t0[2], t0[3],
+    ans = np.array([fwhm, t0[0],
     tau_1, tau_2, tau_3, tau_osc[0], tau_osc[1], period_osc[0], period_osc[1]])
 
     bound_fwhm = [(0.05, 0.2)]
@@ -98,8 +98,8 @@ def test_driver_transient_both_5():
     t=t, intensity=intensity, eps=eps)
 
     fwhm_init_2 = result_ampgo_exp['x'][0]
-    t0_init_2 = result_ampgo_exp['x'][1:5]
-    tau_init_2 = result_ampgo_exp['x'][5:]
+    t0_init_2 = result_ampgo_exp['x'][1:2]
+    tau_init_2 = result_ampgo_exp['x'][2:]
 
     result_ampgo = fit_transient_both('c', fwhm_init_2, t0_init_2,
     tau_init_2, tau_osc_init, period_osc_init, True, method_glb='ampgo',

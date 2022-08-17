@@ -79,7 +79,7 @@ def test_driver_transient_both_4():
     tau_1, tau_2, tau_3, tau_osc[0], tau_osc[1], period_osc[0], period_osc[1]])
 
     bound_fwhm = [(0.05, 0.2)]
-    bound_t0 = [(-0.4, 0.4), (-0.4, 0.4), (-0.4, 0.4), (-0.4, 0.4)]
+    bound_t0 = [(-0.4, 0.4)]
     bound_tau = [(0.1, 1), (1, 100), (100, 10000)]
     bound_tau_osc = [(0.1, 0.5), (0.5, 1)]
     bound_period_osc = [(0.1, 0.5), (0.5, 1)]
@@ -98,8 +98,8 @@ def test_driver_transient_both_4():
     t=t, intensity=intensity, eps=eps)
 
     fwhm_init_2 = result_ampgo_exp['x'][0]
-    t0_init_2 = result_ampgo_exp['x'][1:5]
-    tau_init_2 = result_ampgo_exp['x'][5:]
+    t0_init_2 = result_ampgo_exp['x'][1:2]
+    tau_init_2 = result_ampgo_exp['x'][2:]
 
     result_ampgo = fit_transient_both('g', fwhm_init_2, t0_init_2,
     tau_init_2, tau_osc_init, period_osc_init, True, method_glb='ampgo',

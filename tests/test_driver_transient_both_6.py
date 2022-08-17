@@ -110,8 +110,8 @@ def test_driver_transient_both_6():
     t=t, intensity=intensity, eps=eps)
 
     fwhm_init_2 = result_ampgo_exp['x'][0:2]
-    t0_init_2 = result_ampgo_exp['x'][2:6]
-    tau_init_2 = result_ampgo_exp['x'][6:]
+    t0_init_2 = result_ampgo_exp['x'][2:3]
+    tau_init_2 = result_ampgo_exp['x'][3:]
 
     result_ampgo = fit_transient_both('pv', fwhm_init_2, t0_init_2,
     tau_init_2, tau_osc_init, period_osc_init, True, method_glb='ampgo',

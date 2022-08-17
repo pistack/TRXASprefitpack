@@ -711,7 +711,7 @@ def test_res_grad_decay_same_t0_1():
         t=t, intensity=intensity, eps=eps)**2), epsilon)
     
     res_tst_2, grad_tst = res_grad_decay_same_t0(x0_tst, 3, False, 'g',
-    np.zeros_like(x0, dtype=bool), t, intensity, eps)
+    np.zeros_like(x0_tst, dtype=bool), t, intensity, eps)
 
     assert np.allclose(res_ref, res_tst_1)
     assert np.allclose(res_tst_1, res_tst_2)
@@ -780,7 +780,7 @@ def test_res_grad_decay_same_t0_2():
         t=t, intensity=intensity, eps=eps)**2), epsilon)
 
     res_tst_2, grad_tst = res_grad_decay_same_t0(x0_tst, 3, False, 'c',
-    np.zeros_like(x0, dtype=bool), t, intensity, eps)
+    np.zeros_like(x0_tst, dtype=bool), t, intensity, eps)
 
     assert np.allclose(res_ref, res_tst)
     assert np.allclose(res_tst, res_tst_2)
@@ -854,7 +854,7 @@ def test_res_grad_decay_same_t0_3():
         t=t, intensity=intensity, eps=eps)**2), epsilon)
 
     res_tst_2, grad_tst = res_grad_decay_same_t0(x0, 3, True, 'pv',
-    np.zeros_like(x0, dtype=bool), t, intensity, eps)
+    np.zeros_like(x0_tst, dtype=bool), t, intensity, eps)
 
     assert np.allclose(res_ref, res_tst)
     assert np.allclose(res_tst, res_tst_2)
@@ -922,7 +922,7 @@ def test_res_grad_dmp_osc_same_t0_1():
         t=t, intensity=intensity, eps=eps)**2), epsilon)
 
     res_tst_2, grad_tst = res_grad_dmp_osc_same_t0(x0_tst, 3, 'g',
-    np.zeros_like(x0, dtype=bool), t, intensity, eps)
+    np.zeros_like(x0_tst, dtype=bool), t, intensity, eps)
 
     assert np.allclose(res_ref, res_tst_1)
     assert np.allclose(res_tst_1, res_tst_2)
@@ -988,7 +988,7 @@ def test_res_grad_dmp_osc_same_t0_2():
         t=t, intensity=intensity, eps=eps)**2), epsilon)
 
     res_tst_2, grad_tst = res_grad_dmp_osc_same_t0(x0_tst, 3, 'c',
-    np.zeros_like(x0, dtype=bool), t, intensity, eps)
+    np.zeros_like(x0_tst, dtype=bool), t, intensity, eps)
 
     assert np.allclose(res_ref, res_tst_1)
     assert np.allclose(res_tst_1, res_tst_2)
@@ -1059,7 +1059,7 @@ def test_res_grad_dmp_osc_same_t0_3():
         t=t, intensity=intensity, eps=eps)**2), epsilon)
 
     res_tst_2, grad_tst = res_grad_dmp_osc_same_t0(x0_tst, 3, 'pv',
-    np.zeros_like(x0, dtype=bool), t, intensity, eps)
+    np.zeros_like(x0_tst, dtype=bool), t, intensity, eps)
 
     assert np.allclose(res_ref, res_tst_1)
     assert np.allclose(res_tst_1, res_tst_2)
@@ -1142,7 +1142,7 @@ def test_res_grad_both_same_t0_1():
 
     res_tst_2, grad_tst = res_grad_both_same_t0(x0_tst, 3, 3, 
     False, 'g',
-    np.zeros_like(x0, dtype=bool), t, intensity, eps)
+    np.zeros_like(x0_tst, dtype=bool), t, intensity, eps)
 
     assert np.allclose(res_ref, res_tst_1)
     assert np.allclose(res_tst_1, res_tst_2)
@@ -1224,7 +1224,7 @@ def test_res_grad_both_same_t0_2():
 
     res_tst_2, grad_tst = res_grad_both_same_t0(x0_tst, 3, 3, 
     False, 'c',
-    np.zeros_like(x0, dtype=bool), t, intensity, eps)
+    np.zeros_like(x0_tst, dtype=bool), t, intensity, eps)
 
     assert np.allclose(res_ref, res_tst_1)
     assert np.allclose(res_tst_1, res_tst_2)
@@ -1313,7 +1313,7 @@ def test_res_grad_both_same_t0_3():
         t=t, intensity=intensity, eps=eps)**2), epsilon)
 
     res_tst_2, grad_tst = res_grad_both_same_t0(x0_tst, 3, 3, False, 'pv',
-    np.zeros_like(x0, dtype=bool), t, intensity, eps)
+    np.zeros_like(x0_tst, dtype=bool), t, intensity, eps)
 
     assert np.allclose(res_ref, res_tst_1)
     assert np.allclose(res_tst_1, res_tst_2)
