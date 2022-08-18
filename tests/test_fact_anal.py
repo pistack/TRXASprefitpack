@@ -88,7 +88,7 @@ def test_fact_anal_dmp_osc_conv_3():
     model = dmp_osc_conv(t, fwhm, tau, period, phase, c_ref, irf='pv', eta=eta)
     eps = np.ones_like(model)
     expt = model
-    phase_tst, c_tst = fact_anal_dmp_osc_conv(t, fwhm, tau, period, irf='pv', eta=eta, 
+    phase_tst, c_tst = fact_anal_dmp_osc_conv(t, fwhm, tau, period, irf='pv', eta=eta,
     intensity=expt, eps=eps)
 
     assert np.allclose(c_ref, c_tst)
@@ -154,6 +154,4 @@ def test_fact_anal_sum_exp_dmp_osc_conv_3():
     assert np.allclose(c_ref_decay, c_tst_decay)
     assert np.allclose(c_ref_osc, c_tst_osc)
     assert np.allclose(phase_osc, phase_tst_osc)
-
-
 
