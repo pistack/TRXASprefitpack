@@ -220,7 +220,7 @@ def ampgo(fun: Callable, x0: np.ndarray,
             vaild = False
             while not vaild:
                 r = rng.uniform(-1, 1, n_param)
-                beta = (eps2*np.linalg.norm(x0)+1e-8)/np.linalg.norm(r)
+                beta = (eps2*(1+np.linalg.norm(x0)))/np.linalg.norm(r)
                 x_try = x0 + beta*r
                 x_try = np.where(x_try < lb, lb, x_try)
                 x_try = np.where(x_try > ub, ub, x_try)
@@ -291,7 +291,7 @@ def check_vaild(x_try, tabulist):
     '''
     dist = np.sum((tabulist-x_try)**2, axis=1)
     min_dist = np.min(dist)
-    return min_dist > 1e-18
+    return min_dist > 1e-16
 
 
 def delete_element(x_local, tabulist, strategy):
