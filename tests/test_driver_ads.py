@@ -6,7 +6,7 @@ import numpy as np
 path = os.path.dirname(os.path.realpath(__file__))
 sys.path.append(path+'/../src/')
 
-from TRXASprefitpack import exp_conv, solve_seq_model
+from TRXASprefitpack import solve_seq_model
 from TRXASprefitpack import compute_signal_gau, compute_signal_cauchy, compute_signal_pvoigt
 from TRXASprefitpack import sads, dads
 from TRXASprefitpack import voigt, edge_gaussian
@@ -32,7 +32,7 @@ def test_driver_sads_1():
 
     assert np.allclose(sads_seq.T, diff_abs)
     assert np.allclose(sads_fit, escan)
-    return
+
 
 def test_driver_sads_2():
     fwhm = 0.15
@@ -55,7 +55,7 @@ def test_driver_sads_2():
 
     assert np.allclose(sads_seq.T, diff_abs)
     assert np.allclose(sads_fit, escan)
-    return
+
 
 def test_driver_sads_3():
     fwhm = 0.15
@@ -79,7 +79,7 @@ def test_driver_sads_3():
 
     assert np.allclose(sads_seq.T, diff_abs)
     assert np.allclose(sads_fit, escan)
-    return
+
 
 def test_driver_dads_1():
     fwhm = 0.15
@@ -104,7 +104,7 @@ def test_driver_dads_1():
 
     assert np.allclose(sads_dads.T, diff_abs[:, :-1])
     assert np.allclose(dads_fit, escan)
-    return
+
 
 def test_driver_dads_2():
     fwhm = 0.15
@@ -129,7 +129,7 @@ def test_driver_dads_2():
 
     assert np.allclose(sads_dads.T, diff_abs[:, :-1])
     assert np.allclose(dads_fit, escan)
-    return
+
 
 def test_driver_dads_3():
     fwhm = 0.15
@@ -155,7 +155,7 @@ def test_driver_dads_3():
 
     assert np.allclose(sads_dads.T, diff_abs[:, :-1])
     assert np.allclose(dads_fit, escan)
-    return
+
 
 
 
