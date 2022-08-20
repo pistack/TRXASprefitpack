@@ -21,7 +21,7 @@ plt.rcParams["figure.figsize"] = (12,9)
 print(TRXASprefitpack.__version__)
 ```
 
-    0.6.1
+    0.7.0
 
 
 
@@ -113,9 +113,18 @@ peak_shift_init = np.array([863])
 fwhm_G_thy_init = 0.5
 fwhm_L_thy_init = 0.5
 
-result_1 = fit_static_thy(thy_peak[:1], fwhm_G_thy_init, fwhm_L_thy_init, policy, peak_shift_init, do_glb=True,
+result_1 = fit_static_thy(thy_peak[:1], fwhm_G_thy_init, fwhm_L_thy_init, 
+policy, peak_shift_init, method_glb='ampgo',
 e=e, intensity=obs_static, eps=eps_static)
 ```
+
+    /home/lis1331/anaconda3/lib/python3.8/site-packages/TRXASprefitpack/driver/_ampgo.py:372: RuntimeWarning: invalid value encountered in true_divide
+      diff/dist
+    /home/lis1331/anaconda3/lib/python3.8/site-packages/TRXASprefitpack/driver/_ampgo.py:374: RuntimeWarning: divide by zero encountered in double_scalars
+      y_ttf = numerator/denominator
+    /home/lis1331/anaconda3/lib/python3.8/site-packages/TRXASprefitpack/driver/_ampgo.py:375: RuntimeWarning: divide by zero encountered in true_divide
+      deriv_y_ttf = 2*(grad_numerator/denominator +
+
 
 
 ```python
@@ -127,33 +136,33 @@ print(result_1)
         policy: shift
      
     [Optimization Method]
-        global: basinhopping
+        global: ampgo
         leastsq: trf
      
     [Optimization Status]
-        nfev: 1596
+        nfev: 592
         status: 0
-        global_opt msg: requested number of basinhopping iterations completed successfully
-        leastsq_opt msg: `xtol` termination condition is satisfied.
+        global_opt msg: Requested Number of global iteration is finished.
+        leastsq_opt msg: Both `ftol` and `xtol` termination conditions are satisfied.
      
     [Optimization Results]
         Data points: 51
         Number of effective parameters: 4
         Degree of Freedom: 47
-        Chi squared:  137613.5102
-        Reduced chi squared:  2927.947
-        AIC (Akaike Information Criterion statistic):  410.9193
-        BIC (Bayesian Information Criterion statistic):  418.6466
+        Chi squared:  136411.8463
+        Reduced chi squared:  2902.3797
+        AIC (Akaike Information Criterion statistic):  410.472
+        BIC (Bayesian Information Criterion statistic):  418.1993
      
     [Parameters]
-        fwhm_G:  0.52544619 +/-  0.31400904 ( 59.76%)
-        fwhm_L:  0.54033663 +/-  0.23813406 ( 44.07%)
-        peak_shift 1:  862.66542093 +/-  0.03396275 ( 0.00%)
+        fwhm_G:  0.52095336 +/-  0.31179381 ( 59.85%)
+        fwhm_L:  0.53741688 +/-  0.23583688 ( 43.88%)
+        peak_shift 1:  862.66584191 +/-  0.03366347 ( 0.00%)
      
     [Parameter Bound]
-        fwhm_G:  0.25 <=  0.52544619 <=  1
-        fwhm_L:  0.25 <=  0.54033663 <=  1
-        peak_shift 1:  862.59060102 <=  862.66542093 <=  863.40939898
+        fwhm_G:  0.25 <=  0.52095336 <=  1
+        fwhm_L:  0.25 <=  0.53741688 <=  1
+        peak_shift 1:  862.18120204 <=  862.66584191 <=  863.81879796
      
     [Component Contribution]
         Static spectrum
@@ -196,10 +205,19 @@ peak_shift_init = np.array([863, 863])
 fwhm_G_thy_init = 0.5
 fwhm_L_thy_init = 0.5
 
-result_2 = fit_static_thy(thy_peak, fwhm_G_thy_init, fwhm_L_thy_init, policy, peak_shift_init, do_glb=True,
+result_2 = fit_static_thy(thy_peak, fwhm_G_thy_init, fwhm_L_thy_init, 
+policy, peak_shift_init, method_glb='ampgo',
 e=e, intensity=obs_static, eps=eps_static)
 
 ```
+
+    /home/lis1331/anaconda3/lib/python3.8/site-packages/TRXASprefitpack/driver/_ampgo.py:372: RuntimeWarning: invalid value encountered in true_divide
+      diff/dist
+    /home/lis1331/anaconda3/lib/python3.8/site-packages/TRXASprefitpack/driver/_ampgo.py:374: RuntimeWarning: divide by zero encountered in double_scalars
+      y_ttf = numerator/denominator
+    /home/lis1331/anaconda3/lib/python3.8/site-packages/TRXASprefitpack/driver/_ampgo.py:375: RuntimeWarning: divide by zero encountered in true_divide
+      deriv_y_ttf = 2*(grad_numerator/denominator +
+
 
 
 ```python
@@ -211,49 +229,49 @@ print(result_2)
         policy: shift
      
     [Optimization Method]
-        global: basinhopping
+        global: ampgo
         leastsq: trf
      
     [Optimization Status]
-        nfev: 2246
+        nfev: 1392
         status: 0
-        global_opt msg: requested number of basinhopping iterations completed successfully
+        global_opt msg: Requested Number of global iteration is finished.
         leastsq_opt msg: Both `ftol` and `xtol` termination conditions are satisfied.
      
     [Optimization Results]
         Data points: 51
         Number of effective parameters: 6
         Degree of Freedom: 45
-        Chi squared:  119985.2676
-        Reduced chi squared:  2666.3393
-        AIC (Akaike Information Criterion statistic):  407.9282
-        BIC (Bayesian Information Criterion statistic):  419.5192
+        Chi squared:  119084.5932
+        Reduced chi squared:  2646.3243
+        AIC (Akaike Information Criterion statistic):  407.544
+        BIC (Bayesian Information Criterion statistic):  419.1349
      
     [Parameters]
-        fwhm_G:  0.25000000 +/-  0.44683487 ( 178.73%)
-        fwhm_L:  0.60579241 +/-  0.20775859 ( 34.30%)
-        peak_shift 1:  862.59060102 +/-  0.24407807 ( 0.03%)
-        peak_shift 2:  862.98069401 +/-  0.11409659 ( 0.01%)
+        fwhm_G:  0.25000000 +/-  0.43872563 ( 175.49%)
+        fwhm_L:  0.59975490 +/-  0.20534932 ( 34.24%)
+        peak_shift 1:  862.59164170 +/-  0.23524873 ( 0.03%)
+        peak_shift 2:  862.98150687 +/-  0.11346975 ( 0.01%)
      
     [Parameter Bound]
         fwhm_G:  0.25 <=  0.25000000 <=  1
-        fwhm_L:  0.25 <=  0.60579241 <=  1
-        peak_shift 1:  862.59060102 <=  862.59060102 <=  863.40939898
-        peak_shift 2:  862.59060102 <=  862.98069401 <=  863.40939898
+        fwhm_L:  0.25 <=  0.59975490 <=  1
+        peak_shift 1:  862.18120204 <=  862.59164170 <=  863.81879796
+        peak_shift 2:  862.18120204 <=  862.98150687 <=  863.81879796
      
     [Component Contribution]
         Static spectrum
-         thy 1:  32.73%
-         thy 2:  67.27%
+         thy 1:  33.40%
+         thy 2:  66.60%
      
     [Parameter Correlation]
         Parameter Correlations >  0.1 are reported.
         (fwhm_L, fwhm_G) = -0.885
-        (peak_shift 1, fwhm_G) = -0.35
+        (peak_shift 1, fwhm_G) = -0.355
         (peak_shift 1, fwhm_L) =  0.491
-        (peak_shift 2, fwhm_G) =  0.436
-        (peak_shift 2, fwhm_L) = -0.543
-        (peak_shift 2, peak_shift 1) = -0.856
+        (peak_shift 2, fwhm_G) =  0.439
+        (peak_shift 2, fwhm_L) = -0.542
+        (peak_shift 2, peak_shift 1) = -0.855
 
 
 
@@ -302,8 +320,10 @@ fwhm_L_thy_init = 0.5
 e0_edge_init = np.array([862])
 fwhm_edge_init = np.array([2])
 
-result_2_edge = fit_static_thy(thy_peak, fwhm_G_thy_init, fwhm_L_thy_init, policy, peak_shift_init,
-edge='g', edge_pos_init=e0_edge_init, edge_fwhm_init=fwhm_edge_init, do_glb=True,
+result_2_edge = fit_static_thy(thy_peak, fwhm_G_thy_init, fwhm_L_thy_init, 
+policy, peak_shift_init,
+edge='g', edge_pos_init=e0_edge_init, 
+edge_fwhm_init=fwhm_edge_init, method_glb='ampgo',
 e=e, intensity=obs_static, eps=eps_static)
 ```
 
@@ -319,61 +339,61 @@ print(result_2_edge)
         edge: g
      
     [Optimization Method]
-        global: basinhopping
+        global: ampgo
         leastsq: trf
      
     [Optimization Status]
-        nfev: 3767
+        nfev: 3270
         status: 0
-        global_opt msg: requested number of basinhopping iterations completed successfully
+        global_opt msg: Requested Number of global iteration is finished.
         leastsq_opt msg: `xtol` termination condition is satisfied.
      
     [Optimization Results]
         Data points: 51
         Number of effective parameters: 9
         Degree of Freedom: 42
-        Chi squared:  110.5689
-        Reduced chi squared:  2.6326
-        AIC (Akaike Information Criterion statistic):  57.4645
-        BIC (Bayesian Information Criterion statistic):  74.8509
+        Chi squared:  89.9027
+        Reduced chi squared:  2.1405
+        AIC (Akaike Information Criterion statistic):  46.912
+        BIC (Bayesian Information Criterion statistic):  64.2984
      
     [Parameters]
-        fwhm_G:  0.30072514 +/-  0.00955020 ( 3.18%)
-        fwhm_L:  0.50194070 +/-  0.00710896 ( 1.42%)
-        peak_shift 1:  862.49916688 +/-  0.00784966 ( 0.00%)
-        peak_shift 2:  862.99880820 +/-  0.00335302 ( 0.00%)
-        E0_g 1:  861.58985863 +/-  0.01883188 ( 0.00%)
-        fwhm_(g, edge 1):  2.27083148 +/-  0.06169109 ( 2.72%)
+        fwhm_G:  0.29976122 +/-  0.00865084 ( 2.89%)
+        fwhm_L:  0.49960394 +/-  0.00633794 ( 1.27%)
+        peak_shift 1:  862.50843083 +/-  0.00706934 ( 0.00%)
+        peak_shift 2:  862.99673086 +/-  0.00299232 ( 0.00%)
+        E0_g 1:  861.58687917 +/-  0.01733635 ( 0.00%)
+        fwhm_(g, edge 1):  2.31987033 +/-  0.05701494 ( 2.46%)
      
     [Parameter Bound]
-        fwhm_G:  0.125 <=  0.30072514 <=  0.5
-        fwhm_L:  0.25 <=  0.50194070 <=  1
-        peak_shift 1:  862.29557969 <=  862.49916688 <=  862.90442031
-        peak_shift 2:  862.69557969 <=  862.99880820 <=  863.30442031
-        E0_g 1:  858 <=  861.58985863 <=  866
-        fwhm_(g, edge 1):  1 <=  2.27083148 <=  4
+        fwhm_G:  0.125 <=  0.29976122 <=  0.5
+        fwhm_L:  0.25 <=  0.49960394 <=  1
+        peak_shift 1:  861.99115937 <=  862.50843083 <=  863.20884063
+        peak_shift 2:  862.39115937 <=  862.99673086 <=  863.60884063
+        E0_g 1:  858 <=  861.58687917 <=  866
+        fwhm_(g, edge 1):  1 <=  2.31987033 <=  4
      
     [Component Contribution]
         Static spectrum
-         thy 1:  14.25%
-         thy 2:  35.45%
-         g type edge 1:  50.30%
+         thy 1:  14.27%
+         thy 2:  35.38%
+         g type edge 1:  50.35%
      
     [Parameter Correlation]
         Parameter Correlations >  0.1 are reported.
-        (fwhm_L, fwhm_G) = -0.838
-        (peak_shift 1, fwhm_G) = -0.287
+        (fwhm_L, fwhm_G) = -0.848
+        (peak_shift 1, fwhm_G) = -0.309
         (peak_shift 1, fwhm_L) =  0.599
-        (peak_shift 2, fwhm_G) =  0.371
-        (peak_shift 2, fwhm_L) = -0.609
-        (peak_shift 2, peak_shift 1) = -0.66
+        (peak_shift 2, fwhm_G) =  0.382
+        (peak_shift 2, fwhm_L) = -0.599
+        (peak_shift 2, peak_shift 1) = -0.682
         (E0_g 1, fwhm_G) = -0.144
-        (E0_g 1, fwhm_L) =  0.193
-        (E0_g 1, peak_shift 1) =  0.137
-        (fwhm_(g, edge 1), fwhm_G) =  0.109
-        (fwhm_(g, edge 1), fwhm_L) = -0.171
-        (fwhm_(g, edge 1), peak_shift 1) = -0.184
-        (fwhm_(g, edge 1), E0_g 1) =  0.206
+        (E0_g 1, fwhm_L) =  0.191
+        (E0_g 1, peak_shift 1) =  0.135
+        (fwhm_(g, edge 1), fwhm_G) =  0.113
+        (fwhm_(g, edge 1), fwhm_L) = -0.177
+        (fwhm_(g, edge 1), peak_shift 1) = -0.18
+        (fwhm_(g, edge 1), E0_g 1) =  0.211
 
 
 
@@ -426,8 +446,10 @@ fwhm_L_thy_init = 0.5
 e0_edge_init = np.array([860.5, 862])
 fwhm_edge_init = np.array([0.8, 1.5])
 
-result_2_edge_2 = fit_static_thy(thy_peak, fwhm_G_thy_init, fwhm_L_thy_init, policy, peak_shift_init,
-edge='g', edge_pos_init=e0_edge_init, edge_fwhm_init=fwhm_edge_init, do_glb=True,
+result_2_edge_2 = fit_static_thy(thy_peak, fwhm_G_thy_init, fwhm_L_thy_init, 
+policy, peak_shift_init,
+edge='g', edge_pos_init=e0_edge_init, 
+edge_fwhm_init=fwhm_edge_init, method_glb='ampgo',
 e=e, intensity=obs_static, eps=eps_static)
 ```
 
@@ -442,70 +464,70 @@ print(result_2_edge_2)
         edge: g
      
     [Optimization Method]
-        global: basinhopping
+        global: ampgo
         leastsq: trf
      
     [Optimization Status]
-        nfev: 8320
+        nfev: 6389
         status: 0
-        global_opt msg: requested number of basinhopping iterations completed successfully
+        global_opt msg: Requested Number of global iteration is finished.
         leastsq_opt msg: `xtol` termination condition is satisfied.
      
     [Optimization Results]
         Data points: 51
         Number of effective parameters: 12
         Degree of Freedom: 39
-        Chi squared:  34.0751
-        Reduced chi squared:  0.8737
-        AIC (Akaike Information Criterion statistic):  3.4338
-        BIC (Bayesian Information Criterion statistic):  26.6158
+        Chi squared:  23.0179
+        Reduced chi squared:  0.5902
+        AIC (Akaike Information Criterion statistic): -16.5732
+        BIC (Bayesian Information Criterion statistic):  6.6087
      
     [Parameters]
-        fwhm_G:  0.29705630 +/-  0.00561125 ( 1.89%)
-        fwhm_L:  0.50587743 +/-  0.00416873 ( 0.82%)
-        peak_shift 1:  862.50271730 +/-  0.00468196 ( 0.00%)
-        peak_shift 2:  862.99964539 +/-  0.00195884 ( 0.00%)
-        E0_g 1:  861.95968431 +/-  0.04259326 ( 0.00%)
-        E0_g 2:  860.47220697 +/-  0.05153850 ( 0.01%)
-        fwhm_(g, edge 1):  1.50379841 +/-  0.08769146 ( 5.83%)
-        fwhm_(g, edge 2):  0.82825820 +/-  0.12320940 ( 14.88%)
+        fwhm_G:  0.29766541 +/-  0.00461112 ( 1.55%)
+        fwhm_L:  0.50165657 +/-  0.00341226 ( 0.68%)
+        peak_shift 1:  862.50861290 +/-  0.00383589 ( 0.00%)
+        peak_shift 2:  862.99782704 +/-  0.00158692 ( 0.00%)
+        E0_g 1:  861.96628745 +/-  0.04679976 ( 0.01%)
+        E0_g 2:  860.44150114 +/-  0.06574437 ( 0.01%)
+        fwhm_(g, edge 1):  1.54444699 +/-  0.08594562 ( 5.56%)
+        fwhm_(g, edge 2):  1.01241472 +/-  0.13437182 ( 13.27%)
      
     [Parameter Bound]
-        fwhm_G:  0.125 <=  0.29705630 <=  0.5
-        fwhm_L:  0.25 <=  0.50587743 <=  1
-        peak_shift 1:  862.29557969 <=  862.50271730 <=  862.90442031
-        peak_shift 2:  862.69557969 <=  862.99964539 <=  863.30442031
-        E0_g 1:  858.9 <=  861.95968431 <=  862.1
-        E0_g 2:  859 <=  860.47220697 <=  865
-        fwhm_(g, edge 1):  0.4 <=  1.50379841 <=  1.6
-        fwhm_(g, edge 2):  0.75 <=  0.82825820 <=  3
+        fwhm_G:  0.125 <=  0.29766541 <=  0.5
+        fwhm_L:  0.25 <=  0.50165657 <=  1
+        peak_shift 1:  861.99115937 <=  862.50861290 <=  863.20884063
+        peak_shift 2:  862.39115937 <=  862.99782704 <=  863.60884063
+        E0_g 1:  858.9 <=  861.96628745 <=  862.1
+        E0_g 2:  859 <=  860.44150114 <=  865
+        fwhm_(g, edge 1):  0.4 <=  1.54444699 <=  1.6
+        fwhm_(g, edge 2):  0.75 <=  1.01241472 <=  3
      
     [Component Contribution]
         Static spectrum
-         thy 1:  14.79%
-         thy 2:  35.30%
-         g type edge 1:  36.63%
-         g type edge 2:  13.28%
+         thy 1:  14.63%
+         thy 2:  35.37%
+         g type edge 1:  36.43%
+         g type edge 2:  13.56%
      
     [Parameter Correlation]
         Parameter Correlations >  0.1 are reported.
-        (fwhm_L, fwhm_G) = -0.84
-        (peak_shift 1, fwhm_G) = -0.313
-        (peak_shift 1, fwhm_L) =  0.624
-        (peak_shift 2, fwhm_G) =  0.388
-        (peak_shift 2, fwhm_L) = -0.624
-        (peak_shift 2, peak_shift 1) = -0.665
-        (E0_g 1, peak_shift 1) = -0.142
-        (E0_g 2, E0_g 1) =  0.866
-        (fwhm_(g, edge 1), peak_shift 1) =  0.114
-        (fwhm_(g, edge 1), E0_g 1) = -0.853
-        (fwhm_(g, edge 1), E0_g 2) = -0.757
-        (fwhm_(g, edge 2), fwhm_G) =  0.126
-        (fwhm_(g, edge 2), fwhm_L) = -0.226
-        (fwhm_(g, edge 2), peak_shift 1) = -0.307
-        (fwhm_(g, edge 2), E0_g 1) =  0.731
-        (fwhm_(g, edge 2), E0_g 2) =  0.7
-        (fwhm_(g, edge 2), fwhm_(g, edge 1)) = -0.602
+        (fwhm_L, fwhm_G) = -0.849
+        (peak_shift 1, fwhm_G) = -0.334
+        (peak_shift 1, fwhm_L) =  0.626
+        (peak_shift 2, fwhm_G) =  0.373
+        (peak_shift 2, fwhm_L) = -0.579
+        (peak_shift 2, peak_shift 1) = -0.641
+        (E0_g 1, fwhm_L) = -0.103
+        (E0_g 1, peak_shift 1) = -0.104
+        (E0_g 2, E0_g 1) =  0.924
+        (fwhm_(g, edge 1), E0_g 1) = -0.891
+        (fwhm_(g, edge 1), E0_g 2) = -0.827
+        (fwhm_(g, edge 2), fwhm_G) =  0.137
+        (fwhm_(g, edge 2), fwhm_L) = -0.218
+        (fwhm_(g, edge 2), peak_shift 1) = -0.234
+        (fwhm_(g, edge 2), E0_g 1) =  0.792
+        (fwhm_(g, edge 2), E0_g 2) =  0.787
+        (fwhm_(g, edge 2), fwhm_(g, edge 1)) = -0.664
 
 
 
@@ -579,14 +601,14 @@ print(ci_result) # report confidence interval
         Significance level:  5.000000e-02
      
     [Confidence interval]
-        0.2970563 -  0.01151555 <= b'fwhm_G' <=  0.2970563 +  0.01122604
-        0.50587743 -  0.00845537 <= b'fwhm_L' <=  0.50587743 +  0.00838732
-        862.5027173 -  0.00931266 <= b'peak_shift 1' <=  862.5027173 +  0.00940234
-        862.99964539 -  0.00392627 <= b'peak_shift 2' <=  862.99964539 +  0.00396055
-        861.95968431 -  0.07132079 <= b'E0_g 1' <=  861.95968431 +  0.10665698
-        860.47220697 -  0.09237276 <= b'E0_g 2' <=  860.47220697 +  0.14202443
-        1.50379841 -  0.19350716 <= b'fwhm_(g, edge 1)' <=  1.50379841 +  0.17349489
-        0.8282582 -  0.23266591 <= b'fwhm_(g, edge 2)' <=  0.8282582 +  0.3153878
+        0.29766541 -  0.00938656 <= fwhm_G <=  0.29766541 +  0.00919695
+        0.50165657 -  0.0068657 <= fwhm_L <=  0.50165657 +  0.00680902
+        862.5086129 -  0.00760942 <= peak_shift 1 <=  862.5086129 +  0.00763833
+        862.99782704 -  0.00318677 <= peak_shift 2 <=  862.99782704 +  0.00321782
+        861.96628745 -  0.06236662 <= E0_g 1 <=  861.96628745 +  0.11029989
+        860.44150114 -  0.09856797 <= E0_g 2 <=  860.44150114 +  0.16654756
+        1.54444699 -  0.182611 <= fwhm_(g, edge 1) <=  1.54444699 +  0.16610969
+        1.01241472 -  0.21350814 <= fwhm_(g, edge 2) <=  1.01241472 +  0.29339317
 
 
 
@@ -603,14 +625,14 @@ for i in range(loaded_result['param_name'].size):
 ```
 
     [Confidence interval (from ASE)]
-    0.29705630 - 0.01099785 <= b'fwhm_G' <= 0.29705630 + 0.01099785
-    0.50587743 - 0.00817056 <= b'fwhm_L' <= 0.50587743 + 0.00817056
-    862.50271730 - 0.00917647 <= b'peak_shift 1' <= 862.50271730 + 0.00917647
-    862.99964539 - 0.00383925 <= b'peak_shift 2' <= 862.99964539 + 0.00383925
-    861.95968431 - 0.08348127 <= b'E0_g 1' <= 861.95968431 + 0.08348127
-    860.47220697 - 0.10101361 <= b'E0_g 2' <= 860.47220697 + 0.10101361
-    1.50379841 - 0.17187210 <= b'fwhm_(g, edge 1)' <= 1.50379841 + 0.17187210
-    0.82825820 - 0.24148600 <= b'fwhm_(g, edge 2)' <= 0.82825820 + 0.24148600
+    0.29766541 - 0.00903763 <= fwhm_G <= 0.29766541 + 0.00903763
+    0.50165657 - 0.00668791 <= fwhm_L <= 0.50165657 + 0.00668791
+    862.50861290 - 0.00751821 <= peak_shift 1 <= 862.50861290 + 0.00751821
+    862.99782704 - 0.00311030 <= peak_shift 2 <= 862.99782704 + 0.00311030
+    861.96628745 - 0.09172585 <= E0_g 1 <= 861.96628745 + 0.09172585
+    860.44150114 - 0.12885660 <= E0_g 2 <= 860.44150114 + 0.12885660
+    1.54444699 - 0.16845033 <= fwhm_(g, edge 1) <= 1.54444699 + 0.16845033
+    1.01241472 - 0.26336392 <= fwhm_(g, edge 2) <= 1.01241472 + 0.26336392
 
 
 In many case, ASE does not much different from more sophisticated `f-test` based error estimation.

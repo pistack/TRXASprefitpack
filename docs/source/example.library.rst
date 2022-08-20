@@ -14,3 +14,4 @@ You can download jupyter notebook example from `TRXASprefitpack-example <https:/
    Fit_Transient_Both
    Fit_Static_voigt
    Fit_Static_thy
+   Associated_Difference_Spectrum

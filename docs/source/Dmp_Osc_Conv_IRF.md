@@ -33,7 +33,7 @@ for voigt instrumental response function, analytic implementation is based on ps
 
 ```python
 # Set damped oscillation paramter
-tau = 1; period = 0.3; phase = 0
+tau = 1; period = 0.3; phase = np.pi/4
 t = np.linspace(-5, 5, 3000)
 t_sample = np.hstack((np.arange(-1, 1, 0.05), np.linspace(1, 5, 8)))
 dmp_osc_num = dmp_osc(t, 1/tau, period, phase)
@@ -85,16 +85,16 @@ dmp_osc_conv_gau_anal = dmp_osc_conv_gau(t_sample, fwhm_G, 1/tau, period, phase)
 %timeit convolve(gau_irf_num, dmp_osc_conv_gau_num, 'same')
 ```
 
-    207 µs ± 640 ns per loop (mean ± std. dev. of 7 runs, 1000 loops each)
-    
+    206 µs ± 259 ns per loop (mean ± std. dev. of 7 runs, 1000 loops each)
+
 
 
 ```python
 %timeit dmp_osc_conv_gau(t_sample, fwhm_G, 1/tau, period, phase)
 ```
 
-    49.3 µs ± 313 ns per loop (mean ± std. dev. of 7 runs, 10000 loops each)
-    
+    45.4 µs ± 191 ns per loop (mean ± std. dev. of 7 runs, 10000 loops each)
+
 
 Trivally, calculation of analytic one takes much less time than numerical one.
 
@@ -147,16 +147,16 @@ dmp_osc_conv_cauchy_anal = dmp_osc_conv_cauchy(t_sample, fwhm_L, 1/tau, period, 
 %timeit convolve(cauchy_irf_num, dmp_osc_num, 'same')
 ```
 
-    198 µs ± 1.1 µs per loop (mean ± std. dev. of 7 runs, 10000 loops each)
-    
+    223 µs ± 496 ns per loop (mean ± std. dev. of 7 runs, 1000 loops each)
+
 
 
 ```python
 %timeit dmp_osc_conv_cauchy(t_sample, fwhm_L, 1/tau, period, phase)
 ```
 
-    230 µs ± 1.38 µs per loop (mean ± std. dev. of 7 runs, 1000 loops each)
-    
+    209 µs ± 406 ns per loop (mean ± std. dev. of 7 runs, 1000 loops each)
+
 
 Analytic calculation of convolution of damped osciliation and cauchy instrumental response function needs more time than numerical one. And about four times slower than gaussian one.
 
@@ -206,24 +206,24 @@ Voigt function is much complex than gaussian and cauchy function, so it takes mu
 %timeit gau_irf(t, fwhm_G)
 ```
 
-    41.5 µs ± 119 ns per loop (mean ± std. dev. of 7 runs, 10000 loops each)
-    
+    40.8 µs ± 353 ns per loop (mean ± std. dev. of 7 runs, 10000 loops each)
+
 
 
 ```python
 %timeit cauchy_irf(t, fwhm_L)
 ```
 
-    6.1 µs ± 146 ns per loop (mean ± std. dev. of 7 runs, 100000 loops each)
-    
+    6.85 µs ± 192 ns per loop (mean ± std. dev. of 7 runs, 100000 loops each)
+
 
 
 ```python
 %timeit voigt(t, fwhm_G, fwhm_L)
 ```
 
-    187 µs ± 1 µs per loop (mean ± std. dev. of 7 runs, 10000 loops each)
-    
+    207 µs ± 2.15 µs per loop (mean ± std. dev. of 7 runs, 1000 loops each)
+
 
 
 ```python
@@ -238,8 +238,8 @@ dmp_osc_conv_pvoigt_anal = dmp_osc_conv_pvoigt(t_sample, fwhm, eta, 1/tau, perio
 %timeit dmp_osc_conv_pvoigt(t_sample, fwhm, eta, 1/tau, period, phase)
 ```
 
-    258 µs ± 1.68 µs per loop (mean ± std. dev. of 7 runs, 1000 loops each)
-    
+    271 µs ± 11.6 µs per loop (mean ± std. dev. of 7 runs, 1000 loops each)
+
 
 As one can expected, the computation time for `exp_conv_pvoigt` is just sum of computation time for `exp_conv_gau` and `exp_conv_cauchy`.
 

@@ -1,5 +1,4 @@
-# Fitting with time delay scan (model: exponential decay)
-
+# Fitting with time delay scan
 ## Objective
 1. Fitting with exponential decay model
 2. Save and Load fitting result
@@ -26,7 +25,7 @@ plt.rcParams["figure.figsize"] = (12,9)
 print(TRXASprefitpack.__version__)
 ```
 
-    0.6.0
+    0.7.0
 
 
 ## Fitting with exponential decay model
@@ -115,10 +114,10 @@ param_exact = [fwhm, t0[0], t0[1], t0[2], t0[3], tau_1, tau_2]
     fwhm: 100
     tau_1: 500
     tau_2: 10000
-    t_0_1: -93.0396119572383
-    t_0_2: 38.815806904268705
-    t_0_3: 31.07625235504534
-    t_0_4: -95.75692103034174
+    t_0_1: -156.12041304890062
+    t_0_2: 38.61083766738686
+    t_0_3: -70.46010438461614
+    t_0_4: 96.11767660754525
     ------------------------
     Excited Species contribution
     scan 1: 1 	 1
@@ -162,7 +161,9 @@ t0_init = np.array([0, 0, 0, 0])
 # test with one decay module
 tau_init = np.array([15000])
 
-fit_result_decay_1 = fit_transient_exp(irf, fwhm_init, t0_init, tau_init, False, do_glb=True, t=t, intensity=intensity, eps=eps)
+# use global optimization method: AMPGO
+fit_result_decay_1 = fit_transient_exp(irf, fwhm_init, t0_init, tau_init, False, 
+method_glb='ampgo', t=t, intensity=intensity, eps=eps)
 
 ```
 
@@ -175,44 +176,45 @@ print(fit_result_decay_1)
     [Model information]
         model : decay
         irf: g
-        fwhm:  160.5049
+        fwhm:  144.4151
         eta:  0.0000
         base: False
      
     [Optimization Method]
-        global: basinhopping
+        global: ampgo
         leastsq: trf
      
     [Optimization Status]
-        nfev: 781
+        nfev: 769
         status: 0
-        global_opt msg: requested number of basinhopping iterations completed successfully
+        global_opt msg: Requested Number of global iteration is finished.
         leastsq_opt msg: `ftol` termination condition is satisfied.
      
     [Optimization Results]
         Total Data points: 368
         Number of effective parameters: 10
         Degree of Freedom: 358
-        Chi squared:  2982.3453
-        Reduced chi squared:  8.3306
-        AIC (Akaike Information Criterion statistic):  789.9967
-        BIC (Bayesian Information Criterion statistic):  829.0775
+        Chi squared:  2180.6363
+        Reduced chi squared:  6.0912
+        AIC (Akaike Information Criterion statistic):  674.7784
+        BIC (Bayesian Information Criterion statistic):  713.8592
      
     [Parameters]
-        fwhm_G:  160.50485365 +/-  30.07549216 ( 18.74%)
-        t_0_1_1: -96.15617378 +/-  16.24443868 ( 16.89%)
-        t_0_1_2:  81.75561525 +/-  15.49174901 ( 18.95%)
-        t_0_1_3:  200.00000000 +/-  19.17535540 ( 9.59%)
-        t_0_1_4: -132.51360113 +/-  23.94351677 ( 18.07%)
-        tau_1:  13346.99367982 +/-  959.69336043 ( 7.19%)
+        fwhm_G:  144.41507069 +/-  23.65709134 ( 16.38%)
+        t_0_1_1: -152.23580141 +/-  12.88603562 ( 8.46%)
+        t_0_1_2:  76.21013523 +/-  12.57882417 ( 16.51%)
+        t_0_1_3:  200.00000000 +/-  14.64366187 ( 7.32%)
+        t_0_1_4:  62.15838170 +/-  18.81500401 ( 30.27%)
+        tau_1:  12175.91776145 +/-  742.50080195 ( 6.10%)
      
     [Parameter Bound]
-        fwhm_G:  50 <=  160.50485365 <=  200
-        t_0_1_1: -200 <= -96.15617378 <=  200
-        t_0_1_2: -200 <=  81.75561525 <=  200
+        fwhm_G:  50 <=  144.41507069 <=  200
+        t_0_1_1: -200 <= -152.23580141 <=  200
+        t_0_1_2: -200 <=  76.21013523 <=  200
         t_0_1_3: -200 <=  200.00000000 <=  200
-        t_0_1_4: -200 <= -132.51360113 <=  200
-        tau_1:  3200 <=  13346.99367982 <=  51200
+        t_0_1_4: -200 <=  62.15838170 <=  200
+        tau_1:  3200 <=  12175.91776145 <=  51200
+     
      
     [Component Contribution]
         DataSet dataset_1:
@@ -271,15 +273,26 @@ There may exists shorter lifetime component.
 ```python
 # try with double exponential decay
 # set initial guess
+from tabnanny import verbose
+
+
 irf = 'g' # shape of irf function
 fwhm_init = 100
 t0_init = np.array([0, 0, 0, 0])
 # test with two decay module
 tau_init = np.array([300, 15000])
 
-fit_result_decay_2 = fit_transient_exp(irf, fwhm_init, t0_init, tau_init, False, do_glb=True, t=t, intensity=intensity, eps=eps)
+fit_result_decay_2 = fit_transient_exp(irf, fwhm_init, t0_init, tau_init, False, 
+method_glb='ampgo', kwargs_lsq={'verbose' : 2}, t=t, intensity=intensity, eps=eps)
 
 ```
+
+       Iteration     Total nfev        Cost      Cost reduction    Step norm     Optimality   
+           0              1         1.8288e+02                                    1.13e-03    
+           1              2         1.8288e+02      7.13e-11       2.25e-03       3.89e-05    
+    `ftol` termination condition is satisfied.
+    Function evaluations 2, initial cost 1.8288e+02, final cost 1.8288e+02, first-order optimality 3.89e-05.
+
 
 
 ```python
@@ -290,59 +303,60 @@ print(fit_result_decay_2)
     [Model information]
         model : decay
         irf: g
-        fwhm:  104.7125
+        fwhm:  101.5631
         eta:  0.0000
         base: False
      
     [Optimization Method]
-        global: basinhopping
+        global: ampgo
         leastsq: trf
      
     [Optimization Status]
-        nfev: 1085
+        nfev: 965
         status: 0
-        global_opt msg: requested number of basinhopping iterations completed successfully
+        global_opt msg: Requested Number of global iteration is finished.
         leastsq_opt msg: `ftol` termination condition is satisfied.
      
     [Optimization Results]
         Total Data points: 368
         Number of effective parameters: 15
         Degree of Freedom: 353
-        Chi squared:  352.7762
-        Reduced chi squared:  0.9994
-        AIC (Akaike Information Criterion statistic):  14.4524
-        BIC (Bayesian Information Criterion statistic):  73.0736
+        Chi squared:  365.7519
+        Reduced chi squared:  1.0361
+        AIC (Akaike Information Criterion statistic):  27.745
+        BIC (Bayesian Information Criterion statistic):  86.3663
      
     [Parameters]
-        fwhm_G:  104.71245991 +/-  8.74636550 ( 8.35%)
-        t_0_1_1: -95.55454917 +/-  5.01009098 ( 5.24%)
-        t_0_1_2:  35.91244388 +/-  7.34089597 ( 20.44%)
-        t_0_1_3:  39.36590392 +/-  6.17818029 ( 15.69%)
-        t_0_1_4: -93.10612763 +/-  4.44973137 ( 4.78%)
-        tau_1:  487.90314761 +/-  18.31579044 ( 3.75%)
-        tau_2:  10590.01652058 +/-  293.64560698 ( 2.77%)
+        fwhm_G:  101.56312034 +/-  8.65279856 ( 8.52%)
+        t_0_1_1: -153.31713009 +/-  4.86051817 ( 3.17%)
+        t_0_1_2:  43.99363705 +/-  6.94025884 ( 15.78%)
+        t_0_1_3: -67.50417257 +/-  6.36057697 ( 9.42%)
+        t_0_1_4:  101.54236607 +/-  4.39923343 ( 4.33%)
+        tau_1:  497.19877854 +/-  19.08450237 ( 3.84%)
+        tau_2:  9901.14794048 +/-  284.67177431 ( 2.88%)
      
     [Parameter Bound]
-        fwhm_G:  50 <=  104.71245991 <=  200
-        t_0_1_1: -200 <= -95.55454917 <=  200
-        t_0_1_2: -200 <=  35.91244388 <=  200
-        t_0_1_3: -200 <=  39.36590392 <=  200
-        t_0_1_4: -200 <= -93.10612763 <=  200
-        tau_1:  50 <=  487.90314761 <=  800
-        tau_2:  3200 <=  10590.01652058 <=  51200
+        fwhm_G:  50 <=  101.56312034 <=  200
+        t_0_1_1: -200 <= -153.31713009 <=  200
+        t_0_1_2: -200 <=  43.99363705 <=  200
+        t_0_1_3: -200 <= -67.50417257 <=  200
+        t_0_1_4: -200 <=  101.54236607 <=  200
+        tau_1:  50 <=  497.19877854 <=  800
+        tau_2:  3200 <=  9901.14794048 <=  51200
+     
      
     [Component Contribution]
         DataSet dataset_1:
          #tscan	tscan_1	tscan_2	tscan_3	tscan_4
-         decay 1	-5.44%	-30.39%	-62.74%	 48.42%
-         decay 2	 94.56%	 69.61%	 37.26%	 51.58%
+         decay 1	-4.41%	-28.71%	-62.25%	 48.48%
+         decay 2	 95.59%	 71.29%	 37.75%	 51.52%
      
     [Parameter Correlation]
         Parameter Correlations >  0.1 are reported.
-        (tau_1, fwhm_G) = -0.173
-        (tau_1, t_0_1_3) = -0.351
-        (tau_1, t_0_1_4) = -0.127
-        (tau_2, tau_1) = -0.353
+        (tau_1, fwhm_G) = -0.17
+        (tau_1, t_0_1_3) = -0.345
+        (tau_1, t_0_1_4) = -0.126
+        (tau_2, tau_1) = -0.366
 
 
 
@@ -395,13 +409,13 @@ for i in range(len(fit_result_decay_2['x'])):
     print(f"{fit_result_decay_2['param_name'][i]}: {fit_result_decay_2['x'][i]} (fit) \t {param_exact[i]} (exact)")
 ```
 
-    fwhm_G: 104.71245991082807 (fit) 	 100 (exact)
-    t_0_1_1: -95.55454917448591 (fit) 	 -93.0396119572383 (exact)
-    t_0_1_2: 35.912443883340934 (fit) 	 38.815806904268705 (exact)
-    t_0_1_3: 39.36590391968899 (fit) 	 31.07625235504534 (exact)
-    t_0_1_4: -93.10612762609641 (fit) 	 -95.75692103034174 (exact)
-    tau_1: 487.90314761113535 (fit) 	 500 (exact)
-    tau_2: 10590.016520577483 (fit) 	 10000 (exact)
+    fwhm_G: 101.563120337142 (fit) 	 100 (exact)
+    t_0_1_1: -153.31713008689923 (fit) 	 -156.12041304890062 (exact)
+    t_0_1_2: 43.9936370546416 (fit) 	 38.61083766738686 (exact)
+    t_0_1_3: -67.50417256681469 (fit) 	 -70.46010438461614 (exact)
+    t_0_1_4: 101.54236606639758 (fit) 	 96.11767660754525 (exact)
+    tau_1: 497.1987785448846 (fit) 	 500 (exact)
+    tau_2: 9901.14794048022 (fit) 	 10000 (exact)
 
 
 Fitting result and exact result are match well.
@@ -441,10 +455,10 @@ print(f'4 \t {diff_abs_fit[0,3]} \t {abs_4[0]}  \t {diff_abs_fit[1,3]} \t {abs_4
     ------------------------
     [Species Associated Difference Coefficent]
     scan # 	 ex 1 (fit) 	 ex 1 (exact) 	 ex 2 (fit) 	 ex 2 (exact)
-    1 	 0.9757362905756569 	 1  	 0.9876141169252006 	 1
-    2 	 0.4800552069439707 	 0.5  	 0.8128607523384913 	 0.8
-    3 	 -0.4924221441952984 	 -0.5  	 0.6871993798829517 	 0.7
-    4 	 0.5986150010542517 	 0.6  	 0.29455451213376227 	 0.3
+    1 	 1.0037847366325658 	 1  	 0.9995440788449074 	 1
+    2 	 0.5064294402029949 	 0.5  	 0.805300497592594 	 0.8
+    3 	 -0.4772831402102139 	 -0.5  	 0.6988293554639244 	 0.7
+    4 	 0.6038784961845008 	 0.6  	 0.29551241800998834 	 0.3
 
 
 It also matches well, as expected.
@@ -466,13 +480,13 @@ print(ci_result) # report confidence interval
         Significance level:  5.000000e-02
      
     [Confidence interval]
-        104.71245991 -  17.2423326 <= b'fwhm_G' <=  104.71245991 +  18.8326056
-        -95.55454917 -  9.90590253 <= b't_0_1_1' <= -95.55454917 +  9.64014804
-        35.91244388 -  17.63761307 <= b't_0_1_2' <=  35.91244388 +  16.42968355
-        39.36590392 -  11.63745069 <= b't_0_1_3' <=  39.36590392 +  11.72819974
-        -93.10612763 -  8.66008546 <= b't_0_1_4' <= -93.10612763 +  8.63848049
-        487.90314761 -  35.8040143 <= b'tau_1' <=  487.90314761 +  38.23433676
-        10590.01652058 -  564.99522237 <= b'tau_2' <=  10590.01652058 +  587.56747294
+        101.56312034 -  17.18281259 <= fwhm_G <=  101.56312034 +  18.07428539
+        -153.31713009 -  9.49174207 <= t_0_1_1 <= -153.31713009 +  9.44520352
+        43.99363705 -  12.62990633 <= t_0_1_2 <=  43.99363705 +  12.24103969
+        -67.50417257 -  12.37327962 <= t_0_1_3 <= -67.50417257 +  12.61249769
+        101.54236607 -  9.33060371 <= t_0_1_4 <=  101.54236607 +  9.37813454
+        497.19877854 -  37.12480863 <= tau_1 <=  497.19877854 +  39.7229684
+        9901.14794048 -  551.12555403 <= tau_2 <=  9901.14794048 +  573.87599666
 
 
 
@@ -489,13 +503,13 @@ for i in range(loaded_result['param_name'].size):
 ```
 
     [Confidence interval (from ASE)]
-    104.71245991 - 17.14256138 <= b'fwhm_G' <= 104.71245991 + 17.14256138
-    -95.55454917 - 9.81959788 <= b't_0_1_1' <= -95.55454917 + 9.81959788
-    35.91244388 - 14.38789172 <= b't_0_1_2' <= 35.91244388 + 14.38789172
-    39.36590392 - 12.10901087 <= b't_0_1_3' <= 39.36590392 + 12.10901087
-    -93.10612763 - 8.72131322 <= b't_0_1_4' <= -93.10612763 + 8.72131322
-    487.90314761 - 35.89828961 <= b'tau_1' <= 487.90314761 + 35.89828961
-    10590.01652058 - 575.53481389 <= b'tau_2' <= 10590.01652058 + 575.53481389
+    101.56312034 - 16.95917355 <= fwhm_G <= 101.56312034 + 16.95917355
+    -153.31713009 - 9.52644056 <= t_0_1_1 <= -153.31713009 + 9.52644056
+    43.99363705 - 13.60265737 <= t_0_1_2 <= 43.99363705 + 13.60265737
+    -67.50417257 - 12.46650178 <= t_0_1_3 <= -67.50417257 + 12.46650178
+    101.54236607 - 8.62233908 <= t_0_1_4 <= 101.54236607 + 8.62233908
+    497.19877854 - 37.40493731 <= tau_1 <= 497.19877854 + 37.40493731
+    9901.14794048 - 557.94642507 <= tau_2 <= 9901.14794048 + 557.94642507
 
 
 However, as you can see, in many case, ASE does not much different from more sophisticated `f-test` based error estimation.

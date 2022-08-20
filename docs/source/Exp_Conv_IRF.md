@@ -85,16 +85,16 @@ exp_conv_gau_anal = exp_conv_gau(t_sample, fwhm_G, 1/tau) # analytic
 %timeit convolve(gau_irf_num, decay_num, 'same')
 ```
 
-    224 µs ± 1.66 µs per loop (mean ± std. dev. of 7 runs, 1000 loops each)
-    
+    209 µs ± 599 ns per loop (mean ± std. dev. of 7 runs, 1000 loops each)
+
 
 
 ```python
 %timeit exp_conv_gau(t_sample, fwhm_G, 1/tau)
 ```
 
-    23.9 µs ± 492 ns per loop (mean ± std. dev. of 7 runs, 10000 loops each)
-    
+    24.6 µs ± 213 ns per loop (mean ± std. dev. of 7 runs, 10000 loops each)
+
 
 Trivally, calculation of analytic one takes much less time than numerical one.
 
@@ -148,16 +148,16 @@ exp_conv_cauchy_anal = exp_conv_cauchy(t_sample, fwhm_L, 1/tau) # analytic
 %timeit convolve(cauchy_irf_num, decay_num, 'same')
 ```
 
-    213 µs ± 66.5 ns per loop (mean ± std. dev. of 7 runs, 1000 loops each)
-    
+    202 µs ± 660 ns per loop (mean ± std. dev. of 7 runs, 1000 loops each)
+
 
 
 ```python
 %timeit exp_conv_cauchy(t_sample, fwhm_L, 1/tau)
 ```
 
-    49.1 µs ± 264 ns per loop (mean ± std. dev. of 7 runs, 10000 loops each)
-    
+    50.6 µs ± 149 ns per loop (mean ± std. dev. of 7 runs, 10000 loops each)
+
 
 Analytic calculation of convolution of exponential decay and cauchy instrumental response function needs about twice much time that convolution with gaussian one. Since it needs computation of special function whoose range and domain are both complex ($\mathbb{C}$)
 
@@ -207,24 +207,24 @@ Voigt function is much complex than gaussian and cauchy function, so it takes mu
 %timeit gau_irf(t, fwhm_G)
 ```
 
-    39.9 µs ± 192 ns per loop (mean ± std. dev. of 7 runs, 10000 loops each)
-    
+    38.9 µs ± 95.4 ns per loop (mean ± std. dev. of 7 runs, 10000 loops each)
+
 
 
 ```python
 %timeit cauchy_irf(t, fwhm_L)
 ```
 
-    5.96 µs ± 14.4 ns per loop (mean ± std. dev. of 7 runs, 100000 loops each)
-    
+    6.09 µs ± 45.6 ns per loop (mean ± std. dev. of 7 runs, 100000 loops each)
+
 
 
 ```python
 %timeit voigt(t, fwhm_G, fwhm_L)
 ```
 
-    236 µs ± 154 ns per loop (mean ± std. dev. of 7 runs, 1000 loops each)
-    
+    239 µs ± 1.17 µs per loop (mean ± std. dev. of 7 runs, 1000 loops each)
+
 
 
 ```python
@@ -239,8 +239,8 @@ exp_conv_pvoigt_anal = exp_conv_pvoigt(t_sample, fwhm, eta, 1/tau) # analytic
 %timeit exp_conv_pvoigt(t_sample, fwhm, eta, 1/tau)
 ```
 
-    79.1 µs ± 161 ns per loop (mean ± std. dev. of 7 runs, 10000 loops each)
-    
+    101 µs ± 993 ns per loop (mean ± std. dev. of 7 runs, 10000 loops each)
+
 
 As one can expected, the computation time for `exp_conv_pvoigt` is just sum of computation time for `exp_conv_gau` and `exp_conv_cauchy`.
 
