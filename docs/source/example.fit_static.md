@@ -8,7 +8,8 @@ Yon can find example file from [TRXASprefitpack-example](https://github.com/pist
 1. Go to `voigt` sub-directory. In  `voigt` sub directory,  you can find ``example_static_voigt.txt`` file.
 This example is generated from Library example, fitting with static spectrum (model: voigt).
 2. Type ``fit_static -h`` Then it prints help message. You can find detailed description of arguments in the utility section of this document.
-3. First find edge feature. Type ``fit_static example_static.txt  --mode voigt --edge g --e0_edge 8992 --fwhm_edge 10 -o edge --do_glb``.
+3. First find edge feature. 
+ Type ``fit_static example_static.txt  --mode voigt --edge g --e0_edge 8992 --fwhm_edge 10 -o edge --method_glb ampgo``.
 
 The first and the only one positional argument is the filename of static spectrum file to read.
 
@@ -30,7 +31,7 @@ Last optional argument is `-o` it sets name of `hdf5` file to save fitting resul
 
 1. Based on this now add two voigt component.
 
-2. Type ``fit_static example_static.txt  --mode voigt --e0_voigt 8985 9000 --fwhm_L_voigt 2 6  --edge g --e0_edge 8992 --fwhm_edge 10 -o fit --do_glb``.
+2. Type ``fit_static example_static.txt  --mode voigt --e0_voigt 8985 9000 --fwhm_L_voigt 2 6  --edge g --e0_edge 8992 --fwhm_edge 10 -o fit --method_glb ampgo``.
 
 First additional optional argument ``--e0_voigt`` sets initial peak position of voigt component
 
@@ -70,7 +71,7 @@ This example is generated from Library example, fitting with static spectrum (mo
 ### fitting with theoretical Spectrum
 
 1. First try with one theoretical Spectrum
-2. Type ``fit_static example_static_thy.txt --mode thy --thy_file Ni_example_1.stk --fwhm_G_thy 0.3 --fwhm_L_thy 0.5 --policy shift --peak_shift 863 -o fit_thy_1 --do_glb``.
+2. Type ``fit_static example_static_thy.txt --mode thy --thy_file Ni_example_1.stk --fwhm_G_thy 0.3 --fwhm_L_thy 0.5 --policy shift --peak_shift 863 -o fit_thy_1 --method_glb ampgo``.
 
 In this command, you set ``--mode thy`` and ``--thy_file Ni_example_1.stk``, so you use fitting static spectrum with voigt broadened thoeretical line shape spectrum and it reads thoretical peak position and intensity from ``Ni_example_1.stk``.
 Moreover, you set uniform fwhm paramter for such voigt function through `--fwhm_G_thy` and `--fwhm_L_thy` option.
@@ -80,7 +81,7 @@ To resolve discrepency between thoretical peak position and peak position of sta
 ![png](fit_static_example_file/fit_thy_1.png)
 
 1. Next try with two theoretical Spectrum
-2. Type ``fit_static example_static_thy.txt --mode thy --thy_file Ni_example_1.stk Ni_example_2.stk --fwhm_G_thy 0.3 --fwhm_L_thy 0.5 --policy shift --peak_shift 863 863 -o fit_thy_2 --do_glb``.
+2. Type ``fit_static example_static_thy.txt --mode thy --thy_file Ni_example_1.stk Ni_example_2.stk --fwhm_G_thy 0.3 --fwhm_L_thy 0.5 --policy shift --peak_shift 863 863 -o fit_thy_2 --method_glb ampgo``.
 
 * fit_thy_2
 ![png](fit_static_example_file/fit_thy_2.png)
@@ -88,13 +89,13 @@ To resolve discrepency between thoretical peak position and peak position of sta
 Look at the residual pannel, then you find gaussian type edge feature which is centered at `862` and its fwhm is about `2`.
 
 1. Now add one gaussian type edge feature. Before adding one edge feature, you should refine your initial guess based on previous fitting result.
-2. Type ``fit_static example_static_thy.txt --mode thy --thy_file Ni_example_1.stk Ni_example_2.stk --fwhm_G_thy 0.3 --fwhm_L_thy 0.5 --policy shift --peak_shift 862.5 863 --edge g --fwhm_edge 2 --e0_edge 862 -o fit_thy_2_edge_1 --do_glb``.
+2. Type ``fit_static example_static_thy.txt --mode thy --thy_file Ni_example_1.stk Ni_example_2.stk --fwhm_G_thy 0.3 --fwhm_L_thy 0.5 --policy shift --peak_shift 862.5 863 --edge g --fwhm_edge 2 --e0_edge 862 -o fit_thy_2_edge_1 --method_glb ampgo``.
 
 * fit_thy_2_edge_1
 ![png](fit_static_example_file/fit_thy_2_edge_1.png)
 
 1. Add one more gaussian type edge feature.
-2. Type ``fit_static example_static_thy.txt --mode thy --thy_file Ni_example_1.stk Ni_example_2.stk --fwhm_G_thy 0.3 --fwhm_L_thy 0.5 --policy shift --peak_shift 862.5 863 --edge g --fwhm_edge 1 2 --e0_edge 860.5 862 -o fit_thy_2_edge_2 --do_glb``.
+2. Type ``fit_static example_static_thy.txt --mode thy --thy_file Ni_example_1.stk Ni_example_2.stk --fwhm_G_thy 0.3 --fwhm_L_thy 0.5 --policy shift --peak_shift 862.5 863 --edge g --fwhm_edge 1 2 --e0_edge 860.5 862 -o fit_thy_2_edge_2 --method_glb ampgo``.
 
 * fit_thy_2_edge_2
 ![png](fit_static_example_file/fit_thy_2_edge_2.png)

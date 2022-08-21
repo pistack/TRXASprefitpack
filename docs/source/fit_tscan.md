@@ -11,7 +11,8 @@ To calculate the contribution of each life time component, it solve least linear
 
 * usage: fit_tscan 
                     [-h] [--mode {decay,osc,both}] [--irf {g,c,pv}] [--fwhm_G FWHM_G] [--fwhm_L FWHM_L] [--num_file NUM_FILE [NUM_FILE ...]] [-t0 TIME_ZEROS [TIME_ZEROS ...]] [-t0f TIME_ZEROS_FILE]
-                    [--tau [TAU ...]] [--tau_osc TAU_OSC [TAU_OSC ...]] [--period_osc PERIOD_OSC [PERIOD_OSC ...]] [--no_base] [--fix_irf] [--fix_t0] 
+                    [--tau [TAU ...]] [--tau_osc TAU_OSC [TAU_OSC ...]] [--period_osc PERIOD_OSC [PERIOD_OSC ...]] 
+                    [--no_base] [--same_t0] [--fix_irf] [--fix_t0] 
                     [--method_glb {basinhopping, ampgo}] [-o OUTDIR] [--save_fig]
                     prefix [prefix ...]
 
@@ -53,6 +54,7 @@ To calculate the contribution of each life time component, it solve least linear
   * --period_osc PERIOD_OSC [PERIOD_OSC ...]
    period of the vibration of each damped oscillation component [mode: osc, both]
   * --no_base             exclude baseline for fitting [mode: decay, both]
+  * --same_t0             set time zero of every time delay scan belong to the same dataset equal
   * --fix_irf             fix irf parameter (fwhm_G, fwhm_L) during fitting process
   * --fix_t0              fix time zero parameter during fitting process.
   * --method_glb {basinhopping,ampgo} Global Optimization Method
@@ -66,21 +68,24 @@ To calculate the contribution of each life time component, it solve least linear
 
 1. The number of time zero parameter should be same as the
    total number of scan to fit.
+  
+2. However, if you set `same_t0` then the number of time zero parameter should
+ be same as the total number of dataset.
 
-2. Every scan file whose prefix of filename is same should have same scan range
+3. Every scan file whose prefix of filename is same should have same scan range
 
-3. if you set shape of irf to pseudo voigt (pv), then
+4. if you set shape of irf to pseudo voigt (pv), then
    you should provide two full width at half maximum
    value for gaussian and cauchy parts, respectively.
 
-4. If you did not set tau and `mode=decay` then `--no_base` option is discouraged.
+5. If you did not set tau and `mode=decay` then `--no_base` option is discouraged.
 
-5. If you set `mode=decay` then any parameter whoose subscript is `osc` is discarded (i.e. tau_osc, period_osc).
+6. If you set `mode=decay` then any parameter whoose subscript is `osc` is discarded (i.e. tau_osc, period_osc).
 
-6. If you set `mode=osc` then `tau` parameter is discarded. Also, baseline feature is not included in fitting function.
+7. If you set `mode=osc` then `tau` parameter is discarded. Also, baseline feature is not included in fitting function.
 
-7. The number of tau_osc and period_osc parameter should be same
+8. The number of tau_osc and period_osc parameter should be same
 
-8. If you set `mode=both` then you should set `tau`, `tau_osc` and `period_osc`. 
+9. If you set `mode=both` then you should set `tau`, `tau_osc` and `period_osc`. 
  However the number of `tau` and `tau_osc` need not to be same.
 ```

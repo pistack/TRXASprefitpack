@@ -34,7 +34,7 @@ Last optional argument is `-o` it sets name of `hdf5` file to save fitting resul
 
 * Based on residual plot, there exists short lived decay component, now try with your self to add one or two more decay component.
 
-* For robust fitting result you can turn on global optimization algorithm `basinhopping` by setting `--do_glb` option.
+* For robust fitting result you can turn on global optimization algorithm `ampgo` or `basinhopping` by setting `--method_glb` option.
 
 * You can further analysis fitting result with `decay_1.h5` file.
 
