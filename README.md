@@ -10,7 +10,7 @@
 
 [![Documentation Status](https://readthedocs.org/projects/trxasprefitpack/badge/?version=latest)](https://trxasprefitpack.readthedocs.io/en/latest/?badge=latest)
 
-stable version:  0.7.0
+stable version:  0.7.0.1
 
 current development version: 0.8.dev
 
@@ -95,7 +95,7 @@ Licence: LGPL3
   * Now type ``pip install .``
 * Advanced way (from repository)
   * ``git clone https://github.com/pistack/TRXASprefitpack.git``
-  * ``git checkout v0.7.0``
+  * ``git checkout v0.7.0.1``
   * ``cd TRXASprefitpack``
   * ``python3 -m build``
   * ``cd dist``
