@@ -316,7 +316,7 @@ def residual_decay_same_t0(x0: np.ndarray, base: bool, irf: str,
             chi[end:end+d.shape[0]] = ((c@A) - d[:, j])/e[:, j]
 
             end = end + d.shape[0]
-            t0_idx = t0_idx + 1
+        t0_idx = t0_idx + 1
 
     return chi
 
