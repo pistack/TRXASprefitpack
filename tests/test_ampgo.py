@@ -50,8 +50,8 @@ def sphere(x):
 def rosenbrock(x):
     return np.sum((1-x)**2) + 100*np.sum((x[1:]-x[:-1]**2)**2)
 
-def rastrigin(x):
-    return np.sum(x**2 + 10*(1-np.cos(2*np.pi*x)))
+#def rastrigin(x):
+#    return np.sum(x**2 + 10*(1-np.cos(2*np.pi*x)))
 
 def griewangk(x):
     prod = 1
@@ -72,8 +72,8 @@ def grad_rosenbrock(x):
     part_2[:-1] = -400*x[:-1]*(x[1:]-x[:-1]**2)
     return 2*(x-1) + part_1 + part_2
 
-def grad_rastrigin(x):
-    return 2*x + 20*np.pi*np.sin(2*np.pi*x)
+#def grad_rastrigin(x):
+#    return 2*x + 20*np.pi*np.sin(2*np.pi*x)
 
 def grad_griewangk(x):
     scale = np.sqrt(np.array(list(range(1, x.size+1))))
@@ -85,31 +85,23 @@ def grad_griewangk(x):
 
 def test_ampgo_1():
     bounds = 30*[(-100, 100)]
-    x0 = np.zeros(30)
+    x0 = np.random.uniform(-100, 100, 30)
     res = ampgo(sphere, x0, disp=True,
     minimizer_kwargs={'bounds': bounds, 'jac': grad_sphere})
 
     assert np.allclose(res['fun'], 0)
 
 def test_ampgo_2():
-    bounds = 5*[(-100, 100)]
-    x0 = np.zeros(5)
+    bounds = 30*[(-100, 100)]
+    x0 = np.random.uniform(-100, 100, 30)
     res = ampgo(rosenbrock, x0, disp=True,
     minimizer_kwargs={'bounds': bounds, 'jac': grad_rosenbrock})
 
     assert np.allclose(res['fun'], 0)
 
-def test_ampgo_3():
-    bounds = 30*[(-100, 100)]
-    x0 = np.zeros(30)
-    res = ampgo(rastrigin, x0, disp=True,
-    minimizer_kwargs={'bounds': bounds, 'jac': grad_rastrigin})
-
-    assert np.allclose(res['fun'], 0)
-
 def test_ampgo_4():
-    bounds = 30*[(-100, 100)]
-    x0 = np.zeros(30)
+    bounds = 30*[(-600, 600)]
+    x0 = np.random.uniform(-600, 600, 30)
     res = ampgo(griewangk, x0, disp=True,
     minimizer_kwargs={'bounds': bounds, 'jac': grad_griewangk})
 
@@ -179,3 +171,4 @@ def test_fun_grad_tunnel():
 
     assert np.allclose(ttf_tst, ttf_ref)
     assert np.allclose(grad_tst, grad_ref)
+
