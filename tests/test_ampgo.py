@@ -85,15 +85,15 @@ def grad_griewangk(x):
 
 def test_ampgo_1():
     bounds = 30*[(-100, 100)]
-    x0 = np.zeros(30)
+    x0 = np.random.uniform(-100, 100, 30)
     res = ampgo(sphere, x0, disp=True,
     minimizer_kwargs={'bounds': bounds, 'jac': grad_sphere})
 
     assert np.allclose(res['fun'], 0)
 
 def test_ampgo_2():
-    bounds = 5*[(-100, 100)]
-    x0 = np.zeros(5)
+    bounds = 30*[(-100, 100)]
+    x0 = np.random.uniform(-100, 100, 30)
     res = ampgo(rosenbrock, x0, disp=True,
     minimizer_kwargs={'bounds': bounds, 'jac': grad_rosenbrock})
 
@@ -101,15 +101,15 @@ def test_ampgo_2():
 
 def test_ampgo_3():
     bounds = 30*[(-100, 100)]
-    x0 = np.zeros(30)
+    x0 = np.random.uniform(-100, 100, 30)
     res = ampgo(rastrigin, x0, disp=True,
     minimizer_kwargs={'bounds': bounds, 'jac': grad_rastrigin})
 
     assert np.allclose(res['fun'], 0)
 
 def test_ampgo_4():
-    bounds = 30*[(-100, 100)]
-    x0 = np.zeros(30)
+    bounds = 30*[(-600, 600)]
+    x0 = np.random.uniform(-600, 600, 30)
     res = ampgo(griewangk, x0, disp=True,
     minimizer_kwargs={'bounds': bounds, 'jac': grad_griewangk})
 
