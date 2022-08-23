@@ -16,7 +16,6 @@ from TRXASprefitpack import ampgo
 # Bound x0: [-5, 5], x1: [-5, 5]
 
 f_opt = -1.0316
-bounds = [[-5, 5], [-5, 5]]
 
 
 def six_hump_camelback(x):
@@ -45,15 +44,86 @@ def test_grad_six_hump_camelback():
 
     assert np.allclose(grad_ref, grad_tst, rtol=1e-3, atol=1e-6)
 
+def sphere(x):
+    return np.sum(x**2)
+
+def rosenbrock(x):
+    return np.sum((1-x)**2) + 100*np.sum((x[1:]-x[:-1]**2)**2)
+
+def rastrigin(x):
+    return np.sum(x**2 + 10*(1-np.cos(2*np.pi*x)))
+
+def griewangk(x):
+    prod = 1
+    tmp = np.cos(x/np.sqrt(np.array(list(range(1, x.size+1)))))
+    for i in range(x.size):
+        prod = prod*tmp[i]
+    return  1+1/4000*np.sum(x**2) - prod
+
+def grad_sphere(x):
+    return 2*x
+
+def grad_rosenbrock(x):
+    part_1 = np.empty(x.size)
+    part_2 = np.empty(x.size)
+    part_1[0] = 0
+    part_2[-1] = 0
+    part_1[1:] = 200*(x[1:]-x[:-1]**2)
+    part_2[:-1] = -400*x[:-1]*(x[1:]-x[:-1]**2)
+    return 2*(x-1) + part_1 + part_2
+
+def grad_rastrigin(x):
+    return 2*x + 20*np.pi*np.sin(2*np.pi*x)
+
+def grad_griewangk(x):
+    scale = np.sqrt(np.array(list(range(1, x.size+1))))
+    tmp = np.cos(x/scale)
+    prod = 1
+    for i in range(x.size):
+        prod = prod * tmp[i]
+    return x/2000 + prod*np.sum(np.tan(x/scale)/scale)
 
 def test_ampgo_1():
+    bounds = 30*[(-100, 100)]
+    x0 = np.zeros(30)
+    res = ampgo(sphere, x0, disp=True,
+    minimizer_kwargs={'bounds': bounds, 'jac': grad_sphere})
+
+    assert np.allclose(res['fun'], 0)
+
+def test_ampgo_2():
+    bounds = 5*[(-100, 100)]
+    x0 = np.zeros(5)
+    res = ampgo(rosenbrock, x0, disp=True,
+    minimizer_kwargs={'bounds': bounds, 'jac': grad_rosenbrock})
+
+    assert np.allclose(res['fun'], 0)
+
+def test_ampgo_3():
+    bounds = 30*[(-100, 100)]
+    x0 = np.zeros(30)
+    res = ampgo(rastrigin, x0, disp=True,
+    minimizer_kwargs={'bounds': bounds, 'jac': grad_rastrigin})
+
+    assert np.allclose(res['fun'], 0)
+
+def test_ampgo_4():
+    bounds = 30*[(-100, 100)]
+    x0 = np.zeros(30)
+    res = ampgo(griewangk, x0, disp=True,
+    minimizer_kwargs={'bounds': bounds, 'jac': grad_griewangk})
+
+    assert np.allclose(res['fun'], 0)
+
+
+def test_ampgo_5():
     x0 = np.random.uniform(-5, 5, 2)
     res = ampgo(six_hump_camelback, x0)
 
     assert np.allclose(res['fun'], f_opt, atol=1e-4)
 
 
-def test_ampgo_2():
+def test_ampgo_6():
     x0 = np.random.uniform(-5, 5, 2)
     res = ampgo(six_hump_camelback, x0,
     minimizer_kwargs={'jac': grad_six_hump_camelback})
@@ -61,7 +131,7 @@ def test_ampgo_2():
     assert  np.allclose(res['fun'], f_opt, atol=1e-4)
 
 
-def test_ampgo_3():
+def test_ampgo_7():
     x0 = np.random.uniform(-5, 5, 2)
     res = ampgo(fun_grad_six_hump_camelback, x0,
     minimizer_kwargs={'jac': True})
