@@ -133,25 +133,13 @@ def ampgo(fun: Callable, x0: np.ndarray,
 
     # Setting Arguments For tabu tunneling Function
     if callable(jac):
-        fargs = (len(args)+4)*[None]
-        fargs[0] = fun
-        fargs[3] = jac
-        # fargs[1]: aspiration; fargs[2]: tabulist
-        fargs[4:] = args
-        ttf = tunnel
-        jac_ttf = grad_tunnel
+        ttf = wrapper_tunnel(fun, *args)
+        jac_ttf = wrapper_grad_tunnel(fun, jac, *args)
     elif jac is True:
-        fargs = (len(args)+3)*[None]
-        fargs[0] = fun
-        # fargs[1]: aspiration; fargs[2]: tabulist
-        fargs[3:] = args
-        ttf = fun_grad_tunnel
+        ttf = wrapper_fun_grad_tunnel(fun, *args)
         jac_ttf = True
     else:
-        fargs = (len(args)+4)*[None]
-        fargs[0] = fun
-        fargs[4:] = args
-        ttf = tunnel
+        ttf = wrapper_tunnel(fun, *args)
         jac_ttf = None
 
     if bounds is None:
@@ -207,7 +195,6 @@ def ampgo(fun: Callable, x0: np.ndarray,
 
         # Calculates Aspiration
         aspiration = f_best - eps1*(1+np.abs(f_best))
-        fargs[1] = aspiration
 
         success = False
         for j in range(max_tunnel):
@@ -227,8 +214,7 @@ def ampgo(fun: Callable, x0: np.ndarray,
                 vaild = check_vaild(x_try, tabulist)
 
             # start tabu tunneling
-            fargs[2] = tabulist
-            res = minimize(ttf, x_try, args=tuple(fargs), method=method,
+            res = minimize(ttf, x_try, args=(aspiration, tabulist), method=method,
                            jac=jac_ttf, bounds=bounds, tol=tol, **minimizer_kwargs)
             x0 = res['x']
             nfev = nfev + res['nfev']
@@ -307,71 +293,58 @@ def delete_element(x_local, tabulist, strategy):
 
     return tabulist
 
-
-def tunnel(x0, *args):
+def wrapper_tunnel(fun, *fun_args):
     '''
-    Tabu Tunneling function (lambda = 2)
+    wrapper function for tabu tunneling function
     '''
-    fun, aspiration, tabulist, _ = args[:4]
-    fun_args = ()
-    if len(args) > 4:
-        fun_args = tuple(args[4:])
+    def tunnel(x0, aspiration, tabulist):
+        numerator = (fun(x0, *fun_args)-aspiration)**2
+        denumerator = 1
+        for tabu in tabulist:
+            denumerator = denumerator*np.sum((x0-tabu)**2)
+        return numerator/denumerator
+    return tunnel
 
-    numerator = (fun(x0, *fun_args)-aspiration)**2
-    denominator = 1
-    for tabu in tabulist:
-        denominator = denominator*np.sum((x0-tabu)**2)
-    return numerator/denominator
-
-
-def grad_tunnel(x0, *args):
+def wrapper_grad_tunnel(fun, jac, *fun_args):
     '''
-    Gradient of Tabu Tunneling function
+    wrapper function for gradient of tabu tunneling function
     '''
-    fun, aspiration, tabulist, jac = args[:4]
+    def grad_tunnel(x0, aspiration, tabulist):
+            fval = fun(x0, *fun_args) - aspiration
+            numerator = fval**2
+            grad_numerator = fval*jac(x0, *fun_args)
+            denominator = 1
+            grad_denom = np.zeros_like(x0)
+            for tabu in tabulist:
+                diff = tabu-x0
+                dist = np.sum(diff**2)
+                denominator = denominator*dist
+                grad_denom = grad_denom + diff/dist
+            return 2*(grad_numerator+numerator*grad_denom)/denominator
+    return grad_tunnel
 
-    fun_args = ()
-    if len(args) > 4:
-        fun_args = tuple(args[4:])
-
-    fval = fun(x0, *fun_args) - aspiration
-    numerator = fval**2
-    grad_numerator = fval*jac(x0, *fun_args)
-    denominator = 1
-    grad_denom = np.zeros_like(x0)
-
-    for tabu in tabulist:
-        diff = tabu-x0
-        dist = np.sum(diff**2)
-        denominator = denominator*dist
-        grad_denom = grad_denom + diff/dist
-    return 2*(grad_numerator+numerator*grad_denom)/denominator
-
-
-def fun_grad_tunnel(x0, *args):
+def wrapper_fun_grad_tunnel(fun, *fun_args):
     '''
-    pair of function value and its gradient of
-    Tabu Tunneling function
+    wrapper function for pair of tabu tunneling function and
+    its gradient
     '''
-    fun, aspiration, tabulist = args[:3]
-    fun_args = ()
-    if len(args) > 3:
-        fun_args = tuple(args[3:])
-
-    f_val, grad_val = fun(x0, *fun_args)
-    f_val = f_val-aspiration
-    numerator = f_val**2
-    grad_numerator = f_val*grad_val
-    denominator = 1
-    grad_denominator = np.zeros_like(x0)
-    for tabu in tabulist:
-        diff = tabu-x0
-        dist = np.sum(diff**2)
-        denominator = denominator*dist
-        grad_denominator = grad_denominator + \
-            diff/dist
-
-    y_ttf = numerator/denominator
-    deriv_y_ttf = 2*(grad_numerator/denominator +
-                     y_ttf*grad_denominator)
-    return y_ttf, deriv_y_ttf
+    def fun_grad_tunnel(x0, aspiration, tabulist):
+        f_val, grad_val = fun(x0, *fun_args)
+        f_val = f_val-aspiration
+        numerator = f_val**2
+        grad_numerator = f_val*grad_val
+        denominator = 1
+        grad_denominator = np.zeros_like(x0)
+        for tabu in tabulist:
+            diff = tabu-x0
+            dist = np.sum(diff**2)
+            denominator = denominator*dist
+            grad_denominator = grad_denominator + \
+                diff/dist
+        
+        y_ttf = numerator/denominator
+        deriv_y_ttf = 2*(grad_numerator/denominator +
+        y_ttf*grad_denominator)
+        return y_ttf, deriv_y_ttf
+    
+    return fun_grad_tunnel

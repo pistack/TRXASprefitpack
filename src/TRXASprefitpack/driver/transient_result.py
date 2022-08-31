@@ -187,7 +187,7 @@ class TransientResult(dict):
             else:
                 tot_decay = self['n_decay']
             for o in range(tot_decay, tot_decay+self['n_osc']):
-                row = [f"    dmp_osc {o+1-self['n_decay']}"]
+                row = [f"    dmp_osc {o+1-tot_decay}"]
                 for l in range(coeff_contrib.shape[1]):
                     row.append(f'{coeff_contrib[o, l]: .2f}%')
                 doc_lst.append('\t'.join(row))

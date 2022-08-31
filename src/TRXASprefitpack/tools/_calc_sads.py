@@ -192,8 +192,8 @@ def calc_sads():
     plt.title(f'Retrieved Energy Scan (time_zero: {time_zero:.3e}')
     for i in range(escan_time.size):
         plt.errorbar(e, escan_data[:, i+1]+i*offset, escan_err[:, i], marker='o', mfc='none',
-                     label=f'{escan_time[i]: .3e} (expt)')
-        plt.plot(e, fit[:, i]+i*offset, label=f'{escan_time[i]: .3e} (fit)')
+                     label=f'{escan_time[i]: .3e} (expt)', linestyle='none')
+        plt.plot(e, fit[:, i]+i*offset)
     plt.legend()
     plt.show()
 

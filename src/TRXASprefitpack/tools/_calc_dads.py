@@ -118,6 +118,7 @@ def calc_dads():
     e = escan_data[:, 0]
 
     out_ads = np.vstack((e, ads)).T
+    out_fit = np.vstack((e, fit.T)).T
 
     ads_header_lst = []
     for i in range(ads.shape[0]):
@@ -130,8 +131,9 @@ def calc_dads():
                fmt=out_ads.shape[1]*['%.8e'], header='energy \t'+ads_header)
     np.savetxt(f'{out_prefix}_dads_eps.txt', ads_eps.T,
                fmt=ads_eps.shape[0]*['%.8e'], header=ads_header)
-    np.savetxt(f'{out_prefix}_dads_fit.txt', fit, fmt=(
-        len(escan_time)+1)*['%.8e'], header='energy \t'+fit_header)
+    np.savetxt(f'{out_prefix}_dads_fit.txt', out_fit, 
+               fmt=(len(escan_time)+1)*['%.8e'], 
+               header='energy \t'+fit_header)
 
     # plot dads results
     plt.figure(1)
@@ -145,8 +147,8 @@ def calc_dads():
     plt.title(f'Retrieved Energy Scan (time_zero: {time_zero:.3e}')
     for i in range(escan_time.size):
         plt.errorbar(e, escan_data[:, i+1]+i*offset, escan_err[:, i], marker='o', mfc='none',
-                     label=f'{escan_time[i]: .3e} (expt)')
-        plt.plot(e, fit[:, i]+i*offset, label=f'{escan_time[i]: .3e} (fit)')
+                     label=f'{escan_time[i]: .3e}', linestyle='none')
+        plt.plot(e, fit[:, i]+i*offset)
     plt.legend()
     plt.show()
 
