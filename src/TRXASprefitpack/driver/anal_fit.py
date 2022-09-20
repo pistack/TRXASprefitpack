@@ -18,55 +18,6 @@ from ..res import res_grad_both_same_t0
 from ..res import res_grad_voigt, res_grad_thy
 
 
-def res_scan_opt(p, *args) -> float:
-    '''
-    res_scan
-    Scans minimal value of residual function with constraint
-    ith value of parameter is fixed to p.
-
-    Args:
-     p: value of ith parameter
-     args: arguments
-
-           * 1st: i, index of parameter to scan
-           * 2nd: parameter
-           * 3rd: bounds
-           * 4th: objective function which also gives its gradient
-           * 5th to last: arguments for objective function
-           * :math:`last-3`: fixed_param_idx
-
-    Returns:
-     residual value at params[i] = p
-    '''
-    param = np.atleast_1d(args[1]).copy()
-    param[args[0]] = p
-    bounds = len(args[2])*[None]
-    for i in range(len(args[2])):
-        bounds[i] = args[2][i]
-    bounds[args[0]] = (p, p)
-    func = args[3]
-    fixed_param_idx = np.atleast_1d(args[-4]).copy()
-    fixed_param_idx[args[0]] = True
-    fargs_lst = (len(args)-4)*[None]
-    for i in range(4, len(args)):
-        fargs_lst[i-4] = args[i]
-    fargs_lst[-4] = fixed_param_idx
-    fargs = tuple(fargs_lst)
-    res = minimize(func, param, args=fargs, bounds=bounds, method='L-BFGS-B', jac=True)
-    if not res['success']:
-        print('Warning local minimization is failed')
-
-    return res['fun']
-
-def ci_scan_opt_f(p, *args):
-    '''
-    Confidence interval scan with ith parameter is fixed to p. (for f-test based method)
-    '''
-    F_alpha, dfn, dfd, chi2_opt = args[:4]
-    fargs = tuple(args[4:])
-    return (res_scan_opt(p, *fargs)-chi2_opt/2)/dfn/(chi2_opt/(2*dfd))-F_alpha
-
-
 class CIResult(dict):
     '''
     Class for represent confidence interval of each parameter
@@ -258,6 +209,54 @@ def confidence_interval(result, alpha: float) -> CIResult:
     ci_res['x'] = result['x']
     ci_res['ci'] = ci_lst
     return ci_res
+
+def res_scan_opt(p, *args) -> float:
+    '''
+    res_scan_opt
+    Scans minimal value of residual function with fixing
+    ith value of parameter to p.
+
+    Args:
+     p: value of ith parameter
+     args: arguments
+
+           * 1st: i, index of parameter to scan
+           * 2nd: parameter
+           * 3rd: bounds
+           * 4th: objective function which also gives its gradient
+           * 5th to last: arguments for objective function
+           * :math:`last-3`: fixed_param_idx
+
+    Returns:
+     residual value at params[i] = p
+    '''
+    param = np.atleast_1d(args[1]).copy()
+    param[args[0]] = p
+    bounds = len(args[2])*[None]
+    for i in range(len(args[2])):
+        bounds[i] = args[2][i]
+    bounds[args[0]] = (p, p)
+    func = args[3]
+    fixed_param_idx = np.atleast_1d(args[-4]).copy()
+    fixed_param_idx[args[0]] = True
+    fargs_lst = (len(args)-4)*[None]
+    for i in range(4, len(args)):
+        fargs_lst[i-4] = args[i]
+    fargs_lst[-4] = fixed_param_idx
+    fargs = tuple(fargs_lst)
+    res = minimize(func, param, args=fargs, bounds=bounds, method='L-BFGS-B', jac=True)
+    if not res['success']:
+        print('Warning local minimization is failed')
+
+    return res['fun']
+
+def ci_scan_opt_f(p, *args):
+    '''
+    Confidence interval scan with ith parameter is fixed to p. (for f-test based method)
+    '''
+    F_alpha, dfn, dfd, chi2_opt = args[:4]
+    fargs = tuple(args[4:])
+    return (res_scan_opt(p, *fargs)-chi2_opt/2)/dfn/(chi2_opt/(2*dfd))-F_alpha
 
 
 

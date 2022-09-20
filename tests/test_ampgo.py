@@ -7,8 +7,6 @@ from scipy.optimize import approx_fprime
 path = os.path.dirname(os.path.realpath(__file__))
 sys.path.append(path+'/../src/')
 
-from TRXASprefitpack.driver._ampgo import tunnel, grad_tunnel, fun_grad_tunnel
-from TRXASprefitpack.driver._ampgo import check_vaild
 from TRXASprefitpack import ampgo
 
 # Global minimum of SIX HUMP CAMELBACK
@@ -50,9 +48,6 @@ def sphere(x):
 def rosenbrock(x):
     return np.sum((1-x)**2) + 100*np.sum((x[1:]-x[:-1]**2)**2)
 
-#def rastrigin(x):
-#    return np.sum(x**2 + 10*(1-np.cos(2*np.pi*x)))
-
 def griewangk(x):
     prod = 1
     tmp = np.cos(x/np.sqrt(np.array(list(range(1, x.size+1)))))
@@ -71,9 +66,6 @@ def grad_rosenbrock(x):
     part_1[1:] = 200*(x[1:]-x[:-1]**2)
     part_2[:-1] = -400*x[:-1]*(x[1:]-x[:-1]**2)
     return 2*(x-1) + part_1 + part_2
-
-#def grad_rastrigin(x):
-#    return 2*x + 20*np.pi*np.sin(2*np.pi*x)
 
 def grad_griewangk(x):
     scale = np.sqrt(np.array(list(range(1, x.size+1))))
@@ -129,46 +121,3 @@ def test_ampgo_7():
     minimizer_kwargs={'jac': True})
 
     assert np.allclose(res['fun'], f_opt, atol=1e-4)
-
-
-def test_grad_tunnel():
-    tabusize = 5
-    tabulist = 5*[None]
-    for i in range(tabusize):
-        tabulist[i] = np.random.uniform(-5, 5, 2)
-
-    vaild = False
-    while not vaild:
-        x0 = np.random.uniform(-5, 5, 2)
-        vaild = check_vaild(x0, tabulist)
-
-    ttf_args = (six_hump_camelback, f_opt, tabulist,
-                grad_six_hump_camelback)
-
-    grad_ref = approx_fprime(x0, lambda x0: tunnel(x0, *ttf_args), 5e-8)
-    grad = grad_tunnel(x0, *ttf_args)
-    assert np.allclose(grad, grad_ref)
-
-
-def test_fun_grad_tunnel():
-    tabusize = 5
-    tabulist = 5*[None]
-    for i in range(tabusize):
-        tabulist[i] = np.random.uniform(-5, 5, 2)
-
-    vaild = False
-    while not vaild:
-        x0 = np.random.uniform(-5, 5, 2)
-        vaild = check_vaild(x0, tabulist)
-
-    ttf_args_ref = (six_hump_camelback, f_opt, tabulist,
-                    grad_six_hump_camelback)
-    ttf_args_tst = (fun_grad_six_hump_camelback, f_opt, tabulist)
-
-    ttf_ref = tunnel(x0, *ttf_args_ref)
-    grad_ref = approx_fprime(x0, lambda x0: tunnel(x0, *ttf_args_ref), 5e-8)
-    ttf_tst, grad_tst = fun_grad_tunnel(x0, *ttf_args_tst)
-
-    assert np.allclose(ttf_tst, ttf_ref)
-    assert np.allclose(grad_tst, grad_ref)
-

@@ -107,8 +107,10 @@ def plot_TransientResult(result: TransientResult, save_fig: Optional[str] = None
     '''
 
     start = 0
+    t0_idx = 1+1*(result['irf'] == 'pv')
     for i in range(len(result['t'])):
         for j in range(result['intensity'][i].shape[1]):
+            t0 = result['x'][t0_idx+start+j]
             fig = plt.figure(start+j+1)
             title = f'{result["name_of_dset"][i]} scan #{j+1}'
             subtitle = f"Chi squared: {result['red_chi2_ind'][i][j]: .2f}"
@@ -127,7 +129,7 @@ def plot_TransientResult(result: TransientResult, save_fig: Optional[str] = None
             sub2.plot(result['t'][i], result['fit'][i][:, j],
                       label=f'fit {title}', color='red')
             sub2.legend()
-            sub2.set_xlim(-10*result['fwhm'], 20*result['fwhm'])
+            sub2.set_xlim(-10*result['fwhm']+t0, 20*result['fwhm']+t0)
             sub3 = fig.add_subplot(223)
             if result['model'] in ['decay', 'osc']:
                 sub3.errorbar(result['t'][i], result['res'][i][:, j],
@@ -152,7 +154,7 @@ def plot_TransientResult(result: TransientResult, save_fig: Optional[str] = None
                               label=f'expt osc {title}', linestyle='none', color='black')
                 sub4.plot(result['t'][i], result['fit_osc'][i][:, j],
                           label=f'fit osc {title}', color='red')
-            sub4.set_xlim(-10*result['fwhm'], 20*result['fwhm'])
+            sub4.set_xlim(-10*result['fwhm']+t0, 20*result['fwhm']+t0)
             sub4.legend()
             if save_fig is not None:
                 plt.savefig(
