@@ -97,7 +97,7 @@ def save_TransientResult_txt(result: TransientResult, dirname: str):
 
 
 
-def plot_TransientResult(result: TransientResult, save_fig: Optional[str] = None):
+def plot_TransientResult(result: TransientResult, same_t0: bool, save_fig: Optional[str] = None):
     '''
     plot fitting Result
 
@@ -109,8 +109,11 @@ def plot_TransientResult(result: TransientResult, save_fig: Optional[str] = None
     start = 0
     t0_idx = 1+1*(result['irf'] == 'pv')
     for i in range(len(result['t'])):
+        if same_t0:
+            t0 = result['x'][t0_idx+start]
         for j in range(result['intensity'][i].shape[1]):
-            t0 = result['x'][t0_idx+start+j]
+            if not same_t0:
+                t0 = result['x'][t0_idx+start+j]
             fig = plt.figure(start+j+1)
             title = f'{result["name_of_dset"][i]} scan #{j+1}'
             subtitle = f"Chi squared: {result['red_chi2_ind'][i][j]: .2f}"
@@ -362,7 +365,7 @@ def fit_tscan():
     save_TransientResult_txt(result, args.outdir)
     print(result)
     if args.save_fig:
-        plot_TransientResult(result, args.outdir)
+        plot_TransientResult(result, args.same_t0, args.outdir)
     else:
-        plot_TransientResult(result)
+        plot_TransientResult(result, args.same_t0)
 
