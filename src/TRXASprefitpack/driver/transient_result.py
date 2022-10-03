@@ -186,7 +186,7 @@ class TransientResult(dict):
                 tot_decay = tot_decay+1
                 row = ['     base']
                 for l in range(coeff_contrib.shape[1]):
-                    row.append(f"{coeff_contrib[tot_decay-1,l]: .2f}%")
+                    row.append(f'{coeff_contrib[tot_decay-1,l]: .2f}%')
                 doc_lst.append('\t'.join(row))
 
 
