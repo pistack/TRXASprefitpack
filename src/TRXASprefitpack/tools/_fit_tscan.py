@@ -20,12 +20,13 @@ import argparse
 import numpy as np
 import matplotlib.pyplot as plt
 from ..driver import TransientResult, save_TransientResult
-from ..driver import fit_transient_exp, fit_transient_dmp_osc, fit_transient_both
+from ..driver import fit_transient_exp, fit_transient_raise
+from ..driver import fit_transient_dmp_osc, fit_transient_both
 from .misc import read_data
 
 plt.rcParams['figure.figsize'] = (10, 5)
 
-FITDRIVER = {'decay': fit_transient_exp,
+FITDRIVER = {'decay': fit_transient_exp, 'raise': fit_transient_raise,
              'osc': fit_transient_dmp_osc, 'both': fit_transient_both}
 
 
@@ -131,7 +132,7 @@ def plot_TransientResult(result: TransientResult, save_fig: Optional[str] = None
             sub2.set_xlim(-10*result['fwhm']+result['x'][t0_idx+start+j], 
             20*result['fwhm']+result['x'][t0_idx+start+j])
             sub3 = fig.add_subplot(223)
-            if result['model'] in ['decay', 'osc']:
+            if result['model'] in ['decay', 'raise', 'osc']:
                 sub3.errorbar(result['t'][i], result['res'][i][:, j],
                               result['eps'][i][:, j], marker='o', mfc='none',
                               label=f'res {title}', linestyle='none', color='black')
@@ -144,7 +145,7 @@ def plot_TransientResult(result: TransientResult, save_fig: Optional[str] = None
             sub3.legend()
 
             sub4 = fig.add_subplot(224)
-            if result['model'] in ['decay', 'osc']:
+            if result['model'] in ['decay', 'raise', 'osc']:
                 sub4.errorbar(result['t'][i], result['res'][i][:, j],
                               result['eps'][i][:, j], marker='o', mfc='none',
                               label=f'res {title}', linestyle='none', color='black')
@@ -168,8 +169,9 @@ def plot_TransientResult(result: TransientResult, save_fig: Optional[str] = None
 description = '''
 fit tscan: fitting experimental time trace spectrum data with the convolution of the sum of
 1. exponential decay (mode = decay)
-2. damped oscillation (mode = osc)
-3. exponential decay, damped oscillation (mode=both)
+2. raise model (mode = raise)
+3. damped oscillation (mode = osc)
+4. exponential decay, damped oscillation (mode=both)
 and irf function
 There are three types of irf function (gaussian, cauchy, pseudo voigt)
 To calculate the contribution of each life time component, it solve least linear square problem via scipy linalg lstsq module.
@@ -183,7 +185,7 @@ epilog = '''
 4. if you set shape of irf to pseudo voigt (pv), then you should provide two full width at half maximum
    value for gaussian and cauchy parts, respectively.
 5. If you did not set tau and `mode=decay` then `--no_base` option is discouraged.
-6. If you set `mode=decay` then any parameter whoose subscript is `osc` is discarded (i.e. tau_osc, period_osc).
+6. If you set `mode=decay or raise` then any parameter whose subscript is `osc` is discarded (i.e. tau_osc, period_osc).
 7. If you set `mode=osc` then `tau` parameter is discarded. Also, baseline feature is not included in fitting function.
 8. The number of tau_osc and period_osc parameter should be same
 9. If you set `mode=both` then you should set `tau`, `tau_osc` and `period_osc`. However the number of `tau` and `tau_osc` need not to be same.
@@ -192,6 +194,7 @@ epilog = '''
 mode_help = '''
 Mode of fitting
  `decay`: fitting with the sum of the convolution of exponential decay and instrumental response function
+ `raise` : fitting with the sum of the convolution of raise model and instrumental response function
  `osc`: fitting with the sum of the convolution of damped oscillation and instrumental response function
  `both`: fitting with the sum of both decay and osc
 '''
@@ -230,7 +233,7 @@ def fit_tscan():
     parser = argparse.ArgumentParser(formatter_class=tmp,
                                      description=description,
                                      epilog=epilog)
-    parser.add_argument('--mode', default='decay', choices=['decay', 'osc', 'both'],
+    parser.add_argument('--mode', default='decay', choices=['decay', 'raise', 'osc', 'both'],
                         help=mode_help)
     parser.add_argument('--irf', default='g', choices=['g', 'c', 'pv'],
                         help=irf_help)
