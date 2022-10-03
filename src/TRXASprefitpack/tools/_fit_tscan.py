@@ -98,7 +98,7 @@ def save_TransientResult_txt(result: TransientResult, dirname: str):
 
 
 
-def plot_TransientResult(result: TransientResult, save_fig: Optional[str] = None):
+def plot_TransientResult(result: TransientResult, same_t0: bool, save_fig: Optional[str] = None):
     '''
     plot fitting Result
 
@@ -108,9 +108,13 @@ def plot_TransientResult(result: TransientResult, save_fig: Optional[str] = None
     '''
 
     start = 0
-    t0_idx = 1 + 1*(result['irf'] == 'pv')
+    t0_idx = 1+1*(result['irf'] == 'pv')
     for i in range(len(result['t'])):
+        if same_t0:
+            t0 = result['x'][t0_idx+start]
         for j in range(result['intensity'][i].shape[1]):
+            if not same_t0:
+                t0 = result['x'][t0_idx+start+j]
             fig = plt.figure(start+j+1)
             title = f'{result["name_of_dset"][i]} scan #{j+1}'
             subtitle = f"Chi squared: {result['red_chi2_ind'][i][j]: .2f}"
@@ -129,8 +133,7 @@ def plot_TransientResult(result: TransientResult, save_fig: Optional[str] = None
             sub2.plot(result['t'][i], result['fit'][i][:, j],
                       label=f'fit {title}', color='red')
             sub2.legend()
-            sub2.set_xlim(-10*result['fwhm']+result['x'][t0_idx+start+j], 
-            20*result['fwhm']+result['x'][t0_idx+start+j])
+            sub2.set_xlim(-10*result['fwhm']+t0, 20*result['fwhm']+t0)
             sub3 = fig.add_subplot(223)
             if result['model'] in ['decay', 'raise', 'osc']:
                 sub3.errorbar(result['t'][i], result['res'][i][:, j],
@@ -155,8 +158,7 @@ def plot_TransientResult(result: TransientResult, save_fig: Optional[str] = None
                               label=f'expt osc {title}', linestyle='none', color='black')
                 sub4.plot(result['t'][i], result['fit_osc'][i][:, j],
                           label=f'fit osc {title}', color='red')
-            sub4.set_xlim(-10*result['fwhm']+result['x'][t0_idx+start+j], 
-            20*result['fwhm']+result['x'][t0_idx+start+j])
+            sub4.set_xlim(-10*result['fwhm']+t0, 20*result['fwhm']+t0)
             sub4.legend()
             if save_fig is not None:
                 plt.savefig(
@@ -366,7 +368,7 @@ def fit_tscan():
     save_TransientResult_txt(result, args.outdir)
     print(result)
     if args.save_fig:
-        plot_TransientResult(result, args.outdir)
+        plot_TransientResult(result, args.same_t0, args.outdir)
     else:
-        plot_TransientResult(result)
+        plot_TransientResult(result, args.same_t0)
 
