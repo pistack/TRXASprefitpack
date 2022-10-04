@@ -205,7 +205,7 @@ def fit_transient_raise(irf: str, fwhm_init: Union[float, np.ndarray],
 # Calc individual chi2
     chi = res_lsq['fun']
     num_param_tot = num_tot_scan * \
-        (num_comp+1*base)+num_param-np.sum(fix_param_idx)-1
+        (num_comp+1*base-1)+num_param-np.sum(fix_param_idx)
     chi2 = 2*res_lsq['cost']
     red_chi2 = chi2/(chi.size-num_param_tot)
 
