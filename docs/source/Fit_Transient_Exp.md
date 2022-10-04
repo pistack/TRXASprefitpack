@@ -1,4 +1,4 @@
-# Fitting with time delay scan
+# Fitting with time delay scan -Decay-
 ## Objective
 1. Fitting with exponential decay model
 2. Save and Load fitting result
