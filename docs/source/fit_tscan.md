@@ -2,15 +2,16 @@
 
 fit tscan: fitting experimental time trace spectrum data with the convolution of the sum of 
 1. exponential decay (mode = decay)
-2. damped oscillation (mode = osc)
-3. exponential decay, damped oscillation (mode=both)
+2. raise model (mode = raise)
+3. damped oscillation (mode = osc)
+4. exponential decay, damped oscillation (mode=both)
 
 
 and irf function. There are three types of irf function (gaussian, cauchy, pseudo voigt) are supported.
 To calculate the contribution of each life time component, it solve least linear square problem via `scipy.linalg.lstsq` function.
 
 * usage: fit_tscan 
-                    [-h] [--mode {decay,osc,both}] [--irf {g,c,pv}] [--fwhm_G FWHM_G] [--fwhm_L FWHM_L] [--num_file NUM_FILE [NUM_FILE ...]] [-t0 TIME_ZEROS [TIME_ZEROS ...]] [-t0f TIME_ZEROS_FILE]
+                    [-h] [--mode {decay,raise,osc,both}] [--irf {g,c,pv}] [--fwhm_G FWHM_G] [--fwhm_L FWHM_L] [--num_file NUM_FILE [NUM_FILE ...]] [-t0 TIME_ZEROS [TIME_ZEROS ...]] [-t0f TIME_ZEROS_FILE]
                     [--tau [TAU ...]] [--tau_osc TAU_OSC [TAU_OSC ...]] [--period_osc PERIOD_OSC [PERIOD_OSC ...]] 
                     [--no_base] [--same_t0] [--fix_irf] [--fix_t0] 
                     [--method_glb {basinhopping, ampgo}] [-o OUTDIR] [--save_fig]
@@ -23,9 +24,10 @@ To calculate the contribution of each life time component, it solve least linear
 
 * optional arguments:
   * -h, --help            show this help message and exit
-  * --mode {decay,osc,both}
+  * --mode {decay,raise,osc,both}
    Mode of fitting
     * `decay`: fitting with the sum of the convolution of exponential decay and instrumental response function
+    * `raise`: fitting with the sum of the convolution of raise model and instrumental response function
     * `osc`: fitting with the sum of the convolution of damped oscillation and instrumental response function
     * `both`: fitting with the sum of both decay and osc
 
@@ -48,12 +50,12 @@ To calculate the contribution of each life time component, it solve least linear
    time zeros for each tscan
   * -t0f TIME_ZEROS_FILE, --time_zeros_file TIME_ZEROS_FILE
    filename for time zeros of each tscan
-  * --tau [TAU ...]       lifetime of each decay component [mode: decay, both]
+  * --tau [TAU ...]       lifetime of each decay component [mode: decay, raise, both]
   * --tau_osc TAU_OSC [TAU_OSC ...]
    lifetime of each damped oscillation component [mode: osc, both]
   * --period_osc PERIOD_OSC [PERIOD_OSC ...]
    period of the vibration of each damped oscillation component [mode: osc, both]
-  * --no_base             exclude baseline for fitting [mode: decay, both]
+  * --no_base             exclude baseline for fitting [mode: decay, raise, both]
   * --same_t0             set time zero of every time delay scan belong to the same dataset equal
   * --fix_irf             fix irf parameter (fwhm_G, fwhm_L) during fitting process
   * --fix_t0              fix time zero parameter during fitting process.
@@ -80,12 +82,14 @@ To calculate the contribution of each life time component, it solve least linear
 
 5. If you did not set tau and `mode=decay` then `--no_base` option is discouraged.
 
-6. If you set `mode=decay` then any parameter whoose subscript is `osc` is discarded (i.e. tau_osc, period_osc).
+6. If `mode=raise`, the first lifetime constant (tau) is the raise time.
 
-7. If you set `mode=osc` then `tau` parameter is discarded. Also, baseline feature is not included in fitting function.
+7. If you set `mode=decay, raise` then any parameter whoose subscript is `osc` is discarded (i.e. tau_osc, period_osc).
 
-8. The number of tau_osc and period_osc parameter should be same
+8. If you set `mode=osc` then `tau` parameter is discarded. Also, baseline feature is not included in fitting function.
 
-9. If you set `mode=both` then you should set `tau`, `tau_osc` and `period_osc`. 
+9. The number of tau_osc and period_osc parameter should be same
+
+10. If you set `mode=both` then you should set `tau`, `tau_osc` and `period_osc`. 
  However the number of `tau` and `tau_osc` need not to be same.
 ```

@@ -187,10 +187,11 @@ epilog = '''
 4. if you set shape of irf to pseudo voigt (pv), then you should provide two full width at half maximum
    value for gaussian and cauchy parts, respectively.
 5. If you did not set tau and `mode=decay` then `--no_base` option is discouraged.
-6. If you set `mode=decay or raise` then any parameter whose subscript is `osc` is discarded (i.e. tau_osc, period_osc).
-7. If you set `mode=osc` then `tau` parameter is discarded. Also, baseline feature is not included in fitting function.
-8. The number of tau_osc and period_osc parameter should be same
-9. If you set `mode=both` then you should set `tau`, `tau_osc` and `period_osc`. However the number of `tau` and `tau_osc` need not to be same.
+6. If `mode=raise` then the first lifetime constant (tau) is the raise time.
+7. If you set `mode=decay or raise` then any parameter whose subscript is `osc` is discarded (i.e. tau_osc, period_osc).
+8. If you set `mode=osc` then `tau` parameter is discarded. Also, baseline feature is not included in fitting function.
+9. The number of tau_osc and period_osc parameter should be same
+10. If you set `mode=both` then you should set `tau`, `tau_osc` and `period_osc`. However the number of `tau` and `tau_osc` need not to be same.
 '''
 
 mode_help = '''
@@ -253,13 +254,13 @@ def fit_tscan():
     parser.add_argument('-t0f', '--time_zeros_file',
                         help='filename for time zeros of each tscan')
     parser.add_argument('--tau', type=float, nargs='*',
-                        help='lifetime of each decay component [mode: decay, both]')
+                        help='lifetime of each decay component [mode: decay, raise, both]')
     parser.add_argument('--tau_osc', type=float, nargs='+',
                         help='lifetime of each damped oscillation component [mode: osc, both]')
     parser.add_argument('--period_osc', type=float, nargs='+',
                         help='period of the vibration of each damped oscillation component [mode: osc, both]')
     parser.add_argument('--no_base', action='store_false',
-                        help='exclude baseline for fitting [mode: decay, both]')
+                        help='exclude baseline for fitting [mode: decay, raise, both]')
     parser.add_argument('--same_t0', action='store_true',
                         help='set time zero of every time delay scan belong to the same dataset same')
     parser.add_argument('--fix_irf', action='store_true',
@@ -359,6 +360,15 @@ def fit_tscan():
 
     if args.mode == 'both':
         dargs.append(base)
+    
+    if args.mode == 'raise':
+        if args.tau is None:
+            raise Exception('You need to set initial raise time')
+        else:
+            tau_init = np.array(args.tau)
+            base = args.no_base
+            dargs.append(tau_init)
+            dargs.append(base)
 
     result = FITDRIVER[args.mode](irf, fwhm_init, t0_init, *dargs, method_glb=args.method_glb,
                                   bound_fwhm=bound_fwhm, bound_t0=bound_t0, same_t0=args.same_t0,
