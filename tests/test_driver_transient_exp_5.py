@@ -76,9 +76,9 @@ def test_driver_transient_exp_5():
     same_t0=True,
     t=t, intensity=intensity, eps=eps)
 
-    save_TransientResult(result_ampgo, 'test_driver_transient_exp_2')
-    load_result_ampgo = load_TransientResult('test_driver_transient_exp_2')
-    os.remove('test_driver_transient_exp_2.h5')
+    save_TransientResult(result_ampgo, 'test_driver_transient_exp_5')
+    load_result_ampgo = load_TransientResult('test_driver_transient_exp_5')
+    os.remove('test_driver_transient_exp_5.h5')
 
     assert np.allclose(result_ampgo['x'], ans)
     assert str(result_ampgo) == str(load_result_ampgo)
