@@ -19,6 +19,7 @@ from pathlib import Path
 import argparse
 import numpy as np
 import matplotlib.pyplot as plt
+from ..res import set_bound_tau
 from ..driver import TransientResult, save_TransientResult
 from ..driver import fit_transient_exp, fit_transient_raise
 from ..driver import fit_transient_dmp_osc, fit_transient_both
@@ -266,6 +267,8 @@ def fit_tscan():
                         help='fix irf parameter (fwhm_G, fwhm_L) during fitting process')
     parser.add_argument('--fix_t0', action='store_true',
                         help='fix time zero parameter during fitting process.')
+    parser.add_argument('--fix_raise', action='store_true',
+                        help='fix raise time constant [mode: raise]')
     parser.add_argument('--method_glb', choices=['basinhopping', 'ampgo'],
                         help=method_glb_help)
     parser.add_argument('-o', '--outdir', default='out',
@@ -339,6 +342,7 @@ def fit_tscan():
         bound_t0 = t0_init.size*[None]
         for i in range(t0_init.size):
             bound_t0[i] = (t0_init[i], t0_init[i])
+
     dargs = []
     base = False
     if args.mode in ['decay', 'both']:
@@ -360,8 +364,15 @@ def fit_tscan():
     if args.mode == 'both':
         dargs.append(base)
 
+    bound_tau = None
+    if args.fix_raise:
+        bound_tau = []
+        for tau in tau_init:
+            bound_tau.append(set_bound_tau(tau, fwhm_init))
+
     result = FITDRIVER[args.mode](irf, fwhm_init, t0_init, *dargs, method_glb=args.method_glb,
-                                  bound_fwhm=bound_fwhm, bound_t0=bound_t0, same_t0=args.same_t0,
+                                  bound_fwhm=bound_fwhm, bound_t0=bound_t0, bound_tau=bound_tau,
+                                  same_t0=args.same_t0,
                                   name_of_dset=prefix, t=t, intensity=intensity, eps=eps)
 
     save_TransientResult(result, args.outdir)
