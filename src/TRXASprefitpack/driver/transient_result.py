@@ -168,6 +168,7 @@ class TransientResult(dict):
             tot_decay = self['n_decay']-1
         else:
             tot_decay = self['n_decay']
+
         for i in range(len(self['c'])):
             doc_lst.append(f"    DataSet {self['name_of_dset'][i]}:")
             row = ['     #tscan']
@@ -182,13 +183,13 @@ class TransientResult(dict):
                 for l in range(coeff_contrib.shape[1]):
                     row.append(f'{coeff_contrib[d, l]: .2f}%')
                 doc_lst.append('\t'.join(row))
+            
             if self['base']:
-                tot_decay = tot_decay+1
+                tmp = tot_decay+1
                 row = ['     base']
                 for l in range(coeff_contrib.shape[1]):
-                    row.append(f'{coeff_contrib[tot_decay-1,l]: .2f}%')
+                    row.append(f'{coeff_contrib[tmp-1,l]: .2f}%')
                 doc_lst.append('\t'.join(row))
-
 
             for o in range(tot_decay, tot_decay+self['n_osc']):
                 row = [f'    dmp_osc {o+1-tot_decay}']

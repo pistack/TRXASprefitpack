@@ -345,7 +345,7 @@ def fit_tscan():
 
     dargs = []
     base = False
-    if args.mode in ['decay', 'both']:
+    if args.mode in ['decay', 'raise', 'both']:
         if args.tau is None:
             base = True
             tau_init = None
@@ -353,7 +353,7 @@ def fit_tscan():
             tau_init = np.array(args.tau)
             base = args.no_base
         dargs.append(tau_init)
-        if args.mode == 'decay':
+        if args.mode in ['decay', 'raise']:
             dargs.append(base)
     if args.mode in ['osc', 'both']:
         tau_osc_init = np.array(args.tau_osc)
@@ -369,6 +369,7 @@ def fit_tscan():
         bound_tau = []
         for tau in tau_init:
             bound_tau.append(set_bound_tau(tau, fwhm_init))
+        bound_tau[0] = (tau_init[0], tau_init[0])
 
     result = FITDRIVER[args.mode](irf, fwhm_init, t0_init, *dargs, method_glb=args.method_glb,
                                   bound_fwhm=bound_fwhm, bound_t0=bound_t0, bound_tau=bound_tau,
