@@ -365,7 +365,7 @@ def fit_tscan():
         dargs.append(base)
 
     bound_tau = None
-    if args.fix_raise:
+    if args.fix_raise and args.mode == 'raise':
         bound_tau = []
         for tau in tau_init:
             bound_tau.append(set_bound_tau(tau, fwhm_init))
