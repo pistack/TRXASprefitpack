@@ -1,5 +1,10 @@
+import re
 import tkinter as tk
 import tkinter.messagebox as msg
+
+float_sep_comma = re.compile('([0-9]+[.]?[0-9]*[,]\s*)*[0-9]+[.]?[0-9]*\s*')
+int_sep_comma = re.compile('([0-9]+[,]\s*)*[0-9]*\s*')
+str_sep_comma = re.compile('(\w+[,]\s*)*\w*\s*')
 
 root = tk.Tk()
 root.title('Fit Tscan Gui')
@@ -14,19 +19,20 @@ irf_var = tk.StringVar()
 fit_mode_var = tk.StringVar()
 base_var = tk.IntVar()
 fix_irf_var = tk.IntVar()
+same_t0_var = tk.IntVar()
 
 # --- Select fitting model
 
 fit_mode_label = tk.Label(root, text='Select fitting mode', padx=50, pady=10, font=('Arial', 12))
 fit_mode_label.grid(column=0, row=0, columnspan=3)
 decay_mode = tk.Checkbutton(root, text='decay', variable = fit_mode_var,
-onvalue = 'decay', offvalue='', font=('Arial', 10))
+onvalue = 'decay', offvalue='')
 decay_mode.grid(column=0, row=1)
 dmp_osc_mode = tk.Checkbutton(root, text='damped osc', variable = fit_mode_var,
-onvalue = 'dmp_osc', offvalue='', font=('Arial', 10))
+onvalue = 'dmp_osc', offvalue='')
 dmp_osc_mode.grid(column=1, row=1)
 both_mode = tk.Checkbutton(root, text='decay+dmp_osc', variable = fit_mode_var,
-onvalue = 'both', offvalue='', font=('Arial', 10))
+onvalue = 'both', offvalue='')
 both_mode.grid(column=2, row=1)
 
 
@@ -48,6 +54,8 @@ include_base_check = tk.Checkbutton(root, text='base', variable=base_var, onvalu
 include_base_check.grid(column=0, row=5)
 fix_irf_check = tk.Checkbutton(root, text='fix_irf', variable=fix_irf_var, onvalue=1, offvalue=0)
 fix_irf_check.grid(column=1, row=5)
+same_t0_check = tk.Checkbutton(root, text='same_t0', variable=same_t0_var, onvalue=1, offvalue=0)
+same_t0_check.grid(column=2, row=5)
 
 # --- Read file to fit
 
@@ -138,6 +146,8 @@ def hide_init_param_option():
 
 hide_init_param_option()
 
+# ready for fitting 
+
 def ready_script():
 
     # hide all
@@ -185,21 +195,58 @@ def ready_script():
         msg.showerror('Error', 'Please select the fitting model before clicking ready button')
         return
 
+# --- check sanity of user option ---
+# --- prevent potential error ---
+
 def check_sanity():
-    if irf_var.get() == 'g' and not (entry_fwhm_G.get()):
-        msg.showerror('Error', 'Please set initial fwhm_G parameter')
+    if not (entry_file_prefix.get()):
+        msg.showerror('Error', 'Please write prefix of filename to fit')
+        return False
+    
+    if not (str_sep_comma.match(entry_file_prefix.get())):
+        msg.showerror('Error', 'Prefix of filename entry should be single word or words seperated by comma')
+        return False
+    
+    if not (entry_num_file.get()):
+        msg.showerror('Error', 'Please write number of file to fit')
+        return False
+    
+    if not(int_sep_comma.match(entry_num_file.get())):
+        msg.showerror('Error', 'Number of file entry should be single integer or integers seperated by comma')
         return False
 
-    if irf_var.get() == 'c' and not (entry_fwhm_L.get()):
-        msg.showerror('Error', 'Please set initial fwhm_L parameter')
-        return False
+    if irf_var.get() == 'g': 
+        if not (entry_fwhm_G.get()):
+            msg.showerror('Error', 'Please set initial fwhm_G parameter')
+            return False
+        if not (entry_fwhm_G.get().isnumeric()):
+            msg.showerror('Error', 'fwhm_G should be single real value')
+            return False
 
-    if irf_var.get() == 'pv' and not ((entry_fwhm_G.get()) or entry_fwhm_L.get()):
-        msg.showerror('Error', 'Please set initial fwhm_G, fwhm_L parameter')
-        return False
+
+    if irf_var.get() == 'c':
+        if not (entry_fwhm_L.get()):
+            msg.showerror('Error', 'Please set initial fwhm_L parameter')
+            return False
+        if not (entry_fwhm_L.get().isnumeric()):
+            msg.showerror('Error', 'fwhm_L should be single real value')
+            return False
+
+    if irf_var.get() == 'pv':
+        if not ((entry_fwhm_G.get()) or entry_fwhm_L.get()):
+            msg.showerror('Error', 'Please set initial fwhm_G, fwhm_L parameter')
+            return False
+        
+        if not (entry_fwhm_G.get().isnumeric() and entry_fwhm_L.get().isnumeric()):
+            msg.showerror('Error', 'both fwhm_G and fwhm_L should be single real value')
+            return False
     
     if not (entry_t0.get()):
         msg.showerror('Error', 'Please set inital time zero parameter')
+        return False
+    
+    if not (float_sep_comma.match(entry_t0.get())):
+        msg.showerror('Error', 'Time zero should be single float or floats seperated by comma')
         return False
     
     if fit_mode_var.get() == 'decay' and not ((entry_tau.get()) or base_var.get()):
@@ -215,6 +262,8 @@ def check_sanity():
         not (((entry_tau.get()) or base_var.get()) and (entry_dmp.get()) and (entry_osc.get())):
         msg.showerror('Error', 'Please set initial tau for decay component and damping, period for damping component')
         return False
+    
+    
 
 
 def run_script():
