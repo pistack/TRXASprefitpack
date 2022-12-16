@@ -1,291 +1,451 @@
 import re
 import tkinter as tk
 import tkinter.messagebox as msg
+import tkinter.filedialog as fd
+import numpy as np
+import matplotlib.pyplot as plt
+from TRXASprefitpack import fit_transient_exp, fit_transient_dmp_osc, fit_transient_both
+
+FITDRIVER = {'decay': fit_transient_exp, 'osc': fit_transient_dmp_osc, 
+'both': fit_transient_both}
 
 float_sep_comma = re.compile('([0-9]+[.]?[0-9]*[,]\s*)*[0-9]+[.]?[0-9]*\s*')
-int_sep_comma = re.compile('([0-9]+[,]\s*)*[0-9]*\s*')
-str_sep_comma = re.compile('(\w+[,]\s*)*\w*\s*')
 
-root = tk.Tk()
-root.title('Fit Tscan Gui')
+class fit_tscan_gui_widgets:
 
-result_window = tk.Tk()
-result_window.title('Fitting Report')
+    def __init__(self):
+        self.root = tk.Tk()
+        self.root.title('Fit Tscan Gui')
+        self.parameter_window = tk.Tk()
+        self.parameter_window.title('Initial fitting parameter')
+        self.report_window = tk.Tk()
+        self.report_window.title('Fitting Report')
 
-canvas = tk.Canvas(result_window, width=300, height=600)
-canvas.pack()
-
-irf_var = tk.StringVar()
-fit_mode_var = tk.StringVar()
-base_var = tk.IntVar()
-fix_irf_var = tk.IntVar()
-same_t0_var = tk.IntVar()
-
-# --- Select fitting model
-
-fit_mode_label = tk.Label(root, text='Select fitting mode', padx=50, pady=10, font=('Arial', 12))
-fit_mode_label.grid(column=0, row=0, columnspan=3)
-decay_mode = tk.Checkbutton(root, text='decay', variable = fit_mode_var,
-onvalue = 'decay', offvalue='')
-decay_mode.grid(column=0, row=1)
-dmp_osc_mode = tk.Checkbutton(root, text='damped osc', variable = fit_mode_var,
-onvalue = 'dmp_osc', offvalue='')
-dmp_osc_mode.grid(column=1, row=1)
-both_mode = tk.Checkbutton(root, text='decay+dmp_osc', variable = fit_mode_var,
-onvalue = 'both', offvalue='')
-both_mode.grid(column=2, row=1)
-
-
-irf_label = tk.Label(root, text='Select Type of irf', padx=50, pady=10, font=('Arial', 12))
-irf_label.grid(column=0, row=2, columnspan=3)
-irf_g = tk.Checkbutton(root, text='gaussian', variable=irf_var, 
-onvalue='g', offvalue='')
-irf_g.grid(column=0, row=3)
-irf_c = tk.Checkbutton(root, text='cauchy', variable=irf_var, 
-onvalue='c', offvalue='')
-irf_c.grid(column=1, row=3)
-irf_pv = tk.Checkbutton(root, text='pseudo voigt', variable=irf_var, 
-onvalue='pv', offvalue='')
-irf_pv.grid(column=2, row=3)
-
-option_label = tk.Label(root, text='Other Options', padx=50, pady=10, font=('Arial', 12))
-option_label.grid(column=0, row=4, columnspan=3)
-include_base_check = tk.Checkbutton(root, text='base', variable=base_var, onvalue=1, offvalue=0)
-include_base_check.grid(column=0, row=5)
-fix_irf_check = tk.Checkbutton(root, text='fix_irf', variable=fix_irf_var, onvalue=1, offvalue=0)
-fix_irf_check.grid(column=1, row=5)
-same_t0_check = tk.Checkbutton(root, text='same_t0', variable=same_t0_var, onvalue=1, offvalue=0)
-same_t0_check.grid(column=2, row=5)
-
-# --- Read file to fit
-
-label_file_path = tk.Label(root, text='Type root directory of file', padx=100, pady=10,
-font=('Arial', 12))
-label_file_path.grid(column=0, row=6, columnspan=3)
-entry_file_path = tk.Entry(root, width=50, bd=5)
-entry_file_path.grid(column=0, row=7, columnspan=3)
-
-label_file_prefix = tk.Label(root, text='Prefix of filename to fit (pre,per,...)',
-padx=100, pady=10, font=('Arial', 12))
-label_file_prefix.grid(column=0, row=8, columnspan=3)
-entry_file_prefix = tk.Entry(root, width=50, bd=5)
-entry_file_prefix.grid(column=0, row=9, columnspan=3)
-
-label_num_file = tk.Label(root, text='Number of file to fit (num1,num2,...)',
-padx=100, pady=10, font=('Arial', 12))
-label_num_file.grid(column=0, row=10, columnspan=3)
-entry_num_file = tk.Entry(root, width=50, bd=5)
-entry_num_file.grid(column=0, row=11, columnspan=3)
-
-# ---- Parameters Depending on fitting Model ----
-
-label_fwhm_G = tk.Label(root, text='fwhm_G (irf)',
-padx=100, pady=10, font=('Arial', 12))
-label_fwhm_G.grid(column=0, row=12)
-entry_fwhm_G = tk.Entry(root, width=10, bd=1)
-entry_fwhm_G.grid(column=0, row=13)
-
-
-
-label_fwhm_L = tk.Label(root, text='fwhm_L (irf)',
-padx=100, pady=10, font=('Arial', 12))
-label_fwhm_L.grid(column=1, row=12)
-entry_fwhm_L = tk.Entry(root, width=10, bd=1)
-entry_fwhm_L.grid(column=1, row=13)
-
-
-
-label_t0 = tk.Label(root, text='Insert initial time zero parameter (t01,t02,...)',
-padx=100, pady=10, font=('Arial', 12))
-label_t0.grid(column=0, row=14, columnspan=3)
-entry_t0 = tk.Entry(root, width=50, bd=5)
-entry_t0.grid(column=0, row=15, columnspan=3)
-
-
-
-label_tau = tk.Label(root, text='Insert initial life time parameter (tau1,tau2,...)',
-padx=100, pady=10, font=('Arial', 12))
-label_tau.grid(column=0, row=16, columnspan=3)
-entry_tau = tk.Entry(root, width=50, bd=5)
-entry_tau.grid(column=0, row=17, columnspan=3)
-
-
-
-label_osc = tk.Label(root, text='Insert initial osc period parameter (T_osc1,T_osc2,...)',
-padx=100, pady=10, font=('Arial', 12))
-label_osc.grid(column=0, row=18, columnspan=3)
-entry_osc = tk.Entry(root, width=50, bd=5)
-entry_osc.grid(column=0, row=19, columnspan=3)
-
-
-
-label_dmp = tk.Label(root, text='Insert initial damping lifetime parameter (dmp1,dmp2,...)',
-padx=100, pady=10, font=('Arial', 12))
-label_dmp.grid(column=0, row=20, columnspan=3)
-entry_dmp = tk.Entry(root, width=50, bd=5)
-entry_dmp.grid(column=0, row=21, columnspan=3)
-
-
-
-# in default options for inital parameters are not shown to user
-
-def hide_init_param_option():
-    label_fwhm_G.grid_remove()
-    entry_fwhm_G.grid_remove()
-    label_fwhm_L.grid_remove()
-    entry_fwhm_L.grid_remove()
-    label_t0.grid_remove()
-    entry_t0.grid_remove()
-    label_tau.grid_remove()
-    entry_tau.grid_remove()
-    label_osc.grid_remove()
-    entry_osc.grid_remove()
-    label_dmp.grid_remove()
-    entry_dmp.grid_remove()
-
-
-hide_init_param_option()
-
-# ready for fitting 
-
-def ready_script():
-
-    # hide all
-    hide_init_param_option()
-
-    # show irf option
-    if irf_var.get() == 'g':
-        label_fwhm_G.grid()
-        entry_fwhm_G.grid()
-    elif irf_var.get() == 'c':
-        label_fwhm_L.grid()
-        entry_fwhm_L.grid()
-    elif irf_var.get() == 'pv':
-        label_fwhm_G.grid()
-        label_fwhm_L.grid()
-        entry_fwhm_G.grid()
-        entry_fwhm_L.grid()
-    else:
-        msg.showerror('Error', 'Please select the type of irf before clicking ready button')
-        return
-
-    
-    # show t0 option
-    label_t0.grid()
-    entry_t0.grid()
-
-    # show initial life time related option
-
-    if fit_mode_var.get() == 'decay':
-        label_tau.grid()
-        entry_tau.grid()
-    elif fit_mode_var.get() == 'dmp_osc':
-        label_osc.grid()
-        entry_osc.grid()
-        label_dmp.grid()
-        entry_dmp.grid()
-    elif fit_mode_var.get() == 'both':
-        label_tau.grid()
-        entry_tau.grid()
-        label_osc.grid()
-        entry_osc.grid()
-        label_dmp.grid()
-        entry_dmp.grid()
-    else:
-        msg.showerror('Error', 'Please select the fitting model before clicking ready button')
-        return
-
-# --- check sanity of user option ---
-# --- prevent potential error ---
-
-def check_sanity():
-    if not (entry_file_prefix.get()):
-        msg.showerror('Error', 'Please write prefix of filename to fit')
-        return False
-    
-    if not (str_sep_comma.match(entry_file_prefix.get())):
-        msg.showerror('Error', 'Prefix of filename entry should be single word or words seperated by comma')
-        return False
-    
-    if not (entry_num_file.get()):
-        msg.showerror('Error', 'Please write number of file to fit')
-        return False
-    
-    if not(int_sep_comma.match(entry_num_file.get())):
-        msg.showerror('Error', 'Number of file entry should be single integer or integers seperated by comma')
-        return False
-
-    if irf_var.get() == 'g': 
-        if not (entry_fwhm_G.get()):
-            msg.showerror('Error', 'Please set initial fwhm_G parameter')
-            return False
-        if not (entry_fwhm_G.get().isnumeric()):
-            msg.showerror('Error', 'fwhm_G should be single real value')
-            return False
-
-
-    if irf_var.get() == 'c':
-        if not (entry_fwhm_L.get()):
-            msg.showerror('Error', 'Please set initial fwhm_L parameter')
-            return False
-        if not (entry_fwhm_L.get().isnumeric()):
-            msg.showerror('Error', 'fwhm_L should be single real value')
-            return False
-
-    if irf_var.get() == 'pv':
-        if not ((entry_fwhm_G.get()) or entry_fwhm_L.get()):
-            msg.showerror('Error', 'Please set initial fwhm_G, fwhm_L parameter')
-            return False
+        # -- define necessary variables
+        self.irf_var = tk.StringVar()
+        self.fit_mode_var = tk.StringVar()
+        self.base_var = tk.IntVar()
+        self.fix_irf_var = tk.IntVar()
+        self.fix_t0_var = tk.IntVar() 
+        self.glb_opt_var = tk.StringVar()
+        self.file_lst = []
         
-        if not (entry_fwhm_G.get().isnumeric() and entry_fwhm_L.get().isnumeric()):
-            msg.showerror('Error', 'both fwhm_G and fwhm_L should be single real value')
-            return False
-    
-    if not (entry_t0.get()):
-        msg.showerror('Error', 'Please set inital time zero parameter')
-        return False
-    
-    if not (float_sep_comma.match(entry_t0.get())):
-        msg.showerror('Error', 'Time zero should be single float or floats seperated by comma')
-        return False
-    
-    if fit_mode_var.get() == 'decay' and not ((entry_tau.get()) or base_var.get()):
-        msg.showerror('Error', 'Please set inital life time parameter')
-        return False
-    
-    if fit_mode_var.get() == 'dmp_osc' and \
-        not ((entry_dmp.get()) and (entry_osc.get())):
-        msg.showerror('Error', 'Please set both initial damping and period parameter')
-        return False
+        # --- fitting model selection window
+        self.fit_mode_label = tk.Label(self.root, text='Select fitting mode', 
+        padx=90, pady=10, font=('Arial', 12))
+        self.fit_mode_label.grid(column=0, row=0, columnspan=3)
+        self.decay_mode = tk.Checkbutton(self.root, text='decay', 
+        variable = self.fit_mode_var, onvalue = 'decay', offvalue='')
+        self.decay_mode.grid(column=0, row=1)
+        self.dmp_osc_mode = tk.Checkbutton(self.root, text='damped osc', 
+        variable = self.fit_mode_var, onvalue = 'dmp_osc', offvalue='')
+        self.dmp_osc_mode.grid(column=1, row=1)
+        self.both_mode = tk.Checkbutton(self.root, text='decay+dmp_osc', 
+        variable = self.fit_mode_var, onvalue = 'both', offvalue='')
+        self.both_mode.grid(column=2, row=1)
 
-    if fit_mode_var.get() == 'both' and \
-        not (((entry_tau.get()) or base_var.get()) and (entry_dmp.get()) and (entry_osc.get())):
-        msg.showerror('Error', 'Please set initial tau for decay component and damping, period for damping component')
-        return False
+        # --- irf model selection window
+        self.irf_label = tk.Label(self.root, text='Select Type of irf', 
+        padx=90, pady=10, font=('Arial', 12))
+        self.irf_label.grid(column=0, row=2, columnspan=3)
+        self.irf_g = tk.Checkbutton(self.root, text='gaussian', variable=self.irf_var, 
+        onvalue='g', offvalue='')
+        self.irf_g.grid(column=0, row=3)
+        self.irf_c = tk.Checkbutton(self.root, text='cauchy', variable=self.irf_var, 
+        onvalue='c', offvalue='')
+        self.irf_c.grid(column=1, row=3)
+        self.irf_pv = tk.Checkbutton(self.root, text='pseudo voigt', variable=self.irf_var, 
+        onvalue='pv', offvalue='')
+        self.irf_pv.grid(column=2, row=3)
+
+        # --- global optimization Algorithm
+        self.glb_opt_label = tk.Label(self.root, text='Global optimization Methods',
+        padx=60, pady=10, font=('Arial', 12))
+        self.glb_opt_label.grid(column=0, row=4, columnspan=2)
+        self.glb_opt_ampgo = tk.Checkbutton(self.root, text='AMPGO', variable=self.glb_opt_var,
+        onvalue='ampgo', offvalue='')
+        self.glb_opt_ampgo.grid(column=0, row=5)
+        self.glb_opt_basin = tk.Checkbutton(self.root, text='Basinhopping', 
+        variable=self.glb_opt_var,
+        onvalue='basinhopping', offvalue='')
+        self.glb_opt_basin.grid(column=1, row=5)
+
+        # --- miscellaneous options
+        self.option_label = tk.Label(self.root, text='Miscellaneous Options', 
+        padx=90, pady=10, font=('Arial', 12))
+        self.option_label.grid(column=0, row=6, columnspan=3)
+        self.include_base_check = tk.Checkbutton(self.root, text='base', 
+        variable=self.base_var, onvalue=1, offvalue=0)
+        self.include_base_check.grid(column=0, row=7)
+        self.fix_irf_check = tk.Checkbutton(self.root, text='fix_irf', 
+        variable=self.fix_irf_var, onvalue=1, offvalue=0)
+        self.fix_irf_check.grid(column=1, row=7)
+        self.fix_t0_check = tk.Checkbutton(self.root, text='fix_t0',
+        variable=self.fix_t0_var, onvalue=1, offvalue=0)
+        self.fix_t0_check.grid(column=2, row=7)
+        
+        # --- Read file to fit
+        self.label_file = tk.Label(self.root, text='Browse Files to fit', 
+        padx=120, pady=10, font=('Arial', 12))
+        self.label_file.grid(column=0, row=8, columnspan=4)
+        self.print_file_num = tk.Canvas(self.root, width=320, height=20, bd=5,
+        bg='white')
+        self.print_file_num.grid(column=0, row=9, columnspan=2)
+        self.button_file = tk.Button(self.root, width=30, bd=5, text='browse',
+        command=self.browse_file)
+        self.button_file.grid(column=2, row=9)
+        self.button_plot = tk.Button(self.root, width=30, bd=5, text='plot',
+        command=self.plot_file)
+        self.button_plot.grid(column=3, row=9)
     
+        self.ready_button = tk.Button(self.root, 
+        text='Ready', command=self.ready_fit,
+        font=('Arial', 12), bg='green', padx=30, pady=10, bd=5, fg='white')
+        self.ready_button.grid(column=0, row=10)
+        
+        self.run_button = tk.Button(self.root, 
+        text='Run', command=self.run_script, 
+        font=('Arial', 12), bg='blue', padx=30, pady=10, bd=5, fg='white')
+        self.run_button.grid(column=1, row=10)
+        
+        self.exit_button = tk.Button(self.root, 
+        text='Exit', command=self.exit_script, 
+        font=('Arial', 12), bg='red', padx=30, pady=10, bd=5, fg='white')
+        self.exit_button.grid(column=2, row=10)
+        
+        # ---- Parameters Depending on fitting Model ----
+        self.label_fwhm_G = tk.Label(self.parameter_window, text='fwhm_G (irf)',
+        padx=30, pady=10, font=('Arial', 12))
+        self.label_fwhm_G.grid(column=0, row=0)
+        self.entry_fwhm_G = tk.Entry(self.parameter_window, width=10, bd=1)
+        self.entry_fwhm_G.grid(column=0, row=1)
+        
+        self.label_fwhm_L = tk.Label(self.parameter_window, text='fwhm_L (irf)',
+        padx=30, pady=10, font=('Arial', 12))
+        self.label_fwhm_L.grid(column=1, row=0)
+        self.entry_fwhm_L = tk.Entry(self.parameter_window, width=10, bd=1)
+        self.entry_fwhm_L.grid(column=1, row=1)
+        
+        self.label_t0 = tk.Label(self.parameter_window, 
+        text='Insert initial time zero parameter (t01,t02,...)',
+        padx=90, pady=10, font=('Arial', 12))
+        self.label_t0.grid(column=0, row=2, columnspan=3)
+        self.entry_t0 = tk.Entry(self.parameter_window, width=90, bd=5)
+        self.entry_t0.grid(column=0, row=3, columnspan=3)
+        
+        self.label_tau = tk.Label(self.parameter_window, 
+        text='Insert initial life time parameter (tau1,tau2,...)',
+        padx=90, pady=10, font=('Arial', 12))
+        self.label_tau.grid(column=0, row=4, columnspan=3)
+        self.entry_tau = tk.Entry(self.parameter_window, width=90, bd=5)
+        self.entry_tau.grid(column=0, row=5, columnspan=3)
+        
+        self.label_osc = tk.Label(self.parameter_window, 
+        text='Insert initial osc period parameter (T_osc1,T_osc2,...)',
+        padx=90, pady=10, font=('Arial', 12))
+        self.label_osc.grid(column=0, row=6, columnspan=3)
+        self.entry_osc = tk.Entry(self.parameter_window, width=90, bd=5)
+        self.entry_osc.grid(column=0, row=7, columnspan=3)
+        
+        self.label_dmp = tk.Label(self.parameter_window, 
+        text='Insert initial damping lifetime parameter (dmp1,dmp2,...)',
+        padx=90, pady=10, font=('Arial', 12))
+        self.label_dmp.grid(column=0, row=8, columnspan=3)
+        self.entry_dmp = tk.Entry(self.root, width=90, bd=5)
+        self.entry_dmp.grid(column=0, row=9, columnspan=3)
+
+        self.hide_init_param_option()
+
+        # --- canvas for fitting Report
+        self.report = tk.Canvas(self.report_window, width=600, height=1200, bg='white')
+        self.root.mainloop()
     
+    # --- Browse root directory of fitting file 
+    def browse_file(self):
+        self.file_lst = fd.askopenfilenames(parent=self.root, title='Choose files', 
+        filetypes=(('any files', '*'), ('text files', '*.txt'), ('data files', '*.dat')))
+        self.print_file_num.delete('all')
+        self.print_file_num.create_text(200, 15, text=f'{len(self.file_lst)} number of files are loaded')
+        self.t = []
+        self.intensity = []
+        self.eps = []
+        for fn in self.file_lst:
+            tmp = np.genfromtxt(fn)
+            self.t.append(tmp[:, 0])
+            self.intensity.append(tmp[:, 1])
+            self.eps.append(tmp[:, 2])
+    
+    def plot_file(self):
+        count = 0
+        for fi, ti, inti, epsi in zip(self.file_lst, self.t, self.intensity, self.eps):
+            plt.figure(count)
+            plt.title(fi.split('/')[-1])
+            plt.errorbar(ti, inti, epsi, marker='o')
+            plt.xlabel('Time Delay')
+            plt.ylabel('Intensity')
+            count = count + 1
+        
+        plt.show()
 
 
-def run_script():
-    canvas.delete('all')
-    if not check_sanity():
+    # --- hide fitting parameter entry
+    def hide_init_param_option(self):
+        # irf option
+        self.label_fwhm_G.grid_remove()
+        self.entry_fwhm_G.grid_remove()
+        self.label_fwhm_L.grid_remove()
+        self.entry_fwhm_L.grid_remove()
+
+        # t0 option
+        self.label_t0.grid_remove()
+        self.entry_t0.grid_remove()
+
+        # tau option
+        self.label_tau.grid_remove()
+        self.entry_tau.grid_remove()
+
+        # osc option
+        self.label_osc.grid_remove()
+        self.entry_osc.grid_remove()
+
+        # dmp option
+        self.label_dmp.grid_remove()
+        self.entry_dmp.grid_remove()
+        
+    # --- prepare to fit 
+    def ready_fit(self):
+            
+        # hide all
+        self.hide_init_param_option()
+            
+        # show irf option
+        if self.irf_var.get() == 'g':
+            self.label_fwhm_G.grid()
+            self.entry_fwhm_G.grid()
+        elif self.irf_var.get() == 'c':
+            self.label_fwhm_L.grid()
+            self.entry_fwhm_L.grid()
+        elif self.irf_var.get() == 'pv':
+            self.label_fwhm_G.grid()
+            self.label_fwhm_L.grid()
+            self.entry_fwhm_G.grid()
+            self.entry_fwhm_L.grid()
+        else:
+            msg.showerror('Error', 
+            'Please select the type of irf before clicking ready button')
+            return
+            
+        # show t0 option
+        self.label_t0.grid()
+        self.entry_t0.grid()
+            
+        # show initial life time related option
+        if self.fit_mode_var.get() == 'decay':
+            self.label_tau.grid()
+            self.entry_tau.grid()
+        elif self.fit_mode_var.get() == 'dmp_osc':
+            self.label_osc.grid()
+            self.entry_osc.grid()
+            self.label_dmp.grid()
+            self.entry_dmp.grid()
+        elif self.fit_mode_var.get() == 'both':
+            self.label_tau.grid()
+            self.entry_tau.grid()
+            self.label_osc.grid()
+            self.entry_osc.grid()
+            self.label_dmp.grid()
+            self.entry_dmp.grid()
+        else:
+            msg.showerror('Error', 
+            'Please select the fitting model before clicking ready button')
         return
-    canvas.create_text(50, 50, text=fit_mode_var.get()+' '+irf_var.get())
+    
+    def handle_irf(self):
+        if self.irf_var.get() == 'g':
+            if self.entry_fwhm_G.get():
+                fwhm_G_init = self.entry_fwhm_G.get()
+                if fwhm_G_init.isnumeric():
+                    fwhm = float(fwhm_G_init)
+                else:
+                    msg.showerror('Error',
+                    'fwhm_G should be single float number.')
+                    return False
+            else:
+                msg.showerror('Error', 'Please enter initial fwhm_G value')
+                return False
+        elif self.irf_var.get() == 'c':
+            if self.entry_fwhm_L.get():
+                fwhm_L_init = self.entry_fwhm_L.get()
+                if fwhm_L_init.isnumeric():
+                    fwhm = float(fwhm_L_init)
+                else:
+                    msg.showerror('Error',
+                    'fwhm_L should be single float number')
+                    return False
+            else:
+                msg.showerror('Error', 'Please enter initial fwhm_L value')
+                return False
+        elif self.irf_var.get() == 'pv':
+            if self.entry_fwhm_G.get() and self.entry_fwhm_L.get():
+                fwhm_G_init = self.entry_fwhm_G.get()
+                fwhm_L_init = self.entry_fwhm_L.get()
+                if fwhm_G_init.isnumeric() and fwhm_L_init.isnumeric():
+                    fwhm = [float(fwhm_G_init), float(fwhm_L_init)]
+                else:
+                    msg.showerror('Error',
+                    'Both fwhm_G and fwhm_L field should be single float number')
+                    return False
+            else:
+                msg.showerror('Error',
+                'Please enter both initial fwhm_G and fwhm_L values')
+                return False
+        return fwhm
+    
+    def handle_t0(self):
+        if self.entry_t0.get():
+            str_t0 = self.entry_t0.get()
+            if float_sep_comma.match(str_t0):
+                t0 = np.array(list(map(float, str_t0.split(','))))
+                if t0.size != len(self.file_lst):
+                    msg.showerror('Error',
+                    'Number of initial time zero should be same as number of files to fit.')
+                    return False
+            else:
+                msg.showerror('Error',
+                'initial time zero should be single float or floats seperated by comma.')
+                return False
+        else:
+            msg.showerror('Error',
+            'Please enter initial time zero for each files')
+            return False
+        return t0
+    
+    def handle_tau(self):
+        if self.entry_tau.get():
+            str_tau = self.entry_tau.get()
+            if float_sep_comma.match(str_tau):
+                tau = np.array(list(map(float, str_tau.split(','))))
+            else:
+                msg.showerror('Error',
+                'initial life time constant tau should be single float or floats seperated by comma.')
+                return False
+        else:
+            if self.base_var:
+                return True
+            else:
+                msg.showerror('Error',
+                'Please enter initial life time constant')
+                return False
+        return tau
+    
+    def handle_osc(self):
+        if self.entry_osc.get():
+            str_osc = self.entry_osc.get()
+            if float_sep_comma.match(str_osc):
+                osc = np.array(list(map(float, str_osc.split(','))))
+            else:
+                msg.showerror('Error',
+                'initial oscillation period should be single float or floats seperated by comma.')
+                return False
+        else:
+            msg.showerror('Error',
+            'Please enter initial oscillation period')
+            return False
+        return osc
 
-def exit_script():
-    result_window.quit()
-    root.quit()
+    def handle_dmp(self):
+        if self.entry_dmp.get():
+            str_dmp = self.entry_dmp.get()
+            if float_sep_comma.match(str_dmp):
+                dmp = np.array(list(map(float, str_dmp.split(','))))
+            else:
+                msg.showerror('Error',
+                'initial oscillation period should be single float or floats seperated by comma.')
+                return False
+        else:
+            msg.showerror('Error',
+            'Please enter initial oscillation period')
+            return False
+        return dmp   
 
-ready_button = tk.Button(root, text='Ready', command=ready_script,
-font=('Arial', 12), bg='green', padx=10, pady=10, bd=5, fg='white')
-ready_button.grid(column=0, row=22)
 
-run_button = tk.Button(root, text='Run', command=run_script, 
-font=('Arial', 12), bg='blue', padx=10, pady=10, bd=5, fg='white')
-run_button.grid(column=1, row=22)
+    
+    def run_script(self):
 
-exit_button = tk.Button(root, text='Exit', command=exit_script, 
-font=('Arial', 12), bg='red', padx=10, pady=10, bd=5, fg='white')
-exit_button.grid(column=2, row=22)
+        self.report.delete('all')
 
-root.mainloop()
+        # set initial fwhm
+        irf = self.irf_var.get()
+        fwhm = self.handle_irf()
+        if not fwhm:
+            return
+
+        # set initial t0
+        t0 = self.handle_t0()
+        if not isinstance(t0, np.ndarray):
+            return
+        
+        # handle fix_irf option
+        bound_fwhm = None
+        if self.fix_irf_var.get():
+            if irf in ['g', 'c']:
+                bound_fwhm = [(fwhm, fwhm)]
+            elif irf == 'pv':
+                bound_fwhm = [(fwhm[0], fwhm[0]),
+                (fwhm[1], fwhm[1])]
+        
+        # handle fix_t0 option
+        bound_t0 = None
+        if self.fix_t0_var.get():
+            bound_t0 = t0.size*[None]
+            
+            for i in range(t0.size):
+                bound_t0[i] = (t0[i], t0[i])
+        
+        dargs = []
+        mode = self.fit_mode_var.get()
+        
+        if mode in ['decay', 'both']:
+            base = self.base_var.get()
+            tau = self.handle_tau()
+            if tau:
+                if not isinstance(tau, np.ndarray):
+                    tau = None
+            else:
+                return
+            dargs.append(tau)
+            if mode == 'decay':
+                dargs.append(base)
+        
+        if mode in ['osc', 'both']:
+            dmp = self.handle_dmp()
+            if not dmp:
+                return
+            osc = self.handle_osc()
+            if not osc:
+                return
+            if dmp.size != osc.size:
+                msg.showerror('Error', 'The number of damping constant and oscillation period should be same')
+                return
+            
+            dargs.append(dmp)
+            dargs.append(osc)
+        
+        if mode == 'both':
+            dargs.append(base)
+        
+        result = FITDRIVER[mode](irf, fwhm, t0, *dargs, method_glb=self.glb_opt_var.get(),
+                                  bound_fwhm=bound_fwhm, bound_t0=bound_t0,
+                                  name_of_dset=self.file_lst, 
+                                  t=self.t, intensity=self.intensity, eps=self.eps)
+        
+        self.report.create_text(400, 800, text=result)
+        
+        return
+    
+    def exit_script(self):
+        self.root.quit()
+        self.parameter_window.quit()
+
+if __name__ == '__main__':
+    fit_tscan_gui_widgets()
