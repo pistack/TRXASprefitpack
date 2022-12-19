@@ -32,10 +32,11 @@ class plot_data_widegets:
 
         # mutable
         self.ax.set_title(f'{master.fname[0]}')
-        self.ln, = self.ax.plot(master.t[0], master.intensity[0], mfc='none', 
+        self.ln, = self.ax.plot(master.t[0], master.intensity[0][:, 0], mfc='none', 
         color='black', marker='o')
-        self.poly = self.ax.fill_between(master.t[0], master.intensity[0]-master.eps[0],
-        master.intensity[0]+master.eps[0], alpha=0.5, color='black')
+        self.poly = self.ax.fill_between(master.t[0], 
+        master.intensity[0][:, 0]-master.eps[0][:, 0],
+        master.intensity[0][:, 0]+master.eps[0][:, 0], alpha=0.5, color='black')
 
         # set canvas
         self.canvas = FigureCanvasTkAgg(self.fig, master=self.top)
@@ -60,11 +61,11 @@ class plot_data_widegets:
 
     def update_plot(self, master, val):
         self.ax.set_title(f'{master.fname[val-1]}')
-        self.ln.set_data(master.t[val-1], master.intensity[val-1])
+        self.ln.set_data(master.t[val-1], master.intensity[val-1][:, 0])
         self.poly.remove()
         self.poly = self.ax.fill_between(master.t[val-1], 
-        master.intensity[val-1]-master.eps[val-1],
-        master.intensity[val-1]+master.eps[val-1], alpha=0.5,
+        master.intensity[val-1][:, 0]-master.eps[val-1][:, 0],
+        master.intensity[val-1][:, 0]+master.eps[val-1][:, 0], alpha=0.5,
         color='black')
         self.canvas.draw()
 
@@ -86,7 +87,6 @@ class plot_fit_widegets:
 
         # residual
         self.ax_res = self.fig.add_subplot(212)
-        self.ax_res.set_title('Residual')
         self.ax_res.set_xlabel('Time Delay')
         self.ax_res.set_ylabel('Residual')
 
@@ -94,30 +94,30 @@ class plot_fit_widegets:
 
         # fit
         self.ax_fit.set_title(f'{master.fname[0]}')
-        self.ln_data, = self.ax_fit.plot(master.t[0], master.intensity[0], mfc='none', 
+        self.ln_data, = self.ax_fit.plot(master.t[0], master.intensity[0][:, 0], mfc='none', 
         color='black', marker='o')
         self.poly_data = self.ax_fit.fill_between(master.t[0], 
-        master.intensity[0]-master.eps[0],
-        master.intensity[0]+master.eps[0], alpha=0.5, color='black')
+        master.intensity[0][:, 0]-master.eps[0][:, 0],
+        master.intensity[0][:, 0]+master.eps[0][:, 0], alpha=0.5, color='black')
         self.ln_fit, = self.ax_fit.plot(master.t[0], master.result['fit'][0][:, 0],
         color='red')
 
         # residual
         if master.fit_mode_var.get() in ['decay', 'osc']:
             self.ln_res, = self.ax_res.plot(master.t[0], 
-            master.intensity[0]-master.result['fit'][0][:, 0],
+            master.intensity[0][:, 0]-master.result['fit'][0][:, 0],
             mfc='none', color='black', marker='o')
             self.poly_res = self.ax_res.fill_between(master.t[0],
-            master.intensity[0]-master.result['fit'][0][:, 0]-master.eps[0],
-            master.intensity[0]-master.result['fit'][0][:, 0]+master.eps[0],
+            master.intensity[0][:, 0]-master.result['fit'][0][:, 0]-master.eps[0][:, 0],
+            master.intensity[0][:, 0]-master.result['fit'][0][:, 0]+master.eps[0][:, 0],
             alpha=0.5, color='black')
         else:
             self.ln_res, = self.ax_res.plot(master.t[0], 
-            master.intensity[0]-master.result['fit_decay'][0][:, 0],
+            master.intensity[0][:, 0]-master.result['fit_decay'][0][:, 0],
             mfc='none', color='black', marker='o')
             self.poly_res = self.ax_res.fill_between(master.t[0],
-            master.intensity[0]-master.result['fit_decay'][0][:, 0]-master.eps[0],
-            master.intensity[0]-master.result['fit_decay'][0][:, 0]+master.eps[0],
+            master.intensity[0][:, 0]-master.result['fit_decay'][0][:, 0]-master.eps[0][:, 0],
+            master.intensity[0][:, 0]-master.result['fit_decay'][0][:, 0]+master.eps[0][:, 0],
             alpha=0.5, color='black')
             self.ln_fit, = self.ax_res.plot(master.t[0], master.result['fit_osc'][0][:, 0],
             color='red')
@@ -149,11 +149,11 @@ class plot_fit_widegets:
 
         # update fitting window
         self.ax_fit.set_title(f'{master.fname[val-1]}')
-        self.ln_data.set_data(master.t[val-1], master.intensity[val-1])
+        self.ln_data.set_data(master.t[val-1], master.intensity[val-1][:, 0])
         self.poly_data.remove()
-        self.poly_data = self.ax.fill_between(master.t[val-1], 
-        master.intensity[val-1]-master.eps[val-1],
-        master.intensity[val-1]+master.eps[val-1], alpha=0.5,
+        self.poly_data = self.ax_fit.fill_between(master.t[val-1], 
+        master.intensity[val-1][:, 0]-master.eps[val-1][:, 0],
+        master.intensity[val-1][:, 0]+master.eps[val-1][:, 0], alpha=0.5,
         color='black')
         self.ln_fit.set_data(master.t[val-1], master.result['fit'][val-1][:, 0])
 
@@ -161,19 +161,19 @@ class plot_fit_widegets:
 
         if master.fit_mode_var.get() in ['decay', 'osc']:
             self.ln_res.set_data(master.t[val-1], 
-            master.intensity[val-1]-master.result['fit'][val-1][:, 0])
+            master.intensity[val-1][:, 0]-master.result['fit'][val-1][:, 0])
             self.poly_res.remove()
             self.poly_res = self.ax_res.fill_between(master.t[val-1],
-            master.intensity[val-1]-master.result['fit'][val-1][:, 0]-master.eps[val-1],
-            master.intensity[val-1]-master.result['fit'][val-1][:, 0]+master.eps[val-1],
+            master.intensity[val-1][:, 0]-master.result['fit'][val-1][:, 0]-master.eps[val-1][:, 0],
+            master.intensity[val-1][:, 0]-master.result['fit'][val-1][:, 0]+master.eps[val-1][:, 0],
             alpha=0.5, color='black')
         else:
             self.ln_res.set_data(master.t[val-1], 
-            master.intensity[val-1]-master.result['fit_decay'][val-1][:, 0])
+            master.intensity[val-1][:, 0]-master.result['fit_decay'][val-1][:, 0])
             self.poly_res.remove()
             self.poly_res = self.ax_res.fill_between(master.t[0],
-            master.intensity[val-1]-master.result['fit_decay'][val-1][:, 0]-master.eps[val-1],
-            master.intensity[val-1]-master.result['fit_decay'][val-1][:, 0]+master.eps[val-1],
+            master.intensity[val-1][:, 0]-master.result['fit_decay'][val-1][:, 0]-master.eps[val-1][:, 0],
+            master.intensity[val-1][:, 0]-master.result['fit_decay'][val-1][:, 0]+master.eps[val-1][:, 0],
             alpha=0.5, color='black')
             self.ln_fit.set_data(master.t[val-1], master.result['fit_osc'][val-1][:, 0])
 
@@ -268,7 +268,7 @@ class fit_tscan_gui_widgets:
         self.button_plot.grid(column=3, row=9)
     
         self.ready_button = tk.Button(self.root, 
-        text='Ready', command=self.ready_fit,
+        text='Parameters', command=self.view_param,
         font=('Arial', 12), bg='green', padx=30, pady=10, bd=5, fg='white')
         self.ready_button.grid(column=0, row=10)
         
@@ -342,8 +342,8 @@ class fit_tscan_gui_widgets:
         for fn in self.file_lst:
             tmp = np.genfromtxt(fn)
             self.t.append(tmp[:, 0])
-            self.intensity.append(tmp[:, 1])
-            self.eps.append(tmp[:, 2])
+            self.intensity.append(tmp[:, 1].reshape((tmp.shape[0], 1)))
+            self.eps.append(tmp[:, 2].reshape((tmp.shape[0], 1)))
             self.fname.append(fn.split('/')[-1])
     
     def plot_file(self):
@@ -379,7 +379,7 @@ class fit_tscan_gui_widgets:
         self.entry_dmp.grid_remove()
         
     # --- prepare to fit 
-    def ready_fit(self):
+    def view_param(self):
             
         # hide all
         self.hide_init_param_option()
@@ -577,7 +577,7 @@ class fit_tscan_gui_widgets:
         if mode in ['decay', 'both']:
             base = self.base_var.get()
             tau = self.handle_tau()
-            if tau:
+            if isinstance(tau, np.ndarray) or tau:
                 if not isinstance(tau, np.ndarray):
                     tau = None
             else:
@@ -603,10 +603,17 @@ class fit_tscan_gui_widgets:
         if mode == 'both':
             dargs.append(base)
         
-        self.result = FITDRIVER[mode](irf, fwhm, t0, *dargs, method_glb=self.glb_opt_var.get(),
+        if not self.glb_opt_var.get():
+            glb_opt = None
+        else:
+            glb_opt = self.glb_opt_var.get()
+        
+        self.result = FITDRIVER[mode](irf, fwhm, t0, *dargs, method_glb=glb_opt,
         bound_fwhm=bound_fwhm, bound_t0=bound_t0,
         name_of_dset=self.fname, t=self.t, intensity=self.intensity, eps=self.eps)
-        self.report.create_text(400, 800, text=self.result)
+
+        self.report.create_text(400, 800, text=self.result) # FIX NEEDED
+
         plot_fit_widegets(self)
         
         return
