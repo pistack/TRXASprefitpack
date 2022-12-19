@@ -76,7 +76,15 @@ class PlotDataWidget:
         master.intensity[val-1][:, 0]-master.eps[val-1][:, 0],
         master.intensity[val-1][:, 0]+master.eps[val-1][:, 0], alpha=0.5,
         color='black')
+        xmin = np.min(master.t[val-1])
+        xmax = np.max(master.t[val-1])
+        ymin = np.min(master.intensity[val-1][:, 0])
+        ymax = np.max(master.intensity[val-1][:, 0])
+        errmax = np.max(master.eps[val-1][:, 0])
+        self.ax.set_xlim((xmin, xmax))
+        self.ax.set_ylim((ymin-5*errmax, ymax+5*errmax))
         self.canvas.draw()
+
 
 class PlotFitWidget:
     '''
@@ -126,7 +134,7 @@ class PlotFitWidget:
             master.intensity[0][:, 0]-master.result['fit'][0][:, 0]+master.eps[0][:, 0],
             alpha=0.5, color='black')
         else:
-            self.ln_fit, = self.ax_res.plot(master.t[0], master.result['fit_osc'][0][:, 0],
+            self.ln_fit_osc, = self.ax_res.plot(master.t[0], master.result['fit_osc'][0][:, 0],
             color='red')
             self.ln_res, = self.ax_res.plot(master.t[0],
             master.intensity[0][:, 0]-master.result['fit_decay'][0][:, 0],
@@ -170,6 +178,13 @@ class PlotFitWidget:
         master.intensity[val-1][:, 0]-master.eps[val-1][:, 0],
         master.intensity[val-1][:, 0]+master.eps[val-1][:, 0], alpha=0.5,
         color='black')
+        xmin = np.min(master.t[val-1])
+        xmax = np.max(master.t[val-1])
+        ymin_fit = np.min(master.intensity[val-1][:, 0])
+        ymax_fit = np.max(master.intensity[val-1][:, 0])
+        errmax = np.max(master.eps[val-1][:, 0])
+        self.ax_fit.set_xlim((xmin, xmax))
+        self.ax_fit.set_ylim((ymin_fit-5*errmax, ymax_fit+5*errmax))
 
         # update residual window
 
@@ -181,8 +196,10 @@ class PlotFitWidget:
             master.intensity[val-1][:, 0]-master.result['fit'][val-1][:, 0]-master.eps[val-1][:, 0],
             master.intensity[val-1][:, 0]-master.result['fit'][val-1][:, 0]+master.eps[val-1][:, 0],
             alpha=0.5, color='black')
+            ymax_res = np.max(master.intensity[val-1][:, 0]-master.result['fit'][val-1][:, 0])
+            ymin_res = np.min(master.intensity[val-1][:, 0]-master.result['fit'][val-1][:, 0])
         else:
-            self.ln_fit.set_data(master.t[val-1], master.result['fit_osc'][val-1][:, 0])
+            self.ln_fit_osc.set_data(master.t[val-1], master.result['fit_osc'][val-1][:, 0])
             self.ln_res.set_data(master.t[val-1],
             master.intensity[val-1][:, 0]-master.result['fit_decay'][val-1][:, 0])
             self.poly_res.remove()
@@ -190,6 +207,11 @@ class PlotFitWidget:
             master.intensity[val-1][:, 0]-master.result['fit_decay'][val-1][:, 0]-master.eps[val-1][:, 0],
             master.intensity[val-1][:, 0]-master.result['fit_decay'][val-1][:, 0]+master.eps[val-1][:, 0],
             alpha=0.5, color='black')
+            ymax_res = np.max(master.intensity[val-1][:, 0]-master.result['fit_decay'][val-1][:, 0])
+            ymin_res = np.min(master.intensity[val-1][:, 0]-master.result['fit_decay'][val-1][:, 0])
+
+        self.ax_res.set_xlim((xmin, xmax))
+        self.ax_res.set_ylim((ymin_res-2*errmax, ymax_res+2*errmax))
 
         self.canvas.draw()
 
@@ -206,13 +228,13 @@ class FitReportWidget:
 
     def update_result(self, result):
         self.report_space.configure(state='normal')
-        self.report_space.delete(1.0)
+        self.report_space.delete(1.0, 'end')
         self.report_space.insert(tk.INSERT, str(result))
         self.report_space.configure(state='disabled')
-    
+
     def mainloop(self):
         self.root.mainloop()
-    
+
     def quit(self):
         self.root.quit()
 
@@ -578,7 +600,7 @@ class FitTscanGuiWidget:
         # check files are loaded
         if len(self.fname) == 0:
             msg.showerror('Error', 'Please read files before fitting')
-
+            return
 
         # set initial fwhm
         irf = self.irf_var.get()
@@ -655,10 +677,9 @@ class FitTscanGuiWidget:
         return
 
     def exit_script(self):
-        self.root.quit()
         self.parameter_window.quit()
         self.fit_report_window.quit()
-        self.root.destroy()
+        self.root.quit()
 
 if __name__ == '__main__':
     FitTscanGuiWidget()
