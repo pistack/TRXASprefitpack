@@ -3,13 +3,182 @@ import tkinter as tk
 import tkinter.messagebox as msg
 import tkinter.filedialog as fd
 import numpy as np
-import matplotlib.pyplot as plt
+from matplotlib.backends.backend_tkagg import (
+    FigureCanvasTkAgg, NavigationToolbar2Tk
+)
+from matplotlib.backend_bases import key_press_handler
+from matplotlib.figure import Figure 
 from TRXASprefitpack import fit_transient_exp, fit_transient_dmp_osc, fit_transient_both
 
 FITDRIVER = {'decay': fit_transient_exp, 'osc': fit_transient_dmp_osc, 
 'both': fit_transient_both}
 
 float_sep_comma = re.compile('([0-9]+[.]?[0-9]*[,]\s*)*[0-9]+[.]?[0-9]*\s*')
+
+class plot_data_widegets:
+    # These codes are based on Matplotlib example "Embedding in Tk"
+
+    def __init__(self, master):
+
+        self.top = tk.Toplevel(master.root)
+        self.top.title('Plot Data')
+
+        self.fig = Figure(figsize=(5, 4), dpi=100)
+
+        # immutable 
+        self.ax = self.fig.add_subplot()
+        self.ax.set_xlabel('Time Delay')
+        self.ax.set_ylabel('Intensity')
+
+        # mutable
+        self.ax.set_title(f'{master.fname[0]}')
+        self.ln, = self.ax.plot(master.t[0], master.intensity[0], mfc='none', 
+        color='black', marker='o')
+        self.poly = self.ax.fill_between(master.t[0], master.intensity[0]-master.eps[0],
+        master.intensity[0]+master.eps[0], alpha=0.5, color='black')
+
+        # set canvas
+        self.canvas = FigureCanvasTkAgg(self.fig, master=self.top)
+        self.canvas.draw()
+
+        self.toolbar = \
+            NavigationToolbar2Tk(self.canvas, self.top, pack_toolbar=False)
+        self.toolbar.update()
+
+        self.canvas.mpl_connect("key_press_event", key_press_handler)
+
+        self.slider_update = tk.Scale(self.top, from_=1, to_=len(master.fname),
+        orient=tk.HORIZONTAL, command=lambda val: self.update_plot(master, int(val)), 
+        label='File index')
+
+        self.slider_update.pack(side=tk.BOTTOM)
+        self.toolbar.pack(side=tk.BOTTOM, fill=tk.X)
+        self.canvas.get_tk_widget().pack(side=tk.TOP, fill=tk.BOTH, expand=True)
+        self.top.mainloop()
+    
+    # --- Update plot when one moves slider
+
+    def update_plot(self, master, val):
+        self.ax.set_title(f'{master.fname[val-1]}')
+        self.ln.set_data(master.t[val-1], master.intensity[val-1])
+        self.poly.remove()
+        self.poly = self.ax.fill_between(master.t[val-1], 
+        master.intensity[val-1]-master.eps[val-1],
+        master.intensity[val-1]+master.eps[val-1], alpha=0.5,
+        color='black')
+        self.canvas.draw()
+
+class plot_fit_widegets:
+    # These codes are based on Matplotlib example "Embedding in Tk"
+
+    def __init__(self, master):
+
+        self.top = tk.Toplevel(master.root)
+        self.top.title('Plot Fitting Result')
+
+        self.fig = Figure(figsize=(12, 4), dpi=100)
+
+        # immutable 
+        # fit
+        self.ax_fit = self.fig.add_subplot(211)
+        self.ax_fit.set_xlabel('Time Delay')
+        self.ax_fit.set_ylabel('Intensity')
+
+        # residual
+        self.ax_res = self.fig.add_subplot(212)
+        self.ax_res.set_title('Residual')
+        self.ax_res.set_xlabel('Time Delay')
+        self.ax_res.set_ylabel('Residual')
+
+        # mutable
+
+        # fit
+        self.ax_fit.set_title(f'{master.fname[0]}')
+        self.ln_data, = self.ax_fit.plot(master.t[0], master.intensity[0], mfc='none', 
+        color='black', marker='o')
+        self.poly_data = self.ax_fit.fill_between(master.t[0], 
+        master.intensity[0]-master.eps[0],
+        master.intensity[0]+master.eps[0], alpha=0.5, color='black')
+        self.ln_fit, = self.ax_fit.plot(master.t[0], master.result['fit'][0][:, 0],
+        color='red')
+
+        # residual
+        if master.fit_mode_var.get() in ['decay', 'osc']:
+            self.ln_res, = self.ax_res.plot(master.t[0], 
+            master.intensity[0]-master.result['fit'][0][:, 0],
+            mfc='none', color='black', marker='o')
+            self.poly_res = self.ax_res.fill_between(master.t[0],
+            master.intensity[0]-master.result['fit'][0][:, 0]-master.eps[0],
+            master.intensity[0]-master.result['fit'][0][:, 0]+master.eps[0],
+            alpha=0.5, color='black')
+        else:
+            self.ln_res, = self.ax_res.plot(master.t[0], 
+            master.intensity[0]-master.result['fit_decay'][0][:, 0],
+            mfc='none', color='black', marker='o')
+            self.poly_res = self.ax_res.fill_between(master.t[0],
+            master.intensity[0]-master.result['fit_decay'][0][:, 0]-master.eps[0],
+            master.intensity[0]-master.result['fit_decay'][0][:, 0]+master.eps[0],
+            alpha=0.5, color='black')
+            self.ln_fit, = self.ax_res.plot(master.t[0], master.result['fit_osc'][0][:, 0],
+            color='red')
+            
+
+
+        # set canvas
+        self.canvas = FigureCanvasTkAgg(self.fig, master=self.top)
+        self.canvas.draw()
+
+        self.toolbar = \
+            NavigationToolbar2Tk(self.canvas, self.top, pack_toolbar=False)
+        self.toolbar.update()
+
+        self.canvas.mpl_connect("key_press_event", key_press_handler)
+
+        self.slider_update = tk.Scale(self.top, from_=1, to_=len(master.fname),
+        orient=tk.HORIZONTAL, command=lambda val: self.update_plot(master, int(val)), 
+        label='File index')
+        
+        self.slider_update.pack(side=tk.BOTTOM)
+        self.toolbar.pack(side=tk.BOTTOM, fill=tk.X)
+        self.canvas.get_tk_widget().pack(side=tk.TOP, fill=tk.BOTH, expand=True)
+        self.top.mainloop()
+    
+    # --- Update plot when one moves slider
+
+    def update_plot(self, master, val):
+
+        # update fitting window
+        self.ax_fit.set_title(f'{master.fname[val-1]}')
+        self.ln_data.set_data(master.t[val-1], master.intensity[val-1])
+        self.poly_data.remove()
+        self.poly_data = self.ax.fill_between(master.t[val-1], 
+        master.intensity[val-1]-master.eps[val-1],
+        master.intensity[val-1]+master.eps[val-1], alpha=0.5,
+        color='black')
+        self.ln_fit.set_data(master.t[val-1], master.result['fit'][val-1][:, 0])
+
+        # update residual window
+
+        if master.fit_mode_var.get() in ['decay', 'osc']:
+            self.ln_res.set_data(master.t[val-1], 
+            master.intensity[val-1]-master.result['fit'][val-1][:, 0])
+            self.poly_res.remove()
+            self.poly_res = self.ax_res.fill_between(master.t[val-1],
+            master.intensity[val-1]-master.result['fit'][val-1][:, 0]-master.eps[val-1],
+            master.intensity[val-1]-master.result['fit'][val-1][:, 0]+master.eps[val-1],
+            alpha=0.5, color='black')
+        else:
+            self.ln_res.set_data(master.t[val-1], 
+            master.intensity[val-1]-master.result['fit_decay'][val-1][:, 0])
+            self.poly_res.remove()
+            self.poly_res = self.ax_res.fill_between(master.t[0],
+            master.intensity[val-1]-master.result['fit_decay'][val-1][:, 0]-master.eps[val-1],
+            master.intensity[val-1]-master.result['fit_decay'][val-1][:, 0]+master.eps[val-1],
+            alpha=0.5, color='black')
+            self.ln_fit.set_data(master.t[val-1], master.result['fit_osc'][val-1][:, 0])
+
+        self.canvas.draw()
+
 
 class fit_tscan_gui_widgets:
 
@@ -28,7 +197,7 @@ class fit_tscan_gui_widgets:
         self.fix_irf_var = tk.IntVar()
         self.fix_t0_var = tk.IntVar() 
         self.glb_opt_var = tk.StringVar()
-        self.file_lst = []
+        self.fname = []
         
         # --- fitting model selection window
         self.fit_mode_label = tk.Label(self.root, text='Select fitting mode', 
@@ -166,6 +335,7 @@ class fit_tscan_gui_widgets:
         filetypes=(('any files', '*'), ('text files', '*.txt'), ('data files', '*.dat')))
         self.print_file_num.delete('all')
         self.print_file_num.create_text(200, 15, text=f'{len(self.file_lst)} number of files are loaded')
+        self.fname = []
         self.t = []
         self.intensity = []
         self.eps = []
@@ -174,18 +344,14 @@ class fit_tscan_gui_widgets:
             self.t.append(tmp[:, 0])
             self.intensity.append(tmp[:, 1])
             self.eps.append(tmp[:, 2])
+            self.fname.append(fn.split('/')[-1])
     
     def plot_file(self):
-        count = 0
-        for fi, ti, inti, epsi in zip(self.file_lst, self.t, self.intensity, self.eps):
-            plt.figure(count)
-            plt.title(fi.split('/')[-1])
-            plt.errorbar(ti, inti, epsi, marker='o')
-            plt.xlabel('Time Delay')
-            plt.ylabel('Intensity')
-            count = count + 1
-        
-        plt.show()
+
+        if len(self.fname) == 0:
+            msg.showerror('Error', 'Please load files')
+        else:
+            plot_data_widegets(self)
 
 
     # --- hide fitting parameter entry
@@ -367,12 +533,15 @@ class fit_tscan_gui_widgets:
             'Please enter initial oscillation period')
             return False
         return dmp   
-
-
     
     def run_script(self):
 
         self.report.delete('all')
+
+        # check files are loaded 
+        if len(self.fname) == 0:
+            msg.showerror('Error', 'Please read files before fitting')
+
 
         # set initial fwhm
         irf = self.irf_var.get()
@@ -434,12 +603,11 @@ class fit_tscan_gui_widgets:
         if mode == 'both':
             dargs.append(base)
         
-        result = FITDRIVER[mode](irf, fwhm, t0, *dargs, method_glb=self.glb_opt_var.get(),
-                                  bound_fwhm=bound_fwhm, bound_t0=bound_t0,
-                                  name_of_dset=self.file_lst, 
-                                  t=self.t, intensity=self.intensity, eps=self.eps)
-        
-        self.report.create_text(400, 800, text=result)
+        self.result = FITDRIVER[mode](irf, fwhm, t0, *dargs, method_glb=self.glb_opt_var.get(),
+        bound_fwhm=bound_fwhm, bound_t0=bound_t0,
+        name_of_dset=self.fname, t=self.t, intensity=self.intensity, eps=self.eps)
+        self.report.create_text(400, 800, text=self.result)
+        plot_fit_widegets(self)
         
         return
     
