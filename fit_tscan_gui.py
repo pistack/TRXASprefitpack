@@ -3,6 +3,7 @@ Test code for the gui wrapper of fit_tscan
 '''
 
 from sys import platform
+import os
 import re
 import tkinter as tk
 import tkinter.messagebox as msg
@@ -14,6 +15,7 @@ from matplotlib.backends.backend_tkagg import NavigationToolbar2Tk
 from matplotlib.backend_bases import key_press_handler
 from matplotlib.figure import Figure
 from TRXASprefitpack import fit_transient_exp, fit_transient_dmp_osc, fit_transient_both
+from TRXASprefitpack import save_TransientResult
 
 FITDRIVER = {'decay': fit_transient_exp, 'osc': fit_transient_dmp_osc,
 'both': fit_transient_both}
@@ -352,12 +354,12 @@ class FitTscanGuiWidget:
         self.save_button = tk.Button(self.root,
         text='Save', command=self.save_script,
         font=(widgetfont, 12), bg='black', padx=30, pady=10, bd=5, fg='white')
-        self.run_button.grid(column=1, row=10)
+        self.save_button.grid(column=2, row=10)
 
         self.exit_button = tk.Button(self.root,
         text='Exit', command=self.exit_script,
         font=(widgetfont, 12), bg='red', padx=30, pady=10, bd=5, fg='white')
-        self.exit_button.grid(column=2, row=10)
+        self.exit_button.grid(column=3, row=10)
 
         # ---- Parameters Depending on fitting Model ----
 
@@ -923,7 +925,7 @@ class FitTscanGuiWidget:
 
         self.result = FITDRIVER[mode](irf, fwhm, t0, *dargs, method_glb=glb_opt,
         **kwargs,
-        name_of_dset=self.fname, t=self.t, intensity=self.intensity, eps=self.eps)
+        name_of_dset=np.array(self.fname), t=self.t, intensity=self.intensity, eps=self.eps)
 
         self.fit_report_window.update_result(self.result)
         PlotFitWidget(self)
@@ -931,7 +933,52 @@ class FitTscanGuiWidget:
         return
     
     def save_script(self):
-        return
+        if self.result is None:
+            msg.showerror('Error', 'Please click save button after click run button')
+            return
+        
+        save_folder = fd.askdirectory()
+        save_h5_name = save_folder + '/' + save_folder.split('/')[-1]
+        save_TransientResult(self.result, save_h5_name)
+        
+        with open(f'{save_folder}/fit_summary.txt', 'w', encoding='utf-8') as f:
+            f.write(str(self.result))
+            
+        for i in range(len(self.result['t'])):
+            coeff_fmt = self.result['eps'][i].shape[1]*['%.8e']
+            fit_fmt = (1+self.result['eps'][i].shape[1])*['%.8e']
+            coeff_header_lst = []
+            fit_header_lst = ['time_delay']
+            res_save = np.vstack(
+                (self.result['t'][i], self.result['res'][i][:, 0], self.result['eps'][i][:, 0])).T
+            np.savetxt(f"{save_folder}/res_{self.result['name_of_dset'][i]}.txt", res_save,
+                       fmt=['%.8e', '%.8e', '%.8e'],
+                       header=f"time_delay \t res_{self.result['name_of_dset'][i]} \t eps")
+            fit_header_lst.append(f"fit_{self.result['name_of_dset'][i]}")
+            coeff_header_lst.append(f"tscan_{self.result['name_of_dset'][i]}")
+            
+            fit_header = '\t'.join(fit_header_lst)
+            coeff_header = '\t'.join(coeff_header_lst)
+            
+            np.savetxt(f"{save_folder}/weight_{self.result['name_of_dset'][i]}.txt", 
+            self.result['c'][i], fmt=coeff_fmt, header=coeff_header)
+            
+            if self.result['model'] in ['dmp_osc', 'both']:
+                np.savetxt(f"{save_folder}/phase_{self.result['name_of_dset'][i]}.txt", 
+                self.result['phase'][i], fmt=coeff_fmt, header=coeff_header)
+            
+            fit_save = np.vstack((self.result['t'][i], self.result['fit'][i].T)).T
+            np.savetxt(f"{save_folder}/fit_{self.result['name_of_dset'][i]}.txt",
+            fit_save, fmt=fit_fmt, header=fit_header)
+            
+            if self.result['model'] == 'both':
+                fit_decay_save = np.vstack((self.result['t'][i], self.result['fit_decay'][i].T)).T
+                np.savetxt(f"{save_folder}/fit_decay_{self.result['name_of_dset'][i]}.txt",
+                fit_decay_save, fmt=fit_fmt, header=fit_header)
+                fit_osc_save = np.vstack(
+                    (self.result['t'][i], self.result['fit_osc'][i].T)).T
+                np.savetxt(f"{save_folder}/fit_osc_{self.result['name_of_dset'][i]}.txt", 
+                fit_osc_save, fmt=fit_fmt, header=fit_header)
 
     def exit_script(self):
         self.parameter_window.quit()
