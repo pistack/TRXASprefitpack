@@ -1,9 +1,12 @@
 '''
-Test code for the gui wrapper of fit_tscan
+fit_tscan_gui:
+Graphical User Interface for fit_tscan utility
+
+:copyright: 2021-2022 by pistack (Junho Lee).
+:license: LGPL3.
 '''
 
 from sys import platform
-import os
 import re
 import tkinter as tk
 import tkinter.messagebox as msg
@@ -985,5 +988,7 @@ class FitTscanGuiWidget:
         self.fit_report_window.quit()
         self.root.quit()
 
-if __name__ == '__main__':
+def fit_tscan_gui():
     FitTscanGuiWidget()
+
+
