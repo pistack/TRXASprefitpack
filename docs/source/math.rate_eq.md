@@ -96,3 +96,7 @@ Then one can deduce chemical or physically meaningful difference absorption coef
 \end{equation*}
 
 Above equation only holds when number of observed exponential decay component and excited species in rate equation are same. 
+
+## Dealing with raising Dynamics 
+
+Consider lower triangular first order dynamics with $y_0 = (1, 0, \dotsc, 0)$ and $\Delta A_0 = 0$. Then the observed signal modeled by such lower triangular first order dynamics (raising Dynamics) can be represented by sum of $ \left (\exp(-k_{i+1} t) - \exp(-k_1 t) \right) *h {IRF}(t)$.

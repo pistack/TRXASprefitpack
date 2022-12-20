@@ -24,7 +24,7 @@ plt.rcParams["figure.figsize"] = (12,9)
 print(TRXASprefitpack.__version__)
 ```
 
-    0.7.0
+    0.6.0
 
 
 ## Define equation -sequential decay-

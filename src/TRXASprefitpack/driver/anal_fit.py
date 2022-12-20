@@ -11,8 +11,9 @@ based on f_test
 import numpy as np
 from scipy.stats import f, norm
 from scipy.optimize import brenth, minimize
-from ..res import res_grad_decay, res_grad_dmp_osc, res_grad_both
+from ..res import res_grad_decay, res_grad_raise, res_grad_dmp_osc, res_grad_both
 from ..res import res_grad_decay_same_t0
+from ..res import res_grad_raise_same_t0
 from ..res import res_grad_dmp_osc_same_t0
 from ..res import res_grad_both_same_t0
 from ..res import res_grad_voigt, res_grad_thy
@@ -142,6 +143,17 @@ def confidence_interval(result, alpha: float) -> CIResult:
         else:
             args = [F_alpha, dfn, dfd, chi2_opt, 0, params, result['bounds'],
             res_grad_decay, result['n_decay'],
+            result['base'], result['irf'], fix_param_idx,
+            result['t'], result['intensity'], result['eps']]
+    elif result['model'] == 'raise':
+        if result['same_t0']:
+            args = [F_alpha, dfn, dfd, chi2_opt, 0, params, result['bounds'],
+            res_grad_raise_same_t0, result['n_decay'],
+            result['base'], result['irf'], fix_param_idx,
+            result['t'], result['intensity'], result['eps']]
+        else:
+            args = [F_alpha, dfn, dfd, chi2_opt, 0, params, result['bounds'],
+            res_grad_raise, result['n_decay'],
             result['base'], result['irf'], fix_param_idx,
             result['t'], result['intensity'], result['eps']]
     elif result['model'] == 'dmp_osc':
