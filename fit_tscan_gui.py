@@ -2,6 +2,7 @@
 Test code for the gui wrapper of fit_tscan
 '''
 
+from sys import platform
 import re
 import tkinter as tk
 import tkinter.messagebox as msg
@@ -19,6 +20,13 @@ FITDRIVER = {'decay': fit_transient_exp, 'osc': fit_transient_dmp_osc,
 
 float_sep_comma = re.compile('([\+\-]?[0-9]+[.]?[0-9]*[,]\s*)*[\+\-]?[0-9]+[.]?[0-9]*\s*')
 isfloat = re.compile('[\+\-]?[0-9]+[.]?[0-9]*\s*')
+
+# check font
+if platform == "linux" or platform == "linux2":
+    widgetfont = 'Liberation Sans'
+else:
+    widgetfont = 'Arial'
+
 
 class PlotDataWidget:
     '''
@@ -248,6 +256,7 @@ class FitTscanGuiWidget:
         self.parameter_window = tk.Tk()
         self.parameter_window.title('Initial fitting parameter')
         self.fit_report_window = FitReportWidget()
+        self.result = None
 
         # -- define necessary variables
         self.irf_var = tk.StringVar()
@@ -255,12 +264,13 @@ class FitTscanGuiWidget:
         self.base_var = tk.IntVar()
         self.fix_irf_var = tk.IntVar()
         self.fix_t0_var = tk.IntVar()
+        self.custom_bd_var = tk.IntVar()
         self.glb_opt_var = tk.StringVar()
         self.fname = []
 
         # --- fitting model selection window
         self.fit_mode_label = tk.Label(self.root, text='Select fitting mode',
-        padx=90, pady=10, font=('Arial', 12))
+        padx=90, pady=10, font=(widgetfont, 12))
         self.fit_mode_label.grid(column=0, row=0, columnspan=3)
         self.decay_mode = tk.Checkbutton(self.root, text='decay',
         variable = self.fit_mode_var, onvalue = 'decay', offvalue='')
@@ -274,7 +284,7 @@ class FitTscanGuiWidget:
 
         # --- irf model selection window
         self.irf_label = tk.Label(self.root, text='Select Type of irf',
-        padx=90, pady=10, font=('Arial', 12))
+        padx=90, pady=10, font=(widgetfont, 12))
         self.irf_label.grid(column=0, row=2, columnspan=3)
         self.irf_g = tk.Checkbutton(self.root, text='gaussian', variable=self.irf_var,
         onvalue='g', offvalue='')
@@ -288,7 +298,7 @@ class FitTscanGuiWidget:
 
         # --- global optimization Algorithm
         self.glb_opt_label = tk.Label(self.root, text='Global optimization Methods',
-        padx=60, pady=10, font=('Arial', 12))
+        padx=60, pady=10, font=(widgetfont, 12))
         self.glb_opt_label.grid(column=0, row=4, columnspan=2)
         self.glb_opt_ampgo = tk.Checkbutton(self.root, text='AMPGO', variable=self.glb_opt_var,
         onvalue='ampgo', offvalue='')
@@ -300,8 +310,8 @@ class FitTscanGuiWidget:
 
         # --- miscellaneous options
         self.option_label = tk.Label(self.root, text='Miscellaneous Options',
-        padx=90, pady=10, font=('Arial', 12))
-        self.option_label.grid(column=0, row=6, columnspan=3)
+        padx=120, pady=10, font=(widgetfont, 12))
+        self.option_label.grid(column=0, row=6, columnspan=4)
         self.include_base_check = tk.Checkbutton(self.root, text='base',
         variable=self.base_var, onvalue=1, offvalue=0)
         self.include_base_check.grid(column=0, row=7)
@@ -311,10 +321,13 @@ class FitTscanGuiWidget:
         self.fix_t0_check = tk.Checkbutton(self.root, text='fix_t0',
         variable=self.fix_t0_var, onvalue=1, offvalue=0)
         self.fix_t0_check.grid(column=2, row=7)
+        self.custom_bd_check = tk.Checkbutton(self.root, text='custom bound',
+        variable=self.custom_bd_var, onvalue=1, offvalue=0)
+        self.custom_bd_check.grid(column=3, row=7)
 
         # --- Read file to fit
         self.label_file = tk.Label(self.root, text='Browse Files to fit',
-        padx=120, pady=10, font=('Arial', 12))
+        padx=120, pady=10, font=(widgetfont, 12))
         self.label_file.grid(column=0, row=8, columnspan=4)
         self.print_file_num = tk.Canvas(self.root, width=320, height=20, bd=5,
         bg='white')
@@ -326,61 +339,165 @@ class FitTscanGuiWidget:
         command=self.plot_file)
         self.button_plot.grid(column=3, row=9)
 
-        self.ready_button = tk.Button(self.root,
+        self.param_button = tk.Button(self.root,
         text='Parameters', command=self.view_param,
-        font=('Arial', 12), bg='green', padx=30, pady=10, bd=5, fg='white')
-        self.ready_button.grid(column=0, row=10)
+        font=(widgetfont, 12), bg='green', padx=30, pady=10, bd=5, fg='white')
+        self.param_button.grid(column=0, row=10)
 
         self.run_button = tk.Button(self.root,
         text='Run', command=self.run_script,
-        font=('Arial', 12), bg='blue', padx=30, pady=10, bd=5, fg='white')
+        font=(widgetfont, 12), bg='blue', padx=30, pady=10, bd=5, fg='white')
+        self.run_button.grid(column=1, row=10)
+
+        self.save_button = tk.Button(self.root,
+        text='Save', command=self.save_script,
+        font=(widgetfont, 12), bg='black', padx=30, pady=10, bd=5, fg='white')
         self.run_button.grid(column=1, row=10)
 
         self.exit_button = tk.Button(self.root,
         text='Exit', command=self.exit_script,
-        font=('Arial', 12), bg='red', padx=30, pady=10, bd=5, fg='white')
+        font=(widgetfont, 12), bg='red', padx=30, pady=10, bd=5, fg='white')
         self.exit_button.grid(column=2, row=10)
 
         # ---- Parameters Depending on fitting Model ----
+
+        # Parameter
+        self.label_paramter = tk.Label(self.parameter_window, text='Paramter',
+        font=(widgetfont, 15), padx=120, pady=10)
+        self.label_paramter.grid(column=0, row=0, columnspan=4)
         self.label_fwhm_G = tk.Label(self.parameter_window, text='fwhm_G (irf)',
-        padx=30, pady=10, font=('Arial', 12))
-        self.label_fwhm_G.grid(column=0, row=0)
+        padx=30, pady=10, font=(widgetfont, 12))
+        self.label_fwhm_G.grid(column=0, row=1)
         self.entry_fwhm_G = tk.Entry(self.parameter_window, width=10, bd=1)
-        self.entry_fwhm_G.grid(column=0, row=1)
+        self.entry_fwhm_G.grid(column=0, row=2)
 
         self.label_fwhm_L = tk.Label(self.parameter_window, text='fwhm_L (irf)',
-        padx=30, pady=10, font=('Arial', 12))
-        self.label_fwhm_L.grid(column=1, row=0)
+        padx=30, pady=10, font=(widgetfont, 12))
+        self.label_fwhm_L.grid(column=1, row=1)
         self.entry_fwhm_L = tk.Entry(self.parameter_window, width=10, bd=1)
-        self.entry_fwhm_L.grid(column=1, row=1)
+        self.entry_fwhm_L.grid(column=1, row=2)
 
         self.label_t0 = tk.Label(self.parameter_window,
         text='Insert initial time zero parameter (t01,t02,...)',
-        padx=90, pady=10, font=('Arial', 12))
-        self.label_t0.grid(column=0, row=2, columnspan=3)
+        padx=90, pady=10, font=(widgetfont, 12))
+        self.label_t0.grid(column=0, row=3, columnspan=3)
         self.entry_t0 = tk.Entry(self.parameter_window, width=90, bd=5)
-        self.entry_t0.grid(column=0, row=3, columnspan=3)
+        self.entry_t0.grid(column=0, row=4, columnspan=3)
 
         self.label_tau = tk.Label(self.parameter_window,
         text='Insert initial life time parameter (tau1,tau2,...)',
-        padx=90, pady=10, font=('Arial', 12))
-        self.label_tau.grid(column=0, row=4, columnspan=3)
+        padx=90, pady=10, font=(widgetfont, 12))
+        self.label_tau.grid(column=0, row=5, columnspan=3)
         self.entry_tau = tk.Entry(self.parameter_window, width=90, bd=5)
-        self.entry_tau.grid(column=0, row=5, columnspan=3)
+        self.entry_tau.grid(column=0, row=6, columnspan=3)
 
         self.label_osc = tk.Label(self.parameter_window,
         text='Insert initial osc period parameter (T_osc1,T_osc2,...)',
-        padx=90, pady=10, font=('Arial', 12))
-        self.label_osc.grid(column=0, row=6, columnspan=3)
+        padx=90, pady=10, font=(widgetfont, 12))
+        self.label_osc.grid(column=0, row=7, columnspan=3)
         self.entry_osc = tk.Entry(self.parameter_window, width=90, bd=5)
-        self.entry_osc.grid(column=0, row=7, columnspan=3)
+        self.entry_osc.grid(column=0, row=8, columnspan=3)
 
         self.label_dmp = tk.Label(self.parameter_window,
         text='Insert initial damping lifetime parameter (dmp1,dmp2,...)',
-        padx=90, pady=10, font=('Arial', 12))
-        self.label_dmp.grid(column=0, row=8, columnspan=3)
+        padx=90, pady=10, font=(widgetfont, 12))
+        self.label_dmp.grid(column=0, row=9, columnspan=3)
         self.entry_dmp = tk.Entry(self.parameter_window, width=90, bd=5)
-        self.entry_dmp.grid(column=0, row=9, columnspan=3)
+        self.entry_dmp.grid(column=0, row=10, columnspan=3)
+
+        # Parameter Bound
+
+        self.label_bound = tk.Label(self.parameter_window, text='Bounds',
+        font=(widgetfont, 15), padx=120, pady=10)
+        self.label_bound.grid(column=0, row=11, columnspan=4)
+
+        # fwhm_G (lower)
+        self.label_bd_l_fwhm_G = tk.Label(self.parameter_window, text='fwhm_G (lower)',
+        padx=30, pady=10, font=(widgetfont, 12))
+        self.label_bd_l_fwhm_G.grid(column=0, row=12)
+        self.entry_bd_l_fwhm_G = tk.Entry(self.parameter_window, width=10, bd=1)
+        self.entry_bd_l_fwhm_G.grid(column=0, row=13)
+
+        # fwhm_G (upper)
+        self.label_bd_u_fwhm_G = tk.Label(self.parameter_window, text='fwhm_G (upper)',
+        padx=30, pady=10, font=(widgetfont, 12))
+        self.label_bd_u_fwhm_G.grid(column=1, row=12)
+        self.entry_bd_u_fwhm_G = tk.Entry(self.parameter_window, width=10, bd=1)
+        self.entry_bd_u_fwhm_G.grid(column=1, row=13)
+
+        # fwhm_L (lower)
+        self.label_bd_l_fwhm_L = tk.Label(self.parameter_window, text='fwhm_L (lower)',
+        padx=30, pady=10, font=(widgetfont, 12))
+        self.label_bd_l_fwhm_L.grid(column=2, row=14)
+        self.entry_bd_l_fwhm_L = tk.Entry(self.parameter_window, width=10, bd=1)
+        self.entry_bd_l_fwhm_L.grid(column=2, row=15)
+
+        # fwhm_L (upper)
+        self.label_bd_u_fwhm_L = tk.Label(self.parameter_window, text='fwhm_L (upper)',
+        padx=30, pady=10, font=(widgetfont, 12))
+        self.label_bd_u_fwhm_L.grid(column=2, row=14)
+        self.entry_bd_u_fwhm_L = tk.Entry(self.parameter_window, width=10, bd=1)
+        self.entry_bd_u_fwhm_L.grid(column=2, row=15)
+
+        # bound time zero
+        self.label_bd_l_t0 = tk.Label(self.parameter_window,
+        text='Lower bound of time zero (t01,t02,...)',
+        padx=60, pady=10, font=(widgetfont, 12))
+        self.label_bd_l_t0.grid(column=0, row=16, columnspan=2)
+        self.entry_bd_l_t0 = tk.Entry(self.parameter_window, width=60, bd=5)
+        self.entry_bd_l_t0.grid(column=0, row=17, columnspan=2)
+
+        self.label_bd_u_t0 = tk.Label(self.parameter_window,
+        text='Upper bound of time zero (t01,t02,...)',
+        padx=60, pady=10, font=(widgetfont, 12))
+        self.label_bd_u_t0.grid(column=2, row=16, columnspan=2)
+        self.entry_bd_u_t0 = tk.Entry(self.parameter_window, width=60, bd=5)
+        self.entry_bd_u_t0.grid(column=2, row=17, columnspan=2)
+
+        # bound tau
+        self.label_bd_l_tau = tk.Label(self.parameter_window,
+        text='Lower bound of life time (tau1,tau2,...)',
+        padx=60, pady=10, font=(widgetfont, 12))
+        self.label_bd_l_tau.grid(column=0, row=18, columnspan=2)
+        self.entry_bd_l_tau = tk.Entry(self.parameter_window, width=60, bd=5)
+        self.entry_bd_l_tau.grid(column=0, row=19, columnspan=2)
+
+        self.label_bd_u_tau = tk.Label(self.parameter_window,
+        text='Upper bound of life time (tau1,tau2,...)',
+        padx=60, pady=10, font=(widgetfont, 12))
+        self.label_bd_u_tau.grid(column=2, row=18, columnspan=2)
+        self.entry_bd_u_tau = tk.Entry(self.parameter_window, width=60, bd=5)
+        self.entry_bd_u_tau.grid(column=2, row=19, columnspan=2)
+
+        # bound osc
+        self.label_bd_l_osc = tk.Label(self.parameter_window,
+        text='Lower bound of osc period (T_osc1,T_osc2,...)',
+        padx=60, pady=10, font=(widgetfont, 12))
+        self.label_bd_l_osc.grid(column=0, row=20, columnspan=2)
+        self.entry_bd_l_osc = tk.Entry(self.parameter_window, width=60, bd=5)
+        self.entry_bd_l_osc.grid(column=0, row=21, columnspan=2)
+
+        self.label_bd_u_osc = tk.Label(self.parameter_window,
+        text='Upper bound of osc period (T_osc1,T_osc2,...)',
+        padx=60, pady=10, font=(widgetfont, 12))
+        self.label_bd_u_osc.grid(column=2, row=20, columnspan=2)
+        self.entry_bd_u_osc = tk.Entry(self.parameter_window, width=60, bd=5)
+        self.entry_bd_u_osc.grid(column=2, row=21, columnspan=2)
+
+        # bound dmp
+        self.label_bd_l_dmp = tk.Label(self.parameter_window,
+        text='Lower bound of osc life time (dmp1,dmp2,...)',
+        padx=60, pady=10, font=(widgetfont, 12))
+        self.label_bd_l_dmp.grid(column=0, row=22, columnspan=2)
+        self.entry_bd_l_dmp = tk.Entry(self.parameter_window, width=60, bd=5)
+        self.entry_bd_l_dmp.grid(column=0, row=23, columnspan=2)
+
+        self.label_bd_u_dmp = tk.Label(self.parameter_window,
+        text='Upper bound of osc life time (dmp1,dmp2,...)',
+        padx=60, pady=10, font=(widgetfont, 12))
+        self.label_bd_u_dmp.grid(column=2, row=22, columnspan=2)
+        self.entry_bd_u_dmp = tk.Entry(self.parameter_window, width=60, bd=5)
+        self.entry_bd_u_dmp.grid(column=2, row=23, columnspan=2)
 
         self.hide_init_param_option()
 
@@ -415,27 +532,60 @@ class FitTscanGuiWidget:
 
     # --- hide fitting parameter entry
     def hide_init_param_option(self):
+        # bound
+        self.label_bound.grid_remove()
+
         # irf option
         self.label_fwhm_G.grid_remove()
         self.entry_fwhm_G.grid_remove()
         self.label_fwhm_L.grid_remove()
         self.entry_fwhm_L.grid_remove()
 
+        self.label_bd_l_fwhm_G.grid_remove()
+        self.label_bd_u_fwhm_G.grid_remove()
+        self.entry_bd_l_fwhm_G.grid_remove()
+        self.entry_bd_u_fwhm_G.grid_remove()
+
+        self.label_bd_l_fwhm_L.grid_remove()
+        self.label_bd_u_fwhm_L.grid_remove()
+        self.entry_bd_l_fwhm_L.grid_remove()
+        self.entry_bd_u_fwhm_L.grid_remove()
+
         # t0 option
         self.label_t0.grid_remove()
         self.entry_t0.grid_remove()
+
+        self.label_bd_l_t0.grid_remove()
+        self.entry_bd_l_t0.grid_remove()
+        self.label_bd_u_t0.grid_remove()
+        self.entry_bd_u_t0.grid_remove()
 
         # tau option
         self.label_tau.grid_remove()
         self.entry_tau.grid_remove()
 
+        self.label_bd_l_tau.grid_remove()
+        self.entry_bd_l_tau.grid_remove()
+        self.label_bd_u_tau.grid_remove()
+        self.entry_bd_u_tau.grid_remove()
+
         # osc option
         self.label_osc.grid_remove()
         self.entry_osc.grid_remove()
 
+        self.label_bd_l_osc.grid_remove()
+        self.entry_bd_l_osc.grid_remove()
+        self.label_bd_u_osc.grid_remove()
+        self.entry_bd_u_osc.grid_remove()
+
         # dmp option
         self.label_dmp.grid_remove()
         self.entry_dmp.grid_remove()
+
+        self.label_bd_l_dmp.grid_remove()
+        self.entry_bd_l_dmp.grid_remove()
+        self.label_bd_u_dmp.grid_remove()
+        self.entry_bd_u_dmp.grid_remove()
 
     # --- prepare to fit
     def view_param(self):
@@ -443,75 +593,114 @@ class FitTscanGuiWidget:
         # hide all
         self.hide_init_param_option()
 
-        # show irf option
-        if self.irf_var.get() == 'g':
-            self.label_fwhm_G.grid()
-            self.entry_fwhm_G.grid()
-        elif self.irf_var.get() == 'c':
-            self.label_fwhm_L.grid()
-            self.entry_fwhm_L.grid()
-        elif self.irf_var.get() == 'pv':
-            self.label_fwhm_G.grid()
-            self.label_fwhm_L.grid()
-            self.entry_fwhm_G.grid()
-            self.entry_fwhm_L.grid()
-        else:
+        if self.custom_bd_var.get():
+            self.label_bound.grid()
+
+        if not self.irf_var.get():
             msg.showerror('Error',
             'Please select the type of irf before clicking ready button')
             return
+
+        # show irf option
+        if self.irf_var.get() in ['g', 'pv']:
+            self.label_fwhm_G.grid()
+            self.entry_fwhm_G.grid()
+
+            if self.custom_bd_var.get():
+                self.label_bd_l_fwhm_G.grid()
+                self.label_bd_u_fwhm_G.grid()
+                self.entry_bd_l_fwhm_G.grid()
+                self.entry_bd_u_fwhm_G.grid()
+        
+        if self.irf_var.get() in ['c', 'pv']:
+            self.label_fwhm_L.grid()
+            self.entry_fwhm_L.grid()
+
+            if self.custom_bd_var.get():
+                self.label_bd_l_fwhm_L.grid()
+                self.label_bd_u_fwhm_L.grid()
+                self.entry_bd_l_fwhm_L.grid()
+                self.entry_bd_u_fwhm_L.grid()
 
         # show t0 option
         self.label_t0.grid()
         self.entry_t0.grid()
 
+        if self.custom_bd_var.get():
+            self.label_bd_l_t0.grid()
+            self.label_bd_u_t0.grid()
+            self.entry_bd_l_t0.grid()
+            self.entry_bd_u_t0.grid()
+
         # show initial life time related option
-        if self.fit_mode_var.get() == 'decay':
-            self.label_tau.grid()
-            self.entry_tau.grid()
-        elif self.fit_mode_var.get() == 'dmp_osc':
-            self.label_osc.grid()
-            self.entry_osc.grid()
-            self.label_dmp.grid()
-            self.entry_dmp.grid()
-        elif self.fit_mode_var.get() == 'both':
-            self.label_tau.grid()
-            self.entry_tau.grid()
-            self.label_osc.grid()
-            self.entry_osc.grid()
-            self.label_dmp.grid()
-            self.entry_dmp.grid()
-        else:
+        if not self.fit_mode_var.get():
             msg.showerror('Error',
             'Please select the fitting model before clicking ready button')
-        return
+            return
 
+        if self.fit_mode_var.get() in ['decay', 'both']:
+            self.label_tau.grid()
+            self.entry_tau.grid()
+
+            if self.custom_bd_var.get():
+                self.label_bd_l_tau.grid()
+                self.label_bd_u_tau.grid()
+                self.entry_bd_l_tau.grid()
+                self.entry_bd_u_tau.grid()
+
+        if self.fit_mode_var.get() in ['osc', 'both']:
+
+            self.label_osc.grid()
+            self.entry_osc.grid()
+
+            self.label_dmp.grid()
+            self.entry_dmp.grid()
+
+            if self.custom_bd_var.get():
+                self.label_bd_l_osc.grid()
+                self.label_bd_u_osc.grid()
+                self.entry_bd_l_osc.grid()
+                self.entry_bd_u_osc.grid()
+                self.label_bd_l_dmp.grid()
+                self.label_bd_u_dmp.grid()
+                self.entry_bd_l_dmp.grid()
+                self.entry_bd_u_dmp.grid()
+    
+    def handle_float(self, entry, entry_name):
+        if entry.get():
+            test = entry.get()
+            if isfloat.match(test):
+                value = float(test)
+            else:
+                msg.showerror('Error',
+                f'{entry_name} should be single float number')
+                return False
+        else:
+            msg.showerror('Error',
+            f'Please click Parameter Button and enter {entry_name}')
+            return False
+        return value
+
+    def handle_float_field(self, entry, entry_name):
+        if entry.get():
+            tst = entry.get()
+            if float_sep_comma.match(tst):
+                value = np.array(list(map(float, tst.split(','))))
+            else:
+                msg.showerror('Error',
+                f'{entry_name} should be single float or floats seperated by comma.')
+                return False
+        else:
+            msg.showerror('Error',
+            f'Please enter {entry_name}')
+            return False
+        return value
+                
     def handle_irf(self):
         if self.irf_var.get() == 'g':
-            if self.entry_fwhm_G.get():
-                fwhm_G_init = self.entry_fwhm_G.get()
-                if isfloat.match(fwhm_G_init):
-                    fwhm = float(fwhm_G_init)
-                else:
-                    msg.showerror('Error',
-                    'fwhm_G should be single float number.')
-                    return False
-            else:
-                msg.showerror('Error',
-                'Please click Parameter button and enter initial fwhm_G value')
-                return False
+            fwhm = self.handle_float(self.entry_fwhm_G, 'fwhm_G')
         elif self.irf_var.get() == 'c':
-            if self.entry_fwhm_L.get():
-                fwhm_L_init = self.entry_fwhm_L.get()
-                if isfloat.match(fwhm_L_init):
-                    fwhm = float(fwhm_L_init)
-                else:
-                    msg.showerror('Error',
-                    'fwhm_L should be single float number')
-                    return False
-            else:
-                msg.showerror('Error',
-                'Please click Parameter button and enter initial fwhm_L value')
-                return False
+            fwhm = self.handle_float(self.entry_fwhm_L, 'fwhm_L')
         elif self.irf_var.get() == 'pv':
             if self.entry_fwhm_G.get() and self.entry_fwhm_L.get():
                 fwhm_G_init = self.entry_fwhm_G.get()
@@ -526,24 +715,18 @@ class FitTscanGuiWidget:
                 msg.showerror('Error',
                 'Please click Parameter button and enter both initial fwhm_G and fwhm_L values')
                 return False
+        else:
+            msg.showerror('Error',
+            'Please select irf model and click paramter button')
         return fwhm
 
     def handle_t0(self):
-        if self.entry_t0.get():
-            str_t0 = self.entry_t0.get()
-            if float_sep_comma.match(str_t0):
-                t0 = np.array(list(map(float, str_t0.split(','))))
-                if t0.size != len(self.file_lst):
-                    msg.showerror('Error',
-                    'Number of initial time zero should be same as number of files to fit.')
-                    return False
-            else:
-                msg.showerror('Error',
-                'initial time zero should be single float or floats seperated by comma.')
-                return False
-        else:
+        t0 = self.handle_float_field(self.entry_t0, 't0')
+        if not isinstance(t0, np.ndarray):
+            return t0
+        if t0.size != len(self.file_lst):
             msg.showerror('Error',
-            'Please enter initial time zero for each files')
+            'Number of initial time zero should be same as number of files to fit.')
             return False
         return t0
 
@@ -566,34 +749,56 @@ class FitTscanGuiWidget:
         return tau
 
     def handle_osc(self):
-        if self.entry_osc.get():
-            str_osc = self.entry_osc.get()
-            if float_sep_comma.match(str_osc):
-                osc = np.array(list(map(float, str_osc.split(','))))
-            else:
-                msg.showerror('Error',
-                'initial oscillation period should be single float or floats seperated by comma.')
-                return False
-        else:
-            msg.showerror('Error',
-            'Please enter initial oscillation period')
-            return False
+        osc = self.handle_float_field(self.entry_osc, 'osc period')
         return osc
 
     def handle_dmp(self):
-        if self.entry_dmp.get():
-            str_dmp = self.entry_dmp.get()
-            if float_sep_comma.match(str_dmp):
-                dmp = np.array(list(map(float, str_dmp.split(','))))
-            else:
-                msg.showerror('Error',
-                'initial oscillation period should be single float or floats seperated by comma.')
-                return False
-        else:
-            msg.showerror('Error',
-            'Please enter initial oscillation period')
-            return False
+        dmp = self.handle_float_field(self.entry_dmp, 'dmp life time')
         return dmp
+    
+    def handle_bd_irf(self):
+        bound_fwhm = None
+        if self.irf_var.get() in ['g','pv']:
+            bd_l_fwhm_G = self.handle_float(self.entry_bd_l_fwhm_G, 'fwhm_G (lower)')
+            if not bd_l_fwhm_G:
+                return None
+            bd_u_fwhm_G = self.handle_float(self.entry_bd_u_fwhm_G, 'fwhm_G (upper)')
+            if not bd_u_fwhm_G:
+                return None
+            bound_fwhm_G = (bd_l_fwhm_G, bd_u_fwhm_G)
+        if self.irf_var.get() in ['c', 'pv']:
+            bd_l_fwhm_L = self.handle_float(self.entry_bd_l_fwhm_L, 'fwhm_L (lower)')
+            if not bd_l_fwhm_L:
+                return None
+            bd_u_fwhm_L = self.handle_float(self.entry_bd_u_fwhm_L, 'fwhm_L (upper)')
+            if not bd_u_fwhm_L:
+                return None
+            bound_fwhm_L = (bd_l_fwhm_L, bd_u_fwhm_L)
+        
+        if self.irf_var.get() == 'g':
+            bound_fwhm = [bound_fwhm_G]
+        elif self.irf_var.get() == 'c':
+            bound_fwhm = [bound_fwhm_L]
+        elif self.irf_var.get() == 'pv':
+            bound_fwhm = [bound_fwhm_G, bound_fwhm_L]
+        return bound_fwhm
+
+    def handle_bd_field(self, param, entry_bd_l, entry_bd_u, entry_name):
+        bd_l = self.handle_float_field(entry_bd_l, f'{entry_name} (lower)')
+        if not isinstance(bd_l, np.ndarray):
+            return None
+        bd_u = self.handle_float_field(entry_bd_u, f'{entry_name} (upper)')
+        if not isinstance(bd_u, np.ndarray):
+            return None
+        
+        if bd_l.size != bd_u.size:
+            msg.showerror('Error', 'The size of lower and upper bound should be same')
+            return None
+        if bd_l.size != param.size:
+            msg.showerror('Error', 'The size of bound should be same as size of initial parameter')
+            return None
+
+        return list(zip(bd_l, bd_u))
 
     def run_script(self):
 
@@ -601,36 +806,57 @@ class FitTscanGuiWidget:
         if len(self.fname) == 0:
             msg.showerror('Error', 'Please read files before fitting')
             return
+        
+        dargs = []
+        kwargs_key = []
+        kwargs_val = []
+        kwargs = {}
+
+        bound_fwhm = None
+        bound_t0 = None
+        bound_tau = None
+        bound_dmp = None
+        bound_osc = None
 
         # set initial fwhm
         irf = self.irf_var.get()
         fwhm = self.handle_irf()
         if not fwhm:
             return
+        # set bound fwhm
+        if self.custom_bd_var.get():
+            bound_fwhm = self.handle_bd_irf()
+        kwargs_key.append('bound_fwhm')
 
         # set initial t0
         t0 = self.handle_t0()
         if not isinstance(t0, np.ndarray):
             return
+        
+        if self.custom_bd_var.get():
+            bound_t0 = self.handle_bd_field(t0, self.entry_bd_l_t0,
+        self.entry_bd_u_t0, 'time zero')
+        kwargs_key.append('bound_t0')
 
         # handle fix_irf option
-        bound_fwhm = None
         if self.fix_irf_var.get():
             if irf in ['g', 'c']:
                 bound_fwhm = [(fwhm, fwhm)]
             elif irf == 'pv':
                 bound_fwhm = [(fwhm[0], fwhm[0]),
                 (fwhm[1], fwhm[1])]
+        
+        kwargs_val.append(bound_fwhm)
 
         # handle fix_t0 option
-        bound_t0 = None
         if self.fix_t0_var.get():
             bound_t0 = t0.size*[None]
 
             for i in range(t0.size):
                 bound_t0[i] = (t0[i], t0[i])
+        
+        kwargs_val.append(bound_t0)
 
-        dargs = []
         mode = self.fit_mode_var.get()
 
         if mode in ['decay', 'both']:
@@ -639,9 +865,17 @@ class FitTscanGuiWidget:
             if isinstance(tau, np.ndarray) or tau:
                 if not isinstance(tau, np.ndarray):
                     tau = None
+                else:
+                    if self.custom_bd_var.get():
+                        bound_tau = self.handle_bd_field(tau,
+                        self.entry_bd_l_tau, self.entry_bd_u_tau,
+                        'tau')
+                    kwargs_key.append('bound_tau')
+                    kwargs_val.append(bound_tau)
             else:
                 return
             dargs.append(tau)
+
             if mode == 'decay':
                 dargs.append(base)
 
@@ -655,6 +889,23 @@ class FitTscanGuiWidget:
             if dmp.size != osc.size:
                 msg.showerror('Error', 'The number of damping constant and oscillation period should be same')
                 return
+            
+            if self.custom_bd_var.get():
+                bound_dmp = self.handle_bd_field(dmp, self.entry_bd_l_dmp,
+                self.entry_bd_u_dmp, 'dmp life time')
+                bound_osc = self.handle_bd_field(osc, self.entry_bd_l_osc,
+                self.entry_bd_u_osc, 'osc period')
+            
+            if mode == 'osc':
+                kwargs_key.append('bound_tau')
+                kwargs_val.append(bound_dmp)
+                kwargs_key.append('bound_period')
+                kwargs_val.append(bound_osc)
+            else:
+                kwargs_key.append('bound_tau_osc')
+                kwargs_val.append(bound_dmp)
+                kwargs_key.append('bound_period_osc')
+                kwargs_val.append(bound_osc)
 
             dargs.append(dmp)
             dargs.append(osc)
@@ -666,14 +917,20 @@ class FitTscanGuiWidget:
             glb_opt = None
         else:
             glb_opt = self.glb_opt_var.get()
+        
+        for k,v in zip(kwargs_key, kwargs_val):
+            kwargs[k] = v
 
         self.result = FITDRIVER[mode](irf, fwhm, t0, *dargs, method_glb=glb_opt,
-        bound_fwhm=bound_fwhm, bound_t0=bound_t0,
+        **kwargs,
         name_of_dset=self.fname, t=self.t, intensity=self.intensity, eps=self.eps)
 
         self.fit_report_window.update_result(self.result)
         PlotFitWidget(self)
 
+        return
+    
+    def save_script(self):
         return
 
     def exit_script(self):
