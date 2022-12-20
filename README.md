@@ -12,6 +12,8 @@
 
 stable version:  0.7.0.1
 
+current version: 0.7.1
+
 current development version: 0.8.dev
 
 Copyright: (C) 2021-2022  Junho Lee (@pistack) (Email: pistack@yonsei.ac.kr)
@@ -31,6 +33,7 @@ Licence: LGPL3
 * Fit Utility
   1. fit_static: fitting sum of voigt component or voigt broadened experimental spectrum with experimental static spectrum
   2. fit_tscan: Find lifetime constants or oscillation period from experimental time delay spectrum
+  3. fit_tscan_gui: GUI wrapper for fit_tscan utility (New! in 0.7.1)
 
 ### Libraries
 
