@@ -19,13 +19,15 @@ from pathlib import Path
 import argparse
 import numpy as np
 import matplotlib.pyplot as plt
+from ..res import set_bound_tau
 from ..driver import TransientResult, save_TransientResult
-from ..driver import fit_transient_exp, fit_transient_dmp_osc, fit_transient_both
+from ..driver import fit_transient_exp, fit_transient_raise
+from ..driver import fit_transient_dmp_osc, fit_transient_both
 from .misc import read_data
 
 plt.rcParams['figure.figsize'] = (10, 5)
 
-FITDRIVER = {'decay': fit_transient_exp,
+FITDRIVER = {'decay': fit_transient_exp, 'raise': fit_transient_raise,
              'osc': fit_transient_dmp_osc, 'both': fit_transient_both}
 
 
@@ -134,7 +136,7 @@ def plot_TransientResult(result: TransientResult, same_t0: bool, save_fig: Optio
             sub2.legend()
             sub2.set_xlim(-10*result['fwhm']+t0, 20*result['fwhm']+t0)
             sub3 = fig.add_subplot(223)
-            if result['model'] in ['decay', 'osc']:
+            if result['model'] in ['decay', 'raise', 'osc']:
                 sub3.errorbar(result['t'][i], result['res'][i][:, j],
                               result['eps'][i][:, j], marker='o', mfc='none',
                               label=f'res {title}', linestyle='none', color='black')
@@ -147,7 +149,7 @@ def plot_TransientResult(result: TransientResult, same_t0: bool, save_fig: Optio
             sub3.legend()
 
             sub4 = fig.add_subplot(224)
-            if result['model'] in ['decay', 'osc']:
+            if result['model'] in ['decay', 'raise', 'osc']:
                 sub4.errorbar(result['t'][i], result['res'][i][:, j],
                               result['eps'][i][:, j], marker='o', mfc='none',
                               label=f'res {title}', linestyle='none', color='black')
@@ -170,8 +172,9 @@ def plot_TransientResult(result: TransientResult, same_t0: bool, save_fig: Optio
 description = '''
 fit tscan: fitting experimental time trace spectrum data with the convolution of the sum of
 1. exponential decay (mode = decay)
-2. damped oscillation (mode = osc)
-3. exponential decay, damped oscillation (mode=both)
+2. raise model (mode = raise)
+3. damped oscillation (mode = osc)
+4. exponential decay, damped oscillation (mode=both)
 and irf function
 There are three types of irf function (gaussian, cauchy, pseudo voigt)
 To calculate the contribution of each life time component, it solve least linear square problem via scipy linalg lstsq module.
@@ -185,7 +188,7 @@ epilog = '''
 4. if you set shape of irf to pseudo voigt (pv), then you should provide two full width at half maximum
    value for gaussian and cauchy parts, respectively.
 5. If you did not set tau and `mode=decay` then `--no_base` option is discouraged.
-6. If you set `mode=decay` then any parameter whoose subscript is `osc` is discarded (i.e. tau_osc, period_osc).
+6. If you set `mode=decay or raise` then any parameter whose subscript is `osc` is discarded (i.e. tau_osc, period_osc).
 7. If you set `mode=osc` then `tau` parameter is discarded. Also, baseline feature is not included in fitting function.
 8. The number of tau_osc and period_osc parameter should be same
 9. If you set `mode=both` then you should set `tau`, `tau_osc` and `period_osc`. However the number of `tau` and `tau_osc` need not to be same.
@@ -194,6 +197,7 @@ epilog = '''
 mode_help = '''
 Mode of fitting
  `decay`: fitting with the sum of the convolution of exponential decay and instrumental response function
+ `raise` : fitting with the sum of the convolution of raise model and instrumental response function
  `osc`: fitting with the sum of the convolution of damped oscillation and instrumental response function
  `both`: fitting with the sum of both decay and osc
 '''
@@ -232,7 +236,7 @@ def fit_tscan():
     parser = argparse.ArgumentParser(formatter_class=tmp,
                                      description=description,
                                      epilog=epilog)
-    parser.add_argument('--mode', default='decay', choices=['decay', 'osc', 'both'],
+    parser.add_argument('--mode', default='decay', choices=['decay', 'raise', 'osc', 'both'],
                         help=mode_help)
     parser.add_argument('--irf', default='g', choices=['g', 'c', 'pv'],
                         help=irf_help)
@@ -263,6 +267,8 @@ def fit_tscan():
                         help='fix irf parameter (fwhm_G, fwhm_L) during fitting process')
     parser.add_argument('--fix_t0', action='store_true',
                         help='fix time zero parameter during fitting process.')
+    parser.add_argument('--fix_raise', action='store_true',
+                        help='fix raise time constant [mode: raise]')
     parser.add_argument('--method_glb', choices=['basinhopping', 'ampgo'],
                         help=method_glb_help)
     parser.add_argument('-o', '--outdir', default='out',
@@ -336,9 +342,10 @@ def fit_tscan():
         bound_t0 = t0_init.size*[None]
         for i in range(t0_init.size):
             bound_t0[i] = (t0_init[i], t0_init[i])
+
     dargs = []
     base = False
-    if args.mode in ['decay', 'both']:
+    if args.mode in ['decay', 'raise', 'both']:
         if args.tau is None:
             base = True
             tau_init = None
@@ -346,7 +353,7 @@ def fit_tscan():
             tau_init = np.array(args.tau)
             base = args.no_base
         dargs.append(tau_init)
-        if args.mode == 'decay':
+        if args.mode in ['decay', 'raise']:
             dargs.append(base)
     if args.mode in ['osc', 'both']:
         tau_osc_init = np.array(args.tau_osc)
@@ -357,8 +364,16 @@ def fit_tscan():
     if args.mode == 'both':
         dargs.append(base)
 
+    bound_tau = None
+    if args.fix_raise and args.mode == 'raise':
+        bound_tau = []
+        for tau in tau_init:
+            bound_tau.append(set_bound_tau(tau, fwhm_init))
+        bound_tau[0] = (tau_init[0], tau_init[0])
+
     result = FITDRIVER[args.mode](irf, fwhm_init, t0_init, *dargs, method_glb=args.method_glb,
-                                  bound_fwhm=bound_fwhm, bound_t0=bound_t0, same_t0=args.same_t0,
+                                  bound_fwhm=bound_fwhm, bound_t0=bound_t0, bound_tau=bound_tau,
+                                  same_t0=args.same_t0,
                                   name_of_dset=prefix, t=t, intensity=intensity, eps=eps)
 
     save_TransientResult(result, args.outdir)

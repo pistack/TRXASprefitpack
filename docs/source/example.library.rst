@@ -11,6 +11,7 @@ You can download jupyter notebook example from `TRXASprefitpack-example <https:/
    Dmp_Osc_Conv_IRF
    Rate_Eq
    Fit_Transient_Exp
+   Fit_Transient_Raise
    Fit_Transient_Both
    Fit_Static_voigt
    Fit_Static_thy
