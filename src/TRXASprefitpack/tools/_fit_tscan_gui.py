@@ -237,6 +237,7 @@ class FitReportWidget:
         self.root.title('Fitting Report')
         self.report_space = sc.ScrolledText(self.root,
         width = 80, height = 40)
+        self.report_space.configure(state='disabled')
         self.report_space.grid(column=0)
 
     def update_result(self, result):
