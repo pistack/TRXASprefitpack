@@ -17,8 +17,8 @@ from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
 from matplotlib.backends.backend_tkagg import NavigationToolbar2Tk
 from matplotlib.backend_bases import key_press_handler
 from matplotlib.figure import Figure
-from TRXASprefitpack import fit_transient_exp, fit_transient_dmp_osc, fit_transient_both
-from TRXASprefitpack import save_TransientResult
+from ..driver import fit_transient_exp, fit_transient_dmp_osc, fit_transient_both
+from ..driver import save_TransientResult
 
 FITDRIVER = {'decay': fit_transient_exp, 'osc': fit_transient_dmp_osc,
 'both': fit_transient_both}
