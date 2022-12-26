@@ -17,8 +17,8 @@ from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
 from matplotlib.backends.backend_tkagg import NavigationToolbar2Tk
 from matplotlib.backend_bases import key_press_handler
 from matplotlib.figure import Figure
-from TRXASprefitpack import calc_eta, calc_fwhm
-from TRXASprefitpack import dads
+from ..mathfun import calc_eta, calc_fwhm
+from ..driver import dads
 
 float_sep_comma = re.compile('([\+\-]?[0-9]+[.]?[0-9]*[,]\s*)*[\+\-]?[0-9]+[.]?[0-9]*\s*')
 isfloat = re.compile('[\+\-]?[0-9]+[.]?[0-9]*\s*')
