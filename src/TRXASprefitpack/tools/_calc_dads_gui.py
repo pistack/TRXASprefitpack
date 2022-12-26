@@ -17,8 +17,8 @@ from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
 from matplotlib.backends.backend_tkagg import NavigationToolbar2Tk
 from matplotlib.backend_bases import key_press_handler
 from matplotlib.figure import Figure
-from ..mathfun import calc_eta, calc_fwhm
-from ..driver import dads
+from TRXASprefitpack import calc_eta, calc_fwhm, solve_seq_model
+from TRXASprefitpack import dads, sads
 
 float_sep_comma = re.compile('([\+\-]?[0-9]+[.]?[0-9]*[,]\s*)*[\+\-]?[0-9]+[.]?[0-9]*\s*')
 isfloat = re.compile('[\+\-]?[0-9]+[.]?[0-9]*\s*')
@@ -221,56 +221,69 @@ class CalcDADSGuiWidget:
         # -- define necessary variables
         self.irf_var = tk.StringVar()
         self.base_var = tk.IntVar()
+        self.mode_var = tk.StringVar()
         self.escan_file = None
         self.time_file = None
         self.eps_file = None
 
+        # --- Modes
+
+        self.label_mode = tk.Label(self.root, text='Select Calculation Mode',
+        padx=60, pady=10, font=(widgetfont, 12))
+        self.label_mode.grid(column=0, row=0, columnspan=2)
+        self.dads_mode = tk.Checkbutton(self.root, text='DADS', variable=self.mode_var,
+        onvalue='dads', offvalue='')
+        self.dads_mode.grid(column=0, row=1)
+        self.eads_mode = tk.Checkbutton(self.root, text='EADS', variable=self.mode_var,
+        onvalue='eads', offvalue='')
+        self.eads_mode.grid(column=0, row=2)
+
         # --- irf model selection window
         self.irf_label = tk.Label(self.root, text='Select Type of irf',
         padx=90, pady=10, font=(widgetfont, 12))
-        self.irf_label.grid(column=0, row=2, columnspan=3)
+        self.irf_label.grid(column=0, row=3, columnspan=3)
         self.irf_g = tk.Checkbutton(self.root, text='gaussian', variable=self.irf_var,
         onvalue='g', offvalue='')
-        self.irf_g.grid(column=0, row=3)
+        self.irf_g.grid(column=0, row=4)
         self.irf_c = tk.Checkbutton(self.root, text='cauchy', variable=self.irf_var,
         onvalue='c', offvalue='')
-        self.irf_c.grid(column=1, row=3)
+        self.irf_c.grid(column=1, row=4)
         self.irf_pv = tk.Checkbutton(self.root, text='pseudo voigt', variable=self.irf_var,
         onvalue='pv', offvalue='')
-        self.irf_pv.grid(column=2, row=3)
+        self.irf_pv.grid(column=2, row=4)
 
         # --- SVD options
         self.option_label = tk.Label(self.root, text='SVD Options',
         padx=90, pady=10, font=(widgetfont, 12))
-        self.option_label.grid(column=0, row=4, columnspan=3)
+        self.option_label.grid(column=0, row=5, columnspan=3)
         self.label_cond_num = tk.Label(self.root, text='Conditional Number',
         padx=60, pady=10, font=(widgetfont, 12))
-        self.label_cond_num.grid(column=0, row=5, columnspan=2)
+        self.label_cond_num.grid(column=0, row=6, columnspan=2)
         self.entry_cond_num = tk.Entry(self.root, width=10)
-        self.entry_cond_num.grid(column=2, row=5)
+        self.entry_cond_num.grid(column=2, row=6)
         self.entry_cond_num.insert(0, '0')
 
         # --- miscellaneous options
         self.option_label = tk.Label(self.root, text='Miscellaneous Options',
         padx=120, pady=10, font=(widgetfont, 12))
-        self.option_label.grid(column=0, row=6, columnspan=4)
+        self.option_label.grid(column=0, row=7, columnspan=4)
         self.include_base_check = tk.Checkbutton(self.root, text='base',
         variable=self.base_var, onvalue=1, offvalue=0)
-        self.include_base_check.grid(column=0, row=7)
+        self.include_base_check.grid(column=0, row=8)
 
         # --- Read file to fit
         self.label_file = tk.Label(self.root, text='Browse Files',
         padx=120, pady=10, font=(widgetfont, 12))
-        self.label_file.grid(column=0, row=8, columnspan=4)
+        self.label_file.grid(column=0, row=9, columnspan=4)
         self.print_file_num = tk.Canvas(self.root, width=320, height=20, bd=5,
         bg='white')
-        self.print_file_num.grid(column=0, row=9, columnspan=2)
+        self.print_file_num.grid(column=0, row=10, columnspan=2)
         self.button_file = tk.Button(self.root, width=30, bd=5, text='browse',
         command=self.browse_file)
-        self.button_file.grid(column=2, row=9)
+        self.button_file.grid(column=2, row=10)
         self.button_plot = tk.Button(self.root, width=30, bd=5, text='plot',
         command=self.plot_file)
-        self.button_plot.grid(column=3, row=9)
+        self.button_plot.grid(column=3, row=10)
 
         # --- Parameters
         # 1. fwhm of irf function
@@ -279,32 +292,32 @@ class CalcDADSGuiWidget:
 
         self.label_paramter = tk.Label(self.root, text='Parameter',
         font=(widgetfont, 15), padx=90, pady=10)
-        self.label_paramter.grid(column=0, row=10, columnspan=3)
+        self.label_paramter.grid(column=0, row=11, columnspan=3)
         self.label_fwhm_G = tk.Label(self.root, text='fwhm_G (irf)',
         padx=30, pady=10, font=(widgetfont, 12))
-        self.label_fwhm_G.grid(column=0, row=11)
+        self.label_fwhm_G.grid(column=0, row=12)
         self.entry_fwhm_G = tk.Entry(self.root, width=10, bd=1)
-        self.entry_fwhm_G.grid(column=0, row=12)
+        self.entry_fwhm_G.grid(column=0, row=13)
 
         self.label_fwhm_L = tk.Label(self.root, text='fwhm_L (irf)',
         padx=30, pady=10, font=(widgetfont, 12))
-        self.label_fwhm_L.grid(column=1, row=11)
+        self.label_fwhm_L.grid(column=1, row=12)
         self.entry_fwhm_L = tk.Entry(self.root, width=10, bd=1)
-        self.entry_fwhm_L.grid(column=1, row=12)
+        self.entry_fwhm_L.grid(column=1, row=13)
 
         self.label_t0 = tk.Label(self.root,
         text='t0 (escan)',
         padx=30, pady=10, font=(widgetfont, 12))
-        self.label_t0.grid(column=2, row=11)
+        self.label_t0.grid(column=2, row=12)
         self.entry_t0 = tk.Entry(self.root, width=10, bd=1)
-        self.entry_t0.grid(column=2, row=12)
+        self.entry_t0.grid(column=2, row=13)
 
         self.label_tau = tk.Label(self.root,
         text='Insert life time parameter (tau1,tau2,...)',
         padx=90, pady=10, font=(widgetfont, 12))
-        self.label_tau.grid(column=0, row=13, columnspan=3)
+        self.label_tau.grid(column=0, row=14, columnspan=3)
         self.entry_tau = tk.Entry(self.root, width=90, bd=5)
-        self.entry_tau.grid(column=0, row=14, columnspan=3)
+        self.entry_tau.grid(column=0, row=15, columnspan=3)
 
         # -- Buttons
 
@@ -350,7 +363,7 @@ class CalcDADSGuiWidget:
 
     def plot_file(self):
 
-        if self.escan_file is None or self.time_file is None:
+        if not self.escan_file or not self.time_file:
             msg.showerror('Error', 'Please load escan matrix file and time delay array file')
         else:
             PlotDataWidget(self)
@@ -435,7 +448,7 @@ class CalcDADSGuiWidget:
         return tau
     
     def svd_script(self):
-        if self.escan_file and self.time_file:
+        if not self.escan_file and not self.time_file:
             msg.showerror('Error', 
             'Please load escan matrix file and time delay array file')
         else:
@@ -445,7 +458,7 @@ class CalcDADSGuiWidget:
     def run_script(self):
 
         # check files are loaded
-        if self.escan_file and self.time_file:
+        if not self.escan_file and not self.time_file:
             msg.showerror('Error', 
             'Please load escan matrix file and time delay array file')
             return
@@ -477,9 +490,24 @@ class CalcDADSGuiWidget:
         N_servived = np.sum((self.sigma>cond_num*self.sigma[0]))
         escan_mat_turn = np.einsum('j,ij->ij', 
         self.sigma[:N_servived], self.U[:, :N_servived]) @ self.Vh[:N_servived, :]
-        
-        dads_spec, _, self.escan_fit = dads(self.t-t0, fwhm, self.tau, base, 
-        irf=irf, eta=eta, intensity=escan_mat_turn)
+
+        if self.mode_var.get() == 'dads':
+            dads_spec, _, self.escan_fit = dads(self.t-t0, fwhm, self.tau, base, 
+            irf=irf, eta=eta, intensity=escan_mat_turn)
+        elif self.mode_var.get() == 'eads':
+            if not base:
+                exclude = 'Last'
+            else:
+                exclude = None
+            y0 = np.zeros(self.tau.size+1)
+            y0[0] = 1
+            eigval, V, c = solve_seq_model(self.tau, y0) 
+            dads_spec, _, self.escan_fit = sads(self.t-t0, fwhm,
+            eigval=eigval, V=V, c=c, 
+            exclude=exclude, irf=irf, eta=eta, intensity=escan_mat_turn)
+        else:
+            msg.showerror('Error', 'Please select type of calculation')
+
         self.dads = dads_spec.T
         self.fit = True
         PlotDADSWidget(self)
@@ -487,7 +515,7 @@ class CalcDADSGuiWidget:
     
     def save_script(self):
 
-        if self.escan_file and self.time_file:
+        if not self.escan_file and not self.time_file:
             msg.showerror('Error', 'Please load escan matrix file and time delay array file')
             return
         
@@ -502,9 +530,9 @@ class CalcDADSGuiWidget:
         np.vstack((self.t, self.Vh)).T)
         np.savetxt(f'{save_directory}/sigma.txt', 
         self.sigma)
-        np.savetxt(f'{save_directory}/dads.txt', 
+        np.savetxt(f'{save_directory}/{self.mode_var.get()}.txt', 
         np.vstack((self.e, self.dads.T)).T)
-        np.savetxt(f'{save_directory}/dads_fit.txt', 
+        np.savetxt(f'{save_directory}/{self.mode_var.get()}_fit.txt', 
         np.vstack((self.e, self.escan_fit.T)).T)
         return
 
