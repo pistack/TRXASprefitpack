@@ -17,8 +17,8 @@ from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
 from matplotlib.backends.backend_tkagg import NavigationToolbar2Tk
 from matplotlib.backend_bases import key_press_handler
 from matplotlib.figure import Figure
-from TRXASprefitpack import calc_eta, calc_fwhm, solve_seq_model
-from TRXASprefitpack import dads, sads
+from ..mathfun import calc_eta, calc_fwhm, solve_seq_model
+from ..driver import dads, sads
 
 float_sep_comma = re.compile('([\+\-]?[0-9]+[.]?[0-9]*[,]\s*)*[\+\-]?[0-9]+[.]?[0-9]*\s*')
 isfloat = re.compile('[\+\-]?[0-9]+[.]?[0-9]*\s*')
@@ -538,8 +538,5 @@ class CalcDADSGuiWidget:
 
 def calc_dads_gui():
     CalcDADSGuiWidget()
-
-if __name__ == '__main__':
-    calc_dads_gui()
 
 
