@@ -8,7 +8,7 @@
 
 stable version:  0.7.0.1
 
-current version: 0.7.2
+current version: 0.7.2.1
 
 current development version: 0.8.dev
 
