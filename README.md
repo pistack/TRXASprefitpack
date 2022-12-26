@@ -4,15 +4,11 @@
 
 [![PyPI version](https://badge.fury.io/py/TRXASprefitpack.svg)](https://badge.fury.io/py/TRXASprefitpack)
 
-[![Total alerts](https://img.shields.io/lgtm/alerts/g/pistack/TRXASprefitpack.svg?logo=lgtm&logoWidth=18)](https://lgtm.com/projects/g/pistack/TRXASprefitpack/alerts/)
-
-[![Language grade: Python](https://img.shields.io/lgtm/grade/python/g/pistack/TRXASprefitpack.svg?logo=lgtm&logoWidth=18)](https://lgtm.com/projects/g/pistack/TRXASprefitpack/context:python)
-
 [![Documentation Status](https://readthedocs.org/projects/trxasprefitpack/badge/?version=latest)](https://trxasprefitpack.readthedocs.io/en/latest/?badge=latest)
 
 stable version:  0.7.0.1
 
-current version: 0.7.1
+current version: 0.7.2
 
 current development version: 0.8.dev
 
@@ -30,6 +26,7 @@ Licence: LGPL3
   1. calc_broad: broaden theoretically calculated line shape spectrum with voigt profile
   2. calc_dads: Calculates decay associated difference spectrum from experimental energy scan and sum of exponential decay model
   3. calc_sads: Calculates species associated difference spectrum frim experimental energy scan and 1st order rate equation model
+  4. calc_dads_gui: GUI wrapper for calc_dads utility (New! in 0.7.2)
 * Fit Utility
   1. fit_static: fitting sum of voigt component or voigt broadened experimental spectrum with experimental static spectrum
   2. fit_tscan: Find lifetime constants or oscillation period from experimental time delay spectrum
