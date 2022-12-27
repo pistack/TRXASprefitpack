@@ -88,7 +88,7 @@ def test_driver_sads_3():
     sads_seq, _, sads_fit = sads(escan_time, fwhm, eigval, V, c,
     irf='pv', eta=eta, intensity=escan, eps=eps)
 
-    sads_seq_svd, sads_fit_svd = sads(escan_time, fwhm, eigval, V, c,
+    sads_seq_svd, sads_fit_svd = sads_svd(escan_time, fwhm, eigval, V, c,
     irf='pv', eta=eta, intensity=escan)
 
     assert np.allclose(sads_seq.T, diff_abs)
@@ -116,11 +116,15 @@ def test_driver_dads_1():
     escan = diff_abs @ y
     dads_seq, _, dads_fit = dads(escan_time, fwhm, tau, False,
     irf='g', intensity=escan, eps=eps)
+    dads_seq_svd, dads_fit_svd = dads_svd(escan_time, fwhm, tau, False,
+    irf='g', intensity=escan)
     V_scale = np.einsum('j,ij->ij', c, V)
     sads_dads = np.linalg.solve(V_scale[:-1, :-1].T, dads_seq)
 
     assert np.allclose(sads_dads.T, diff_abs[:, :-1])
+    assert np.allclose(dads_seq, dads_seq_svd.T)
     assert np.allclose(dads_fit, escan)
+    assert np.allclose(dads_fit_svd, escan)
 
 
 def test_driver_dads_2():
@@ -141,11 +145,16 @@ def test_driver_dads_2():
     escan = diff_abs @ y
     dads_seq, _, dads_fit = dads(escan_time, fwhm, tau, False,
     irf='c', intensity=escan, eps=eps)
+    dads_seq_svd, dads_fit_svd = dads_svd(escan_time, fwhm, tau, False,
+    irf='c', intensity=escan)
+
     V_scale = np.einsum('j,ij->ij', c, V)
     sads_dads = np.linalg.solve(V_scale[:-1, :-1].T, dads_seq)
 
     assert np.allclose(sads_dads.T, diff_abs[:, :-1])
+    assert np.allclose(dads_seq, dads_seq_svd.T)
     assert np.allclose(dads_fit, escan)
+    assert np.allclose(dads_fit_svd, escan)
 
 
 def test_driver_dads_3():
@@ -167,11 +176,15 @@ def test_driver_dads_3():
     escan = diff_abs @ y
     dads_seq, _, dads_fit = dads(escan_time, fwhm, tau, False,
     irf='pv', eta=eta, intensity=escan, eps=eps)
+    dads_seq_svd, dads_fit_svd = dads_svd(escan_time, fwhm, tau, False,
+    irf='pv', eta=eta, intensity=escan)
     V_scale = np.einsum('j,ij->ij', c, V)
     sads_dads = np.linalg.solve(V_scale[:-1, :-1].T, dads_seq)
 
     assert np.allclose(sads_dads.T, diff_abs[:, :-1])
+    assert np.allclose(dads_seq, dads_seq_svd.T)
     assert np.allclose(dads_fit, escan)
+    assert np.allclose(dads_fit_svd, escan)
 
 
 
