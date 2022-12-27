@@ -8,7 +8,7 @@ sys.path.append(path+'/../src/')
 
 from TRXASprefitpack import solve_seq_model
 from TRXASprefitpack import compute_signal_gau, compute_signal_cauchy, compute_signal_pvoigt
-from TRXASprefitpack import sads, dads
+from TRXASprefitpack import sads, dads, sads_svd, dads_svd
 from TRXASprefitpack import voigt, edge_gaussian
 
 def test_driver_sads_1():
@@ -30,8 +30,13 @@ def test_driver_sads_1():
     sads_seq, _, sads_fit = sads(escan_time, fwhm, eigval, V, c,
     irf='g', intensity=escan, eps=eps)
 
+    sads_seq_svd, sads_fit_svd = sads_svd(escan_time, fwhm, eigval, V, c,
+    irf='g', intensity=escan)
+
     assert np.allclose(sads_seq.T, diff_abs)
     assert np.allclose(sads_fit, escan)
+    assert np.allclose(sads_seq_svd, diff_abs)
+    assert np.allclose(sads_fit_svd, escan)
 
 
 def test_driver_sads_2():
@@ -53,8 +58,13 @@ def test_driver_sads_2():
     sads_seq, _, sads_fit = sads(escan_time, fwhm, eigval, V, c,
     irf='c', intensity=escan, eps=eps)
 
+    sads_seq_svd, sads_fit_svd = sads_svd(escan_time, fwhm, eigval, V, c,
+    irf='c', intensity=escan)
+
     assert np.allclose(sads_seq.T, diff_abs)
     assert np.allclose(sads_fit, escan)
+    assert np.allclose(sads_seq_svd, diff_abs)
+    assert np.allclose(sads_fit_svd, escan)
 
 
 def test_driver_sads_3():
@@ -74,11 +84,18 @@ def test_driver_sads_3():
     y = compute_signal_pvoigt(escan_time, fwhm, eta, eigval, V, c)
     diff_abs = np.vstack((ex_1-gs, ex_2-gs, np.zeros_like(gs))).T
     escan = diff_abs @ y
+
     sads_seq, _, sads_fit = sads(escan_time, fwhm, eigval, V, c,
     irf='pv', eta=eta, intensity=escan, eps=eps)
 
+    sads_seq_svd, sads_fit_svd = sads(escan_time, fwhm, eigval, V, c,
+    irf='pv', eta=eta, intensity=escan)
+
     assert np.allclose(sads_seq.T, diff_abs)
     assert np.allclose(sads_fit, escan)
+    assert np.allclose(sads_seq_svd, diff_abs)
+    assert np.allclose(sads_fit_svd, escan)
+
 
 
 def test_driver_dads_1():

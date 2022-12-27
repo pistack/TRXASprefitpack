@@ -18,7 +18,7 @@ from matplotlib.backends.backend_tkagg import NavigationToolbar2Tk
 from matplotlib.backend_bases import key_press_handler
 from matplotlib.figure import Figure
 from ..mathfun import calc_eta, calc_fwhm, solve_seq_model
-from ..driver import dads, sads
+from ..driver import dads, sads, dads_svd, sads_svd
 
 float_sep_comma = re.compile('([\+\-]?[0-9]+[.]?[0-9]*[,]\s*)*[\+\-]?[0-9]+[.]?[0-9]*\s*')
 isfloat = re.compile('[\+\-]?[0-9]+[.]?[0-9]*\s*')
@@ -234,9 +234,17 @@ class CalcDADSGuiWidget:
         self.dads_mode = tk.Checkbutton(self.root, text='DADS', variable=self.mode_var,
         onvalue='dads', offvalue='')
         self.dads_mode.grid(column=0, row=1)
+        self.dads_svd_mode = tk.Checkbutton(self.root, 
+        text='DADS (SVD)', variable=self.mode_var,
+        onvalue='dads_svd', offvalue='')
+        self.dads_svd_mode.grid(column=1, row=1)
         self.eads_mode = tk.Checkbutton(self.root, text='EADS', variable=self.mode_var,
         onvalue='eads', offvalue='')
         self.eads_mode.grid(column=0, row=2)
+        self.eads_svd_mode = tk.Checkbutton(self.root, 
+        text='EADS (SVD)', variable=self.mode_var,
+        onvalue='eads_svd', offvalue='')
+        self.eads_svd_mode.grid(column=1, row=2)
 
         # --- irf model selection window
         self.irf_label = tk.Label(self.root, text='Select Type of irf',
@@ -494,7 +502,12 @@ class CalcDADSGuiWidget:
         if self.mode_var.get() == 'dads':
             dads_spec, _, self.escan_fit = dads(self.t-t0, fwhm, self.tau, base, 
             irf=irf, eta=eta, intensity=escan_mat_turn)
-        elif self.mode_var.get() == 'eads':
+            self.dads = dads_spec.T
+        elif self.mode_var.get() == 'dads_svd':
+            dads_spec, self.escan_fit = dads_svd(self.t-t0, fwhm, self.tau, base, 
+            irf=irf, eta=eta, intensity=self.escan_mat, cond_num=cond_num)
+            self.dads = dads_spec
+        elif self.mode_var.get() in ['eads', 'eads_svd']:
             if not base:
                 exclude = 'Last'
             else:
@@ -502,13 +515,19 @@ class CalcDADSGuiWidget:
             y0 = np.zeros(self.tau.size+1)
             y0[0] = 1
             eigval, V, c = solve_seq_model(self.tau, y0) 
-            dads_spec, _, self.escan_fit = sads(self.t-t0, fwhm,
-            eigval=eigval, V=V, c=c, 
-            exclude=exclude, irf=irf, eta=eta, intensity=escan_mat_turn)
+            if self.mode_var.get() == 'eads':
+                dads_spec, _, self.escan_fit = sads(self.t-t0, fwhm,
+                eigval=eigval, V=V, c=c, 
+                exclude=exclude, irf=irf, eta=eta, intensity=escan_mat_turn)
+                self.dads = dads_spec.T
+            else:
+                dads_spec, self.escan_fit = sads_svd(self.t-t0, fwhm,
+                eigval=eigval, V=V, c=c, 
+                exclude=exclude, irf=irf, eta=eta, intensity=escan_mat_turn,
+                cond_num=cond_num)
+                self.dads = dads_spec
         else:
             msg.showerror('Error', 'Please select type of calculation')
-
-        self.dads = dads_spec.T
         self.fit = True
         PlotDADSWidget(self)
         return
