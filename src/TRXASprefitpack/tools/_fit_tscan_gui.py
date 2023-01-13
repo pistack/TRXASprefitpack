@@ -17,11 +17,13 @@ from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
 from matplotlib.backends.backend_tkagg import NavigationToolbar2Tk
 from matplotlib.backend_bases import key_press_handler
 from matplotlib.figure import Figure
-from ..driver import fit_transient_exp, fit_transient_dmp_osc, fit_transient_both
+from ..res import set_bound_tau
+from ..driver import fit_transient_exp, fit_transient_raise
+from ..driver import fit_transient_dmp_osc, fit_transient_both
 from ..driver import save_TransientResult
 
-FITDRIVER = {'decay': fit_transient_exp, 'osc': fit_transient_dmp_osc,
-'both': fit_transient_both}
+FITDRIVER = {'decay': fit_transient_exp, 'raise': fit_transient_raise,
+'osc': fit_transient_dmp_osc, 'both': fit_transient_both}
 
 float_sep_comma = re.compile('([\+\-]?[0-9]+[.]?[0-9]*[,]\s*)*[\+\-]?[0-9]+[.]?[0-9]*\s*')
 isfloat = re.compile('[\+\-]?[0-9]+[.]?[0-9]*\s*')
@@ -138,7 +140,7 @@ class PlotFitWidget:
         master.intensity[0][:, 0]+master.eps[0][:, 0], alpha=0.5, color='black')
 
         # residual
-        if master.fit_mode_var.get() in ['decay', 'osc']:
+        if master.fit_mode_var.get() in ['decay', 'raise', 'osc']:
             self.ln_res, = self.ax_res.plot(master.t[0],
             master.intensity[0][:, 0]-master.result['fit'][0][:, 0],
             mfc='none', color='black', marker='o')
@@ -201,7 +203,7 @@ class PlotFitWidget:
 
         # update residual window
 
-        if master.fit_mode_var.get() in ['decay', 'osc']:
+        if master.fit_mode_var.get() in ['decay', 'raise', 'osc']:
             self.ln_res.set_data(master.t[val-1],
             master.intensity[val-1][:, 0]-master.result['fit'][val-1][:, 0])
             self.poly_res.remove()
@@ -232,25 +234,15 @@ class FitReportWidget:
     '''
     Class for reporting fitting result
     '''
-    def __init__(self):
-        self.root = tk.Tk()
-        self.root.title('Fitting Report')
-        self.report_space = sc.ScrolledText(self.root,
+    def __init__(self, result):
+        self.top = tk.Toplevel()
+        self.top.title('Fitting Report')
+        self.report_space = sc.ScrolledText(self.top,
         width = 80, height = 40)
-        self.report_space.configure(state='disabled')
-        self.report_space.grid(column=0)
-
-    def update_result(self, result):
-        self.report_space.configure(state='normal')
-        self.report_space.delete(1.0, 'end')
         self.report_space.insert(tk.INSERT, str(result))
         self.report_space.configure(state='disabled')
-
-    def mainloop(self):
-        self.root.mainloop()
-
-    def quit(self):
-        self.root.quit()
+        self.report_space.grid(column=0)
+        self.top.mainloop()
 
 class FitTscanGuiWidget:
     '''
@@ -261,14 +253,15 @@ class FitTscanGuiWidget:
         self.root.title('Fit Tscan Gui')
         self.parameter_window = tk.Tk()
         self.parameter_window.title('Initial fitting parameter')
-        self.fit_report_window = FitReportWidget()
         self.result = None
+        self.fit = False
 
         # -- define necessary variables
         self.irf_var = tk.StringVar()
         self.fit_mode_var = tk.StringVar()
         self.base_var = tk.IntVar()
         self.fix_irf_var = tk.IntVar()
+        self.fix_raise_var = tk.IntVar()
         self.fix_t0_var = tk.IntVar()
         self.custom_bd_var = tk.IntVar()
         self.glb_opt_var = tk.StringVar()
@@ -277,16 +270,19 @@ class FitTscanGuiWidget:
         # --- fitting model selection window
         self.fit_mode_label = tk.Label(self.root, text='Select fitting mode',
         padx=90, pady=10, font=(widgetfont, 12))
-        self.fit_mode_label.grid(column=0, row=0, columnspan=3)
+        self.fit_mode_label.grid(column=0, row=0, columnspan=4)
         self.decay_mode = tk.Checkbutton(self.root, text='decay',
         variable = self.fit_mode_var, onvalue = 'decay', offvalue='')
         self.decay_mode.grid(column=0, row=1)
+        self.raise_mode = tk.Checkbutton(self.root, text='raise',
+        variable = self.fit_mode_var, onvalue = 'raise', offvalue='')
+        self.raise_mode.grid(column=1, row=1)
         self.dmp_osc_mode = tk.Checkbutton(self.root, text='damped osc',
         variable = self.fit_mode_var, onvalue = 'dmp_osc', offvalue='')
-        self.dmp_osc_mode.grid(column=1, row=1)
+        self.dmp_osc_mode.grid(column=2, row=1)
         self.both_mode = tk.Checkbutton(self.root, text='decay+dmp_osc',
         variable = self.fit_mode_var, onvalue = 'both', offvalue='')
-        self.both_mode.grid(column=2, row=1)
+        self.both_mode.grid(column=3, row=1)
 
         # --- irf model selection window
         self.irf_label = tk.Label(self.root, text='Select Type of irf',
@@ -317,19 +313,22 @@ class FitTscanGuiWidget:
         # --- miscellaneous options
         self.option_label = tk.Label(self.root, text='Miscellaneous Options',
         padx=120, pady=10, font=(widgetfont, 12))
-        self.option_label.grid(column=0, row=6, columnspan=4)
+        self.option_label.grid(column=0, row=6, columnspan=5)
         self.include_base_check = tk.Checkbutton(self.root, text='base',
         variable=self.base_var, onvalue=1, offvalue=0)
         self.include_base_check.grid(column=0, row=7)
         self.fix_irf_check = tk.Checkbutton(self.root, text='fix_irf',
         variable=self.fix_irf_var, onvalue=1, offvalue=0)
         self.fix_irf_check.grid(column=1, row=7)
+        self.fix_raise_check = tk.Checkbutton(self.root, text='fix_raise',
+        variable=self.fix_raise_var, onvalue=1, offvalue=0)
+        self.fix_raise_check.grid(column=2, row=7)
         self.fix_t0_check = tk.Checkbutton(self.root, text='fix_t0',
         variable=self.fix_t0_var, onvalue=1, offvalue=0)
-        self.fix_t0_check.grid(column=2, row=7)
+        self.fix_t0_check.grid(column=3, row=7)
         self.custom_bd_check = tk.Checkbutton(self.root, text='custom bound',
         variable=self.custom_bd_var, onvalue=1, offvalue=0)
-        self.custom_bd_check.grid(column=3, row=7)
+        self.custom_bd_check.grid(column=4, row=7)
 
         # --- Read file to fit
         self.label_file = tk.Label(self.root, text='Browse Files to fit',
@@ -509,7 +508,6 @@ class FitTscanGuiWidget:
 
         self.root.mainloop()
         self.parameter_window.mainloop()
-        self.fit_report_window.mainloop()
 
     # --- Browse root directory of fitting file
     def browse_file(self):
@@ -527,11 +525,14 @@ class FitTscanGuiWidget:
             self.intensity.append(tmp[:, 1].reshape((tmp.shape[0], 1)))
             self.eps.append(tmp[:, 2].reshape((tmp.shape[0], 1)))
             self.fname.append(fn.split('/')[-1])
+        self.fit = False
 
     def plot_file(self):
 
         if len(self.fname) == 0:
             msg.showerror('Error', 'Please load files')
+        elif self.fit:
+            PlotFitWidget(self)
         else:
             PlotDataWidget(self)
 
@@ -644,7 +645,7 @@ class FitTscanGuiWidget:
             'Please select the fitting model before clicking ready button')
             return
 
-        if self.fit_mode_var.get() in ['decay', 'both']:
+        if self.fit_mode_var.get() in ['decay', 'raise', 'both']:
             self.label_tau.grid()
             self.entry_tau.grid()
 
@@ -865,24 +866,32 @@ class FitTscanGuiWidget:
 
         mode = self.fit_mode_var.get()
 
-        if mode in ['decay', 'both']:
+        if mode in ['decay', 'raise', 'both']:
             base = self.base_var.get()
             tau = self.handle_tau()
             if isinstance(tau, np.ndarray) or tau:
                 if not isinstance(tau, np.ndarray):
                     tau = None
+                elif tau is None and mode == 'raise':
+                    msg.showerror('Error', 
+                    'Please give initial raise time constant for raising model')
+                    return
                 else:
                     if self.custom_bd_var.get():
                         bound_tau = self.handle_bd_field(tau,
                         self.entry_bd_l_tau, self.entry_bd_u_tau,
                         'tau')
+                    elif self.fix_raise_var.get():
+                        for k in tau:
+                            bound_tau.append(set_bound_tau(k, fwhm))
+                        bound_tau[0] = (tau[0], tau[0])
                     kwargs_key.append('bound_tau')
                     kwargs_val.append(bound_tau)
             else:
                 return
             dargs.append(tau)
 
-            if mode == 'decay':
+            if mode in ['decay', 'raise']:
                 dargs.append(base)
 
         if mode in ['osc', 'both']:
@@ -893,7 +902,8 @@ class FitTscanGuiWidget:
             if not osc:
                 return
             if dmp.size != osc.size:
-                msg.showerror('Error', 'The number of damping constant and oscillation period should be same')
+                msg.showerror('Error', 
+                'The number of damping constant and oscillation period should be same')
                 return
             
             if self.custom_bd_var.get():
@@ -931,9 +941,8 @@ class FitTscanGuiWidget:
         **kwargs,
         name_of_dset=np.array(self.fname), t=self.t, intensity=self.intensity, eps=self.eps)
 
-        self.fit_report_window.update_result(self.result)
-        PlotFitWidget(self)
-
+        self.fit = True
+        FitReportWidget(self.result)
         return
     
     def save_script(self):

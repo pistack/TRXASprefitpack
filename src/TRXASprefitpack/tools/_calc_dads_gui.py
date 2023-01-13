@@ -480,7 +480,7 @@ class CalcDADSGuiWidget:
 
         # set t0 of energy scan
         t0 = self.handle_t0()
-        if not t0:
+        if not isinstance(t0, float):
             return
         
 
