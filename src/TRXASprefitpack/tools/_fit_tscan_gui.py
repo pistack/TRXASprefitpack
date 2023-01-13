@@ -995,7 +995,6 @@ class FitTscanGuiWidget:
 
     def exit_script(self):
         self.parameter_window.quit()
-        self.fit_report_window.quit()
         self.root.quit()
 
 def fit_tscan_gui():
