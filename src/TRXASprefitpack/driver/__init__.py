@@ -7,7 +7,7 @@ convolution of sum of exponential decay and instrumental response function
 :license: LGPL3.
 '''
 
-from .ads import sads, dads
+from .ads import sads, dads, sads_svd, dads_svd
 from .transient_result import TransientResult, save_TransientResult, load_TransientResult
 from .static_result import StaticResult, save_StaticResult, load_StaticResult
 from .static_result import static_spectrum
@@ -20,7 +20,7 @@ from ._static_voigt import fit_static_voigt
 from ._static_thy import fit_static_thy
 from .anal_fit import CIResult, is_better_fit, confidence_interval
 
-__all__ = ['sads', 'dads', 'ampgo',
+__all__ = ['sads', 'sads_svd', 'dads', 'dads_svd', 'ampgo',
            'TransientResult', 'save_TransientResult', 'load_TransientResult',
            'StaticResult', 'save_StaticResult', 'load_StaticResult',
            'static_spectrum',

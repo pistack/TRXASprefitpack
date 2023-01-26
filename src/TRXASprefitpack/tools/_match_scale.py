@@ -70,6 +70,8 @@ def match_scale():
                         'It will read prefix_i.txt')
     parser.add_argument('--ref_tscan_energy', type=float,
                         help='energy of reference time delay scan')
+    parser.add_argument('--ref_escan_idx', type=int,
+                        help='index of reference energy scan')
     parser.add_argument('--ref_tscan_file',
                         help='filename for reference time delay scan data')
     parser.add_argument('--escan_time', type=float, nargs='+',
@@ -120,7 +122,8 @@ def match_scale():
         return
     else:
         time_zero = args.time_zero
-
+    
+    ref_escan_idx = args.ref_escan_idx - 1
     ref_tscan_energy = args.ref_tscan_energy
     ref_tscan_data = np.genfromtxt(args.ref_tscan_file)
     escan_time = np.array(args.escan_time)
@@ -135,9 +138,11 @@ def match_scale():
     c = fact_anal_exp_conv(ref_tscan_data[:, 0]-time_zero, fwhm, tau, base, irf, eta,
                            intensity=ref_tscan_data[:, 1], eps=ref_tscan_data[:, 2])
     A_slec = make_A_matrix_exp(escan_time-time_zero, fwhm, tau, base, irf)
+
     fit_slec = c@A_slec
+    scale_factor_1 = escan_data[e_ref_idx, ref_escan_idx]/fit_slec[ref_escan_idx]
     sample_e = escan_data[e_ref_idx, :]
-    scale_factor = fit_slec/sample_e
+    scale_factor = scale_factor_1*fit_slec/sample_e
     escan_data_scaled[:, 1:] = np.einsum('j,ij->ij', scale_factor, escan_data)
     escan_eps_scaled = np.einsum('j,ij->ij', scale_factor, escan_eps)
 

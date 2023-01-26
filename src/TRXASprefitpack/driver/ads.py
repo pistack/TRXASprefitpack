@@ -8,7 +8,7 @@ submodule for driver routine of associated difference spectrum
 
 from typing import Optional, Tuple
 import numpy as np
-from scipy.linalg import svd
+from scipy.linalg import svd, lstsq
 from ..mathfun.A_matrix import make_A_matrix_dmp_osc, make_A_matrix_exp
 from ..mathfun.rate_eq import compute_signal_irf
 
@@ -79,6 +79,51 @@ def dads(escan_time: np.ndarray, fwhm: float, tau: np.ndarray, base: Optional[bo
             c_eps[:, i] = np.sqrt(np.diag(cov_scale))
 
     return c, c_eps, c.T @ A
+
+def dads_svd(escan_time: np.ndarray, fwhm: float, tau: np.ndarray, base: Optional[bool] = True,
+             irf: Optional[str] = 'g', eta: Optional[float] = None,
+             intensity: Optional[np.ndarray] = None, cond_num: Optional[float] = 0) \
+             -> Tuple[np.ndarray, np.ndarray]:
+    '''
+    Calculate decay associated difference spectrum from experimental energy scan data
+    (using svd)
+
+    Args:
+      escan_time: time delay for each energy scan data
+      fwhm: full width at half maximum of instrumental response function
+      tau: life time for each component
+      base: whether or not include baseline [default: True]
+      irf: shape of instrumental response function [default: g]
+
+           * 'g': normalized gaussian distribution,
+           * 'c': normalized cauchy distribution,
+           * 'pv': pseudo voigt profile :math:`(1-\\eta)g(t, {fwhm}) + \\eta c(t, {fwhm})`
+
+      eta: mixing parameter for pseudo voigt profile
+           (only needed for pseudo voigt profile)
+      intensity: intensity of energy scan dataset
+      cond_num: conditional number to turncate svd
+
+    Returns:
+     Tuple of calculated decay associated difference spectrum of each component,
+     and retrieved energy scan intensity from dads and decay components
+
+    Note:
+     To calculate decay associated difference spectrum of n component exponential decay, you should measure at least n
+     energy scan
+    '''
+    # svd of data matrix
+    U_data, s_data, Vh_data = svd(intensity, full_matrices=False)
+    N_survived = np.sum((s_data > cond_num*s_data[0]))
+    U_data_trun = U_data[:, :N_survived]
+    s_data_trun = s_data[:N_survived]
+    Vh_turn = Vh_data[:N_survived, :]
+    A = make_A_matrix_exp(escan_time, fwhm, tau, base, irf, eta)
+    c, _, _, _ = lstsq(A.T, Vh_turn.T, cond=1e-2)
+    coeff = np.einsum('j,ij->ij', s_data_trun, U_data_trun) @ c.T
+    fit = coeff @ A
+
+    return coeff, fit
 
 def dads_osc(escan_time: np.ndarray, fwhm: float, tau: np.ndarray, 
              tau_osc: np.ndarray, period_osc: np.ndarray, base: Optional[bool] = True,
@@ -250,6 +295,70 @@ def sads(escan_time: np.ndarray, fwhm: float, eigval: np.ndarray, V: np.ndarray,
             diff_abs_eps[:, i] = np.sqrt(red_chi2*np.diag(cov))
 
     return diff_abs, diff_abs_eps, diff_abs.T @ B
+
+def sads_svd(escan_time: np.ndarray, fwhm: float, eigval: np.ndarray, V: np.ndarray, c: np.ndarray,
+             exclude: Optional[str] = None, irf: Optional[str] = 'g', eta: Optional[float] = None,
+             intensity: Optional[np.ndarray] = None, cond_num: Optional[float] = 0) -> Tuple[np.ndarray, np.ndarray]:
+    '''
+    Calculate species associated difference spectrum from experimental energy scan data
+    (using svd)
+
+    Args:
+      escan_time: time delay for each energy scan data
+      fwhm: full width at half maximum of instrumental response function
+      eigval: eigenvalue of rate equation matrix
+      V: eigenvector of rate equation matrix
+      c: coefficient to match initial condition of rate equation
+      exclude: exclude either 'first' or 'last' element or both 'first' and 'last' element.
+
+               * 'first' : exclude first element
+               * 'last' : exclude last element
+               * 'first_and_last' : exclude both first and last element
+               * None : Do not exclude any element [default]
+
+      irf: shape of instrumental response function [default: g]
+
+           * 'g': normalized gaussian distribution,
+           * 'c': normalized cauchy distribution,
+           * 'pv': pseudo voigt profile :math:`(1-\\eta)g(t, {fwhm}) + \\eta c(t, {fwhm})`
+
+      eta: mixing parameter for pseudo voigt profile (only needed for pseudo voigt profile)
+      intensity: intensity of energy scan dataset
+      cond_num: conditional number to turncate svd
+
+    Returns:
+     Tuple of calculated species associated difference spectrum of each component, and
+     retrieved intensity of energy scan from sads and model excited state components
+
+    Note:
+     1. eigval, V, c should be obtained from solve_model
+     2. To calculate species associated difference spectrum of n excited state species, you should measure at least n+1 energy scan
+     3. Difference spectrum of ground state is zero, so ground state species should be excluded from rate equation or via exclude option.
+    '''
+    # svd
+
+    U_data, s_data, Vh_data = svd(intensity, full_matrices=False)
+    N_survived = np.sum((s_data > cond_num*s_data[0]))
+    U_data_trun = U_data[:, :N_survived]
+    s_data_trun = s_data[:N_survived]
+    Vh_turn = Vh_data[:N_survived, :]
+
+
+    A = compute_signal_irf(escan_time, eigval, V, c, fwhm, irf, eta)
+    if exclude == 'first':
+        B = A[1:, :]
+    elif exclude == 'last':
+        B = A[:-1, :]
+    elif exclude == 'first_and_last':
+        B = A[1:-1, :]
+    else:
+        B = A
+
+    c, _, _, _ = lstsq(B.T, Vh_turn.T, cond=1e-2)
+    coeff = np.einsum('j,ij->ij', s_data_trun, U_data_trun) @ c.T
+    fit = coeff @ B
+
+    return coeff, fit
 
 def sads_osc(escan_time: np.ndarray, fwhm: float, 
              eigval: np.ndarray, V: np.ndarray, c: np.ndarray,

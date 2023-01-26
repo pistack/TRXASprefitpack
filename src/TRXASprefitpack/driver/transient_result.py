@@ -156,8 +156,8 @@ class TransientResult(dict):
                 for j in range(self['c'][i].shape[1]):
                     row.append(f'tscan_{j+1}')
                 doc_lst.append('\t'.join(row))
-            for o in range(self['n_osc']):
-                row = [f'     dmp_osc {o+1}']
+                for o in range(self['n_osc']):
+                    row = [f'     dmp_osc {o+1}']
                 for l in range(self['phase'][i].shape[1]):
                     row.append(f"{self['phase'][i][o, l]/np.pi: .4f} π")
                 doc_lst.append('\t'.join(row))
@@ -168,6 +168,8 @@ class TransientResult(dict):
             tot_decay = self['n_decay']-1
         else:
             tot_decay = self['n_decay']
+        
+        tot_decay_tmp = tot_decay
 
         for i in range(len(self['c'])):
             doc_lst.append(f"    DataSet {self['name_of_dset'][i]}:")
@@ -185,14 +187,14 @@ class TransientResult(dict):
                 doc_lst.append('\t'.join(row))
             
             if self['base']:
-                tmp = tot_decay+1
+                tot_decay_tmp = tot_decay+1
                 row = ['     base']
                 for l in range(coeff_contrib.shape[1]):
-                    row.append(f'{coeff_contrib[tmp-1,l]: .2f}%')
+                    row.append(f'{coeff_contrib[tot_decay_tmp-1,l]: .2f}%')
                 doc_lst.append('\t'.join(row))
 
-            for o in range(tot_decay, tot_decay+self['n_osc']):
-                row = [f'    dmp_osc {o+1-tot_decay}']
+            for o in range(tot_decay_tmp, tot_decay_tmp+self['n_osc']):
+                row = [f'    dmp_osc {o+1-tot_decay_tmp}']
                 for l in range(coeff_contrib.shape[1]):
                     row.append(f'{coeff_contrib[o, l]: .2f}%')
                 doc_lst.append('\t'.join(row))
