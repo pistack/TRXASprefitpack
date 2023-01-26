@@ -23,7 +23,7 @@ from ..driver import fit_transient_dmp_osc, fit_transient_both
 from ..driver import save_TransientResult
 
 FITDRIVER = {'decay': fit_transient_exp, 'raise': fit_transient_raise,
-'osc': fit_transient_dmp_osc, 'both': fit_transient_both}
+'dmp_osc': fit_transient_dmp_osc, 'both': fit_transient_both}
 
 float_sep_comma = re.compile('([\+\-]?[0-9]+[.]?[0-9]*[,]\s*)*[\+\-]?[0-9]+[.]?[0-9]*\s*')
 isfloat = re.compile('[\+\-]?[0-9]+[.]?[0-9]*\s*')
@@ -140,7 +140,7 @@ class PlotFitWidget:
         master.intensity[0][:, 0]+master.eps[0][:, 0], alpha=0.5, color='black')
 
         # residual
-        if master.fit_mode_var.get() in ['decay', 'raise', 'osc']:
+        if master.fit_mode_var.get() in ['decay', 'raise', 'dmp_osc']:
             self.ln_res, = self.ax_res.plot(master.t[0],
             master.intensity[0][:, 0]-master.result['fit'][0][:, 0],
             mfc='none', color='black', marker='o')
@@ -203,7 +203,7 @@ class PlotFitWidget:
 
         # update residual window
 
-        if master.fit_mode_var.get() in ['decay', 'raise', 'osc']:
+        if master.fit_mode_var.get() in ['decay', 'raise', 'dmp_osc']:
             self.ln_res.set_data(master.t[val-1],
             master.intensity[val-1][:, 0]-master.result['fit'][val-1][:, 0])
             self.poly_res.remove()
@@ -655,7 +655,7 @@ class FitTscanGuiWidget:
                 self.entry_bd_l_tau.grid()
                 self.entry_bd_u_tau.grid()
 
-        if self.fit_mode_var.get() in ['osc', 'both']:
+        if self.fit_mode_var.get() in ['dmp_osc', 'both']:
 
             self.label_osc.grid()
             self.entry_osc.grid()
@@ -894,7 +894,7 @@ class FitTscanGuiWidget:
             if mode in ['decay', 'raise']:
                 dargs.append(base)
 
-        if mode in ['osc', 'both']:
+        if mode in ['dmp_osc', 'both']:
             dmp = self.handle_dmp()
             if not dmp:
                 return
@@ -912,7 +912,7 @@ class FitTscanGuiWidget:
                 bound_osc = self.handle_bd_field(osc, self.entry_bd_l_osc,
                 self.entry_bd_u_osc, 'osc period')
             
-            if mode == 'osc':
+            if mode == 'dmp_osc':
                 kwargs_key.append('bound_tau')
                 kwargs_val.append(bound_dmp)
                 kwargs_key.append('bound_period')
