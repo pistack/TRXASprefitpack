@@ -882,6 +882,7 @@ class FitTscanGuiWidget:
                         self.entry_bd_l_tau, self.entry_bd_u_tau,
                         'tau')
                     elif self.fix_raise_var.get():
+                        bound_tau = []
                         for k in tau:
                             bound_tau.append(set_bound_tau(k, fwhm))
                         bound_tau[0] = (tau[0], tau[0])
