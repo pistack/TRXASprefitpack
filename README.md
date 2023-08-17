@@ -12,7 +12,7 @@ current version: 0.7.2.2
 
 current development version: 0.8.dev
 
-Copyright: (C) 2021-2022  Junho Lee (@pistack) (Email: phistack@kaist.ac.kr)
+Copyright: (C) 2021-2023  Junho Lee (@pistack) (Email: phistack@kaist.ac.kr)
 
 Licence: LGPL3
 
