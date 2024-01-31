@@ -78,7 +78,8 @@ def test_res_grad_decay_1():
         t=t, intensity=intensity, eps=eps)**2), epsilon)
 
     res_tst, grad_tst = res_grad_decay(x0, 3, False, 'g',
-    np.zeros_like(x0, dtype=bool), t, intensity, eps)
+    np.zeros_like(x0, dtype=bool), 
+    t=t, intensity=intensity, eps=eps)
 
     assert np.allclose(res_ref, res_tst)
     assert np.allclose(grad_ref, grad_tst, rtol=rel_tol,
@@ -143,7 +144,8 @@ def test_res_grad_decay_2():
         t=t, intensity=intensity, eps=eps)**2), epsilon)
 
     res_tst, grad_tst = res_grad_decay(x0, 3, False, 'c',
-    np.zeros_like(x0, dtype=bool), t, intensity, eps)
+    np.zeros_like(x0, dtype=bool), 
+    t=t, intensity=intensity, eps=eps)
 
     assert np.allclose(res_ref, res_tst)
     assert np.allclose(grad_ref, grad_tst, rtol=rel_tol,
@@ -213,7 +215,8 @@ def test_res_grad_decay_3():
         t=t, intensity=intensity, eps=eps)**2), epsilon)
 
     res_tst, grad_tst = res_grad_decay(x0, 3, True, 'pv',
-    np.zeros_like(x0, dtype=bool), t, intensity, eps)
+    np.zeros_like(x0, dtype=bool), 
+    t=t, intensity=intensity, eps=eps)
 
     assert np.allclose(res_ref, res_tst)
     assert np.allclose(grad_ref, grad_tst, rtol=rel_tol,
@@ -711,7 +714,8 @@ def test_res_grad_decay_same_t0_1():
         t=t, intensity=intensity, eps=eps)**2), epsilon)
 
     res_tst_2, grad_tst = res_grad_decay_same_t0(x0_tst, 3, False, 'g',
-    np.zeros_like(x0_tst, dtype=bool), t, intensity, eps)
+    np.zeros_like(x0_tst, dtype=bool), 
+    t=t, intensity=intensity, eps=eps)
 
     assert np.allclose(res_ref, res_tst_1)
     assert np.allclose(res_tst_1, res_tst_2)
@@ -780,7 +784,8 @@ def test_res_grad_decay_same_t0_2():
         t=t, intensity=intensity, eps=eps)**2), epsilon)
 
     res_tst_2, grad_tst = res_grad_decay_same_t0(x0_tst, 3, False, 'c',
-    np.zeros_like(x0_tst, dtype=bool), t, intensity, eps)
+    np.zeros_like(x0_tst, dtype=bool), 
+    t=t, intensity=intensity, eps=eps)
 
     assert np.allclose(res_ref, res_tst)
     assert np.allclose(res_tst, res_tst_2)
@@ -854,7 +859,8 @@ def test_res_grad_decay_same_t0_3():
         t=t, intensity=intensity, eps=eps)**2), epsilon)
 
     res_tst_2, grad_tst = res_grad_decay_same_t0(x0_tst, 3, True, 'pv',
-    np.zeros_like(x0_tst, dtype=bool), t, intensity, eps)
+    np.zeros_like(x0_tst, dtype=bool), 
+    t=t, intensity=intensity, eps=eps)
 
     assert np.allclose(res_ref, res_tst)
     assert np.allclose(res_tst, res_tst_2)
