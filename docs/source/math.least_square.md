@@ -1,8 +1,8 @@
 # Least Square Regression
 
-## Chi squared and maximum likelyhood estimation
+## Chi-squared and maximum likelihood estimation
 
-Suppose that our measurement data $y_i$ is independent each other and obeys $N(\bar{y}_i, \sigma_i)$.
+Suppose that our measurement data $y_i$ is independent of each other and obeys $N(\bar{y}_i, \sigma_i)$.
 Then likelihood function $\mathcal{L}(\bar{\mathbf{y}} | \mathbf{y})$ is given by
 
 \begin{align*}
@@ -28,7 +28,7 @@ So, the log likelihood function $\log \mathcal{L}(\bar{\mathbf{y}} | \mathbf{y})
 \log \mathcal{L}(\bar{\mathbf{y}}, \mathbf{y}) = \log C - \frac{\chi^2}{2}
 \end{equation*}
 
-Thus, maximizing likelihood or log likelihood is same as minimizing $\chi^2$.
+Thus, maximizing likelihood or log-likelihood is the same as minimizing $\chi^2$.
 
 In common fitting process we estimate $\bar{y}_i$ as 
 
@@ -36,11 +36,11 @@ In common fitting process we estimate $\bar{y}_i$ as
 \bar{y}_i = f(x_i, \mathbf{\theta})
 \end{equation*}
 
-, so our likelihood, log likelihood and chi squared function are the function of fitting paramter $\mathbf{\theta}$.
+, so our likelihood, log-likelihood and chi-squared function are the function of fitting parameter $\mathbf{\theta}$.
 
 ## Linear Least Square
 
-Suppose that our fitting function $f(x, \mathbf{\theta})$ is the linear combination of some function $g_i(x)$ which does not depends on $\mathbf{\theta}$.
+Suppose that our fitting function $f(x, \mathbf{\theta})$ is the linear combination of some function $g_i(x)$ which does not depend on $\mathbf{\theta}$.
 
 \begin{align*}
 f(x, \mathbf{\theta}) &= \sum_i \theta_i g_i(x) \\
@@ -65,13 +65,13 @@ To minimize $\chi^2$, we require
 \frac{\partial \chi^2}{\partial \theta_i} = 0
 \end{equation*}
 
-then we have following equation, which is usually called normal equation.
+Then, we have the following equation, usually called the normal equation.
 
 \begin{equation*}
 \mathbf{\theta} = (G^T G)^{-1} G^T \mathbf{y}'
 \end{equation*}
 
-The $(G^T G)^{-1}$ is called paramter convariance matrix, which is denoted by ${Cov}$.
+The $(G^T G)^{-1}$ is called the parameter covariance matrix, which is denoted by ${Cov}$.
 
 The standard error of paramter ${Err}(\mathbf{\theta})$ is defined as
 
@@ -79,11 +79,11 @@ The standard error of paramter ${Err}(\mathbf{\theta})$ is defined as
 {Err}(\mathbf{\theta})^2 = \frac{\chi^2}{N-p} {diag}(Cov)
 \end{equation*}
 
-, where $N$ is the total number of data points and $p$ is the number of paramter.
+, where $N$ is the total number of data points, and $p$ is the number of parameter.
 
-Note that the $G$ is also the scaled jacobian of model function $f(x, \mathbf{\theta})$ with respect to paramter $\mathbf{\theta}$.
+Note that the $G$ is also the scaled Jacobian of the model function $f(x, \mathbf{\theta})$ concerning parameter $\mathbf{\theta}$.
 
-So, one can extend to definition of standard error of paramter in linear least square regression to non-linear one.
+So, one can extend the definition of the parameter's standard error in linear least square regression to a non-linear one.
 
 \begin{align*}
 {Cov} &= (J^T J)^{-1} \\
@@ -91,10 +91,10 @@ So, one can extend to definition of standard error of paramter in linear least s
 \end{align*}
 , where $J$ is the scaled jacobian of non-linear model function $f(x, \mathbf{\theta})$ with respect to paramter $\mathbf{\theta}$.
 
-Such paramter error estimation is called, Asymptotic Standard Errors.
+Such parameter error estimation is called Asymptotic Standard Error.
 However, strictly speaking, Asymptotic Standard Error estimation should not be used in non-linear least square regression.
 
-Our package `TRXASprefitpack` provides alternative error paramter estimation method based on `F-test`.
+Our package `TRXASprefitpack` provides an alternative error parameter estimation method based on the `F-test.`
 
 ## Alternative Paramter Error Estimation
 
@@ -104,12 +104,12 @@ Define $\chi^2_i(x)$ as
 \chi^2_i (x) = {arg}\,{min}_{\mathbf{\theta}, \theta_i = x} \chi^2 (\theta)
 \end{equation*}
 
-Then the number of paramter corresponding to $\chi^2_i$ is $P-1$.
+Then the number of parameters corresponding to $\chi^2_i$ is $P-1$.
 
 ### F-test based paramter error estimation
 
-Let $\chi^2_0 = \chi^2(\theta_0)$ be the minimum chi square value.
-One can estimates confidence interval of $i$th optimal paramter $\theta_{0, i}$ with significant level $\alpha$ by
+Let $\chi^2_0 = \chi^2(\theta_0)$ be the minimum chi-square value.
+One can estimates confidence interval of $i$th optimal parameter $\theta_{0, i}$ with significant level $\alpha$ by
 
 \begin{equation*}
 F_{\alpha}(1, n-p) = \frac{\chi^2_i(\theta)-\chi^2_0}{\chi^2_0/(n-p)}
@@ -117,9 +117,9 @@ F_{\alpha}(1, n-p) = \frac{\chi^2_i(\theta)-\chi^2_0}{\chi^2_0/(n-p)}
 
 ## Compare two different fit
 
-Assume that model 2 is the restriction of model 1. Then you can compare two model based on f-test.
+Assume that model 2 is the restriction of model 1. Then, you can compare two models based on the f-test.
 
-## Seperation Scheme
+## Separation Scheme
 
 Suppose that
 
@@ -140,12 +140,12 @@ The optimization problem
 {\arg}\,{min}_{\mathbf{\theta}_l} \chi^2(\mathbf{\theta}_l, \mathbf{\theta})
 \end{equation*}
 
-is just linear least square problem described in linear least square section and we know exact solution of such problem.
+is just a linear least square problem described in a linear least square section, and we know the exact solution to such a problem.
 Let $\mathbf{\theta}_{l} = \mathbf{C}(\mathbf{\theta})$ be the least norm solution of the linear least square problem then,
 
 \begin{align*}
 {arg}\,{min}_{\mathbf{\theta}} \chi^2(\mathbf{C}(\mathbf{\theta}), \mathbf{\theta}) &= {arg}\,{min}_{\mathbf{\theta}_l, \mathbf{\theta_{nl}}} \chi^2 \\
-\frac{\partial \chi^2(\mathbf{C}(\mathbf{\theta}), \mathbf{\theta})}{\partial \mathbf{C}(\mathbf{\theta}}  &= 0 
+\frac{\partial \chi^2(\mathbf{C}(\mathbf{\theta}), \mathbf{\theta})}{\partial \mathbf{C}(\mathbf{\theta})}  &= 0 
 \end{align*}
 
 So, by chain rule the gradient of $\chi^2(\mathbf{C}(\mathbf{\theta}), \mathbf{\theta})$ is
@@ -157,7 +157,7 @@ So, by chain rule the gradient of $\chi^2(\mathbf{C}(\mathbf{\theta}), \mathbf{\
 &= \frac{\partial \chi^2}{\partial \mathbf{\theta}}
 \end{align*}
 
-Because of $\frac{\partial \mathbf{C}(\mathbf{\theta})}{\partial \mathbf{\theta}}$ term, the analytic hessian of $\chi^2(mathbf{C}, mathbf{theta})$ is quite complicated. Currently the analytic hessian is not implemented. However in theory, analytic hessian is well defined.
+Because of $\frac{\partial \mathbf{C}(\mathbf{\theta})}{\partial \mathbf{\theta}}$ term, the analytic hessian of $\chi^2(\mathbf{C}, \mathbf{theta})$ is quite complicated. Currently, the analytic Hessian is not implemented. However, in theory, analytical Hessian is well defined.
 
 The Hessian of $\chi^2(\mathbf{C}, \mathbf{\theta})$ is
 
@@ -187,7 +187,7 @@ B'^T H_c B' &= B^T H_c B + N^T H_c B + B^T H_c N + N^T H_c N \\
 &= B^T H_c B
 \end{align*}
 
-Therefore $H'$ is well defined, eventhough $B$ is not unique.
+Therefore, $H'$ is well defined, even though $B$ is not unique.
 
-The seperation scheme reduces dimension of optimization problem and the gradient of $\chi^2(C,\theta)$ is same as that of original $\chi^2$ function, 
-so implementing seperation scheme will speed up optimization process.
+The separation scheme reduces the dimension of the optimization problem, and the gradient of $\chi^2(C,\theta)$ is the same as that of the original $\chi^2$ function, 
+so implementing a separation scheme will speed up the optimization process.
