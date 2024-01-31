@@ -10,7 +10,7 @@ from TRXASprefitpack import solve_seq_model, rate_eq_conv
 from TRXASprefitpack import fit_transient_exp
 from TRXASprefitpack import save_TransientResult, load_TransientResult
 
-def test_driver_transient_exp_4():
+def test_driver_transient_exp_same_t0_4():
     tau_1 = 0.5
     tau_2 = 2
     tau_3 = 10
@@ -36,37 +36,37 @@ def test_driver_transient_exp_4():
         solve_seq_model(np.array([tau_2, tau_3]), y0_2)
 
     # Now generates measured transient signal
-    # Last element is ground state
-    abs_1_1 = [1, 1, 1, 0]
-    abs_2_1 = [0.5, 0.8, 0.2, 0]
-    abs_3_1 = [-0.5, 0.7, 0.9, 0]
-    abs_4_1 = [0.6, 0.3, -1, 0]
+    # Last element is ground state or long lived species
+    abs_1_1 = [1, 1, 1, 0.3]
+    abs_2_1 = [0.5, 0.8, 0.2, 0.4]
+    abs_3_1 = [-0.5, 0.7, 0.9, 0.6]
+    abs_4_1 = [0.6, 0.3, -1, 0.7]
 
     abs_1_2 = [1, 1, 0]
     abs_2_2 = [0.5, 0.8, 0]
     abs_3_2 = [-0.5, 0.7, 0]
     abs_4_2 = [0.6, 0.3, 0]
 
-    t0 = np.random.uniform(-0.2, 0.2, 8) # perturb time zero of each scan
+    t0 = np.random.uniform(-0.2, 0.2, 2) # perturb time zero of each scan
 
     # generate measured data
     y_obs_1_1 = \
         rate_eq_conv(t_seq-t0[0], fwhm, abs_1_1, eigval_seq_1, V_seq_1, c_seq_1, irf='g')
     y_obs_2_1 = \
-        rate_eq_conv(t_seq-t0[1], fwhm, abs_2_1, eigval_seq_1, V_seq_1, c_seq_1, irf='g')
+        rate_eq_conv(t_seq-t0[0], fwhm, abs_2_1, eigval_seq_1, V_seq_1, c_seq_1, irf='g')
     y_obs_3_1 = \
-        rate_eq_conv(t_seq-t0[2], fwhm, abs_3_1, eigval_seq_1, V_seq_1, c_seq_1, irf='g')
+        rate_eq_conv(t_seq-t0[0], fwhm, abs_3_1, eigval_seq_1, V_seq_1, c_seq_1, irf='g')
     y_obs_4_1 = \
-        rate_eq_conv(t_seq-t0[3], fwhm, abs_4_1, eigval_seq_1, V_seq_1, c_seq_1, irf='g')
+        rate_eq_conv(t_seq-t0[0], fwhm, abs_4_1, eigval_seq_1, V_seq_1, c_seq_1, irf='g')
 
     y_obs_1_2 = \
-        rate_eq_conv(t_seq-t0[4], fwhm, abs_1_2, eigval_seq_2, V_seq_2, c_seq_2, irf='g')
+        rate_eq_conv(t_seq-t0[1], fwhm, abs_1_2, eigval_seq_2, V_seq_2, c_seq_2, irf='g')
     y_obs_2_2 = \
-        rate_eq_conv(t_seq-t0[5], fwhm, abs_2_2, eigval_seq_2, V_seq_2, c_seq_2, irf='g')
+        rate_eq_conv(t_seq-t0[1], fwhm, abs_2_2, eigval_seq_2, V_seq_2, c_seq_2, irf='g')
     y_obs_3_2 = \
-        rate_eq_conv(t_seq-t0[6], fwhm, abs_3_2, eigval_seq_2, V_seq_2, c_seq_2, irf='g')
+        rate_eq_conv(t_seq-t0[1], fwhm, abs_3_2, eigval_seq_2, V_seq_2, c_seq_2, irf='g')
     y_obs_4_2 = \
-        rate_eq_conv(t_seq-t0[7], fwhm, abs_4_2, eigval_seq_2, V_seq_2, c_seq_2, irf='g')
+        rate_eq_conv(t_seq-t0[1], fwhm, abs_4_2, eigval_seq_2, V_seq_2, c_seq_2, irf='g')
 
     # generate measured intensity
     i_obs_1 = np.vstack((y_obs_1_1, y_obs_2_1, y_obs_3_1, y_obs_4_1)).T
@@ -74,34 +74,34 @@ def test_driver_transient_exp_4():
 
     eps_obs = np.ones_like(i_obs_1)
 
-    tau_mask = [np.array([True, False, True, True]),
-                np.array([False, True, True, False])]
+    tau_mask = [np.array([True, False, True, True, True]),
+                np.array([False, True, True, False, False])]
 
     t = [t_seq, t_seq]
     intensity = [i_obs_1, i_obs_2]
     eps = [eps_obs/1000, eps_obs/1000]
 
 
-    ans = np.array([fwhm, t0[0], t0[1], t0[2], t0[3],
-    t0[4], t0[5], t0[6], t0[7], tau_1, tau_2, tau_3, tau_4])
+    ans = np.array([fwhm, t0[0], t0[1], tau_1, tau_2, tau_3, tau_4])
 
     bound_fwhm = [(0.05, 0.2)]
-    bound_t0 = [(-0.4, 0.4)]*8
+    bound_t0 = [(-0.4, 0.4)]*2
     bound_tau = [(0.1, 1), (1, 10), (1, 100), (100, 10000)]
     fwhm_init = np.random.uniform(0.05, 0.2)
-    t0_init = np.random.uniform(-0.4, 0.4, 8)
+    t0_init = np.random.uniform(-0.4, 0.4, 2)
     tau_init = np.array([np.random.uniform(0.1, 1), np.random.uniform(1, 10),
     np.random.uniform(1, 100), np.random.uniform(100, 10000)])
 
 
-    result_ampgo = fit_transient_exp('g', fwhm_init, t0_init, tau_init, False,
-    tau_mask=tau_mask, method_glb='ampgo', 
+    result_ampgo = fit_transient_exp('g', fwhm_init, t0_init, tau_init, True,
+    method_glb='ampgo', tau_mask=tau_mask, 
     bound_fwhm=bound_fwhm, bound_t0=bound_t0, bound_tau=bound_tau,
+    same_t0=True,
     t=t, intensity=intensity, eps=eps)
 
-    save_TransientResult(result_ampgo, 'test_driver_transient_exp_4')
-    load_result_ampgo = load_TransientResult('test_driver_transient_exp_4')
-    os.remove('test_driver_transient_exp_4.h5')
+    save_TransientResult(result_ampgo, 'test_driver_transient_exp_t0_4')
+    load_result_ampgo = load_TransientResult('test_driver_transient_exp_t0_4')
+    os.remove('test_driver_transient_exp_t0_4.h5')
 
     assert np.allclose(result_ampgo['x'], ans)
     assert str(result_ampgo) == str(load_result_ampgo)
