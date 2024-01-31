@@ -305,7 +305,7 @@ def test_res_grad_decay_4():
         tau_mask = tau_mask,
         t=t, intensity=intensity, eps=eps)**2), epsilon)
 
-    res_tst, grad_tst = res_grad_decay(x0, 3, False, 'g',
+    res_tst, grad_tst = res_grad_decay(x0, 4, False, 'g',
     np.zeros_like(x0, dtype=bool), tau_mask = tau_mask,
     t=t, intensity=intensity, eps=eps)
 
@@ -1037,13 +1037,13 @@ def test_res_grad_decay_same_t0_4():
     res_ref = 1/2*np.sum(residual_decay(x0, False, 'g', tau_mask=tau_mask,
     t=t, intensity=intensity, eps=eps)**2)
     res_tst_1 = 1/2*np.sum(residual_decay_same_t0(x0_tst, False, 'g',
-    t=t, intensity=intensity, eps=eps)**2)
+    tau_mask=tau_mask, t=t, intensity=intensity, eps=eps)**2)
 
     grad_ref = approx_fprime(x0_tst, lambda x0: \
         1/2*np.sum(residual_decay_same_t0(x0, False, 'g', tau_mask=tau_mask,
         t=t, intensity=intensity, eps=eps)**2), epsilon)
 
-    res_tst_2, grad_tst = res_grad_decay_same_t0(x0_tst, 3, False, 'g',
+    res_tst_2, grad_tst = res_grad_decay_same_t0(x0_tst, 4, False, 'g',
     np.zeros_like(x0_tst, dtype=bool), tau_mask=tau_mask,
     t=t, intensity=intensity, eps=eps)
 
@@ -1508,5 +1508,3 @@ def test_res_grad_both_same_t0_3():
     assert np.allclose(res_tst_1, res_tst_2)
     assert np.allclose(grad_ref, grad_tst, rtol=rel_tol,
     atol=abs_tol)
-
-
