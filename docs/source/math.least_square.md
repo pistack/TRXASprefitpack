@@ -157,7 +157,7 @@ So, by chain rule the gradient of $\chi^2(\mathbf{C}(\mathbf{\theta}), \mathbf{\
 &= \frac{\partial \chi^2}{\partial \mathbf{\theta}}
 \end{align*}
 
-Because of $\frac{\partial \mathbf{C}(\mathbf{\theta})}{\partial \mathbf{\theta}}$ term, the analytic hessian of $\chi^2(mathbf{C}, mathbf{theta})$ is quite complicated.
+Because of $\frac{\partial \mathbf{C}(\mathbf{\theta})}{\partial \mathbf{\theta}}$ term, the analytic hessian of $\chi^2(mathbf{C}, mathbf{theta})$ is quite complicated. Currently the analytic hessian is not implemented. However in theory, analytic hessian is well defined.
 
 The Hessian of $\chi^2(\mathbf{C}, \mathbf{\theta})$ is
 
@@ -168,7 +168,7 @@ The Hessian of $\chi^2(\mathbf{C}, \mathbf{\theta})$ is
 Note that $\frac{\partial \chi^2(\mathbf{C}(\mathbf{\theta}), \mathbf{\theta})}{\partial \mathbf{C}_j(\mathbf{\theta})} = 0$ for all $\theta$. Take derivative of $\mathbf{\theta}_i$ then
 
 \begin{equation*}
-\frac{\partial^2 \chi^2}{\partial \mathbf{theta}_i \partial \mathbf{C}_j} + \sum_k \frac{\partial^2 \chi^2}{\partial \mathbf{C}_j \partial \mathbf{C}_k} \frac{\partial \mathbf{C}_k}{\partial \mathbf{\theta}_i} = 0.
+\frac{\partial^2 \chi^2}{\partial \mathbf{\theta}_i \partial \mathbf{C}_j} + \sum_k \frac{\partial^2 \chi^2}{\partial \mathbf{C}_j \partial \mathbf{C}_k} \frac{\partial \mathbf{C}_k}{\partial \mathbf{\theta}_i} = 0.
 \end{equation*}
 
 For simplicity, denote $H_c = [\frac{\partial^2 \chi^2}{\partial C_i \partial C_j}]_{ij}$, $H_{\theta} = [\frac{\partial^2 \chi^2}{\partial \theta_i \partial \theta_j}]_{ij}$, $H_{\theta c} = [\frac{\partial^2 \chi^2}{\partial \theta_i \partial C_j}]_{ij}$, and $B = [\frac{\partial C_i}{\partial \theta_j}]_{ij}$.
