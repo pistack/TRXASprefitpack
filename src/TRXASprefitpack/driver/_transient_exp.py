@@ -31,6 +31,7 @@ def fit_transient_exp(irf: str, fwhm_init: Union[float, np.ndarray],
                       bound_t0: Optional[Sequence[Tuple[float, float]]] = None,
                       bound_tau: Optional[Sequence[Tuple[float, float]]] = None,
                       same_t0: Optional[bool] = False,
+                      tau_mask: Optional[Sequence[np.ndarray]] = None,
                       name_of_dset: Optional[Sequence[str]] = None,
                       t: Optional[Sequence[np.ndarray]] = None,
                       intensity: Optional[Sequence[np.ndarray]] = None,
@@ -45,7 +46,7 @@ def fit_transient_exp(irf: str, fwhm_init: Union[float, np.ndarray],
     Moreover this driver uses two step method to search best parameter, its covariance and
     estimated parameter error.
 
-    Step 1. (basinhopping)
+    Step 1. (basinhopping or ampgo)
     Use global optimization to find rough global minimum of our objective function.
     In this stage, it use analytic gradient for scalar residual function.
 
@@ -83,6 +84,8 @@ def fit_transient_exp(irf: str, fwhm_init: Union[float, np.ndarray],
      bound_tau (sequence of tuple): boundary for lifetime constant for decay component,
       if `bound_tau` is `None`, the upper and lower bound are given by ``set_bound_tau``.
      same_t0 (bool): Whether or not time zero of every time delay scan in the same dataset should be same
+     tau_mask (sequence of boolean np.ndarray): whether or not include jth time constant in ith dataset fitting (tau_mask[i][j])
+      If base is True, size of tau_mask[i] should be `num_tau+1`.
      name_of_dset (sequence of str): name of each dataset
      t (sequence of np.narray): time scan range for each datasets
      intensity (sequence of np.ndarray): sequence of intensity of datasets for time delay scan
@@ -137,7 +140,7 @@ def fit_transient_exp(irf: str, fwhm_init: Union[float, np.ndarray],
         fix_param_idx[i] = (bound[i][0] == bound[i][1])
 
     if method_glb is not None:
-        go_args = (num_comp, base, irf, fix_param_idx,
+        go_args = (num_comp, base, irf, fix_param_idx, tau_mask,
                    t, intensity, eps)
         min_go_kwargs = {'args': go_args, 'jac': True, 'bounds': bound}
         if kwargs_glb is not None:
@@ -162,7 +165,7 @@ def fit_transient_exp(irf: str, fwhm_init: Union[float, np.ndarray],
         res_go['nfev'] = 0
 
     param_gopt = res_go['x']
-    args_lsq = (base, irf, t, intensity, eps)
+    args_lsq = (base, irf, tau_mask, t, intensity, eps)
 
     if kwargs_lsq is not None:
         _ = kwargs_lsq.pop('args', None)
@@ -244,7 +247,12 @@ def fit_transient_exp(irf: str, fwhm_init: Union[float, np.ndarray],
         param_name[1] = 'fwhm_L'
 
     for i in range(len(t)):
-        c[i] = np.empty((num_comp+1*base, intensity[i].shape[1]))
+        c[i] = np.zeros((num_comp+1*base, intensity[i].shape[1]))
+
+        if tau_mask is None:
+            tm = np.ones((num_comp+1*base), dtype=bool)
+        else:
+            tm = tau_mask[i]
 
         if same_t0:
             A = \
@@ -257,8 +265,8 @@ def fit_transient_exp(irf: str, fwhm_init: Union[float, np.ndarray],
                 A = \
                     make_A_matrix_exp(t[i]-param_opt[t0_idx],
                     fwhm_pv, tau_opt, base, irf, eta)
-            c[i][:, j] = fact_anal_A(A, intensity[i][:, j], eps[i][:, j])
-            fit[i][:, j] = c[i][:, j] @ A
+            c[i][tm, j] = fact_anal_A(A[tm, :], intensity[i][:, j], eps[i][:, j])
+            fit[i][:, j] = c[i][:, j] @ A[tm, :]
             if not same_t0:
                 param_name[t0_idx] = f't_0_{i+1}_{j+1}'
                 t0_idx = t0_idx + 1

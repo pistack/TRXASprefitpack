@@ -18,9 +18,11 @@ from ..mathfun.exp_conv_irf import deriv_exp_sum_conv_gau, deriv_exp_sum_conv_ca
 # residual and gradient function for exponential decay model
 
 
-def residual_decay(x0: np.ndarray, base: bool, irf: str,
+def residual_decay(x0: np.ndarray, base: bool, irf: str, 
+                   tau_mask: Optional[Sequence[np.ndarray]] = None,
                    t: Optional[Sequence[np.ndarray]] = None,
-                   intensity: Optional[Sequence[np.ndarray]] = None, eps: Optional[Sequence[np.ndarray]] = None) -> np.ndarray:
+                   intensity: Optional[Sequence[np.ndarray]] = None, 
+                   eps: Optional[Sequence[np.ndarray]] = None) -> np.ndarray:
     '''
     residual_decay
     scipy.optimize.least_squares compatible vector residual function for fitting multiple set of time delay scan with the
@@ -40,7 +42,6 @@ def residual_decay(x0: np.ndarray, base: bool, irf: str,
         * 3rd to :math:`3+N_{scan}`: time zero of each scan
         * :math:`3+N_{scan}` to :math:`3+N_{scan}+N_{\\tau}`: time constant of each decay component
 
-     num_comp: number of exponential decay component (except base)
      base: whether or not include baseline (i.e. very long lifetime component)
      irf: shape of instrumental response function
 
@@ -50,6 +51,9 @@ def residual_decay(x0: np.ndarray, base: bool, irf: str,
 
         For pseudo voigt profile, the mixing parameter :math:`\\eta(f_G, f_L)` and
         uniform fwhm paramter :math:`f(f_G, f_L)` are calculated by `calc_eta` and `calc_fwhm` routine
+     tau_mask (sequence of boolean np.ndarray): whether or not include jth time constant in ith dataset fitting (tau_mask[i][j])
+      If base is True, size of tau_mask[i] should be `num_tau+1`.
+
      t: time points for each data set
      intensity: sequence of intensity of datasets
      eps: sequence of estimated error of datasets
@@ -85,28 +89,35 @@ def residual_decay(x0: np.ndarray, base: bool, irf: str,
 
     end = 0
     t0_idx = num_irf
+    dset_idx = 0
     for ti, d, e in zip(t, intensity, eps):
+        if tau_mask is None:
+            tm = np.ones_like(k, dtype=bool)
+        else:
+            tm = tau_mask[dset_idx]
         for j in range(d.shape[1]):
             t0 = x0[t0_idx]
             if irf == 'g':
-                A = make_A_matrix_gau(ti-t0, fwhm, k)
+                A = make_A_matrix_gau(ti-t0, fwhm, k[tm])
             elif irf == 'c':
-                A = make_A_matrix_cauchy(ti-t0, fwhm, k)
+                A = make_A_matrix_cauchy(ti-t0, fwhm, k[tm])
             else:
-                A_gau = make_A_matrix_gau(ti-t0, fwhm, k)
-                A_cauchy = make_A_matrix_cauchy(ti-t0, fwhm, k)
+                A_gau = make_A_matrix_gau(ti-t0, fwhm, k[tm])
+                A_cauchy = make_A_matrix_cauchy(ti-t0, fwhm, k[tm])
                 A = A_gau + eta*(A_cauchy-A_gau)
             c = fact_anal_A(A, d[:, j], e[:, j])
             chi[end:end+d.shape[0]] = ((c@A) - d[:, j])/e[:, j]
 
             end = end + d.shape[0]
             t0_idx = t0_idx + 1
+        dset_idx = dset_idx + 1
 
     return chi
 
 
 def res_grad_decay(x0: np.ndarray, num_comp: int, base: bool, irf: str,
                    fix_param_idx: Optional[np.ndarray] = None,
+                   tau_mask: Optional[np.ndarray] = None,
                    t: Optional[Sequence[np.ndarray]] = None,
                    intensity: Optional[Sequence[np.ndarray]] = None,
                    eps: Optional[Sequence[np.ndarray]] = None) -> Tuple[np.ndarray, np.ndarray]:
@@ -139,8 +150,12 @@ def res_grad_decay(x0: np.ndarray, num_comp: int, base: bool, irf: str,
 
         For pseudo voigt profile, the mixing parameter :math:`\\eta(f_G, f_L)` and
         uniform fwhm paramter :math:`f(f_G, f_L)` are calculated by `calc_eta` and `calc_fwhm` routine
-     t: time points for each data set
+
      fix_param_idx: index for fixed parameter (masked array for `x0`)
+     tau_mask (sequence of boolean np.ndarray): whether or not include jth time constant in ith dataset fitting (tau_mask[i][j])
+      If base is True, size of tau_mask[i] should be `num_tau+1`.
+
+     t: time points for each data set
      intensity: sequence of intensity of datasets
      eps: sequence of estimated error of datasets
 
@@ -181,22 +196,30 @@ def res_grad_decay(x0: np.ndarray, num_comp: int, base: bool, irf: str,
 
     end = 0
     t0_idx = num_irf
+    dset_idx = 0
 
     for ti, d, e in zip(t, intensity, eps):
         step = d.shape[0]
+        if tau_mask is None:
+            tm = np.ones_like(k, dtype=bool)
+        else:
+            tm = tau_mask[dset_idx]
         for j in range(d.shape[1]):
             t0 = x0[t0_idx]
             if irf == 'g':
-                A = make_A_matrix_gau(ti-t0, fwhm, k)
+                A = make_A_matrix_gau(ti-t0, fwhm, k[tm])
             elif irf == 'c':
-                A = make_A_matrix_cauchy(ti-t0, fwhm, k)
+                A = make_A_matrix_cauchy(ti-t0, fwhm, k[tm])
             else:
-                A_gau = make_A_matrix_gau(ti-t0, fwhm, k)
-                A_cauchy = make_A_matrix_cauchy(ti-t0, fwhm, k)
+                A_gau = make_A_matrix_gau(ti-t0, fwhm, k[tm])
+                A_cauchy = make_A_matrix_cauchy(ti-t0, fwhm, k[tm])
                 diff = A_cauchy-A_gau
                 A = A_gau + eta*diff
-            c = fact_anal_A(A, d[:, j], e[:, j])
-            chi[end:end+step] = (c@A-d[:, j])/e[:, j]
+            cm = fact_anal_A(A, d[:, j], e[:, j])
+            chi[end:end+step] = (cm@A-d[:, j])/e[:, j]
+
+            c = np.zeros_like(k)
+            c[tm] = cm
 
             if irf == 'g':
                 grad_tmp = deriv_exp_sum_conv_gau(ti-t0, fwhm, 1/tau, c, base)
@@ -222,6 +245,7 @@ def res_grad_decay(x0: np.ndarray, num_comp: int, base: bool, irf: str,
 
             end = end + step
             t0_idx = t0_idx + 1
+        dset_idx = dset_idx+1
 
     mask = np.ones(num_param, dtype=bool)
     mask[num_irf:num_irf+num_t0] = False
@@ -233,6 +257,7 @@ def res_grad_decay(x0: np.ndarray, num_comp: int, base: bool, irf: str,
     return np.sum(chi**2)/2, grad
 
 def residual_decay_same_t0(x0: np.ndarray, base: bool, irf: str,
+                           tau_mask: Optional[Sequence[np.ndarray]] = None,
                            t: Optional[Sequence[np.ndarray]] = None,
                            intensity: Optional[Sequence[np.ndarray]] = None,
                            eps: Optional[Sequence[np.ndarray]] = None) -> np.ndarray:
@@ -257,7 +282,6 @@ def residual_decay_same_t0(x0: np.ndarray, base: bool, irf: str,
         * 3rd to :math:`3+N_{dset}`: time zero of each data set
         * :math:`3+N_{dset}` to :math:`3+N_{dset}+N_{\\tau}`: time constant of each decay component
 
-     num_comp: number of exponential decay component (except base)
      base: whether or not include baseline (i.e. very long lifetime component)
      irf: shape of instrumental response function
 
@@ -267,6 +291,10 @@ def residual_decay_same_t0(x0: np.ndarray, base: bool, irf: str,
 
         For pseudo voigt profile, the mixing parameter :math:`\\eta(f_G, f_L)` and
         uniform fwhm paramter :math:`f(f_G, f_L)` are calculated by `calc_eta` and `calc_fwhm` routine
+
+     tau_mask (sequence of boolean np.ndarray): whether or not include jth time constant in ith dataset fitting (tau_mask[i][j])
+      If base is True, size of tau_mask[i] should be `num_tau+1`.
+
      t: time points for each data set
      intensity: sequence of intensity of datasets
      eps: sequence of estimated error of datasets
@@ -301,15 +329,20 @@ def residual_decay_same_t0(x0: np.ndarray, base: bool, irf: str,
 
     end = 0
     t0_idx = num_irf
+    dset_idx = 0
     for ti, d, e in zip(t, intensity, eps):
         t0 = x0[t0_idx]
-        if irf == 'g':
-            A = make_A_matrix_gau(ti-t0, fwhm, k)
-        elif irf == 'c':
-            A = make_A_matrix_cauchy(ti-t0, fwhm, k)
+        if tau_mask is None:
+            tm = np.ones_like(k, dtype=bool)
         else:
-            A_gau = make_A_matrix_gau(ti-t0, fwhm, k)
-            A_cauchy = make_A_matrix_cauchy(ti-t0, fwhm, k)
+            tm = tau_mask[dset_idx]
+        if irf == 'g':
+            A = make_A_matrix_gau(ti-t0, fwhm, k[tm])
+        elif irf == 'c':
+            A = make_A_matrix_cauchy(ti-t0, fwhm, k[tm])
+        else:
+            A_gau = make_A_matrix_gau(ti-t0, fwhm, k[tm])
+            A_cauchy = make_A_matrix_cauchy(ti-t0, fwhm, k[tm])
             A = A_gau + eta*(A_cauchy-A_gau)
         for j in range(d.shape[1]):
             c = fact_anal_A(A, d[:, j], e[:, j])
@@ -317,11 +350,13 @@ def residual_decay_same_t0(x0: np.ndarray, base: bool, irf: str,
 
             end = end + d.shape[0]
         t0_idx = t0_idx + 1
+        dset_idx = dset_idx + 1
 
     return chi
 
 def res_grad_decay_same_t0(x0: np.ndarray, num_comp: int, base: bool, irf: str,
                            fix_param_idx: Optional[np.ndarray] = None,
+                           tau_mask: Optional[np.ndarray] = None,
                            t: Optional[Sequence[np.ndarray]] = None,
                            intensity: Optional[Sequence[np.ndarray]] = None,
                            eps: Optional[Sequence[np.ndarray]] = None) -> Tuple[np.ndarray, np.ndarray]:
@@ -355,8 +390,10 @@ def res_grad_decay_same_t0(x0: np.ndarray, num_comp: int, base: bool, irf: str,
 
         For pseudo voigt profile, the mixing parameter :math:`\\eta(f_G, f_L)` and
         uniform fwhm paramter :math:`f(f_G, f_L)` are calculated by `calc_eta` and `calc_fwhm` routine
-     t: time points for each data set
      fix_param_idx: index for fixed parameter (masked array for `x0`)
+     tau_mask (sequence of boolean np.ndarray): whether or not include jth time constant in ith dataset fitting (tau_mask[i][j])
+      If base is True, size of tau_mask[i] should be `num_tau+1`.
+     t: time points for each data set
      intensity: sequence of intensity of datasets
      eps: sequence of estimated error of datasets
 
@@ -399,21 +436,30 @@ def res_grad_decay_same_t0(x0: np.ndarray, num_comp: int, base: bool, irf: str,
 
     end = 0
     t0_idx = num_irf
+    dset_idx = 0
     for ti, d, e in zip(t, intensity, eps):
+
+        # initialize
         step = d.shape[0]
+        t0 = x0[t0_idx]
         A = np.empty((num_comp+1*base, step))
         A_grad_decay = np.empty((num_comp+1*base, step, 3))
         grad_decay = np.empty((step, num_comp+2))
 
-        t0 = x0[t0_idx]
+        if tau_mask is None:
+            tm = np.ones_like(k, dtype=bool)
+        else:
+            tm = tau_mask[dset_idx]
+
+        # caching
         if irf == 'g':
-            A[:num_comp+1*base, :] = make_A_matrix_gau(ti-t0, fwhm, k)
+            A = make_A_matrix_gau(ti-t0, fwhm, k)
             for i in range(num_comp):
                 A_grad_decay[i, :, :] = deriv_exp_conv_gau(ti-t0, fwhm, k[i])
             if base:
                 A_grad_decay[-1, :, :] = deriv_exp_conv_gau(ti-t0, fwhm, 0)
         elif irf == 'c':
-            A[:num_comp+1*base, :] = make_A_matrix_cauchy(ti-t0, fwhm, k)
+            A = make_A_matrix_cauchy(ti-t0, fwhm, k)
             for i in range(num_comp):
                 A_grad_decay[i, :, :] = deriv_exp_conv_cauchy(ti-t0, fwhm, k[i])
             if base:
@@ -422,7 +468,7 @@ def res_grad_decay_same_t0(x0: np.ndarray, num_comp: int, base: bool, irf: str,
             tmp_gau = make_A_matrix_gau(ti-t0, fwhm, k)
             tmp_cauchy = make_A_matrix_cauchy(ti-t0, fwhm, k)
             diff = tmp_cauchy-tmp_gau
-            A[:num_comp+1*base, :] = tmp_gau + eta*diff
+            A = tmp_gau + eta*diff
             for i in range(num_comp):
                 tmp_grad_gau = deriv_exp_conv_gau(ti-t0, fwhm, k[i])
                 tmp_grad_cauchy = deriv_exp_conv_cauchy(ti-t0, fwhm, k[i])
@@ -433,11 +479,14 @@ def res_grad_decay_same_t0(x0: np.ndarray, num_comp: int, base: bool, irf: str,
                 A_grad_decay[-1, :, :] = tmp_grad_gau + eta*(tmp_grad_cauchy-tmp_grad_gau)
 
         for j in range(d.shape[1]):
-            c = fact_anal_A(A, d[:, j], e[:, j])
-            chi[end:end+step] = (c@A-d[:, j])/e[:, j]
+            cm = fact_anal_A(A[tm, :], d[:, j], e[:, j])
+            chi[end:end+step] = (cm@A[tm, :]-d[:, j])/e[:, j]
+
+            c = np.zeros_like(k)
+            c[tm] = cm
 
             grad_decay[:, :2] = \
-                np.tensordot(c[:num_comp+1*base], A_grad_decay[:, :, :2], axes=1)
+                np.tensordot(c, A_grad_decay[:, :, :2], axes=1)
             for i in range(num_comp):
                 grad_decay[:, 2+i] = c[i]*A_grad_decay[i, :, 2]
 
@@ -447,7 +496,7 @@ def res_grad_decay_same_t0(x0: np.ndarray, num_comp: int, base: bool, irf: str,
                 df[end:end+step, 0] = grad_decay[:, 1]
 
             else:
-                cdiff = (c[:num_comp+1*base]@diff)/e[:, j]
+                cdiff = (c@diff)/e[:, j]
                 df[end:end+step, 0] = dfwhm_G*grad_decay[:, 1]+deta_G*cdiff
                 df[end:end+step, 1] = dfwhm_L*grad_decay[:, 1]+deta_L*cdiff
 
@@ -458,6 +507,7 @@ def res_grad_decay_same_t0(x0: np.ndarray, num_comp: int, base: bool, irf: str,
             end = end + step
 
         t0_idx = t0_idx + 1
+        dset_idx = dset_idx + 1
 
     mask = np.ones(num_param, dtype=bool)
     mask[num_irf:num_irf+num_dataset] = False
