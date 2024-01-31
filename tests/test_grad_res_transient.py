@@ -229,7 +229,8 @@ def test_res_grad_decay_4():
     tau_4 = 1000
     fwhm = 0.100
     # initial condition
-    y0 = np.array([1, 0, 0, 0])
+    y0_1 = np.array([1, 0, 0, 0])
+    y0_2 = np.array([1, 0, 0])
 
     # set time range (mixed step)
     t_seq1 = np.arange(-2, -1, 0.2)
@@ -242,37 +243,42 @@ def test_res_grad_decay_4():
 
     t_seq = np.hstack((t_seq1, t_seq2, t_seq3, t_seq4, t_seq5, t_seq6, t_seq7))
     eigval_seq_1, V_seq_1, c_seq_1 = \
-        solve_seq_model(np.array([tau_1, tau_3, tau_4]), y0)
+        solve_seq_model(np.array([tau_1, tau_3, tau_4]), y0_1)
     eigval_seq_2, V_seq_2, c_seq_2 = \
-        solve_seq_model(np.array([tau_2, tau_3]), y0)
+        solve_seq_model(np.array([tau_2, tau_3]), y0_2)
 
     # Now generates measured transient signal
     # Last element is ground state
-    abs_1 = [1, 1, 1, 0]
-    abs_2 = [0.5, 0.8, 0.2, 0]
-    abs_3 = [-0.5, 0.7, 0.9, 0]
-    abs_4 = [0.6, 0.3, -1, 0]
+    abs_1_1 = [1, 1, 1, 0]
+    abs_2_1 = [0.5, 0.8, 0.2, 0]
+    abs_3_1 = [-0.5, 0.7, 0.9, 0]
+    abs_4_1 = [0.6, 0.3, -1, 0]
+
+    abs_1_2 = [1, 1, 0]
+    abs_2_2 = [0.5, 0.8, 0]
+    abs_3_2 = [-0.5, 0.7, 0]
+    abs_4_2 = [0.6, 0.3, 0]
 
     t0 = np.random.uniform(-0.2, 0.2, 8) # perturb time zero of each scan
 
     # generate measured data
     y_obs_1_1 = \
-        rate_eq_conv(t_seq-t0[0], fwhm, abs_1, eigval_seq_1, V_seq_1, c_seq_1, irf='g')
+        rate_eq_conv(t_seq-t0[0], fwhm, abs_1_1, eigval_seq_1, V_seq_1, c_seq_1, irf='g')
     y_obs_2_1 = \
-        rate_eq_conv(t_seq-t0[1], fwhm, abs_2, eigval_seq_1, V_seq_1, c_seq_1, irf='g')
+        rate_eq_conv(t_seq-t0[1], fwhm, abs_2_1, eigval_seq_1, V_seq_1, c_seq_1, irf='g')
     y_obs_3_1 = \
-        rate_eq_conv(t_seq-t0[2], fwhm, abs_3, eigval_seq_1, V_seq_1, c_seq_1, irf='g')
+        rate_eq_conv(t_seq-t0[2], fwhm, abs_3_1, eigval_seq_1, V_seq_1, c_seq_1, irf='g')
     y_obs_4_1 = \
-        rate_eq_conv(t_seq-t0[3], fwhm, abs_4, eigval_seq_1, V_seq_1, c_seq_1, irf='g')
+        rate_eq_conv(t_seq-t0[3], fwhm, abs_4_1, eigval_seq_1, V_seq_1, c_seq_1, irf='g')
 
     y_obs_1_2 = \
-        rate_eq_conv(t_seq-t0[4], fwhm, abs_1, eigval_seq_2, V_seq_2, c_seq_2, irf='g')
+        rate_eq_conv(t_seq-t0[4], fwhm, abs_1_2, eigval_seq_2, V_seq_2, c_seq_2, irf='g')
     y_obs_2_2 = \
-        rate_eq_conv(t_seq-t0[5], fwhm, abs_2, eigval_seq_2, V_seq_2, c_seq_2, irf='g')
+        rate_eq_conv(t_seq-t0[5], fwhm, abs_2_2, eigval_seq_2, V_seq_2, c_seq_2, irf='g')
     y_obs_3_2 = \
-        rate_eq_conv(t_seq-t0[6], fwhm, abs_3, eigval_seq_2, V_seq_2, c_seq_2, irf='g')
+        rate_eq_conv(t_seq-t0[6], fwhm, abs_3_2, eigval_seq_2, V_seq_2, c_seq_2, irf='g')
     y_obs_4_2 = \
-        rate_eq_conv(t_seq-t0[7], fwhm, abs_4, eigval_seq_2, V_seq_2, c_seq_2, irf='g')
+        rate_eq_conv(t_seq-t0[7], fwhm, abs_4_2, eigval_seq_2, V_seq_2, c_seq_2, irf='g')
 
     # generate measured intensity
     i_obs_1 = np.vstack((y_obs_1_1, y_obs_2_1, y_obs_3_1, y_obs_4_1)).T
@@ -959,7 +965,8 @@ def test_res_grad_decay_same_t0_4():
     tau_4 = 1000
     fwhm = 0.100
     # initial condition
-    y0 = np.array([1, 0, 0, 0])
+    y0_1 = np.array([1, 0, 0, 0])
+    y0_2 = np.array([1, 0, 0])
 
     # set time range (mixed step)
     t_seq1 = np.arange(-2, -1, 0.2)
@@ -972,37 +979,42 @@ def test_res_grad_decay_same_t0_4():
 
     t_seq = np.hstack((t_seq1, t_seq2, t_seq3, t_seq4, t_seq5, t_seq6, t_seq7))
     eigval_seq_1, V_seq_1, c_seq_1 = \
-        solve_seq_model(np.array([tau_1, tau_3, tau_4]), y0)
+        solve_seq_model(np.array([tau_1, tau_3, tau_4]), y0_1)
     eigval_seq_2, V_seq_2, c_seq_2 = \
-        solve_seq_model(np.array([tau_2, tau_3]), y0)
+        solve_seq_model(np.array([tau_2, tau_3]), y0_2)
 
     # Now generates measured transient signal
     # Last element is ground state
-    abs_1 = [1, 1, 1, 0]
-    abs_2 = [0.5, 0.8, 0.2, 0]
-    abs_3 = [-0.5, 0.7, 0.9, 0]
-    abs_4 = [0.6, 0.3, -1, 0]
+    abs_1_1 = [1, 1, 1, 0]
+    abs_2_1 = [0.5, 0.8, 0.2, 0]
+    abs_3_1 = [-0.5, 0.7, 0.9, 0]
+    abs_4_1 = [0.6, 0.3, -1, 0]
+
+    abs_1_2 = [1, 1, 0]
+    abs_2_2 = [0.5, 0.8, 0]
+    abs_3_2 = [-0.5, 0.7, 0]
+    abs_4_2 = [0.6, 0.3, 0]
 
     t0 = np.random.uniform(-0.2, 0.2, 2) # perturb time zero of each scan
 
     # generate measured data
     y_obs_1_1 = \
-        rate_eq_conv(t_seq-t0[0], fwhm, abs_1, eigval_seq_1, V_seq_1, c_seq_1, irf='g')
+        rate_eq_conv(t_seq-t0[0], fwhm, abs_1_1, eigval_seq_1, V_seq_1, c_seq_1, irf='g')
     y_obs_2_1 = \
-        rate_eq_conv(t_seq-t0[0], fwhm, abs_2, eigval_seq_1, V_seq_1, c_seq_1, irf='g')
+        rate_eq_conv(t_seq-t0[0], fwhm, abs_2_1, eigval_seq_1, V_seq_1, c_seq_1, irf='g')
     y_obs_3_1 = \
-        rate_eq_conv(t_seq-t0[0], fwhm, abs_3, eigval_seq_1, V_seq_1, c_seq_1, irf='g')
+        rate_eq_conv(t_seq-t0[0], fwhm, abs_3_1, eigval_seq_1, V_seq_1, c_seq_1, irf='g')
     y_obs_4_1 = \
-        rate_eq_conv(t_seq-t0[0], fwhm, abs_4, eigval_seq_1, V_seq_1, c_seq_1, irf='g')
+        rate_eq_conv(t_seq-t0[0], fwhm, abs_4_1, eigval_seq_1, V_seq_1, c_seq_1, irf='g')
 
     y_obs_1_2 = \
-        rate_eq_conv(t_seq-t0[1], fwhm, abs_1, eigval_seq_2, V_seq_2, c_seq_2, irf='g')
+        rate_eq_conv(t_seq-t0[1], fwhm, abs_1_2, eigval_seq_2, V_seq_2, c_seq_2, irf='g')
     y_obs_2_2 = \
-        rate_eq_conv(t_seq-t0[1], fwhm, abs_2, eigval_seq_2, V_seq_2, c_seq_2, irf='g')
+        rate_eq_conv(t_seq-t0[1], fwhm, abs_2_2, eigval_seq_2, V_seq_2, c_seq_2, irf='g')
     y_obs_3_2 = \
-        rate_eq_conv(t_seq-t0[1], fwhm, abs_3, eigval_seq_2, V_seq_2, c_seq_2, irf='g')
+        rate_eq_conv(t_seq-t0[1], fwhm, abs_3_2, eigval_seq_2, V_seq_2, c_seq_2, irf='g')
     y_obs_4_2 = \
-        rate_eq_conv(t_seq-t0[1], fwhm, abs_4, eigval_seq_2, V_seq_2, c_seq_2, irf='g')
+        rate_eq_conv(t_seq-t0[1], fwhm, abs_4_2, eigval_seq_2, V_seq_2, c_seq_2, irf='g')
 
     # generate measured intensity
     i_obs_1 = np.vstack((y_obs_1_1, y_obs_2_1, y_obs_3_1, y_obs_4_1)).T

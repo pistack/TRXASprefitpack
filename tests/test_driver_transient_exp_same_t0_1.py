@@ -10,7 +10,7 @@ from TRXASprefitpack import solve_seq_model, rate_eq_conv
 from TRXASprefitpack import fit_transient_exp
 from TRXASprefitpack import save_TransientResult, load_TransientResult
 
-def test_driver_transient_exp_4():
+def test_driver_transient_exp_same_t0_1():
     tau_1 = 0.5
     tau_2 = 10
     tau_3 = 1000
