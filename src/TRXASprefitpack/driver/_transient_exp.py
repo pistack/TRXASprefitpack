@@ -266,7 +266,7 @@ def fit_transient_exp(irf: str, fwhm_init: Union[float, np.ndarray],
                     make_A_matrix_exp(t[i]-param_opt[t0_idx],
                     fwhm_pv, tau_opt, base, irf, eta)
             c[i][tm, j] = fact_anal_A(A[tm, :], intensity[i][:, j], eps[i][:, j])
-            fit[i][:, j] = c[i][:, j] @ A[tm, :]
+            fit[i][:, j] = c[i][:, j] @ A
             if not same_t0:
                 param_name[t0_idx] = f't_0_{i+1}_{j+1}'
                 t0_idx = t0_idx + 1
