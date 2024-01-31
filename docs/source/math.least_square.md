@@ -141,25 +141,53 @@ The optimization problem
 \end{equation*}
 
 is just linear least square problem described in linear least square section and we know exact solution of such problem.
-Let $\mathbf{\theta}_{l} = \mathbf{C}(\mathbf{\theta})$ be the least norm solution of the linear least square problem and define
-$\chi'^2(\mathbf{\theta}) = \chi^2(\mathbf{C}(\mathbf{\theta}), \mathbf{\theta})$ then
+Let $\mathbf{\theta}_{l} = \mathbf{C}(\mathbf{\theta})$ be the least norm solution of the linear least square problem then,
 
 \begin{align*}
-{arg}\,{min}_{\mathbf{\theta}} \chi'^2 &= {arg}\,{min}_{\mathbf{\theta}_l, \mathbf{\theta_{nl}}} \chi^2 \\
-\frac{\partial \chi^2}{\partial \mathbf{\theta}_l} \Big |_{\mathbf{\theta}_l = \mathbf{C}(\mathbf{\theta}), \mathbf{\theta}_{nl} = \mathbf{\theta}} &= 0
+{arg}\,{min}_{\mathbf{\theta}} \chi^2(\mathbf{C}(\mathbf{\theta}), \mathbf{\theta}) &= {arg}\,{min}_{\mathbf{\theta}_l, \mathbf{\theta_{nl}}} \chi^2 \\
+\frac{\partial \chi^2(\mathbf{C}(\mathbf{\theta}), \mathbf{\theta})}{\partial \mathbf{C}(\mathbf{\theta}}  &= 0 
 \end{align*}
 
-So, by chain rule the gradient of $\chi'^2(\mathbf{\theta})$ is
+So, by chain rule the gradient of $\chi^2(\mathbf{C}(\mathbf{\theta}), \mathbf{\theta})$ is
 
 \begin{align*}
-\frac{\partial \chi'^2}{\partial \mathbf{\theta}} &= 
-\frac{\partial \chi^2}{\partial \mathbf{\theta}_l} \Big |_{\mathbf{\theta}_l = \mathbf{C}(\mathbf{\theta})} 
-\frac{\partial \mathbf{C}(\mathbf{\theta})}{\partial \mathbf{\theta}} + \frac{\partial \chi^2}{\partial \mathbf{\theta}} \\
+\frac{\partial \chi^2(\mathbf{C}, \mathbf{\theta})}{\partial \mathbf{\theta}} &= 
+\frac{\partial \chi^2}{\partial \mathbf{C}(\mathbf{\theta})} \frac{\partial \mathbf{C}(\mathbf{\theta})}{\partial \mathbf{\theta}} 
++ \frac{\partial \chi^2}{\partial \mathbf{\theta}} \\
 &= \frac{\partial \chi^2}{\partial \mathbf{\theta}}
 \end{align*}
 
-Because of $\frac{\partial \mathbf{C}(\mathbf{\theta})}{\partial \mathbf{\theta}}$ term, it is hard to obtain analytic hessian of $\chi'^2/2$ which is used to
-estimate the Asymptotic Standard Errors.
+Because of $\frac{\partial \mathbf{C}(\mathbf{\theta})}{\partial \mathbf{\theta}}$ term, the analytic hessian of $\chi^2(mathbf{C}, mathbf{theta})$ is quite complicated.
 
-However, implementing separation scheme will speed up optimization process.
-Since, it reduces dimension of optimization problem but gradient is same as original $\chi^2$ function.
+The Hessian of $\chi^2(\mathbf{C}, \mathbf{\theta})$ is
+
+\begin{equation*}
+\frac{\partial^2 \chi^2(\mathbf{C}, \mathbf{\theta})}{\partial \mathbf{\theta}_i \mathbf{\theta}_j} = \frac{\partial^2 \chi^2}{\partial \mathbf{\theta}_i \partial \mathbf{\theta}_j} + \sum_k \frac{\partial^2 \chi^2}{\partial \mathbf{\theta}_j \partial \mathbf{C}_k} \frac{\partial \mathbf{C}_k}{\partial \mathbf{\theta}_i}
+\end{equation*}
+
+Note that $\frac{\partial \chi^2(\mathbf{C}(\mathbf{\theta}), \mathbf{\theta})}{\partial \mathbf{C}_j(\mathbf{\theta})} = 0$ for all $\theta$. Take derivative of $\mathbf{\theta}_i$ then
+
+\begin{equation*}
+\frac{\partial^2 \chi^2}{\partial \mathbf{theta}_i \partial \mathbf{C}_j} + \sum_k \frac{\partial^2 \chi^2}{\partial \mathbf{C}_j \partial \mathbf{C}_k} \frac{\partial \mathbf{C}_k}{\partial \mathbf{\theta}_i} = 0.
+\end{equation*}
+
+For simplicity, denote $H_c = [\frac{\partial^2 \chi^2}{\partial C_i \partial C_j}]_{ij}$, $H_{\theta} = [\frac{\partial^2 \chi^2}{\partial \theta_i \partial \theta_j}]_{ij}$, $H_{\theta c} = [\frac{\partial^2 \chi^2}{\partial \theta_i \partial C_j}]_{ij}$, and $B = [\frac{\partial C_i}{\partial \theta_j}]_{ij}$.
+Let the hessian matrix of $\chi^2(\mathbf{C}, \mathbf{\theta})$ be $H'$ then
+
+\begin{align*}
+H_{\theta c}^T &= - H_c B \\
+H' &= H_{\theta} + H_{\theta_c} B \\
+&= H_{\theta} - B^T H_c B
+\end{align*}
+
+The solution $B$ satisfying $H_{\theta c}^T = - H_c B$ is in general not unique. Let $B' = B + N$, where $H_c N = 0$. Then 
+\begin{align*}
+B'^T H_c B' &= B^T H_c B + N^T H_c B + B^T H_c N + N^T H_c N \\
+&= B^T H_c B + (H_c N)^T B \\
+&= B^T H_c B
+\end{align*}
+
+Therefore $H'$ is well defined, eventhough $B$ is not unique.
+
+The seperation scheme reduces dimension of optimization problem and the gradient of $\chi^2(C,\theta)$ is same as that of original $\chi^2$ function, 
+so implementing seperation scheme will speed up optimization process.
