@@ -231,6 +231,129 @@ def deriv_exp_conv_cauchy(t: Union[float, np.ndarray],
             grad[:, 2] = -(t*f.imag+fwhm*f.real/2)/np.pi
     return grad
 
+# analytic hessian calculation routine 
+def hess_exp_conv_gau(t: Union[float, np.ndarray], fwhm: float,
+                       k: float) -> np.ndarray:
+    '''
+    Compute hessian of exponential function convolved with normalized gaussian
+    distribution
+
+    Args:
+      t: time
+      fwhm: full width at half maximum of gaussian distribution
+      k: rate constant (inverse of life time)
+
+    Returns:
+     Hessian of Convolution of normalized gaussian distribution and exponential
+     decay :math:`(\\exp(-kt))`.
+    Note:
+
+     * 1st column: d^2f/dt^2
+     * 2nd column: d^2f/dtd(fwhm)
+     * 3rd column: d^2f/dtdk
+     * 4th column: d^2f/d(fwhm)^2
+     * 5th column: d^2f/d(fwhm)dk
+     * 6th column: d^2f/dk^2
+
+    '''
+
+    sigma = fwhm/(2*np.sqrt(2*np.log(2)))
+    f = exp_conv_gau(t, fwhm, k)
+    g = np.exp(-(t/sigma)**2/2)/np.sqrt(2*np.pi)
+
+
+    if not isinstance(t, np.ndarray):
+        hess = np.empty(6)
+        hess[0] = k**2*f - (t/sigma+k*sigma)*g/sigma/sigma
+        hess[1] = \
+            (((t/sigma+k*sigma)**2-(k*t+1))*g/sigma/sigma - (k**2*(k*sigma))*f)/(2*np.sqrt(2*np.log(2))) 
+        hess[2] = k*sigma*g - ((k*sigma)**2+1-k*t)*f
+        hess[3] = \
+        (k**2*(1+(k*sigma)**2)*f-
+         (k**2*(k*sigma)+(k**2-2/sigma)*(t/sigma)+k/sigma*(t/sigma)**2+(t/sigma)**3/sigma/sigma)*g)/(8*np.log(2))
+        hess[4] = (((k*sigma)**2+2-k*t)*(k*sigma*f)-(1+(k*sigma)**2)*g)/(2*np.sqrt(2*np.log(2)))
+        hess[5] = (((k*sigma)*sigma-t)**2+sigma**2)*f-(k*(k*sigma)-t)*(sigma*g)
+    else:
+        hess = np.empty((t.size, 6))
+        hess[:, 0] = k**2*f - (t/sigma+k*sigma)*g/sigma/sigma
+        hess[:, 1] = \
+            (((t/sigma+k*sigma)**2-(k*t+1))*g/sigma/sigma - (k**2*(k*sigma))*f)/(2*np.sqrt(2*np.log(2))) 
+        hess[:, 2] = k*sigma*g - ((k*sigma)**2+1-k*t)*f
+        hess[:, 3] = \
+        (k**2*(1+(k*sigma)**2)*f-
+         (k**2*(k*sigma)+(k**2-2/sigma)*(t/sigma)+k/sigma*(t/sigma)**2+(t/sigma)**3/sigma/sigma)*g)/(8*np.log(2))
+        hess[:, 4] = (((k*sigma)**2+2-k*t)*(k*sigma*f)-(1+(k*sigma)**2)*g)/(2*np.sqrt(2*np.log(2)))
+        hess[:, 5] = (((k*sigma)*sigma-t)**2+sigma**2)*f-(k*(k*sigma)-t)*(sigma*g)
+
+    return hess
+
+def hess_exp_conv_cauchy(t: Union[float, np.ndarray],
+                          fwhm: float,
+                          k: float) -> Union[float, np.ndarray]:
+    '''
+    Compute hessian of the convolution of exponential function and normalized cauchy
+    distribution
+
+    Args:
+       t: time
+       fwhm: full width at half maximum of cauchy distribution
+       k: rate constant (inverse of life time)
+
+    Returns:
+      Hessian of convolution of normalized cauchy distribution and
+      exponential decay :math:`(\\exp(-kt))`.
+
+    Note:
+
+     * 1st column: d^2f/dt^2
+     * 2nd column: d^2f/dtd(fwhm)
+     * 3rd column: d^2f/dtdk
+     * 4th column: d^2f/d(fwhm)^2
+     * 5th column: d^2f/d(fwhm)dk
+     * 6th column: d^2f/dk^2
+    '''
+
+    if not isinstance(t, np.ndarray):
+        hess = np.empty(6)
+        if k == 0:
+            tmp = np.pi*(2*t+fwhm)**3
+            hess[0] = -8*fwhm/tmp
+            hess[1] = (4*t-2*fwhm)/tmp
+            hess[2] = 0
+            hess[3] = 4*t/tmp
+            hess[4] = 0
+            hess[5] = 0
+        else:
+            z = (t+complex(0, fwhm/2))
+            f = exp1x(-k*z)
+            tmp = (k**2+f+k/z+1/(z**2))/np.pi
+            hess[0] = tmp.imag
+            hess[1] = tmp.real/2
+            hess[2] = ((k*t-1)*f.imag + (k*fwhm)/2*f.real)/np.pi
+            hess[3] = - hess[0]/4
+            hess[4] = ((k*t-1)*f.real-(k*fwhm)/2*f.imag+1)/(2*np.pi)
+            hess[5] = ((z**2*f).imag + fwhm/(2*k))/np.pi
+    else:
+        hess = np.empty((t.size, 6))
+        if k == 0:
+            hess[:, 0] = -8*fwhm/(np.pi*(2*t+fwhm)**3)
+            hess[:, 1] = (1/4-t/(2*fwhm))*hess[0]
+            hess[:, 2] = 0
+            hess[:, 3] = -t/(2*fwhm)*hess[0]
+            hess[:, 4] = 0
+            hess[:, 5] = 0
+        else:
+            z = (t+complex(0, fwhm/2))
+            f = exp1x(-k*z)
+            tmp = (k**2+f+k/z+1/(z**2))/np.pi
+            hess[:, 0] = tmp.imag
+            hess[:, 1] = tmp.real/2
+            hess[:, 2] = ((k*t-1)*f.imag + (k*fwhm)/2*f.real)/np.pi
+            hess[:, 3] = - hess[0]/4
+            hess[:, 4] = ((k*t-1)*f.real-(k*fwhm)/2*f.imag+1)/(2*np.pi)
+            hess[:, 5] = ((z**2*f).imag + fwhm/(2*k))/np.pi
+    return hess 
+
 # calculate derivative of the convolution of sum of exponential decay and instrumental response function
 
 
