@@ -6,9 +6,9 @@
 
 [![Documentation Status](https://readthedocs.org/projects/trxasprefitpack/badge/?version=latest)](https://trxasprefitpack.readthedocs.io/en/latest/?badge=latest)
 
-stable version:  0.7.0.1
+stable version:  0.7.3
 
-current version: 0.7.2.2
+current version: 0.7.3
 
 current development version: 0.8.dev
 

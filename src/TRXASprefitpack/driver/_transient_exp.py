@@ -3,7 +3,7 @@ _transient_exp:
 submodule for fitting time delay scan with the
 convolution of sum of exponential decay and instrumental response function
 
-:copyright: 2021-2022 by pistack (Junho Lee).
+:copyright: 2021-2024 by pistack (Junho Lee).
 :license: LGPL3.
 '''
 from typing import Optional, Union, Sequence, Tuple
