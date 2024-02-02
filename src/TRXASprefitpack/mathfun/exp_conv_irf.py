@@ -318,11 +318,12 @@ def hess_exp_conv_cauchy(t: Union[float, np.ndarray],
     if not isinstance(t, np.ndarray):
         hess = np.empty(6)
         if k == 0:
-            tmp = np.pi*(2*t+fwhm)**3
-            hess[0] = -8*fwhm/tmp
-            hess[1] = (4*t-2*fwhm)/tmp
+            fp = 2/(np.pi*fwhm*(1+(2/fwhm*t)**2))
+            fpp = -4*np.pi*(t/fwhm)*fp**2
+            hess[0] = fpp
+            hess[1] = -(fp/fwhm+(t/fwhm)*fpp)
             hess[2] = 0
-            hess[3] = 4*t/tmp
+            hess[3] = 2/fwhm*(t/fwhm)*fp + (t/fwhm)**2*fpp
             hess[4] = 0
             hess[5] = 0
         else:
@@ -338,10 +339,11 @@ def hess_exp_conv_cauchy(t: Union[float, np.ndarray],
     else:
         hess = np.empty((t.size, 6))
         if k == 0:
-            hess[:, 0] = -8*fwhm/(np.pi*(2*t+fwhm)**3)
-            hess[:, 1] = (1/4-t/(2*fwhm))*hess[0]
+            hess[:, 4] = 2/(np.pi*fwhm*(1+(2/fwhm*t)**2))
+            hess[:, 0] = -4*np.pi*(t/fwhm)*hess[:, 4]**2
+            hess[:, 1] = -(hess[:, 4]/fwhm+(t/fwhm)*hess[:, 0])
             hess[:, 2] = 0
-            hess[:, 3] = -t/(2*fwhm)*hess[0]
+            hess[:, 3] = 2/fwhm*(t/fwhm)*hess[:, 4] + (t/fwhm)**2*hess[:, 0]
             hess[:, 4] = 0
             hess[:, 5] = 0
         else:
