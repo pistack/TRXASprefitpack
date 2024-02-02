@@ -329,3 +329,148 @@ def deriv_voigt_thy(e: np.ndarray, thy_peak: np.ndarray,
             (thy_peak[:, 0]*thy_peak[:, 1])
 
     return grad
+
+def hess_edge_gaussian(e: Union[float, np.ndarray], fwhm_G: float) -> np.ndarray:
+    '''
+    hessian of gaussian type edge
+
+    Args:
+     e: energy
+     fwhm_G: full width at half maximum
+
+    Returns:
+     hessian of gaussian edge function
+
+    Note:
+
+     * 1st column: d^2f/de^2
+     * 2nd column: df/de d(fwhm_G)
+     * 3rd column: d^2 f / d(fwhm_G)
+    '''
+    tmp = np.exp(-4*np.log(2)*(e/fwhm_G)**2)/np.sqrt(np.pi)
+
+    grad_e = 2*np.sqrt(np.log(2))/fwhm_G*tmp
+    grad_fwhm_G = -2*np.sqrt(np.log(2))*e/fwhm_G/fwhm_G*tmp
+
+    if isinstance(e, np.ndarray):
+        grad = np.empty((e.size, 2))
+        grad[:, 0] = grad_e
+        grad[:, 1] = grad_fwhm_G
+    else:
+        grad = np.empty(2)
+        grad[0] = grad_e
+        grad[1] = grad_fwhm_G
+
+    return grad
+
+
+def hess_edge_lorenzian(e: Union[float, np.ndarray], fwhm_L: float) -> np.ndarray:
+    '''
+    derivative of lorenzian type edge
+
+    Args:
+     e: energy
+     fwhm_G: full width at half maximum
+
+    Returns:
+     first derivative of lorenzian type function
+
+    Note:
+
+     * 1st column: df/de
+     * 2nd column: df/d(fwhm_L)
+    '''
+    tmp = 1/np.pi/(e**2+fwhm_L**2/4)
+    grad_e = fwhm_L*tmp/2
+    grad_fwhm_L = -e*tmp/2
+
+    if isinstance(e, np.ndarray):
+        grad = np.empty((e.size, 2))
+        grad[:, 0] = grad_e
+        grad[:, 1] = grad_fwhm_L
+    else:
+        grad = np.empty(2)
+        grad[0] = grad_e
+        grad[1] = grad_fwhm_L
+
+    return grad
+
+
+def hess_voigt(e: Union[float, np.ndarray], fwhm_G: float, fwhm_L: float) -> np.ndarray:
+    '''
+    deriv_voigt: derivative of voigt profile with respect to (e, fwhm_G, fwhm_L)
+
+    Args:
+     e: energy
+     fwhm_G: full width at half maximum of gaussian part :math:(2\\sqrt{2\\log(2)}\\sigma)
+     fwhm_L: full width at half maximum of lorenzian part :math:(2\\gamma)
+
+    Returns:
+     first derivative of voigt profile
+
+    Note:
+
+     * 1st column: df/de
+     * 2nd column: df/d(fwhm_G)
+     * 3rd column: df/d(fwhm_L)
+
+     if `fwhm_G` is (<1e-8) then,
+
+     * 1st column: dl/de
+     * 2nd column: 0
+     * 3rd column: dL/d(fwhm_L)
+
+     L means normalized lorenzian shape with full width at half maximum parameter: `fwhm_L`
+
+     if `fwhm_L` is (<1e-8) it returns
+
+     * 1st column: dg/de
+     * 2nd column: dg/d(fwhm_G)
+     * 3rd column: 0
+
+     g means normalized gaussian shape with full width at half maximum parameter: `fwhm_G`
+    '''
+
+    if fwhm_G < 1e-8:
+        tmp = fwhm_L/2/np.pi/(e**2+fwhm_L**2/4)**2
+        if isinstance(e, np.ndarray):
+            grad = np.empty((e.size, 3))
+            grad[:, 0] = - 2*e*tmp
+            grad[:, 1] = 0
+            grad[:, 2] = (1/np.pi/(e**2+fwhm_L**2/4)-fwhm_L*tmp)/2
+        else:
+            grad = np.empty(3)
+            grad[0] = -2*e*tmp
+            grad[1] = 0
+            grad[2] = (1/np.pi/(e**2+fwhm_L**2/4)-fwhm_L*tmp)/2
+        return grad
+
+    sigma = fwhm_G/(2*np.sqrt(2*np.log(2)))
+    if fwhm_L < 1e-8:
+        tmp = np.exp(-(e/sigma)**2/2)/(sigma*np.sqrt(2*np.pi))
+        if isinstance(e, np.ndarray):
+            grad = np.empty((e.size, 3))
+            grad[:, 0] = -e/sigma**2*tmp
+            grad[:, 1] = ((e/sigma)**2-1)/fwhm_G*tmp
+            grad[:, 2] = 0
+        else:
+            grad = np.empty(3)
+            grad[0] = -e/sigma**2*tmp
+            grad[1] = ((e/sigma)**2-1)/sigma*tmp
+            grad[2] = 0
+        return grad
+
+    z = (e+complex(0, fwhm_L/2))/(sigma*np.sqrt(2))
+    f = wofz(z)/(sigma*np.sqrt(2*np.pi))
+    f_z = (complex(0, 2/np.sqrt(np.pi))-2*z*wofz(z))/(sigma*np.sqrt(2*np.pi))
+    if isinstance(e, np.ndarray):
+        grad = np.empty((e.size, 3))
+        grad[:, 0] = f_z.real/(sigma*np.sqrt(2))
+        grad[:, 1] = (-f/sigma-z/sigma*f_z).real/(2*np.sqrt(2*np.log(2)))
+        grad[:, 2] = -f_z.imag/(2*np.sqrt(2)*sigma)
+    else:
+        grad = np.empty(3)
+        grad[0] = f_z.real/(sigma*np.sqrt(2))
+        grad[1] = (-f/sigma-z/sigma*f_z).real/(2*np.sqrt(2*np.log(2)))
+        grad[2] = -f_z.imag/(2*np.sqrt(2)*sigma)
+    return grad

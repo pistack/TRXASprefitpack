@@ -329,11 +329,11 @@ def hess_exp_conv_cauchy(t: Union[float, np.ndarray],
         else:
             z = (t+complex(0, fwhm/2))
             f = exp1x(-k*z)
-            tmp = (k**2+f+k/z+1/(z**2))/np.pi
+            tmp = (k*(k*f)+(k+1/z)/z)/np.pi
             hess[0] = tmp.imag
             hess[1] = tmp.real/2
             hess[2] = ((k*t-1)*f.imag + (k*fwhm)/2*f.real)/np.pi
-            hess[3] = - hess[0]/4
+            hess[3] = -hess[0]/4
             hess[4] = ((k*t-1)*f.real-(k*fwhm)/2*f.imag+1)/(2*np.pi)
             hess[5] = ((z**2*f).imag + fwhm/(2*k))/np.pi
     else:
@@ -349,11 +349,11 @@ def hess_exp_conv_cauchy(t: Union[float, np.ndarray],
         else:
             z = (t+complex(0, fwhm/2))
             f = exp1x(-k*z)
-            tmp = (k**2+f+k/z+1/(z**2))/np.pi
+            tmp = (k*(k*f)+(k+1/z)/z)/np.pi
             hess[:, 0] = tmp.imag
             hess[:, 1] = tmp.real/2
             hess[:, 2] = ((k*t-1)*f.imag + (k*fwhm)/2*f.real)/np.pi
-            hess[:, 3] = - hess[0]/4
+            hess[:, 3] = -hess[:, 0]/4
             hess[:, 4] = ((k*t-1)*f.real-(k*fwhm)/2*f.imag+1)/(2*np.pi)
             hess[:, 5] = ((z**2*f).imag + fwhm/(2*k))/np.pi
     return hess 
