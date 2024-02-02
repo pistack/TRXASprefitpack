@@ -157,7 +157,7 @@ So, by chain rule the gradient of $\chi^2(\mathbf{C}(\mathbf{\theta}), \mathbf{\
 &= \frac{\partial \chi^2}{\partial \mathbf{\theta}}
 \end{align*}
 
-Because of $\frac{\partial \mathbf{C}(\mathbf{\theta})}{\partial \mathbf{\theta}}$ term, the analytic hessian of $\chi^2(\mathbf{C}, \mathbf{theta})$ is quite complicated. Currently, the analytic Hessian is not implemented. However, in theory, analytical Hessian is well defined.
+Because of $\frac{\partial \mathbf{C}(\mathbf{\theta})}{\partial \mathbf{\theta}}$ term, the analytic hessian of $\chi^2(\mathbf{C}, \mathbf{\theta})$ is quite complicated. Currently, the analytic Hessian is not implemented. However, in theory, analytical Hessian is well defined.
 
 The Hessian of $\chi^2(\mathbf{C}, \mathbf{\theta})$ is
 

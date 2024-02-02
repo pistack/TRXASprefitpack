@@ -13,6 +13,7 @@ from .irf import gau_irf, cauchy_irf, pvoigt_irf
 from .irf import calc_eta, calc_fwhm, deriv_eta, deriv_fwhm
 from .exp_conv_irf import exp_conv_gau, exp_conv_cauchy, exp_conv_pvoigt
 from .exp_conv_irf import deriv_exp_conv_gau, deriv_exp_conv_cauchy
+from .exp_conv_irf import hess_exp_conv_gau, hess_exp_conv_cauchy
 from .exp_conv_irf import deriv_exp_sum_conv_gau, deriv_exp_sum_conv_cauchy
 from .exp_conv_irf import dmp_osc_conv_gau, dmp_osc_conv_cauchy, dmp_osc_conv_pvoigt
 from .exp_conv_irf import deriv_dmp_osc_conv_gau, deriv_dmp_osc_conv_cauchy
@@ -36,6 +37,7 @@ __all__ = ['voigt', 'edge_gaussian', 'edge_lorenzian', 'voigt_thy',
            'calc_eta', 'calc_fwhm', 'deriv_eta', 'deriv_fwhm',
            'exp_conv_gau', 'exp_conv_cauchy', 'exp_conv_pvoigt',
            'deriv_exp_conv_gau', 'deriv_exp_conv_cauchy',
+           'hess_exp_conv_gau', 'hess_exp_conv_cauchy',
            'deriv_exp_sum_conv_gau', 'deriv_exp_sum_conv_cauchy',
            'dmp_osc_conv_gau', 'dmp_osc_conv_cauchy', 'dmp_osc_conv_pvoigt',
            'deriv_dmp_osc_conv_gau', 'deriv_dmp_osc_conv_cauchy',

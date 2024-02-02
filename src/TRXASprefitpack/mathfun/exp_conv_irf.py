@@ -270,9 +270,10 @@ def hess_exp_conv_gau(t: Union[float, np.ndarray], fwhm: float,
         hess[2] = k*sigma*g - ((k*sigma)**2+1-k*t)*f
         hess[3] = \
         (k**2*(1+(k*sigma)**2)*f-
-         (k**2*(k*sigma)+(k**2-2/sigma)*(t/sigma)+k/sigma*(t/sigma)**2+(t/sigma)**3/sigma/sigma)*g)/(8*np.log(2))
+         (k**2*(k*sigma)+(k**2-2/sigma/sigma)*(t/sigma)+
+          k/sigma*(t/sigma)**2+(t/sigma)**3/sigma/sigma)*g)/(8*np.log(2))
         hess[4] = (((k*sigma)**2+2-k*t)*(k*sigma*f)-(1+(k*sigma)**2)*g)/(2*np.sqrt(2*np.log(2)))
-        hess[5] = (((k*sigma)*sigma-t)**2+sigma**2)*f-(k*(k*sigma)-t)*(sigma*g)
+        hess[5] = (((k*sigma)*sigma-t)**2+sigma**2)*f-(sigma*(k*sigma)-t)*(sigma*g)
     else:
         hess = np.empty((t.size, 6))
         hess[:, 0] = k**2*f - (t/sigma+k*sigma)*g/sigma/sigma
@@ -281,9 +282,10 @@ def hess_exp_conv_gau(t: Union[float, np.ndarray], fwhm: float,
         hess[:, 2] = k*sigma*g - ((k*sigma)**2+1-k*t)*f
         hess[:, 3] = \
         (k**2*(1+(k*sigma)**2)*f-
-         (k**2*(k*sigma)+(k**2-2/sigma)*(t/sigma)+k/sigma*(t/sigma)**2+(t/sigma)**3/sigma/sigma)*g)/(8*np.log(2))
+         (k**2*(k*sigma)+(k**2-2/sigma/sigma)*(t/sigma)+
+          k/sigma*(t/sigma)**2+(t/sigma)**3/sigma/sigma)*g)/(8*np.log(2))
         hess[:, 4] = (((k*sigma)**2+2-k*t)*(k*sigma*f)-(1+(k*sigma)**2)*g)/(2*np.sqrt(2*np.log(2)))
-        hess[:, 5] = (((k*sigma)*sigma-t)**2+sigma**2)*f-(k*(k*sigma)-t)*(sigma*g)
+        hess[:, 5] = (((k*sigma)*sigma-t)**2+sigma**2)*f-(sigma*(k*sigma)-t)*(sigma*g)
 
     return hess
 
