@@ -371,30 +371,32 @@ def hess_edge_lorenzian(e: Union[float, np.ndarray], fwhm_L: float) -> np.ndarra
 
     Args:
      e: energy
-     fwhm_G: full width at half maximum
+     fwhm_L: full width at half maximum
 
     Returns:
-     first derivative of lorenzian type function
+     hessian of lorenzian type function
 
     Note:
 
-     * 1st column: df/de
-     * 2nd column: df/d(fwhm_L)
+     * 1st column: d^2f/de^2
+     * 2nd column: d^2f/ded(fwhm_L)
+     * 3rd column: d^2f/d(fwhm_L)^2
     '''
-    tmp = 1/np.pi/(e**2+fwhm_L**2/4)
-    grad_e = fwhm_L*tmp/2
-    grad_fwhm_L = -e*tmp/2
+    fp = fwhm_L/(2*np.pi)/(e**2+(fwhm_L/2)**2)
 
     if isinstance(e, np.ndarray):
-        grad = np.empty((e.size, 2))
-        grad[:, 0] = grad_e
-        grad[:, 1] = grad_fwhm_L
-    else:
-        grad = np.empty(2)
-        grad[0] = grad_e
-        grad[1] = grad_fwhm_L
+        hess = np.empty((e.size, 3))
+        hess[:, 0] = -4*(np.pi/fwhm_L)*e*fp**2
+        hess[:, 1] = -(fp+e*hess[:, 0])/fwhm_L
+        hess[:, 2] = 2/fwhm_L*(e/fwhm_L)*fp+(e/fwhm_L)**2*hess[:, 0]
 
-    return grad
+    else:
+        hess = np.empty((3))
+        hess[0] = -4*(np.pi/fwhm_L)*e*fp**2
+        hess[1] = -(fp+e*hess[0])/fwhm_L
+        hess[2] = 2/fwhm_L*(e/fwhm_L)*fp+(e/fwhm_L)**2*hess[0]
+
+    return hess
 
 
 def hess_voigt(e: Union[float, np.ndarray], fwhm_G: float, fwhm_L: float) -> np.ndarray:
