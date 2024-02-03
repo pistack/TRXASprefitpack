@@ -401,7 +401,7 @@ def hess_edge_lorenzian(e: Union[float, np.ndarray], fwhm_L: float) -> np.ndarra
 
 def hess_voigt(e: Union[float, np.ndarray], fwhm_G: float, fwhm_L: float) -> np.ndarray:
     '''
-    deriv_voigt: derivative of voigt profile with respect to (e, fwhm_G, fwhm_L)
+    hess_voigt: Hessian of voigt profile with respect to (e, fwhm_G, fwhm_L)
 
     Args:
      e: energy
@@ -409,44 +409,34 @@ def hess_voigt(e: Union[float, np.ndarray], fwhm_G: float, fwhm_L: float) -> np.
      fwhm_L: full width at half maximum of lorenzian part :math:(2\\gamma)
 
     Returns:
-     first derivative of voigt profile
+     Hessian derivative of voigt profile
 
     Note:
 
-     * 1st column: df/de
-     * 2nd column: df/d(fwhm_G)
-     * 3rd column: df/d(fwhm_L)
+     * 1st column: d^2f/de^2
+     * 2nd column: d^2f/ded(fwhm_G)
+     * 3rd column: d^2f/ded(fwhm_L)
+     * 4th column: d^2f/d(fwhm_G)^2
+     * 5th column: d^2f/d(fwhm_G)d(fwhm_L)
+     * 6th column: d^2f/d(fwhm_L)^2
 
-     if `fwhm_G` is (<1e-8) then,
-
-     * 1st column: dl/de
-     * 2nd column: 0
-     * 3rd column: dL/d(fwhm_L)
-
-     L means normalized lorenzian shape with full width at half maximum parameter: `fwhm_L`
-
-     if `fwhm_L` is (<1e-8) it returns
-
-     * 1st column: dg/de
-     * 2nd column: dg/d(fwhm_G)
-     * 3rd column: 0
-
-     g means normalized gaussian shape with full width at half maximum parameter: `fwhm_G`
+     if `fwhm_G` is (<1e-8) then, It assume fwhm_G = 0 => lorenzian profile
+     if `fwhm_L` is (<1e-8) then, It assume fwhm_L = 0 => gaussian profile
     '''
 
     if fwhm_G < 1e-8:
-        tmp = fwhm_L/2/np.pi/(e**2+fwhm_L**2/4)**2
+        tmp = 1/(e**2+(fwhm_L/2)**2)
         if isinstance(e, np.ndarray):
-            grad = np.empty((e.size, 3))
-            grad[:, 0] = - 2*e*tmp
-            grad[:, 1] = 0
-            grad[:, 2] = (1/np.pi/(e**2+fwhm_L**2/4)-fwhm_L*tmp)/2
+            hess = np.zeros((e.size, 6))
+            hess[:, 0] = (2*fwhm_L*e**2*tmp-fwhm_L)*(tmp/np.pi)
+            hess[:, 2] = (fwhm_L**2/2*e*tmp-e)*(tmp/np.pi)
+            hess[:, 5] = ((fwhm_L**2-2)*fwhm_L*tmp/4-fwhm_L)*(tmp/(2*np.pi))
         else:
-            grad = np.empty(3)
-            grad[0] = -2*e*tmp
-            grad[1] = 0
-            grad[2] = (1/np.pi/(e**2+fwhm_L**2/4)-fwhm_L*tmp)/2
-        return grad
+            hess = np.zeros(6)
+            hess[:, 0] = (2*fwhm_L*e**2*tmp-fwhm_L)*(tmp/np.pi)
+            hess[:, 2] = (fwhm_L**2/2*e*tmp-e)*(tmp/np.pi)
+            hess[:, 5] = ((fwhm_L**2-2)*fwhm_L*tmp/4-fwhm_L)*(tmp/(2*np.pi))
+        return hess 
 
     sigma = fwhm_G/(2*np.sqrt(2*np.log(2)))
     if fwhm_L < 1e-8:
