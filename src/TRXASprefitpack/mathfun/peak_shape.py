@@ -428,30 +428,30 @@ def hess_voigt(e: Union[float, np.ndarray], fwhm_G: float, fwhm_L: float) -> np.
         tmp = 1/(e**2+(fwhm_L/2)**2)
         if isinstance(e, np.ndarray):
             hess = np.zeros((e.size, 6))
-            hess[:, 0] = (2*fwhm_L*e**2*tmp-fwhm_L)*(tmp/np.pi)
-            hess[:, 2] = (fwhm_L**2/2*e*tmp-e)*(tmp/np.pi)
-            hess[:, 5] = ((fwhm_L**2-2)*fwhm_L*tmp/4-fwhm_L)*(tmp/(2*np.pi))
+            hess[:, 0] = (4*e*(e*tmp)-1)*(fwhm_L/np.pi)*tmp*tmp
+            hess[:, 2] = -(e*tmp)*((e**2-3*(fwhm_L/2)**2)*tmp*tmp)/np.pi
+            hess[:, 5] = (fwhm_L*(fwhm_L**2*tmp)-3*fwhm_L)*tmp*tmp/(4*np.pi)
         else:
             hess = np.zeros(6)
-            hess[:, 0] = (2*fwhm_L*e**2*tmp-fwhm_L)*(tmp/np.pi)
-            hess[:, 2] = (fwhm_L**2/2*e*tmp-e)*(tmp/np.pi)
-            hess[:, 5] = ((fwhm_L**2-2)*fwhm_L*tmp/4-fwhm_L)*(tmp/(2*np.pi))
+            hess[0] = (4*e*(e*tmp)-1)*(fwhm_L/np.pi)*tmp*tmp
+            hess[2] = -(e*tmp)*((e**2-3*(fwhm_L/2)**2)*tmp*tmp)/np.pi
+            hess[5] = (fwhm_L*(fwhm_L**2*tmp)-3*fwhm_L)*tmp*tmp/(4*np.pi)
         return hess 
 
     sigma = fwhm_G/(2*np.sqrt(2*np.log(2)))
     if fwhm_L < 1e-8:
-        tmp = np.exp(-(e/sigma)**2/2)/(sigma*np.sqrt(2*np.pi))
+        tmp = np.exp(-(e/sigma)**2/2)/(sigma*np.sqrt(2*np.pi))/sigma/sigma
         if isinstance(e, np.ndarray):
-            grad = np.empty((e.size, 3))
-            grad[:, 0] = -e/sigma**2*tmp
-            grad[:, 1] = ((e/sigma)**2-1)/fwhm_G*tmp
-            grad[:, 2] = 0
+            hess = np.zeros((e.size, 6))
+            hess[:, 0] = tmp*((e/sigma)**2-1)
+            hess[:, 1] = -tmp*(e/sigma)*((e/sigma)**2-3)/(2*np.sqrt(2*np.log(2)))
+            hess[:, 3] = tmp*((e/sigma)**2*((e/sigma)**2-5)+2)/(8*np.log(2))
         else:
-            grad = np.empty(3)
-            grad[0] = -e/sigma**2*tmp
-            grad[1] = ((e/sigma)**2-1)/sigma*tmp
-            grad[2] = 0
-        return grad
+            hess = np.zeros(6)
+            hess[0] = tmp*((e/sigma)**2-1)
+            hess[1] = -tmp*(e/sigma)*((e/sigma)**2-3)/(2*np.sqrt(2*np.log(2)))
+            hess[3] = tmp*((e/sigma)**2*((e/sigma)**2-5)+2)/(8*np.log(2))
+        return hess 
 
     z = (e+complex(0, fwhm_L/2))/(sigma*np.sqrt(2))
     f = wofz(z)/(sigma*np.sqrt(2*np.pi))
