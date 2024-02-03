@@ -347,21 +347,22 @@ def hess_edge_gaussian(e: Union[float, np.ndarray], fwhm_G: float) -> np.ndarray
      * 2nd column: df/de d(fwhm_G)
      * 3rd column: d^2 f / d(fwhm_G)
     '''
-    tmp = np.exp(-4*np.log(2)*(e/fwhm_G)**2)/np.sqrt(np.pi)
 
-    grad_e = 2*np.sqrt(np.log(2))/fwhm_G*tmp
-    grad_fwhm_G = -2*np.sqrt(np.log(2))*e/fwhm_G/fwhm_G*tmp
+    tmp = 2*np.sqrt(np.log(2))/(fwhm_G*np.sqrt(np.pi))*\
+    np.exp(-4*np.log(2)*(e/fwhm_G)**2)
 
     if isinstance(e, np.ndarray):
-        grad = np.empty((e.size, 2))
-        grad[:, 0] = grad_e
-        grad[:, 1] = grad_fwhm_G
+        hess = np.empty((e.size, 3))
+        hess[:, 0] = -8*np.log(2)/fwhm_G*(e/fwhm_G)*tmp
+        hess[:, 1] = (8*np.log(2)*(e/fwhm_G)**2-1)*(tmp/fwhm_G)
+        hess[:, 2] = (1-4*np.log(2)*(e/fwhm_G)**2)*(2*e/fwhm_G/fwhm_G*tmp)
     else:
-        grad = np.empty(2)
-        grad[0] = grad_e
-        grad[1] = grad_fwhm_G
+        hess = np.empty(3)
+        hess[0] = -8*np.log(2)/fwhm_G*(e/fwhm_G)*tmp
+        hess[1] = (8*np.log(2)*(e/fwhm_G)**2-1)*(tmp/fwhm_G)
+        hess[2] = (1-4*np.log(2)*(e/fwhm_G)**2)*(2*e/fwhm_G/fwhm_G*tmp)
 
-    return grad
+    return hess
 
 
 def hess_edge_lorenzian(e: Union[float, np.ndarray], fwhm_L: float) -> np.ndarray:
