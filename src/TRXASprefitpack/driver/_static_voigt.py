@@ -17,7 +17,7 @@ from scipy.optimize import least_squares
 from ..mathfun.peak_shape import voigt, edge_gaussian, edge_lorenzian
 from ..mathfun.A_matrix import fact_anal_A
 from ..res.parm_bound import set_bound_e0, set_bound_t0
-from ..res.res_voigt import residual_voigt, res_grad_voigt
+from ..res.res_voigt import residual_voigt, res_grad_voigt, res_hess_voigt
 
 GLBSOLVER = {'basinhopping': basinhopping, 'ampgo': ampgo}
 
@@ -286,7 +286,10 @@ def fit_static_voigt(e0_init: np.ndarray, fwhm_G_init: np.ndarray, fwhm_L_init: 
     res = intensity - fit
 
     jac = res_lsq['jac']
-    hes = jac.T @ jac
+    hes = res_hess_voigt(param_opt, num_voigt, edge=edge, 
+                         num_edge=num_edge, base_order=base_order,
+                         e=e, intensity=intensity, eps=eps)
+
     cov = np.zeros_like(hes)
     n_free_param = np.sum(~fix_param_idx)
     mask_2d = np.einsum('i,j->ij', ~fix_param_idx, ~fix_param_idx)

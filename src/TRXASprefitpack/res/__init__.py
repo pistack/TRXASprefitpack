@@ -16,7 +16,7 @@ from .res_osc import residual_dmp_osc, res_grad_dmp_osc
 from .res_osc import residual_dmp_osc_same_t0, res_grad_dmp_osc_same_t0
 from .res_both import residual_both, res_grad_both
 from .res_both import residual_both_same_t0, res_grad_both_same_t0
-from .res_voigt import residual_voigt, res_grad_voigt
+from .res_voigt import residual_voigt, res_grad_voigt, res_hess_voigt
 from .res_thy import residual_thy, res_grad_thy
 
 __all__ = ['set_bound_t0', 'set_bound_tau',
@@ -29,5 +29,5 @@ __all__ = ['set_bound_t0', 'set_bound_tau',
            'residual_raise_same_t0', 'res_grad_raise_same_t0',
            'residual_dmp_osc_same_t0', 'res_grad_dmp_osc_same_t0',
            'residual_both_same_t0', 'res_grad_both_same_t0',
-           'residual_voigt', 'res_grad_voigt',
+           'residual_voigt', 'res_grad_voigt', 'res_hess_voigt',
            'residual_thy', 'res_grad_thy']

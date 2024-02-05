@@ -69,7 +69,6 @@ def test_driver_static_voigt_1():
     load_result_ampgo = load_StaticResult('test_driver_static_voigt_1')
     os.remove('test_driver_static_voigt_1.h5')
 
-
     assert np.allclose(result_ampgo['x'], ans)
     assert np.allclose(static_ampgo, model_static-base_line)
     assert np.allclose(static_spectrum(e, result_ampgo, deriv_order=1),
