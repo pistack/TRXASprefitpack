@@ -329,3 +329,141 @@ def deriv_voigt_thy(e: np.ndarray, thy_peak: np.ndarray,
             (thy_peak[:, 0]*thy_peak[:, 1])
 
     return grad
+
+def hess_edge_gaussian(e: Union[float, np.ndarray], fwhm_G: float) -> np.ndarray:
+    '''
+    hessian of gaussian type edge
+
+    Args:
+     e: energy
+     fwhm_G: full width at half maximum
+
+    Returns:
+     hessian of gaussian edge function
+
+    Note:
+
+     * 1st column: d^2f/de^2
+     * 2nd column: df/de d(fwhm_G)
+     * 3rd column: d^2 f / d(fwhm_G)
+    '''
+
+    tmp = 2*np.sqrt(np.log(2))/(fwhm_G*np.sqrt(np.pi))*\
+    np.exp(-4*np.log(2)*(e/fwhm_G)**2)
+
+    if isinstance(e, np.ndarray):
+        hess = np.empty((e.size, 3))
+        hess[:, 0] = -8*np.log(2)/fwhm_G*(e/fwhm_G)*tmp
+        hess[:, 1] = (8*np.log(2)*(e/fwhm_G)**2-1)*(tmp/fwhm_G)
+        hess[:, 2] = (1-4*np.log(2)*(e/fwhm_G)**2)*(2*e/fwhm_G/fwhm_G*tmp)
+    else:
+        hess = np.empty(3)
+        hess[0] = -8*np.log(2)/fwhm_G*(e/fwhm_G)*tmp
+        hess[1] = (8*np.log(2)*(e/fwhm_G)**2-1)*(tmp/fwhm_G)
+        hess[2] = (1-4*np.log(2)*(e/fwhm_G)**2)*(2*e/fwhm_G/fwhm_G*tmp)
+
+    return hess
+
+
+def hess_edge_lorenzian(e: Union[float, np.ndarray], fwhm_L: float) -> np.ndarray:
+    '''
+    derivative of lorenzian type edge
+
+    Args:
+     e: energy
+     fwhm_L: full width at half maximum
+
+    Returns:
+     hessian of lorenzian type function
+
+    Note:
+
+     * 1st column: d^2f/de^2
+     * 2nd column: d^2f/ded(fwhm_L)
+     * 3rd column: d^2f/d(fwhm_L)^2
+    '''
+    fp = fwhm_L/(2*np.pi)/(e**2+(fwhm_L/2)**2)
+
+    if isinstance(e, np.ndarray):
+        hess = np.empty((e.size, 3))
+        hess[:, 0] = -4*(np.pi/fwhm_L)*e*fp**2
+        hess[:, 1] = -(fp+e*hess[:, 0])/fwhm_L
+        hess[:, 2] = 2/fwhm_L*(e/fwhm_L)*fp+(e/fwhm_L)**2*hess[:, 0]
+
+    else:
+        hess = np.empty((3))
+        hess[0] = -4*(np.pi/fwhm_L)*e*fp**2
+        hess[1] = -(fp+e*hess[0])/fwhm_L
+        hess[2] = 2/fwhm_L*(e/fwhm_L)*fp+(e/fwhm_L)**2*hess[0]
+
+    return hess
+
+
+def hess_voigt(e: Union[float, np.ndarray], fwhm_G: float, fwhm_L: float) -> np.ndarray:
+    '''
+    hess_voigt: Hessian of voigt profile with respect to (e, fwhm_G, fwhm_L)
+
+    Args:
+     e: energy
+     fwhm_G: full width at half maximum of gaussian part :math:(2\\sqrt{2\\log(2)}\\sigma)
+     fwhm_L: full width at half maximum of lorenzian part :math:(2\\gamma)
+
+    Returns:
+     Hessian derivative of voigt profile
+
+    Note:
+
+     * 1st column: d^2f/de^2
+     * 2nd column: d^2f/ded(fwhm_G)
+     * 3rd column: d^2f/ded(fwhm_L)
+     * 4th column: d^2f/d(fwhm_G)^2
+     * 5th column: d^2f/d(fwhm_G)d(fwhm_L)
+     * 6th column: d^2f/d(fwhm_L)^2
+
+     if `fwhm_G` is (<1e-8) then, It assume fwhm_G = 0 => lorenzian profile
+     if `fwhm_L` is (<1e-8) then, It assume fwhm_L = 0 => gaussian profile
+    '''
+
+    if fwhm_G < 1e-8:
+        tmp = 1/(e**2+(fwhm_L/2)**2)
+        if isinstance(e, np.ndarray):
+            hess = np.zeros((e.size, 6))
+            hess[:, 0] = (4*e*(e*tmp)-1)*(fwhm_L/np.pi)*tmp*tmp
+            hess[:, 2] = -(e*tmp)*((e**2-3*(fwhm_L/2)**2)*tmp*tmp)/np.pi
+            hess[:, 5] = (fwhm_L*(fwhm_L**2*tmp)-3*fwhm_L)*tmp*tmp/(4*np.pi)
+        else:
+            hess = np.zeros(6)
+            hess[0] = (4*e*(e*tmp)-1)*(fwhm_L/np.pi)*tmp*tmp
+            hess[2] = -(e*tmp)*((e**2-3*(fwhm_L/2)**2)*tmp*tmp)/np.pi
+            hess[5] = (fwhm_L*(fwhm_L**2*tmp)-3*fwhm_L)*tmp*tmp/(4*np.pi)
+        return hess 
+
+    sigma = fwhm_G/(2*np.sqrt(2*np.log(2)))
+    if fwhm_L < 1e-8:
+        tmp = np.exp(-(e/sigma)**2/2)/(sigma*np.sqrt(2*np.pi))/sigma/sigma
+        if isinstance(e, np.ndarray):
+            hess = np.zeros((e.size, 6))
+            hess[:, 0] = tmp*((e/sigma)**2-1)
+            hess[:, 1] = -tmp*(e/sigma)*((e/sigma)**2-3)/(2*np.sqrt(2*np.log(2)))
+            hess[:, 3] = tmp*((e/sigma)**2*((e/sigma)**2-5)+2)/(8*np.log(2))
+        else:
+            hess = np.zeros(6)
+            hess[0] = tmp*((e/sigma)**2-1)
+            hess[1] = -tmp*(e/sigma)*((e/sigma)**2-3)/(2*np.sqrt(2*np.log(2)))
+            hess[3] = tmp*((e/sigma)**2*((e/sigma)**2-5)+2)/(8*np.log(2))
+        return hess 
+
+    z = (e+complex(0, fwhm_L/2))/(sigma*np.sqrt(2))
+    f = wofz(z)/(sigma*np.sqrt(2*np.pi))
+    f_z = (complex(0, 2/np.sqrt(np.pi))-2*z*wofz(z))/(sigma*np.sqrt(2*np.pi))
+    if isinstance(e, np.ndarray):
+        grad = np.empty((e.size, 3))
+        grad[:, 0] = f_z.real/(sigma*np.sqrt(2))
+        grad[:, 1] = (-f/sigma-z/sigma*f_z).real/(2*np.sqrt(2*np.log(2)))
+        grad[:, 2] = -f_z.imag/(2*np.sqrt(2)*sigma)
+    else:
+        grad = np.empty(3)
+        grad[0] = f_z.real/(sigma*np.sqrt(2))
+        grad[1] = (-f/sigma-z/sigma*f_z).real/(2*np.sqrt(2*np.log(2)))
+        grad[2] = -f_z.imag/(2*np.sqrt(2)*sigma)
+    return grad
