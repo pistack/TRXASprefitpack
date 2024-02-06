@@ -83,4 +83,7 @@ def test_driver_transient_exp_1():
     assert np.allclose(result_ampgo['x'], ans)
     assert str(result_ampgo) == str(load_result_ampgo)
 
+if __name__ == '__main__':
+    test_driver_transient_exp_1()
+
 

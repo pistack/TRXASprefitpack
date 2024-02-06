@@ -299,13 +299,14 @@ def res_hess_voigt(x0: np.ndarray, num_voigt: int, edge: Optional[str] = None,
     for i in range(num_voigt):
         df_tmp = deriv_voigt(e-e0[i], fwhm_G[i], fwhm_L[i])
         df_tmp = np.einsum('ij,i->ij', df_tmp, 1/eps)
+        df_tmp[:, 0] = -df_tmp[:, 0]
         hf_tmp = c[i]*hess_voigt(e-e0[i], fwhm_G[i], fwhm_L[i])
         hf_tmp = np.einsum('ij,i->ij', hf_tmp, 1/eps)
-        df[:, i] = -c[i]*df_tmp[:, 0]
+        df[:, i] = c[i]*df_tmp[:, 0]
         df[:, num_voigt+i] = c[i]*df_tmp[:, 1]
         df[:, 2*num_voigt+i] = c[i]*df_tmp[:, 2]
         chidf_tmp = chi@df_tmp
-        Hcx[i, i] = -chidf_tmp[0]
+        Hcx[i, i] = chidf_tmp[0]
         Hcx[i, num_voigt+i] = chidf_tmp[1]
         Hcx[i, 2*num_voigt+i] = chidf_tmp[2]
         chihf_tmp = chi@hf_tmp

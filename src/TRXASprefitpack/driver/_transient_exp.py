@@ -15,7 +15,7 @@ from scipy.optimize import basinhopping
 from scipy.optimize import least_squares
 from ..mathfun.A_matrix import make_A_matrix_exp, fact_anal_A
 from ..res.parm_bound import set_bound_t0, set_bound_tau
-from ..res.res_decay import residual_decay, res_grad_decay
+from ..res.res_decay import residual_decay, res_grad_decay, res_hess_decay
 from ..res.res_decay import residual_decay_same_t0, res_grad_decay_same_t0
 
 GLBSOLVER = {'basinhopping': basinhopping, 'ampgo': ampgo}
@@ -282,11 +282,20 @@ def fit_transient_exp(irf: str, fwhm_init: Union[float, np.ndarray],
 
     jac = res_lsq['jac']
     hes = jac.T @ jac
+    #hes_tst = res_hess_decay(param_opt, num_comp, base, irf, 
+    #                     tau_mask=tau_mask, t=t, intensity=intensity, eps=eps)
     cov = np.zeros_like(hes)
+    #cov_tst = np.zeros_like(hes)
     n_free_param = np.sum(~fix_param_idx)
     mask_2d = np.einsum('i,j->ij', ~fix_param_idx, ~fix_param_idx)
     cov[mask_2d] = np.linalg.inv(hes[mask_2d].reshape(
         (n_free_param, n_free_param))).flatten()
+    #cov_tst[mask_2d] = np.linalg.inv(hes_tst[mask_2d].reshape(
+    #    (n_free_param, n_free_param))).flatten()
+    #print('J^T@J')
+    #print(np.diag(cov))
+    #print('analytic Hessian')
+    #print(np.diag(cov_tst))
     cov_scaled = red_chi2*cov
     param_eps = np.sqrt(np.diag(cov_scaled))
     corr = cov_scaled.copy()
