@@ -433,43 +433,115 @@ def res_hess_decay(x0: np.ndarray, num_comp: int, base: bool, irf: str,
                     #Jf
                     grad_sum[:, 0] = grad_sum[:, 0]+c[-1]*tmp_grad[:, 1]
                     grad_sum[:, 1] = grad_sum[:, 1]+c[-1]*tmp_grad[:, 0]
+            else:
+                for i in range(tau.size):
+                    tmp_grad_gau = deriv_exp_conv_gau(ti-t0, fwhm, 1/tau[i])
+                    tmp_hess_gau = c[i]*hess_exp_conv_gau(ti-t0, fwhm, 1/tau[i])
+                    tmp_grad_cauchy = deriv_exp_conv_cauchy(ti-t0, fwhm, 1/tau[i])
+                    tmp_hess_cauchy = c[i]*hess_exp_conv_cauchy(ti-t0, fwhm, 1/tau[i])
+                    
+                    tmp_hess_gau[:, 1] = -tmp_hess_gau[:, 1] # d^2 f / d(-t)d(fwhm)
+                    tmp_hess_gau[:, 2] = tmp_hess_gau[:, 2]/tau[i]**2 # d^2 f / d(-t)d(1/k)
+                    tmp_hess_gau[:, 4] = -tmp_hess_gau[:, 4]/tau[i]**2 # d^2 f / d(fwhm)d(1/k)
+                    tmp_hess_gau[:, 5] = \
+                        (tmp_hess_gau[:, 5]/tau[i]+2*c[i]*tmp_grad_gau[:, 2])/tau[i]**3 # d^2 f / d(1/k)^2
+                    tmp_grad_gau[:, 0] = -tmp_grad_gau[:, 0] # df/d(-t)
+                    tmp_grad_gau[:, 2] = -tmp_grad_gau[:, 2]/tau[i]**2 # d f / d(1/k)
+
+                    tmp_hess_cauchy[:, 1] = -tmp_hess_cauchy[:, 1] # d^2 f / d(-t)d(fwhm)
+                    tmp_hess_cauchy[:, 2] = tmp_hess_cauchy[:, 2]/tau[i]**2 # d^2 f / d(-t)d(1/k)
+                    tmp_hess_cauchy[:, 4] = -tmp_hess_cauchy[:, 4]/tau[i]**2 # d^2 f / d(fwhm)d(1/k)
+                    tmp_hess_cauchy[:, 5] = \
+                        (tmp_hess_cauchy[:, 5]/tau[i]+2*c[i]*tmp_grad_cauchy[:, 2])/tau[i]**3 # d^2 f / d(1/k)^2
+                    tmp_grad_cauchy[:, 0] = -tmp_grad_cauchy[:, 0] # df/d(-t)
+                    tmp_grad_cauchy[:, 2] = -tmp_grad_cauchy[:, 2]/tau[i]**2 # d f / d(1/k)
+
+                    tmp_grad_gau = np.einsum('ij,i->ij', tmp_grad_gau, 1/e[:, j])
+                    tmp_hess_gau = np.einsum('ij,i->ij', tmp_hess_gau, 1/e[:, j])
+
+                    tmp_grad_cauchy = np.einsum('ij,i->ij', tmp_grad_cauchy, 1/e[:, j])
+                    tmp_hess_cauchy = np.einsum('ij,i->ij', tmp_hess_cauchy, 1/e[:, j])
+
+                    tmp_grad = np.zeros((chi.size, 4)) # fwhm_G fwhm_L t tau
+                    tmp_hess = np.zeros((chi.size, 10))
+
+                    ## Construct tmp_grad and tmp_hess for pseudo voigt 
+
+                    tmp_chi_grad = chi@tmp_grad; tmp_chi_hess = chi@tmp_hess
+
+                    # Hcx
+                    Hcx[i, :num_irf+1] = tmp_chi_grad[:3] #fwhm_(G,L) t
+                    Hcx[i, i+1+num_irf] = tmp_chi_grad[3] #tau_i
+
+                    # Hx
+                    Hx_2nd[0, 0] = Hx_2nd[0, 0] + tmp_chi_hess[0] #d(fwhm_G)^2
+                    Hx_2nd[0, 1] = Hx_2nd[0, 1] + tmp_chi_hess[1] # d(fwhm_G)d(fwhm_L)
+                    Hx_2nd[0, t0_idx] = Hx_2nd[0, t0_idx] + tmp_chi_hess[2] # dtd(fwhm_G)
+                    Hx_2nd[0, num_irf+num_t0+i] = \
+                        Hx_2nd[0, num_irf+num_t0+i] + tmp_chi_hess[3] #d(fwhm_G)d(tau)
+                    Hx_2nd[1, 1] = Hx_2nd[1, 1] + tmp_chi_hess[4] #d(fwhm_L)^2
+                    Hx_2nd[1, t0_idx] = Hx_2nd[1, t0_idx] + tmp_chi_hess[5] # dtd(fwhm_L)
+                    Hx_2nd[1, num_irf+num_t0+i] = \
+                        Hx_2nd[1, num_irf+num_t0+i] + tmp_chi_hess[6] #d(fwhm_L)d(tau)
+                    Hx_2nd[t0_idx, t0_idx] = Hx_2nd[t0_idx, t0_idx] + tmp_chi_hess[7] # dt^2
+                    Hx_2nd[t0_idx, num_irf+num_t0+i] = tmp_chi_hess[8] # dt dtau_i
+                    Hx_2nd[num_irf+num_t0+i, num_irf+num_t0+i] = \
+                        Hx_2nd[num_irf+num_t0+i, num_irf+num_t0+i] + tmp_chi_hess[9] # d(tau_i)^2 
+
+                    #Jf
+                    grad_sum[:, :num_irf+1] = \
+                        grad_sum[:, :num_irf+1]+c[i]*tmp_grad[:, :num_irf+1]
+                    grad_sum[:, 1+i+num_irf] = c[i]*tmp_grad[:, 3]
                 
-                Hx_1st_tmp = grad_sum.T @ grad_sum
+                #if base:
+                    # copy general case
 
-                Hcx = Hcx + dc@grad_sum
+            # IRF independent part    
+            Hx_1st_tmp = grad_sum.T @ grad_sum
 
-                tm_2d = np.einsum('i,j->ij', tm, tm)
+            Hcx = Hcx + dc@grad_sum
 
-                Hc_mask = Hc[tm, :][:, tm]
-                Hcx_mask = np.zeros((Hc_mask.shape[0], 2+Hc_mask.shape[0]))
-                Hcx_mask[:, :2] = Hcx[tm, :2]
-                Hcx_mask[:, 2:] = Hcx[tm, 2:][:, tm]
-                b = np.linalg.solve(Hc_mask, Hcx_mask)
-                Hcorr_tmp = b.T @ (Hcx_mask)
+            tm_2d = np.einsum('i,j->ij', tm, tm)
 
-                # fwhm
-                Hx_1st[0, 0] = Hx_1st[0, 0] + Hx_1st_tmp[0, 0]
-                Hcorr[0, 0] = Hcorr[0, 0] + Hcorr_tmp[0, 0]
+            Hc_mask = Hc[tm, :][:, tm]
+            Hcx_mask = np.zeros((Hc_mask.shape[0], 1+num_irf+Hc_mask.shape[0]))
+            Hcx_mask[:, :num_irf+1] = Hcx[tm, :num_irf+1]
+            Hcx_mask[:, num_irf+1:] = Hcx[tm, num_irf+1:][:, tm]
+            b = np.linalg.solve(Hc_mask, Hcx_mask)
+            Hcorr_tmp = b.T @ (Hcx_mask)
 
-                Hx_1st[0, t0_idx] = Hx_1st_tmp[0, 1]
-                Hcorr[0, t0_idx] = Hcorr_tmp[0, 1]
+            # fwhm
+            Hx_1st[:num_irf, :num_irf] = \
+                Hx_1st[:num_irf, :num_irf] + Hx_1st_tmp[:num_irf, :num_irf]
+            Hcorr[:num_irf, :num_irf] = \
+                Hcorr[:num_irf, :num_irf] + Hcorr_tmp[:num_irf, :num_irf]
 
-                Hx_1st[0, 1+num_t0:] = Hx_1st[0, 1+num_t0:] + Hx_1st_tmp[0, 2:]
-                Hcorr[0, 1+num_t0:][tm] = \
-                    Hcorr[0, 1+num_t0:][tm] + Hcorr_tmp[0, 2:]
+            Hx_1st[:num_irf, t0_idx] = Hx_1st_tmp[:num_irf, num_irf]
+            Hcorr[:num_irf, t0_idx] = Hcorr_tmp[:num_irf, num_irf]
 
-                # t0
-                Hx_1st[t0_idx, t0_idx] = Hx_1st_tmp[1, 1]
-                Hcorr[t0_idx, t0_idx] = Hcorr_tmp[1, 1]
+            Hx_1st[:num_irf, num_irf+num_t0:] = \
+                Hx_1st[:num_irf, num_irf+num_t0:] + \
+                    Hx_1st_tmp[:num_irf, num_irf+1:]
+            Hcorr[:num_irf, num_irf+num_t0:][:, tm] = \
+                Hcorr[:num_irf, num_irf+num_t0:][:, tm] + \
+                    Hcorr_tmp[:num_irf, num_irf+1:]
 
-                Hx_1st[t0_idx, 1+num_t0:] = Hx_1st_tmp[1, 2:]
-                Hcorr[t0_idx, 1+num_t0:][tm] = Hcorr_tmp[1, 2:]
+            # t0
+            Hx_1st[t0_idx, t0_idx] = Hx_1st_tmp[num_irf, num_irf]
+            Hcorr[t0_idx, t0_idx] = Hcorr_tmp[num_irf, num_irf]
 
-                # tau
-                Hx_1st[1+num_t0:, 1+num_t0:] = \
-                    Hx_1st[1+num_t0:, 1+num_t0:] + Hx_1st_tmp[2:, 2:]
-                Hcorr[1+num_t0:, 1+num_t0:][tm_2d] = \
-                    Hcorr[1+num_t0:, 1+num_t0:][tm_2d] + Hcorr_tmp[2:, 2:].flatten()
+            Hx_1st[t0_idx, num_irf+num_t0:] = \
+                Hx_1st_tmp[num_irf, 1+num_irf:]
+            Hcorr[t0_idx, num_irf+num_t0:][tm] = \
+                Hcorr_tmp[num_irf, 1+num_irf:]
+
+            # tau
+            Hx_1st[num_irf+num_t0:, num_irf+num_t0:] = \
+                Hx_1st[num_irf+num_t0:, num_irf+num_t0:] + \
+                    Hx_1st_tmp[num_irf+1:, num_irf+1:]
+            Hcorr[num_irf+num_t0:, num_irf+num_t0:][tm_2d] = \
+                Hcorr[num_irf+num_t0:, num_irf+num_t0:][tm_2d] + \
+                    Hcorr_tmp[num_irf+1:, num_irf+1:].flatten()
 
             t0_idx = t0_idx + 1
         dset_idx = dset_idx+1
