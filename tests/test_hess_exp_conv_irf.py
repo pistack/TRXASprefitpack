@@ -29,6 +29,7 @@ def test_hess_exp_conv_gau_2():
     t = np.linspace(-1, 100, 2001)
     tst = hess_exp_conv_gau(t, fwhm, 1/tau)
     ref = check_num_hess(exp_conv_gau, t, fwhm, 1/tau)
+
     assert np.allclose(tst[:, 0], ref[:, 0, 0], rtol=1e-3, atol=1e-5)
     assert np.allclose(tst[:, 1], ref[:, 0, 1], rtol=1e-3, atol=1e-5)
     assert np.allclose(tst[:, 2], ref[:, 0, 2], rtol=1e-3, atol=1e-5)
@@ -58,6 +59,7 @@ def test_hess_exp_conv_cauchy_2():
     assert np.allclose(tst[:, 3], ref[:, 1, 1], rtol=1e-3, atol=1e-5)
     assert np.allclose(tst[:, 4], ref[:, 1, 2], rtol=1e-3, atol=1e-5)
     assert np.allclose(tst[:, 5], ref[:, 2, 2], rtol=1e-3, atol=1e-5)
+
 
 
 

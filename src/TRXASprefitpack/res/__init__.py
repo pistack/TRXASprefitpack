@@ -8,7 +8,7 @@ fitting time delay scan data or static spectrum data
 '''
 from .parm_bound import set_bound_t0, set_bound_tau
 from .parm_bound import set_bound_e0
-from .res_decay import residual_decay, res_grad_decay
+from .res_decay import residual_decay, res_grad_decay, res_hess_decay
 from .res_decay import residual_decay_same_t0, res_grad_decay_same_t0
 from .res_raise import residual_raise, res_grad_raise
 from .res_raise import residual_raise_same_t0, res_grad_raise_same_t0 
@@ -21,7 +21,7 @@ from .res_thy import residual_thy, res_grad_thy
 
 __all__ = ['set_bound_t0', 'set_bound_tau',
            'set_bound_e0',
-           'residual_decay', 'res_grad_decay',
+           'residual_decay', 'res_grad_decay', 'res_hess_decay',
            'residual_raise', 'res_grad_raise',
            'residual_dmp_osc', 'res_grad_dmp_osc',
            'residual_both', 'res_grad_both',

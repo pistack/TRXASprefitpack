@@ -237,7 +237,7 @@ def res_grad_decay(x0: np.ndarray, num_comp: int, base: bool, irf: str,
             if irf in ['g', 'c']:
                 df[end:end+step, 0] = grad_tmp[:, 1]
             else:
-                cdiff = (c@diff)/e[:, j]
+                cdiff = (cm@diff)/e[:, j]
                 df[end:end+step, 0] = dfwhm_G*grad_tmp[:, 1]+deta_G*cdiff
                 df[end:end+step, 1] = dfwhm_L*grad_tmp[:, 1]+deta_L*cdiff
             grad[t0_idx] = -chi[end:end+step]@grad_tmp[:, 0]
@@ -360,20 +360,26 @@ def res_hess_decay(x0: np.ndarray, num_comp: int, base: bool, irf: str,
             c = np.zeros_like(k)
             c[tm] = cm
 
-            dc = np.einsum('ij,j->ij', A[tm, :], 1/e[:, j])
+            dc = np.einsum('ij,j->ij', A, 1/e[:, j])
             Hc = dc @ dc.T
             
             grad_sum = np.zeros((chi.size, 1+num_irf+tau.size))
+            Hcx[:, :] = 0
 
-            if irf == 'g':
+            if irf in ['g', 'c']:
                 for i in range(tau.size):
-                    tmp_grad = deriv_exp_conv_gau(ti-t0, fwhm, 1/tau[i])
-                    tmp_hess = c[i]*hess_exp_conv_gau(ti-t0, fwhm, 1/tau[i])
+                    if irf == 'g':
+                        tmp_grad = deriv_exp_conv_gau(ti-t0, fwhm, 1/tau[i])
+                        tmp_hess = c[i]*hess_exp_conv_gau(ti-t0, fwhm, 1/tau[i])
+                    else:
+                        tmp_grad = deriv_exp_conv_cauchy(ti-t0, fwhm, 1/tau[i])
+                        tmp_hess = c[i]*hess_exp_conv_cauchy(ti-t0, fwhm, 1/tau[i])
+                    
                     tmp_hess[:, 1] = -tmp_hess[:, 1] # d^2 f / d(-t)d(fwhm)
                     tmp_hess[:, 2] = tmp_hess[:, 2]/tau[i]**2 # d^2 f / d(-t)d(1/k)
                     tmp_hess[:, 4] = -tmp_hess[:, 4]/tau[i]**2 # d^2 f / d(fwhm)d(1/k)
-                    tmp_hess[:, 5] = (tmp_hess[:, 5]/tau[i]+2*tmp_grad[:, 2])/tau[i]**3 # d^2 f / d(1/k)^2
-                    tmp_grad[:, 0] = -tmp_grad[:, 0]
+                    tmp_hess[:, 5] = (tmp_hess[:, 5]/tau[i]+2*c[i]*tmp_grad[:, 2])/tau[i]**3 # d^2 f / d(1/k)^2
+                    tmp_grad[:, 0] = -tmp_grad[:, 0] # df/d(-t)
                     tmp_grad[:, 2] = -tmp_grad[:, 2]/tau[i]**2 # d f / d(1/k)
 
                     tmp_grad = np.einsum('ij,i->ij', tmp_grad, 1/e[:, j])
@@ -396,12 +402,17 @@ def res_hess_decay(x0: np.ndarray, num_comp: int, base: bool, irf: str,
                         Hx_2nd[1+num_t0+i, 1+num_t0+i] + tmp_chi_hess[5] # d(tau_i)^2 
 
                     #Jf
-                    grad_sum[:, :2] = grad_sum[:, :2]+c[i]*tmp_grad[:, :2]
+                    grad_sum[:, 0] = grad_sum[:, 0]+c[i]*tmp_grad[:, 1]
+                    grad_sum[:, 1] = grad_sum[:, 1]+c[i]*tmp_grad[:, 0]
                     grad_sum[:, 2+i] = c[i]*tmp_grad[:, 2]
                 
                 if base:
-                    tmp_grad = deriv_exp_conv_gau(ti-t0, fwhm, 0)
-                    tmp_hess = c[-1]*hess_exp_conv_gau(ti-t0, fwhm, 0)
+                    if irf == 'g':
+                        tmp_grad = deriv_exp_conv_gau(ti-t0, fwhm, 0)
+                        tmp_hess = c[-1]*hess_exp_conv_gau(ti-t0, fwhm, 0)
+                    else:
+                        tmp_grad = deriv_exp_conv_cauchy(ti-t0, fwhm, 0)
+                        tmp_hess = c[-1]*hess_exp_conv_cauchy(ti-t0, fwhm, 0)
                     tmp_hess[:, 1] = -tmp_hess[:, 1] # d^2 f / d(-t)d(fwhm)
                     tmp_grad[:, 0] = -tmp_grad[:, 0]
 
@@ -420,49 +431,55 @@ def res_hess_decay(x0: np.ndarray, num_comp: int, base: bool, irf: str,
                     Hx_2nd[t0_idx, t0_idx] = Hx_2nd[t0_idx, t0_idx] + tmp_chi_hess[0] # dt^2
 
                     #Jf
-                    grad_sum[:, :2] = grad_sum[:, :2]+c[-1]*tmp_grad[:, :2]
+                    grad_sum[:, 0] = grad_sum[:, 0]+c[-1]*tmp_grad[:, 1]
+                    grad_sum[:, 1] = grad_sum[:, 1]+c[-1]*tmp_grad[:, 0]
                 
                 Hx_1st_tmp = grad_sum.T @ grad_sum
 
-                b = np.linalg.solve(Hc, Hcx)
-                b[~tm, :] = 0
-                Hcorr_tmp = b.T @ Hcx
+                Hcx = Hcx + dc@grad_sum
+
+                tm_2d = np.einsum('i,j->ij', tm, tm)
+
+                Hc_mask = Hc[tm, :][:, tm]
+                Hcx_mask = np.zeros((Hc_mask.shape[0], 2+Hc_mask.shape[0]))
+                Hcx_mask[:, :2] = Hcx[tm, :2]
+                Hcx_mask[:, 2:] = Hcx[tm, 2:][:, tm]
+                b = np.linalg.solve(Hc_mask, Hcx_mask)
+                Hcorr_tmp = b.T @ (Hcx_mask)
 
                 # fwhm
                 Hx_1st[0, 0] = Hx_1st[0, 0] + Hx_1st_tmp[0, 0]
                 Hcorr[0, 0] = Hcorr[0, 0] + Hcorr_tmp[0, 0]
 
                 Hx_1st[0, t0_idx] = Hx_1st_tmp[0, 1]
-                Hcorr[0, t0_idx] = Hcorr[0, 1]
+                Hcorr[0, t0_idx] = Hcorr_tmp[0, 1]
 
                 Hx_1st[0, 1+num_t0:] = Hx_1st[0, 1+num_t0:] + Hx_1st_tmp[0, 2:]
-                Hcorr[0, 1+num_t0:] = Hcorr[0, 1+num_t0:] + Hcorr_tmp[0, 2:]
+                Hcorr[0, 1+num_t0:][tm] = \
+                    Hcorr[0, 1+num_t0:][tm] + Hcorr_tmp[0, 2:]
 
                 # t0
                 Hx_1st[t0_idx, t0_idx] = Hx_1st_tmp[1, 1]
                 Hcorr[t0_idx, t0_idx] = Hcorr_tmp[1, 1]
 
                 Hx_1st[t0_idx, 1+num_t0:] = Hx_1st_tmp[1, 2:]
-                Hcorr[t0_idx, 1+num_t0:] = Hcorr_tmp[1, 2:]
+                Hcorr[t0_idx, 1+num_t0:][tm] = Hcorr_tmp[1, 2:]
 
                 # tau
                 Hx_1st[1+num_t0:, 1+num_t0:] = \
                     Hx_1st[1+num_t0:, 1+num_t0:] + Hx_1st_tmp[2:, 2:]
-                Hcorr[1+num_t0:, 1+num_t0:] = \
-                    Hcorr[1+num_t0:, 1+num_t0:] + Hcorr_tmp[2:, 2:]
-
+                Hcorr[1+num_t0:, 1+num_t0:][tm_2d] = \
+                    Hcorr[1+num_t0:, 1+num_t0:][tm_2d] + Hcorr_tmp[2:, 2:].flatten()
 
             t0_idx = t0_idx + 1
         dset_idx = dset_idx+1
 
-        for i in range(num_param):
-            for j in range(i+1, num_param):
-                Hx_1st[j, i] = Hx_1st[i, j]
-                Hx_2nd[j, i] = Hx_2nd[i, j]
-                Hcorr[j, i] = Hcorr[i, j]
-    
     H = Hx_1st + Hx_2nd - Hcorr
-
+ 
+    for i in range(num_param):
+        for j in range(i+1, num_param):
+            H[j, i] = H[i, j]
+ 
     return H
 
 def residual_decay_same_t0(x0: np.ndarray, base: bool, irf: str,
