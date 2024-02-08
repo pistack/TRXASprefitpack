@@ -283,12 +283,11 @@ def fit_transient_exp(irf: str, fwhm_init: Union[float, np.ndarray],
     jac = res_lsq['jac']
     hes = jac.T @ jac
     cov = np.zeros_like(hes)
-    cov_tst = np.zeros_like(hes)
     n_free_param = np.sum(~fix_param_idx)
     mask_2d = np.einsum('i,j->ij', ~fix_param_idx, ~fix_param_idx)
     cov[mask_2d] = np.linalg.inv(hes[mask_2d].reshape(
         (n_free_param, n_free_param))).flatten()
-    cov_scaled = red_chi2*cov_tst
+    cov_scaled = red_chi2*cov
     param_eps = np.sqrt(np.diag(cov_scaled))
     corr = cov_scaled.copy()
     weight = np.einsum('i,j->ij', param_eps, param_eps)
