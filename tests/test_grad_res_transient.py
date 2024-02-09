@@ -42,10 +42,10 @@ def test_res_grad_decay_1():
 
     # Now generates measured transient signal
     # Last element is ground state
-    abs_1 = [1, 1, 1, 0]
-    abs_2 = [0.5, 0.8, 0.2, 0]
-    abs_3 = [-0.5, 0.7, 0.9, 0]
-    abs_4 = [0.6, 0.3, -1, 0]
+    abs_1 = [1, 1, 1, 0.2]
+    abs_2 = [0.5, 0.8, 0.2, 0.3]
+    abs_3 = [-0.5, 0.7, 0.9, 0.5]
+    abs_4 = [0.6, 0.3, -1, 0.7]
 
     t0 = np.random.uniform(-0.2, 0.2, 4) # perturb time zero of each scan
 
@@ -72,13 +72,13 @@ def test_res_grad_decay_1():
 
     x0 = np.array([0.15, 0, 0, 0, 0, 0.4, 9, 990])
 
-    res_ref = 1/2*np.sum(residual_decay(x0, False, 'g',
+    res_ref = 1/2*np.sum(residual_decay(x0, True, 'g',
     t=t, intensity=intensity, eps=eps)**2)
     grad_ref = approx_fprime(x0, lambda x0: \
-        1/2*np.sum(residual_decay(x0, False, 'g',
+        1/2*np.sum(residual_decay(x0, True, 'g',
         t=t, intensity=intensity, eps=eps)**2), epsilon)
 
-    res_tst, grad_tst = res_grad_decay(x0, 3, False, 'g',
+    res_tst, grad_tst = res_grad_decay(x0, 3, True, 'g',
     np.zeros_like(x0, dtype=bool), 
     t=t, intensity=intensity, eps=eps)
 
@@ -108,10 +108,10 @@ def test_res_grad_decay_2():
 
     # Now generates measured transient signal
     # Last element is ground state
-    abs_1 = [1, 1, 1, 0]
-    abs_2 = [0.5, 0.8, 0.2, 0]
-    abs_3 = [-0.5, 0.7, 0.9, 0]
-    abs_4 = [0.6, 0.3, -1, 0]
+    abs_1 = [1, 1, 1, 0.2]
+    abs_2 = [0.5, 0.8, 0.2, 0.3]
+    abs_3 = [-0.5, 0.7, 0.9, 0.4]
+    abs_4 = [0.6, 0.3, -1, 0.5]
 
     t0 = np.random.uniform(-0.2, 0.2, 4) # perturb time zero of each scan
 
@@ -138,13 +138,13 @@ def test_res_grad_decay_2():
 
     x0 = np.array([0.15, 0, 0, 0, 0, 0.4, 9, 990])
 
-    res_ref = 1/2*np.sum(residual_decay(x0, False, 'c',
+    res_ref = 1/2*np.sum(residual_decay(x0, True, 'c',
     t=t, intensity=intensity, eps=eps)**2)
     grad_ref = approx_fprime(x0, lambda x0: \
-        1/2*np.sum(residual_decay(x0, False, 'c',
+        1/2*np.sum(residual_decay(x0, True, 'c',
         t=t, intensity=intensity, eps=eps)**2), epsilon)
 
-    res_tst, grad_tst = res_grad_decay(x0, 3, False, 'c',
+    res_tst, grad_tst = res_grad_decay(x0, 3, True, 'c',
     np.zeros_like(x0, dtype=bool), 
     t=t, intensity=intensity, eps=eps)
 
@@ -175,10 +175,10 @@ def test_res_grad_decay_3():
 
     # Now generates measured transient signal
     # Last element is ground state
-    abs_1 = [1, 1, 1, 0]
-    abs_2 = [0.5, 0.8, 0.2, 0]
-    abs_3 = [-0.5, 0.7, 0.9, 0]
-    abs_4 = [0.6, 0.3, -1, 0]
+    abs_1 = [1, 1, 1, 0.3]
+    abs_2 = [0.5, 0.8, 0.2, 0.2]
+    abs_3 = [-0.5, 0.7, 0.9, 0.12]
+    abs_4 = [0.6, 0.3, -1, 0.35]
 
     t0 = np.random.uniform(-0.2, 0.2, 4) # perturb time zero of each scan
 
@@ -250,15 +250,15 @@ def test_res_grad_decay_4():
 
     # Now generates measured transient signal
     # Last element is ground state
-    abs_1_1 = [1, 1, 1, 0]
-    abs_2_1 = [0.5, 0.8, 0.2, 0]
-    abs_3_1 = [-0.5, 0.7, 0.9, 0]
-    abs_4_1 = [0.6, 0.3, -1, 0]
+    abs_1_1 = [1, 1, 1, 0.13]
+    abs_2_1 = [0.5, 0.8, 0.2, 0.16]
+    abs_3_1 = [-0.5, 0.7, 0.9, 0.72]
+    abs_4_1 = [0.6, 0.3, -1, 0.12]
 
-    abs_1_2 = [1, 1, 0]
-    abs_2_2 = [0.5, 0.8, 0]
-    abs_3_2 = [-0.5, 0.7, 0]
-    abs_4_2 = [0.6, 0.3, 0]
+    abs_1_2 = [1, 1, 0.3]
+    abs_2_2 = [0.5, 0.8, -0.1]
+    abs_3_2 = [-0.5, 0.7, -0.2]
+    abs_4_2 = [0.6, 0.3, -0.12]
 
     t0 = np.random.uniform(-0.2, 0.2, 8) # perturb time zero of each scan
 
@@ -287,8 +287,8 @@ def test_res_grad_decay_4():
 
     eps_obs = np.ones_like(i_obs_1)
 
-    tau_mask = [np.array([True, False, True, True]),
-                np.array([False, True, True, False])]
+    tau_mask = [np.array([True, False, True, True, True]),
+                np.array([False, True, True, False, True])]
 
     t = [t_seq, t_seq]
     intensity = [i_obs_1, i_obs_2]
@@ -298,15 +298,15 @@ def test_res_grad_decay_4():
                    0, 0, 0, 0, 0, 0, 0, 0,
                      0.3, 1, 8, 800])
 
-    res_ref = 1/2*np.sum(residual_decay(x0, False, 'g',
+    res_ref = 1/2*np.sum(residual_decay(x0, True, 'g',
     tau_mask = tau_mask,
     t=t, intensity=intensity, eps=eps)**2)
     grad_ref = approx_fprime(x0, lambda x0: \
-        1/2*np.sum(residual_decay(x0, False, 'g',
+        1/2*np.sum(residual_decay(x0, True, 'g',
         tau_mask = tau_mask,
         t=t, intensity=intensity, eps=eps)**2), epsilon)
 
-    res_tst, grad_tst = res_grad_decay(x0, 4, False, 'g',
+    res_tst, grad_tst = res_grad_decay(x0, 4, True, 'g',
     np.zeros_like(x0, dtype=bool), tau_mask = tau_mask,
     t=t, intensity=intensity, eps=eps)
 
@@ -341,15 +341,15 @@ def test_res_grad_decay_5():
 
     # Now generates measured transient signal
     # Last element is ground state
-    abs_1_1 = [1, 1, 1, 0]
-    abs_2_1 = [0.5, 0.8, 0.2, 0]
-    abs_3_1 = [-0.5, 0.7, 0.9, 0]
-    abs_4_1 = [0.6, 0.3, -1, 0]
+    abs_1_1 = [1, 1, 1, 0.21]
+    abs_2_1 = [0.5, 0.8, 0.2, 0.12]
+    abs_3_1 = [-0.5, 0.7, 0.9, 0.07]
+    abs_4_1 = [0.6, 0.3, -1, 0.16]
 
-    abs_1_2 = [1, 1, 0]
-    abs_2_2 = [0.5, 0.8, 0]
-    abs_3_2 = [-0.5, 0.7, 0]
-    abs_4_2 = [0.6, 0.3, 0]
+    abs_1_2 = [1, 1, 0.34]
+    abs_2_2 = [0.5, 0.8, 0.23]
+    abs_3_2 = [-0.5, 0.7, 0.32]
+    abs_4_2 = [0.6, 0.3, 0.11]
 
     t0 = np.random.uniform(-0.2, 0.2, 8) # perturb time zero of each scan
 
@@ -378,8 +378,8 @@ def test_res_grad_decay_5():
 
     eps_obs = np.ones_like(i_obs_1)
 
-    tau_mask = [np.array([True, False, True, True]),
-                np.array([False, True, True, False])]
+    tau_mask = [np.array([True, False, True, True, True]),
+                np.array([False, True, True, False, True])]
 
     t = [t_seq, t_seq]
     intensity = [i_obs_1, i_obs_2]
@@ -389,15 +389,15 @@ def test_res_grad_decay_5():
                    0, 0, 0, 0, 0, 0, 0, 0,
                      0.3, 1, 8, 800])
 
-    res_ref = 1/2*np.sum(residual_decay(x0, False, 'c',
+    res_ref = 1/2*np.sum(residual_decay(x0, True, 'c',
     tau_mask = tau_mask,
     t=t, intensity=intensity, eps=eps)**2)
     grad_ref = approx_fprime(x0, lambda x0: \
-        1/2*np.sum(residual_decay(x0, False, 'c',
+        1/2*np.sum(residual_decay(x0, True, 'c',
         tau_mask = tau_mask,
         t=t, intensity=intensity, eps=eps)**2), epsilon)
 
-    res_tst, grad_tst = res_grad_decay(x0, 4, False, 'c',
+    res_tst, grad_tst = res_grad_decay(x0, 4, True, 'c',
     np.zeros_like(x0, dtype=bool), tau_mask = tau_mask,
     t=t, intensity=intensity, eps=eps)
 
@@ -435,15 +435,15 @@ def test_res_grad_decay_6():
 
     # Now generates measured transient signal
     # Last element is ground state
-    abs_1_1 = [1, 1, 1, 0]
-    abs_2_1 = [0.5, 0.8, 0.2, 0]
-    abs_3_1 = [-0.5, 0.7, 0.9, 0]
-    abs_4_1 = [0.6, 0.3, -1, 0]
+    abs_1_1 = [1, 1, 1, 0.12]
+    abs_2_1 = [0.5, 0.8, 0.2, 0.23]
+    abs_3_1 = [-0.5, 0.7, 0.9, 0.32]
+    abs_4_1 = [0.6, 0.3, -1, 0.33]
 
-    abs_1_2 = [1, 1, 0]
-    abs_2_2 = [0.5, 0.8, 0]
-    abs_3_2 = [-0.5, 0.7, 0]
-    abs_4_2 = [0.6, 0.3, 0]
+    abs_1_2 = [1, 1, 0.34]
+    abs_2_2 = [0.5, 0.8, 0.76]
+    abs_3_2 = [-0.5, 0.7, 0.11]
+    abs_4_2 = [0.6, 0.3, 0.39]
 
     t0 = np.random.uniform(-0.2, 0.2, 8) # perturb time zero of each scan
 
@@ -480,8 +480,8 @@ def test_res_grad_decay_6():
 
     eps_obs = np.ones_like(i_obs_1)
 
-    tau_mask = [np.array([True, False, True, True]),
-                np.array([False, True, True, False])]
+    tau_mask = [np.array([True, False, True, True, True]),
+                np.array([False, True, True, False, True])]
 
     t = [t_seq, t_seq]
     intensity = [i_obs_1, i_obs_2]
@@ -491,15 +491,15 @@ def test_res_grad_decay_6():
                    0, 0, 0, 0, 0, 0, 0, 0,
                      0.3, 1, 8, 800])
 
-    res_ref = 1/2*np.sum(residual_decay(x0, False, 'pv',
+    res_ref = 1/2*np.sum(residual_decay(x0, True, 'pv',
     tau_mask = tau_mask,
     t=t, intensity=intensity, eps=eps)**2)
     grad_ref = approx_fprime(x0, lambda x0: \
-        1/2*np.sum(residual_decay(x0, False, 'pv',
+        1/2*np.sum(residual_decay(x0, True, 'pv',
         tau_mask = tau_mask,
         t=t, intensity=intensity, eps=eps)**2), epsilon)
 
-    res_tst, grad_tst = res_grad_decay(x0, 4, False, 'pv',
+    res_tst, grad_tst = res_grad_decay(x0, 4, True, 'pv',
     np.zeros_like(x0, dtype=bool), tau_mask = tau_mask,
     t=t, intensity=intensity, eps=eps)
 

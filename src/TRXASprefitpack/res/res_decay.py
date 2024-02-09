@@ -11,6 +11,7 @@ from typing import Optional, Sequence, Tuple
 import numpy as np
 from ..mathfun.irf import calc_eta, deriv_eta
 from ..mathfun.irf import calc_fwhm, deriv_fwhm
+from ..mathfun.irf import hess_fwhm_eta
 from ..mathfun.A_matrix import make_A_matrix_gau, make_A_matrix_cauchy, fact_anal_A
 from ..mathfun.exp_conv_irf import deriv_exp_conv_gau, deriv_exp_conv_cauchy
 from ..mathfun.exp_conv_irf import hess_exp_conv_gau, hess_exp_conv_cauchy
@@ -313,6 +314,7 @@ def res_hess_decay(x0: np.ndarray, num_comp: int, base: bool, irf: str,
         fwhm = calc_fwhm(x0[0], x0[1])
         dfwhm_G, dfwhm_L = deriv_fwhm(x0[0], x0[1])
         deta_G, deta_L = deriv_eta(x0[0], x0[1])
+        hess_fwhm, hess_eta = hess_fwhm_eta(x0[0], x0[1])
 
     num_t0 = 0
     count = 0
@@ -456,16 +458,75 @@ def res_hess_decay(x0: np.ndarray, num_comp: int, base: bool, irf: str,
                     tmp_grad_cauchy[:, 0] = -tmp_grad_cauchy[:, 0] # df/d(-t)
                     tmp_grad_cauchy[:, 2] = -tmp_grad_cauchy[:, 2]/tau[i]**2 # d f / d(1/k)
 
-                    tmp_grad_gau = np.einsum('ij,i->ij', tmp_grad_gau, 1/e[:, j])
-                    tmp_hess_gau = np.einsum('ij,i->ij', tmp_hess_gau, 1/e[:, j])
-
-                    tmp_grad_cauchy = np.einsum('ij,i->ij', tmp_grad_cauchy, 1/e[:, j])
-                    tmp_hess_cauchy = np.einsum('ij,i->ij', tmp_hess_cauchy, 1/e[:, j])
-
                     tmp_grad = np.zeros((chi.size, 4)) # fwhm_G fwhm_L t tau
                     tmp_hess = np.zeros((chi.size, 10))
 
-                    ## Construct tmp_grad and tmp_hess for pseudo voigt 
+                    ## Construct tmp_grad and tmp_hess for pseudo voigt
+
+                    # gradient
+                    tmp_grad[:, 0] = dfwhm_G*\
+                        (tmp_grad_gau[:, 1]+eta*(tmp_grad_cauchy[:, 1]-tmp_grad_gau[:, 1])) + \
+                        deta_G*diff[i, :]
+                    tmp_grad[:, 1] = dfwhm_L*\
+                        (tmp_grad_gau[:, 1]+eta*(tmp_grad_cauchy[:, 1]-tmp_grad_gau[:, 1])) + \
+                        deta_L*diff[i, :]
+                    tmp_grad[:, 2] = tmp_grad_gau[:, 0]+\
+                        eta*(tmp_grad_cauchy[:, 0]-tmp_grad_gau[:, 0])
+                    tmp_grad[:, 3] = tmp_grad_gau[:, 2]+\
+                        eta*(tmp_grad_cauchy[:, 2]-tmp_grad_gau[:, 2])
+                    
+                    #hessian
+
+                    # fwhm_G, fwhm_G
+                    tmp_hess[:, 0] = c[i]*hess_fwhm[0]*\
+                    (tmp_grad_gau[:, 1]+
+                     eta*(tmp_grad_cauchy[:, 1]-tmp_grad_gau[:, 1])) + \
+                    dfwhm_G*(dfwhm_G*(tmp_hess_gau[:, 3]+
+                    eta*(tmp_hess_cauchy[:, 3]-tmp_hess_gau[:, 3]))+
+                    2*c[i]*deta_G*(tmp_grad_cauchy[:, 1]-tmp_grad_gau[:, 1])) + \
+                    c[i]*hess_eta[0]*diff[i, :]
+
+                    # fwhm_L, fwhm_L
+                    tmp_hess[:, 4] = c[i]*hess_fwhm[2]*\
+                    (tmp_grad_gau[:, 1]+
+                     eta*(tmp_grad_cauchy[:, 1]-tmp_grad_gau[:, 1])) + \
+                    dfwhm_L*(dfwhm_L*(tmp_hess_gau[:, 3]+
+                    eta*(tmp_hess_cauchy[:, 3]-tmp_hess_gau[:, 3]))+
+                    2*c[i]*deta_L*(tmp_grad_cauchy[:, 1]-tmp_grad_gau[:, 1])) + \
+                    c[i]*hess_eta[2]*diff[i, :]
+
+                    # fwhm_G, fwhm_L
+                    tmp_hess[:, 1] = c[i]*hess_fwhm[1]*\
+                    (tmp_grad_gau[:, 1]+
+                    eta*(tmp_grad_cauchy[:, 1]-tmp_grad_gau[:, 1])) + \
+                    dfwhm_G*(dfwhm_L*(tmp_hess_gau[:, 3]+
+                    eta*(tmp_hess_cauchy[:, 3]-tmp_hess_gau[:, 3]))+
+                    c[i]*deta_L*(tmp_grad_cauchy[:, 1]-tmp_grad_gau[:, 1])) + \
+                    c[i]*hess_eta[1]*diff[i, :] + \
+                    c[i]*deta_G*dfwhm_L*(tmp_grad_cauchy[:, 1]-tmp_grad_gau[:, 1])
+
+                    # fwhm_G, other
+                    tmp_hess[:, 2] = c[i]*deta_G*(tmp_grad_cauchy[:, 0]-tmp_grad_gau[:, 0])+\
+                    dfwhm_G*(tmp_hess_gau[:, 1]+eta*(tmp_hess_cauchy[:, 1]-tmp_hess_gau[:, 1]))
+                    tmp_hess[:, 3] = c[i]*deta_G*(tmp_grad_cauchy[:, 2]-tmp_grad_gau[:, 2])+\
+                    dfwhm_G*(tmp_hess_gau[:, 4]+eta*(tmp_hess_cauchy[:, 4]-tmp_hess_gau[:, 4]))
+
+                    # fwhm_L, other
+                    tmp_hess[:, 5] = c[i]*deta_L*(tmp_grad_cauchy[:, 0]-tmp_grad_gau[:, 0])+\
+                    dfwhm_L*(tmp_hess_gau[:, 1]+eta*(tmp_hess_cauchy[:, 1]-tmp_hess_gau[:, 1]))
+                    tmp_hess[:, 6] = c[i]*deta_L*(tmp_grad_cauchy[:, 2]-tmp_grad_gau[:, 2])+\
+                    dfwhm_L*(tmp_hess_gau[:, 4]+eta*(tmp_hess_cauchy[:, 4]-tmp_hess_gau[:, 4]))
+
+                    # other, other
+                    tmp_hess[:, 7] = tmp_hess_gau[:, 0]+\
+                    eta*(tmp_hess_cauchy[:, 0]-tmp_hess_gau[:, 0])
+                    tmp_hess[:, 8] = tmp_hess_gau[:, 2]+\
+                    eta*(tmp_hess_cauchy[:, 2]-tmp_hess_gau[:, 2])
+                    tmp_hess[:, 9] = tmp_hess_gau[:, 5]+\
+                    eta*(tmp_hess_cauchy[:, 5]-tmp_hess_gau[:, 5])
+
+                    tmp_grad = np.einsum('ij,i->ij', tmp_grad, 1/e[:, j])
+                    tmp_hess = np.einsum('ij,i->ij', tmp_hess, 1/e[:, j])
 
                     tmp_chi_grad = chi@tmp_grad; tmp_chi_hess = chi@tmp_hess
 
@@ -493,20 +554,110 @@ def res_hess_decay(x0: np.ndarray, num_comp: int, base: bool, irf: str,
                         grad_sum[:, :num_irf+1]+c[i]*tmp_grad[:, :num_irf+1]
                     grad_sum[:, 1+i+num_irf] = c[i]*tmp_grad[:, 3]
                 
-                #if base:
-                    # copy general case
+                if base:
+                    tmp_grad_gau = deriv_exp_conv_gau(ti-t0, fwhm, 0)
+                    tmp_hess_gau = c[-1]*hess_exp_conv_gau(ti-t0, fwhm, 0)
+                    tmp_grad_cauchy = deriv_exp_conv_cauchy(ti-t0, fwhm, 0)
+                    tmp_hess_cauchy = c[-1]*hess_exp_conv_cauchy(ti-t0, fwhm, 0)
+                    
+                    tmp_hess_gau[:, 1] = -tmp_hess_gau[:, 1] # d^2 f / d(-t)d(fwhm)
+                    tmp_grad_gau[:, 0] = -tmp_grad_gau[:, 0] # df/d(-t)
+
+                    tmp_hess_cauchy[:, 1] = -tmp_hess_cauchy[:, 1] # d^2 f / d(-t)d(fwhm)
+                    tmp_grad_cauchy[:, 0] = -tmp_grad_cauchy[:, 0] # df/d(-t)
+
+                    tmp_grad = np.zeros((chi.size, 3)) # fwhm_G fwhm_L t tau
+                    tmp_hess = np.zeros((chi.size, 6))
+
+                    ## Construct tmp_grad and tmp_hess for pseudo voigt
+
+                    # gradient
+                    tmp_grad[:, 0] = dfwhm_G*\
+                        (tmp_grad_gau[:, 1]+eta*(tmp_grad_cauchy[:, 1]-tmp_grad_gau[:, 1])) + \
+                        deta_G*diff[-1, :]
+                    tmp_grad[:, 1] = dfwhm_L*\
+                        (tmp_grad_gau[:, 1]+eta*(tmp_grad_cauchy[:, 1]-tmp_grad_gau[:, 1])) + \
+                        deta_L*diff[-1, :]
+                    tmp_grad[:, 2] = tmp_grad_gau[:, 0]+\
+                        eta*(tmp_grad_cauchy[:, 0]-tmp_grad_gau[:, 0])
+                    #hessian
+
+                    # fwhm_G, fwhm_G
+                    tmp_hess[:, 0] = c[-1]*hess_fwhm[0]*\
+                    (tmp_grad_gau[:, 1]+
+                    eta*(tmp_grad_cauchy[:, 1]-tmp_grad_gau[:, 1])) + \
+                    dfwhm_G*(dfwhm_G*(tmp_hess_gau[:, 3]+
+                    eta*(tmp_hess_cauchy[:, 3]-tmp_hess_gau[:, 3]))+
+                    2*c[-1]*deta_G*(tmp_grad_cauchy[:, 1]-tmp_grad_gau[:, 1])) + \
+                    c[-1]*hess_eta[0]*diff[-1, :]
+
+                    # fwhm_L, fwhm_L
+                    tmp_hess[:, 3] = c[-1]*hess_fwhm[2]*\
+                    (tmp_grad_gau[:, 1]+
+                    eta*(tmp_grad_cauchy[:, 1]-tmp_grad_gau[:, 1])) + \
+                    dfwhm_L*(dfwhm_L*(tmp_hess_gau[:, 3]+
+                    eta*(tmp_hess_cauchy[:, 3]-tmp_hess_gau[:, 3]))+
+                    2*c[-1]*deta_L*(tmp_grad_cauchy[:, 1]-tmp_grad_gau[:, 1])) + \
+                    c[-1]*hess_eta[2]*diff[-1, :]
+
+                    # fwhm_G, fwhm_L
+                    tmp_hess[:, 1] = c[-1]*hess_fwhm[1]*\
+                    (tmp_grad_gau[:, 1]+
+                    eta*(tmp_grad_cauchy[:, 1]-tmp_grad_gau[:, 1])) + \
+                    dfwhm_G*(dfwhm_L*(tmp_hess_gau[:, 3]+
+                    eta*(tmp_hess_cauchy[:, 3]-tmp_hess_gau[:, 3]))+
+                    c[-1]*deta_L*(tmp_grad_cauchy[:, 1]-tmp_grad_gau[:, 1])) + \
+                    c[-1]*hess_eta[1]*diff[-1, :] + \
+                    c[-1]*deta_G*dfwhm_L*(tmp_grad_cauchy[:, 1]-tmp_grad_gau[:, 1])
+
+                    # fwhm_G, other
+                    tmp_hess[:, 2] = c[-1]*deta_G*(tmp_grad_cauchy[:, 0]-tmp_grad_gau[:, 0])+\
+                    dfwhm_G*(tmp_hess_gau[:, 1]+eta*(tmp_hess_cauchy[:, 1]-tmp_hess_gau[:, 1]))
+
+                    # fwhm_L, other
+                    tmp_hess[:, 4] = c[-1]*deta_L*(tmp_grad_cauchy[:, 0]-tmp_grad_gau[:, 0])+\
+                    dfwhm_L*(tmp_hess_gau[:, 1]+eta*(tmp_hess_cauchy[:, 1]-tmp_hess_gau[:, 1]))
+
+                    # other, other
+                    tmp_hess[:, 5] = tmp_hess_gau[:, 0]+\
+                    eta*(tmp_hess_cauchy[:, 0]-tmp_hess_gau[:, 0])
+
+                    tmp_grad = np.einsum('ij,i->ij', tmp_grad, 1/e[:, j])
+                    tmp_hess = np.einsum('ij,i->ij', tmp_hess, 1/e[:, j])
+
+                    tmp_chi_grad = chi@tmp_grad; tmp_chi_hess = chi@tmp_hess
+
+                    # Hcx
+                    Hcx[-1, :num_irf+1] = tmp_chi_grad[:3] #fwhm_(G,L) t
+
+                    # Hx
+                    Hx_2nd[0, 0] = Hx_2nd[0, 0] + tmp_chi_hess[0] #d(fwhm_G)^2
+                    Hx_2nd[0, 1] = Hx_2nd[0, 1] + tmp_chi_hess[1] # d(fwhm_G)d(fwhm_L)
+                    Hx_2nd[0, t0_idx] = Hx_2nd[0, t0_idx] + tmp_chi_hess[2] # dtd(fwhm_G)
+                    Hx_2nd[1, 1] = Hx_2nd[1, 1] + tmp_chi_hess[3] #d(fwhm_L)^2
+                    Hx_2nd[1, t0_idx] = Hx_2nd[1, t0_idx] + tmp_chi_hess[4] # dtd(fwhm_L)
+                    Hx_2nd[t0_idx, t0_idx] = Hx_2nd[t0_idx, t0_idx] + tmp_chi_hess[5] # dt^2
+
+                    #Jf
+                    grad_sum[:, :num_irf+1] = \
+                        grad_sum[:, :num_irf+1]+c[-1]*tmp_grad[:, :num_irf+1]
 
             # IRF independent part    
             Hx_1st_tmp = grad_sum.T @ grad_sum
 
             Hcx = Hcx + dc@grad_sum
 
-            tm_2d = np.einsum('i,j->ij', tm, tm)
+            if base:
+                tm_tau = tm[:-1]
+            else:
+                tm_tau = tm
+
+            tm_2d = np.einsum('i,j->ij', tm_tau, tm_tau)
 
             Hc_mask = Hc[tm, :][:, tm]
-            Hcx_mask = np.zeros((Hc_mask.shape[0], 1+num_irf+Hc_mask.shape[0]))
+            Hcx_mask = np.zeros((Hc_mask.shape[0], 1+num_irf+np.sum(tm_tau)))
             Hcx_mask[:, :num_irf+1] = Hcx[tm, :num_irf+1]
-            Hcx_mask[:, num_irf+1:] = Hcx[tm, num_irf+1:][:, tm]
+            Hcx_mask[:, num_irf+1:] = Hcx[tm, num_irf+1:][:, tm_tau]
             b = np.linalg.solve(Hc_mask, Hcx_mask)
             Hcorr_tmp = b.T @ (Hcx_mask)
 
@@ -522,8 +673,8 @@ def res_hess_decay(x0: np.ndarray, num_comp: int, base: bool, irf: str,
             Hx_1st[:num_irf, num_irf+num_t0:] = \
                 Hx_1st[:num_irf, num_irf+num_t0:] + \
                     Hx_1st_tmp[:num_irf, num_irf+1:]
-            Hcorr[:num_irf, num_irf+num_t0:][:, tm] = \
-                Hcorr[:num_irf, num_irf+num_t0:][:, tm] + \
+            Hcorr[:num_irf, num_irf+num_t0:][:, tm_tau] = \
+                Hcorr[:num_irf, num_irf+num_t0:][:, tm_tau] + \
                     Hcorr_tmp[:num_irf, num_irf+1:]
 
             # t0
@@ -532,7 +683,7 @@ def res_hess_decay(x0: np.ndarray, num_comp: int, base: bool, irf: str,
 
             Hx_1st[t0_idx, num_irf+num_t0:] = \
                 Hx_1st_tmp[num_irf, 1+num_irf:]
-            Hcorr[t0_idx, num_irf+num_t0:][tm] = \
+            Hcorr[t0_idx, num_irf+num_t0:][tm_tau] = \
                 Hcorr_tmp[num_irf, 1+num_irf:]
 
             # tau
