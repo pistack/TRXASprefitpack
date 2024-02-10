@@ -10,6 +10,7 @@ from .parm_bound import set_bound_t0, set_bound_tau
 from .parm_bound import set_bound_e0
 from .res_decay import residual_decay, res_grad_decay, res_hess_decay
 from .res_decay import residual_decay_same_t0, res_grad_decay_same_t0
+from .res_decay import res_hess_decay_same_t0
 from .res_raise import residual_raise, res_grad_raise
 from .res_raise import residual_raise_same_t0, res_grad_raise_same_t0 
 from .res_osc import residual_dmp_osc, res_grad_dmp_osc
@@ -26,6 +27,7 @@ __all__ = ['set_bound_t0', 'set_bound_tau',
            'residual_dmp_osc', 'res_grad_dmp_osc',
            'residual_both', 'res_grad_both',
            'residual_decay_same_t0', 'res_grad_decay_same_t0',
+           'res_hess_decay_same_t0',
            'residual_raise_same_t0', 'res_grad_raise_same_t0',
            'residual_dmp_osc_same_t0', 'res_grad_dmp_osc_same_t0',
            'residual_both_same_t0', 'res_grad_both_same_t0',
