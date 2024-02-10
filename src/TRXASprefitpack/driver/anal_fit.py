@@ -138,12 +138,12 @@ def confidence_interval(result, alpha: float) -> CIResult:
         if result['same_t0']:
             args = [F_alpha, dfn, dfd, chi2_opt, 0, params, result['bounds'],
             res_grad_decay_same_t0, result['n_decay'],
-            result['base'], result['irf'], fix_param_idx,
+            result['base'], result['irf'], result['tau_mask'], fix_param_idx,
             result['t'], result['intensity'], result['eps']]
         else:
             args = [F_alpha, dfn, dfd, chi2_opt, 0, params, result['bounds'],
             res_grad_decay, result['n_decay'],
-            result['base'], result['irf'], fix_param_idx,
+            result['base'], result['irf'], result['tau_mask'], fix_param_idx,
             result['t'], result['intensity'], result['eps']]
     elif result['model'] == 'raise':
         if result['same_t0']:

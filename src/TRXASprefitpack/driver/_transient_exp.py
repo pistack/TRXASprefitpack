@@ -141,7 +141,7 @@ def fit_transient_exp(irf: str, fwhm_init: Union[float, np.ndarray],
         fix_param_idx[i] = (bound[i][0] == bound[i][1])
 
     if method_glb is not None:
-        go_args = (num_comp, base, irf, fix_param_idx, tau_mask,
+        go_args = (num_comp, base, irf, tau_mask, fix_param_idx,
                    t, intensity, eps)
         min_go_kwargs = {'args': go_args, 'jac': True, 'bounds': bound}
         if kwargs_glb is not None:
@@ -312,6 +312,12 @@ def fit_transient_exp(irf: str, fwhm_init: Union[float, np.ndarray],
     result['irf'] = irf
     result['eta'] = eta
     result['fwhm'] = fwhm_pv
+
+    if tau_mask is not None:
+        result['tau_mask'] = tau_mask
+    else:
+        result['tau_mask'] = \
+            [np.ones(num_comp+1*base, dtype=bool)]*len(t)
 
     # save experimental fitting data
     if name_of_dset is None:
