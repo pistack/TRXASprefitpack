@@ -118,8 +118,8 @@ def residual_decay(x0: np.ndarray, base: bool, irf: str,
 
 
 def res_grad_decay(x0: np.ndarray, num_comp: int, base: bool, irf: str,
-                   fix_param_idx: Optional[np.ndarray] = None,
                    tau_mask: Optional[np.ndarray] = None,
+                   fix_param_idx: Optional[np.ndarray] = None,
                    t: Optional[Sequence[np.ndarray]] = None,
                    intensity: Optional[Sequence[np.ndarray]] = None,
                    eps: Optional[Sequence[np.ndarray]] = None) -> Tuple[np.ndarray, np.ndarray]:
@@ -152,6 +152,9 @@ def res_grad_decay(x0: np.ndarray, num_comp: int, base: bool, irf: str,
 
         For pseudo voigt profile, the mixing parameter :math:`\\eta(f_G, f_L)` and
         uniform fwhm paramter :math:`f(f_G, f_L)` are calculated by `calc_eta` and `calc_fwhm` routine
+
+     tau_mask (sequence of boolean np.ndarray): whether or not include jth time constant in ith dataset fitting (tau_mask[i][j])
+      If base is True, size of tau_mask[i] should be `num_tau+1`.
 
      fix_param_idx: index for fixed parameter (masked array for `x0`)
      tau_mask (sequence of boolean np.ndarray): whether or not include jth time constant in ith dataset fitting (tau_mask[i][j])
@@ -805,8 +808,8 @@ def residual_decay_same_t0(x0: np.ndarray, base: bool, irf: str,
     return chi
 
 def res_grad_decay_same_t0(x0: np.ndarray, num_comp: int, base: bool, irf: str,
-                           fix_param_idx: Optional[np.ndarray] = None,
                            tau_mask: Optional[np.ndarray] = None,
+                           fix_param_idx: Optional[np.ndarray] = None,
                            t: Optional[Sequence[np.ndarray]] = None,
                            intensity: Optional[Sequence[np.ndarray]] = None,
                            eps: Optional[Sequence[np.ndarray]] = None) -> Tuple[np.ndarray, np.ndarray]:
@@ -840,9 +843,11 @@ def res_grad_decay_same_t0(x0: np.ndarray, num_comp: int, base: bool, irf: str,
 
         For pseudo voigt profile, the mixing parameter :math:`\\eta(f_G, f_L)` and
         uniform fwhm paramter :math:`f(f_G, f_L)` are calculated by `calc_eta` and `calc_fwhm` routine
-     fix_param_idx: index for fixed parameter (masked array for `x0`)
+        
      tau_mask (sequence of boolean np.ndarray): whether or not include jth time constant in ith dataset fitting (tau_mask[i][j])
       If base is True, size of tau_mask[i] should be `num_tau+1`.
+
+     fix_param_idx: index for fixed parameter (masked array for `x0`)
      t: time points for each data set
      intensity: sequence of intensity of datasets
      eps: sequence of estimated error of datasets

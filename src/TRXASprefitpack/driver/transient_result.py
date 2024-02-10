@@ -261,6 +261,9 @@ def save_TransientResult(result: TransientResult, filename: str):
                 expt_dset.create_dataset(d, data=result[k][i])
             for k, d in zip(fit_key_lst, fit_dir_lst):
                 fit_res_dset.create_dataset(d, data=result[k][i])
+            if result['model'] == 'decay':
+                fit_res_dset.create_dataset(
+                    'tau_mask', data=result['tau_mask'][i])
             if result['model'] == 'both':
                 fit_res_dset.create_dataset(
                     'fit_osc', data=result['fit_osc'][i])
@@ -268,6 +271,7 @@ def save_TransientResult(result: TransientResult, filename: str):
                     'fit_decay', data=result['fit_decay'][i])
             if result['model'] in ['dmp_osc', 'both']:
                 fit_res_dset.create_dataset('phase', data=result['phase'][i])
+
 
         for k in model_key_lst:
             fit_res.attrs[k] = result[k]
@@ -345,6 +349,10 @@ def load_TransientResult(filename: str) -> TransientResult:
 
         for k in fit_key_lst:
             result[k] = np.empty(len(result['name_of_dset']), dtype=object)
+        
+        if result['model'] == 'decay':
+            result['tau_mask'] = np.empty(
+                len(result['name_of_dset']), dtype=object)
 
         if result['model'] in ['dmp_osc', 'both']:
             result['phase'] = np.empty(
@@ -364,6 +372,10 @@ def load_TransientResult(filename: str) -> TransientResult:
                 result[k][i] = np.atleast_2d(expt_dset[d])
             for k, d in zip(fit_key_lst, fit_dir_lst):
                 result[k][i] = np.atleast_2d(fit_res_dset[d])
+            
+            if result['model'] == 'decay':
+                result['tau_mask'][i] = \
+                    np.array(fit_res_dset['tau_mask'], dtype=bool)
 
             if result['model'] in ['both', 'dmp_osc']:
                 result['phase'][i] = np.atleast_2d(fit_res_dset['phase'])

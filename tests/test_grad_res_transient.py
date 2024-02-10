@@ -79,7 +79,6 @@ def test_res_grad_decay_1():
         t=t, intensity=intensity, eps=eps)**2), epsilon)
 
     res_tst, grad_tst = res_grad_decay(x0, 3, True, 'g',
-    np.zeros_like(x0, dtype=bool), 
     t=t, intensity=intensity, eps=eps)
 
     assert np.allclose(res_ref, res_tst)
@@ -145,7 +144,6 @@ def test_res_grad_decay_2():
         t=t, intensity=intensity, eps=eps)**2), epsilon)
 
     res_tst, grad_tst = res_grad_decay(x0, 3, True, 'c',
-    np.zeros_like(x0, dtype=bool), 
     t=t, intensity=intensity, eps=eps)
 
     assert np.allclose(res_ref, res_tst)
@@ -216,7 +214,6 @@ def test_res_grad_decay_3():
         t=t, intensity=intensity, eps=eps)**2), epsilon)
 
     res_tst, grad_tst = res_grad_decay(x0, 3, True, 'pv',
-    np.zeros_like(x0, dtype=bool), 
     t=t, intensity=intensity, eps=eps)
 
     assert np.allclose(res_ref, res_tst)
@@ -307,7 +304,7 @@ def test_res_grad_decay_4():
         t=t, intensity=intensity, eps=eps)**2), epsilon)
 
     res_tst, grad_tst = res_grad_decay(x0, 4, True, 'g',
-    np.zeros_like(x0, dtype=bool), tau_mask = tau_mask,
+    tau_mask = tau_mask,
     t=t, intensity=intensity, eps=eps)
 
     assert np.allclose(res_ref, res_tst)
@@ -398,7 +395,7 @@ def test_res_grad_decay_5():
         t=t, intensity=intensity, eps=eps)**2), epsilon)
 
     res_tst, grad_tst = res_grad_decay(x0, 4, True, 'c',
-    np.zeros_like(x0, dtype=bool), tau_mask = tau_mask,
+    tau_mask = tau_mask,
     t=t, intensity=intensity, eps=eps)
 
     assert np.allclose(res_ref, res_tst)
@@ -500,7 +497,7 @@ def test_res_grad_decay_6():
         t=t, intensity=intensity, eps=eps)**2), epsilon)
 
     res_tst, grad_tst = res_grad_decay(x0, 4, True, 'pv',
-    np.zeros_like(x0, dtype=bool), tau_mask = tau_mask,
+    tau_mask = tau_mask,
     t=t, intensity=intensity, eps=eps)
 
     assert np.allclose(res_ref, res_tst)
@@ -999,7 +996,6 @@ def test_res_grad_decay_same_t0_1():
         t=t, intensity=intensity, eps=eps)**2), epsilon)
 
     res_tst_2, grad_tst = res_grad_decay_same_t0(x0_tst, 3, False, 'g',
-    np.zeros_like(x0_tst, dtype=bool), 
     t=t, intensity=intensity, eps=eps)
 
     assert np.allclose(res_ref, res_tst_1)
@@ -1069,7 +1065,6 @@ def test_res_grad_decay_same_t0_2():
         t=t, intensity=intensity, eps=eps)**2), epsilon)
 
     res_tst_2, grad_tst = res_grad_decay_same_t0(x0_tst, 3, False, 'c',
-    np.zeros_like(x0_tst, dtype=bool), 
     t=t, intensity=intensity, eps=eps)
 
     assert np.allclose(res_ref, res_tst)
@@ -1144,7 +1139,6 @@ def test_res_grad_decay_same_t0_3():
         t=t, intensity=intensity, eps=eps)**2), epsilon)
 
     res_tst_2, grad_tst = res_grad_decay_same_t0(x0_tst, 3, True, 'pv',
-    np.zeros_like(x0_tst, dtype=bool), 
     t=t, intensity=intensity, eps=eps)
 
     assert np.allclose(res_ref, res_tst)
@@ -1238,7 +1232,7 @@ def test_res_grad_decay_same_t0_4():
         t=t, intensity=intensity, eps=eps)**2), epsilon)
 
     res_tst_2, grad_tst = res_grad_decay_same_t0(x0_tst, 4, False, 'g',
-    np.zeros_like(x0_tst, dtype=bool), tau_mask=tau_mask,
+    tau_mask=tau_mask,
     t=t, intensity=intensity, eps=eps)
 
     assert np.allclose(res_ref, res_tst_1)
