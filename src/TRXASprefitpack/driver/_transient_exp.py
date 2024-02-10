@@ -17,6 +17,7 @@ from ..mathfun.A_matrix import make_A_matrix_exp, fact_anal_A
 from ..res.parm_bound import set_bound_t0, set_bound_tau
 from ..res.res_decay import residual_decay, res_grad_decay
 from ..res.res_decay import residual_decay_same_t0, res_grad_decay_same_t0
+from ..res.res_decay import res_hess_decay, res_hess_decay_same_t0
 
 GLBSOLVER = {'basinhopping': basinhopping, 'ampgo': ampgo}
 
@@ -281,7 +282,17 @@ def fit_transient_exp(irf: str, fwhm_init: Union[float, np.ndarray],
         param_name[num_irf+t0_init.size+i] = f'tau_{i+1}'
 
     jac = res_lsq['jac']
-    hes = jac.T @ jac
+    if same_t0:
+        hes = res_hess_decay_same_t0(param_opt, num_comp, base,
+                                     irf=irf, tau_mask=tau_mask,
+                                     t=t, intensity=intensity,
+                                     eps=eps)
+    else:
+        hes = res_hess_decay(param_opt, num_comp, base,
+                             irf=irf, tau_mask=tau_mask,
+                             t=t, intensity=intensity,
+                             eps=eps)
+
     cov = np.zeros_like(hes)
     n_free_param = np.sum(~fix_param_idx)
     mask_2d = np.einsum('i,j->ij', ~fix_param_idx, ~fix_param_idx)

@@ -7,6 +7,7 @@ from scipy.optimize import approx_fprime
 path = os.path.dirname(os.path.realpath(__file__))
 sys.path.append(path+'/../src/')
 
+from TRXASprefitpack import calc_eta, calc_fwhm
 from TRXASprefitpack import residual_decay, residual_dmp_osc, residual_both
 from TRXASprefitpack import res_grad_decay, res_grad_dmp_osc, res_grad_both
 from TRXASprefitpack import residual_decay_same_t0, residual_dmp_osc_same_t0, residual_both_same_t0
@@ -41,10 +42,10 @@ def test_res_grad_decay_1():
 
     # Now generates measured transient signal
     # Last element is ground state
-    abs_1 = [1, 1, 1, 0]
-    abs_2 = [0.5, 0.8, 0.2, 0]
-    abs_3 = [-0.5, 0.7, 0.9, 0]
-    abs_4 = [0.6, 0.3, -1, 0]
+    abs_1 = [1, 1, 1, 0.2]
+    abs_2 = [0.5, 0.8, 0.2, 0.3]
+    abs_3 = [-0.5, 0.7, 0.9, 0.5]
+    abs_4 = [0.6, 0.3, -1, 0.7]
 
     t0 = np.random.uniform(-0.2, 0.2, 4) # perturb time zero of each scan
 
@@ -71,13 +72,13 @@ def test_res_grad_decay_1():
 
     x0 = np.array([0.15, 0, 0, 0, 0, 0.4, 9, 990])
 
-    res_ref = 1/2*np.sum(residual_decay(x0, False, 'g',
+    res_ref = 1/2*np.sum(residual_decay(x0, True, 'g',
     t=t, intensity=intensity, eps=eps)**2)
     grad_ref = approx_fprime(x0, lambda x0: \
-        1/2*np.sum(residual_decay(x0, False, 'g',
+        1/2*np.sum(residual_decay(x0, True, 'g',
         t=t, intensity=intensity, eps=eps)**2), epsilon)
 
-    res_tst, grad_tst = res_grad_decay(x0, 3, False, 'g',
+    res_tst, grad_tst = res_grad_decay(x0, 3, True, 'g',
     np.zeros_like(x0, dtype=bool), 
     t=t, intensity=intensity, eps=eps)
 
@@ -107,10 +108,10 @@ def test_res_grad_decay_2():
 
     # Now generates measured transient signal
     # Last element is ground state
-    abs_1 = [1, 1, 1, 0]
-    abs_2 = [0.5, 0.8, 0.2, 0]
-    abs_3 = [-0.5, 0.7, 0.9, 0]
-    abs_4 = [0.6, 0.3, -1, 0]
+    abs_1 = [1, 1, 1, 0.2]
+    abs_2 = [0.5, 0.8, 0.2, 0.3]
+    abs_3 = [-0.5, 0.7, 0.9, 0.4]
+    abs_4 = [0.6, 0.3, -1, 0.5]
 
     t0 = np.random.uniform(-0.2, 0.2, 4) # perturb time zero of each scan
 
@@ -137,13 +138,13 @@ def test_res_grad_decay_2():
 
     x0 = np.array([0.15, 0, 0, 0, 0, 0.4, 9, 990])
 
-    res_ref = 1/2*np.sum(residual_decay(x0, False, 'c',
+    res_ref = 1/2*np.sum(residual_decay(x0, True, 'c',
     t=t, intensity=intensity, eps=eps)**2)
     grad_ref = approx_fprime(x0, lambda x0: \
-        1/2*np.sum(residual_decay(x0, False, 'c',
+        1/2*np.sum(residual_decay(x0, True, 'c',
         t=t, intensity=intensity, eps=eps)**2), epsilon)
 
-    res_tst, grad_tst = res_grad_decay(x0, 3, False, 'c',
+    res_tst, grad_tst = res_grad_decay(x0, 3, True, 'c',
     np.zeros_like(x0, dtype=bool), 
     t=t, intensity=intensity, eps=eps)
 
@@ -174,10 +175,10 @@ def test_res_grad_decay_3():
 
     # Now generates measured transient signal
     # Last element is ground state
-    abs_1 = [1, 1, 1, 0]
-    abs_2 = [0.5, 0.8, 0.2, 0]
-    abs_3 = [-0.5, 0.7, 0.9, 0]
-    abs_4 = [0.6, 0.3, -1, 0]
+    abs_1 = [1, 1, 1, 0.3]
+    abs_2 = [0.5, 0.8, 0.2, 0.2]
+    abs_3 = [-0.5, 0.7, 0.9, 0.12]
+    abs_4 = [0.6, 0.3, -1, 0.35]
 
     t0 = np.random.uniform(-0.2, 0.2, 4) # perturb time zero of each scan
 
@@ -249,15 +250,15 @@ def test_res_grad_decay_4():
 
     # Now generates measured transient signal
     # Last element is ground state
-    abs_1_1 = [1, 1, 1, 0]
-    abs_2_1 = [0.5, 0.8, 0.2, 0]
-    abs_3_1 = [-0.5, 0.7, 0.9, 0]
-    abs_4_1 = [0.6, 0.3, -1, 0]
+    abs_1_1 = [1, 1, 1, 0.13]
+    abs_2_1 = [0.5, 0.8, 0.2, 0.16]
+    abs_3_1 = [-0.5, 0.7, 0.9, 0.72]
+    abs_4_1 = [0.6, 0.3, -1, 0.12]
 
-    abs_1_2 = [1, 1, 0]
-    abs_2_2 = [0.5, 0.8, 0]
-    abs_3_2 = [-0.5, 0.7, 0]
-    abs_4_2 = [0.6, 0.3, 0]
+    abs_1_2 = [1, 1, 0.3]
+    abs_2_2 = [0.5, 0.8, -0.1]
+    abs_3_2 = [-0.5, 0.7, -0.2]
+    abs_4_2 = [0.6, 0.3, -0.12]
 
     t0 = np.random.uniform(-0.2, 0.2, 8) # perturb time zero of each scan
 
@@ -286,8 +287,8 @@ def test_res_grad_decay_4():
 
     eps_obs = np.ones_like(i_obs_1)
 
-    tau_mask = [np.array([True, False, True, True]),
-                np.array([False, True, True, False])]
+    tau_mask = [np.array([True, False, True, True, True]),
+                np.array([False, True, True, False, True])]
 
     t = [t_seq, t_seq]
     intensity = [i_obs_1, i_obs_2]
@@ -297,15 +298,208 @@ def test_res_grad_decay_4():
                    0, 0, 0, 0, 0, 0, 0, 0,
                      0.3, 1, 8, 800])
 
-    res_ref = 1/2*np.sum(residual_decay(x0, False, 'g',
+    res_ref = 1/2*np.sum(residual_decay(x0, True, 'g',
     tau_mask = tau_mask,
     t=t, intensity=intensity, eps=eps)**2)
     grad_ref = approx_fprime(x0, lambda x0: \
-        1/2*np.sum(residual_decay(x0, False, 'g',
+        1/2*np.sum(residual_decay(x0, True, 'g',
         tau_mask = tau_mask,
         t=t, intensity=intensity, eps=eps)**2), epsilon)
 
-    res_tst, grad_tst = res_grad_decay(x0, 4, False, 'g',
+    res_tst, grad_tst = res_grad_decay(x0, 4, True, 'g',
+    np.zeros_like(x0, dtype=bool), tau_mask = tau_mask,
+    t=t, intensity=intensity, eps=eps)
+
+    assert np.allclose(res_ref, res_tst)
+    assert np.allclose(grad_ref, grad_tst, rtol=rel_tol,
+    atol=abs_tol)
+
+def test_res_grad_decay_5():
+    tau_1 = 0.5
+    tau_2 = 2
+    tau_3 = 10
+    tau_4 = 1000
+    fwhm = 0.100
+    # initial condition
+    y0_1 = np.array([1, 0, 0, 0])
+    y0_2 = np.array([1, 0, 0])
+
+    # set time range (mixed step)
+    t_seq1 = np.arange(-2, -1, 0.2)
+    t_seq2 = np.arange(-1, 2, 0.02)
+    t_seq3 = np.arange(2, 5, 0.2)
+    t_seq4 = np.arange(5, 10, 1)
+    t_seq5 = np.arange(10, 100, 10)
+    t_seq6 = np.arange(100, 1000, 100)
+    t_seq7 = np.linspace(1000, 2000, 2)
+
+    t_seq = np.hstack((t_seq1, t_seq2, t_seq3, t_seq4, t_seq5, t_seq6, t_seq7))
+    eigval_seq_1, V_seq_1, c_seq_1 = \
+        solve_seq_model(np.array([tau_1, tau_3, tau_4]), y0_1)
+    eigval_seq_2, V_seq_2, c_seq_2 = \
+        solve_seq_model(np.array([tau_2, tau_3]), y0_2)
+
+    # Now generates measured transient signal
+    # Last element is ground state
+    abs_1_1 = [1, 1, 1, 0.21]
+    abs_2_1 = [0.5, 0.8, 0.2, 0.12]
+    abs_3_1 = [-0.5, 0.7, 0.9, 0.07]
+    abs_4_1 = [0.6, 0.3, -1, 0.16]
+
+    abs_1_2 = [1, 1, 0.34]
+    abs_2_2 = [0.5, 0.8, 0.23]
+    abs_3_2 = [-0.5, 0.7, 0.32]
+    abs_4_2 = [0.6, 0.3, 0.11]
+
+    t0 = np.random.uniform(-0.2, 0.2, 8) # perturb time zero of each scan
+
+    # generate measured data
+    y_obs_1_1 = \
+        rate_eq_conv(t_seq-t0[0], fwhm, abs_1_1, eigval_seq_1, V_seq_1, c_seq_1, irf='c')
+    y_obs_2_1 = \
+        rate_eq_conv(t_seq-t0[1], fwhm, abs_2_1, eigval_seq_1, V_seq_1, c_seq_1, irf='c')
+    y_obs_3_1 = \
+        rate_eq_conv(t_seq-t0[2], fwhm, abs_3_1, eigval_seq_1, V_seq_1, c_seq_1, irf='c')
+    y_obs_4_1 = \
+        rate_eq_conv(t_seq-t0[3], fwhm, abs_4_1, eigval_seq_1, V_seq_1, c_seq_1, irf='c')
+
+    y_obs_1_2 = \
+        rate_eq_conv(t_seq-t0[4], fwhm, abs_1_2, eigval_seq_2, V_seq_2, c_seq_2, irf='c')
+    y_obs_2_2 = \
+        rate_eq_conv(t_seq-t0[5], fwhm, abs_2_2, eigval_seq_2, V_seq_2, c_seq_2, irf='c')
+    y_obs_3_2 = \
+        rate_eq_conv(t_seq-t0[6], fwhm, abs_3_2, eigval_seq_2, V_seq_2, c_seq_2, irf='c')
+    y_obs_4_2 = \
+        rate_eq_conv(t_seq-t0[7], fwhm, abs_4_2, eigval_seq_2, V_seq_2, c_seq_2, irf='c')
+
+    # generate measured intensity
+    i_obs_1 = np.vstack((y_obs_1_1, y_obs_2_1, y_obs_3_1, y_obs_4_1)).T
+    i_obs_2 = np.vstack((y_obs_1_2, y_obs_2_2, y_obs_3_2, y_obs_4_2)).T
+
+    eps_obs = np.ones_like(i_obs_1)
+
+    tau_mask = [np.array([True, False, True, True, True]),
+                np.array([False, True, True, False, True])]
+
+    t = [t_seq, t_seq]
+    intensity = [i_obs_1, i_obs_2]
+    eps = [eps_obs, eps_obs]
+
+    x0 = np.array([0.15, 
+                   0, 0, 0, 0, 0, 0, 0, 0,
+                     0.3, 1, 8, 800])
+
+    res_ref = 1/2*np.sum(residual_decay(x0, True, 'c',
+    tau_mask = tau_mask,
+    t=t, intensity=intensity, eps=eps)**2)
+    grad_ref = approx_fprime(x0, lambda x0: \
+        1/2*np.sum(residual_decay(x0, True, 'c',
+        tau_mask = tau_mask,
+        t=t, intensity=intensity, eps=eps)**2), epsilon)
+
+    res_tst, grad_tst = res_grad_decay(x0, 4, True, 'c',
+    np.zeros_like(x0, dtype=bool), tau_mask = tau_mask,
+    t=t, intensity=intensity, eps=eps)
+
+    assert np.allclose(res_ref, res_tst)
+    assert np.allclose(grad_ref, grad_tst, rtol=rel_tol,
+    atol=abs_tol)
+
+def test_res_grad_decay_6():
+    tau_1 = 0.5
+    tau_2 = 2
+    tau_3 = 10
+    tau_4 = 1000
+    fwhm_G = 0.15
+    fwhm_L = 0.1
+    fwhm = calc_fwhm(fwhm_G, fwhm_L)
+    eta = calc_eta(fwhm_G, fwhm_L)
+    # initial condition
+    y0_1 = np.array([1, 0, 0, 0])
+    y0_2 = np.array([1, 0, 0])
+
+    # set time range (mixed step)
+    t_seq1 = np.arange(-2, -1, 0.2)
+    t_seq2 = np.arange(-1, 2, 0.02)
+    t_seq3 = np.arange(2, 5, 0.2)
+    t_seq4 = np.arange(5, 10, 1)
+    t_seq5 = np.arange(10, 100, 10)
+    t_seq6 = np.arange(100, 1000, 100)
+    t_seq7 = np.linspace(1000, 2000, 2)
+
+    t_seq = np.hstack((t_seq1, t_seq2, t_seq3, t_seq4, t_seq5, t_seq6, t_seq7))
+    eigval_seq_1, V_seq_1, c_seq_1 = \
+        solve_seq_model(np.array([tau_1, tau_3, tau_4]), y0_1)
+    eigval_seq_2, V_seq_2, c_seq_2 = \
+        solve_seq_model(np.array([tau_2, tau_3]), y0_2)
+
+    # Now generates measured transient signal
+    # Last element is ground state
+    abs_1_1 = [1, 1, 1, 0.12]
+    abs_2_1 = [0.5, 0.8, 0.2, 0.23]
+    abs_3_1 = [-0.5, 0.7, 0.9, 0.32]
+    abs_4_1 = [0.6, 0.3, -1, 0.33]
+
+    abs_1_2 = [1, 1, 0.34]
+    abs_2_2 = [0.5, 0.8, 0.76]
+    abs_3_2 = [-0.5, 0.7, 0.11]
+    abs_4_2 = [0.6, 0.3, 0.39]
+
+    t0 = np.random.uniform(-0.2, 0.2, 8) # perturb time zero of each scan
+
+    # generate measured data
+    y_obs_1_1 = \
+        rate_eq_conv(t_seq-t0[0], fwhm, abs_1_1, eigval_seq_1, V_seq_1, c_seq_1, 
+                     irf='pv', eta=eta)
+    y_obs_2_1 = \
+        rate_eq_conv(t_seq-t0[1], fwhm, abs_2_1, eigval_seq_1, V_seq_1, c_seq_1, 
+                     irf='pv', eta=eta)
+    y_obs_3_1 = \
+        rate_eq_conv(t_seq-t0[2], fwhm, abs_3_1, eigval_seq_1, V_seq_1, c_seq_1, 
+                     irf='pv', eta=eta)
+    y_obs_4_1 = \
+        rate_eq_conv(t_seq-t0[3], fwhm, abs_4_1, eigval_seq_1, V_seq_1, c_seq_1, 
+                     irf='pv', eta=eta)
+
+    y_obs_1_2 = \
+        rate_eq_conv(t_seq-t0[4], fwhm, abs_1_2, eigval_seq_2, V_seq_2, c_seq_2, 
+                     irf='pv', eta=eta)
+    y_obs_2_2 = \
+        rate_eq_conv(t_seq-t0[5], fwhm, abs_2_2, eigval_seq_2, V_seq_2, c_seq_2, 
+                     irf='pv', eta=eta)
+    y_obs_3_2 = \
+        rate_eq_conv(t_seq-t0[6], fwhm, abs_3_2, eigval_seq_2, V_seq_2, c_seq_2, 
+                     irf='pv', eta=eta)
+    y_obs_4_2 = \
+        rate_eq_conv(t_seq-t0[7], fwhm, abs_4_2, eigval_seq_2, V_seq_2, c_seq_2, 
+                     irf='pv', eta=eta)
+
+    # generate measured intensity
+    i_obs_1 = np.vstack((y_obs_1_1, y_obs_2_1, y_obs_3_1, y_obs_4_1)).T
+    i_obs_2 = np.vstack((y_obs_1_2, y_obs_2_2, y_obs_3_2, y_obs_4_2)).T
+
+    eps_obs = np.ones_like(i_obs_1)
+
+    tau_mask = [np.array([True, False, True, True, True]),
+                np.array([False, True, True, False, True])]
+
+    t = [t_seq, t_seq]
+    intensity = [i_obs_1, i_obs_2]
+    eps = [eps_obs, eps_obs]
+
+    x0 = np.array([0.15, 0.1,
+                   0, 0, 0, 0, 0, 0, 0, 0,
+                     0.3, 1, 8, 800])
+
+    res_ref = 1/2*np.sum(residual_decay(x0, True, 'pv',
+    tau_mask = tau_mask,
+    t=t, intensity=intensity, eps=eps)**2)
+    grad_ref = approx_fprime(x0, lambda x0: \
+        1/2*np.sum(residual_decay(x0, True, 'pv',
+        tau_mask = tau_mask,
+        t=t, intensity=intensity, eps=eps)**2), epsilon)
+
+    res_tst, grad_tst = res_grad_decay(x0, 4, True, 'pv',
     np.zeros_like(x0, dtype=bool), tau_mask = tau_mask,
     t=t, intensity=intensity, eps=eps)
 

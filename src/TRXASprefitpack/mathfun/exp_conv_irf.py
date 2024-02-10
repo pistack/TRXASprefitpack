@@ -432,7 +432,6 @@ def deriv_exp_sum_conv_cauchy(t: np.ndarray, fwhm: float,
 
     return grad
 
-
 def exp_mod_gau_cplx(t: Union[float, np.ndarray], sigma: float,
                      kr: float, ki: float) -> \
         Union[Tuple[float, float], Tuple[np.ndarray, np.ndarray]]:

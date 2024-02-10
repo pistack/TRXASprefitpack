@@ -244,7 +244,7 @@ def deriv_voigt(e: Union[float, np.ndarray], fwhm_G: float, fwhm_L: float) -> np
 
     z = (e+complex(0, fwhm_L/2))/(sigma*np.sqrt(2))
     f = wofz(z)/(sigma*np.sqrt(2*np.pi))
-    f_z = (complex(0, 2/np.sqrt(np.pi))-2*z*wofz(z))/(sigma*np.sqrt(2*np.pi))
+    f_z = complex(0, np.sqrt(2)/(np.pi*sigma))-2*z*f
     if isinstance(e, np.ndarray):
         grad = np.empty((e.size, 3))
         grad[:, 0] = f_z.real/(sigma*np.sqrt(2))
@@ -454,16 +454,22 @@ def hess_voigt(e: Union[float, np.ndarray], fwhm_G: float, fwhm_L: float) -> np.
         return hess 
 
     z = (e+complex(0, fwhm_L/2))/(sigma*np.sqrt(2))
-    f = wofz(z)/(sigma*np.sqrt(2*np.pi))
-    f_z = (complex(0, 2/np.sqrt(np.pi))-2*z*wofz(z))/(sigma*np.sqrt(2*np.pi))
+    f = wofz(z); fp = complex(0, 2/np.sqrt(np.pi))-2*z*f
+    fpp = -2*(f+z*fp)
     if isinstance(e, np.ndarray):
-        grad = np.empty((e.size, 3))
-        grad[:, 0] = f_z.real/(sigma*np.sqrt(2))
-        grad[:, 1] = (-f/sigma-z/sigma*f_z).real/(2*np.sqrt(2*np.log(2)))
-        grad[:, 2] = -f_z.imag/(2*np.sqrt(2)*sigma)
+        hess = np.empty((e.size, 6))
+        hess[:, 0] = fpp.real/(2*np.sqrt(2*np.pi)*sigma**3)
+        hess[:, 1] = -(fp+z*fpp/2).real/(np.sqrt(np.pi)*sigma**3)/(2*np.sqrt(2*np.log(2)))
+        hess[:, 2] = -fpp.imag/(2*np.sqrt(2*np.pi)*sigma**3)/2
+        hess[:, 3] = (2*f+4*z*fp+z*(z*fpp)).real/(np.sqrt(2*np.pi)*sigma**3)/(8*np.log(2))
+        hess[:, 4] = (fp+z*fpp/2).imag/(np.sqrt(np.pi)*sigma**3)/(4*np.sqrt(2*np.log(2)))
+        hess[:, 5] = -hess[:, 0]/4
     else:
-        grad = np.empty(3)
-        grad[0] = f_z.real/(sigma*np.sqrt(2))
-        grad[1] = (-f/sigma-z/sigma*f_z).real/(2*np.sqrt(2*np.log(2)))
-        grad[2] = -f_z.imag/(2*np.sqrt(2)*sigma)
-    return grad
+        hess = np.empty(6)
+        hess[0] = fpp.real/(2*np.sqrt(2*np.pi)*sigma**3)
+        hess[1] = -(fp+z*fpp/2).real/(np.sqrt(np.pi)*sigma**3)/(2*np.sqrt(2*np.log(2)))
+        hess[2] = -fpp.imag/(2*np.sqrt(2*np.pi)*sigma**3)/2
+        hess[3] = (2*f+4*z*fp+z*(z*fpp)).real/(np.sqrt(2*np.pi)*sigma**3)/(8*np.log(2))
+        hess[4] = (fp+z*fpp/2).imag/(np.sqrt(np.pi)*sigma**3)/(4*np.sqrt(2*np.log(2)))
+        hess[5] = -hess[0]/4
+    return hess 

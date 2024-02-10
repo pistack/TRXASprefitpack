@@ -158,3 +158,67 @@ def deriv_eta(fwhm_G: float, fwhm_L: float) -> Tuple[float, float]:
     dx_fwhm_L = g - fwhm_L*df_fwhm_L*g/f/5
     deta_x = 0.33348*x**2-0.95438*x+1.36603
     return deta_x*dx_fwhm_G, deta_x*dx_fwhm_L
+
+def hess_fwhm_eta(fwhm_G: float, fwhm_L: float) -> Tuple[np.ndarray, np.ndarray]:
+    '''
+    Calculate hessian of fwhm and eta of pseudo voigt profile with fwhm_G, fwhm_L based on
+    Journal of Applied Crystallography. 33 (6): 1311–1316.
+
+    Args:
+      fwhm_G: full width at half maximum of gaussian part
+      fwhm_L: full width at half maximum of lorenzian part
+    Returns:
+     hessian of fwhm(fwhm_G, fwhm_L) and hessian of eta(fwhm_G, fwhm_L)
+    
+    Note:
+     1st column: d^2 f / d(fwhm_G)^2
+     2nd column: d^2 f / d(fwhm_G)d(fwhm_L)
+     3rd column: d^2 f / d(fwhm_L)^2
+    '''
+    Hess_fwhm = np.zeros(3)
+    Hess_eta = np.zeros(3)
+
+    f = fwhm_G**5+2.69269*fwhm_G**4*fwhm_L + \
+        2.42843*fwhm_G**3*fwhm_L**2 + \
+        4.47163*fwhm_G**2*fwhm_L**3 + \
+        0.07842*fwhm_G*fwhm_L**4 + \
+        fwhm_L**5
+    
+    fwhm = f**(1/5)
+    x = fwhm_L/fwhm
+    d_eta_x = 1.36603-0.95438*x+0.33348*x**2
+    d2_eta_x_2 = 0.66696*x-0.95438
+
+    dfwhm_fwhm_G, dfwhm_fwhm_L = deriv_fwhm(fwhm_G, fwhm_L)
+
+    dx_fwhm_G = -x*(dfwhm_fwhm_G/fwhm)
+    dx_fwhm_L = 1/fwhm-x*(dfwhm_fwhm_L/fwhm)
+
+    d2f_fwhm_G_2 = 20*fwhm_G**3+32.31228*fwhm_G**2*fwhm_L+\
+    14.57058*fwhm_G*fwhm_L**2+8.94326*fwhm_L**3
+    d2f_fwhm_G_fwhm_L = 10.77076*fwhm_G**3 + 14.57058*fwhm_G**2*fwhm_L+\
+    26.82978*fwhm_G*fwhm_L**2+0.31368*fwhm_L**3
+    d2f_fwhm_L_2 = 20*fwhm_L**3+0.94104*fwhm_L**2*fwhm_G + \
+    26.82978*fwhm_G**2*fwhm_L+4.85686*fwhm_G**3
+
+    Hess_fwhm[0] = d2f_fwhm_G_2*fwhm/f/5-\
+        4*dfwhm_fwhm_G**2/fwhm
+    Hess_fwhm[1] = d2f_fwhm_G_fwhm_L*fwhm/f/5-\
+        4*dfwhm_fwhm_G*dfwhm_fwhm_L/fwhm
+    Hess_fwhm[2] = d2f_fwhm_L_2*fwhm/f/5-\
+        4*dfwhm_fwhm_L**2/fwhm
+
+    d2x_fwhm_G_2 = x*(2*(dfwhm_fwhm_G/fwhm)**2-(Hess_fwhm[0]/fwhm))
+    d2x_fwhm_G_fwhm_L = 2*x*(dfwhm_fwhm_G/fwhm)*(dfwhm_fwhm_L/fwhm)-\
+    (dfwhm_fwhm_G/fwhm+x*Hess_fwhm[1])/fwhm
+    d2x_fwhm_L_2 = 2*x*(dfwhm_fwhm_L/fwhm)**2 - \
+    (x*Hess_fwhm[2]+2*dfwhm_fwhm_L/fwhm)/fwhm
+
+    Hess_eta[0] = d2_eta_x_2*(dx_fwhm_G)**2+\
+        d_eta_x*(d2x_fwhm_G_2)
+    Hess_eta[1] = d2_eta_x_2*(dx_fwhm_G*dx_fwhm_L)+\
+        d_eta_x*(d2x_fwhm_G_fwhm_L)
+    Hess_eta[2] = d2_eta_x_2*(dx_fwhm_L)**2+\
+        d_eta_x*(d2x_fwhm_L_2)
+
+    return Hess_fwhm, Hess_eta

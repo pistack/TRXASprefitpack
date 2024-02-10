@@ -11,7 +11,7 @@ from .peak_shape import deriv_voigt, deriv_edge_gaussian, deriv_edge_lorenzian
 from .peak_shape import hess_voigt, hess_edge_gaussian, hess_edge_lorenzian
 from .peak_shape import voigt_thy, deriv_voigt_thy
 from .irf import gau_irf, cauchy_irf, pvoigt_irf
-from .irf import calc_eta, calc_fwhm, deriv_eta, deriv_fwhm
+from .irf import calc_eta, calc_fwhm, deriv_eta, deriv_fwhm, hess_fwhm_eta
 from .exp_conv_irf import exp_conv_gau, exp_conv_cauchy, exp_conv_pvoigt
 from .exp_conv_irf import deriv_exp_conv_gau, deriv_exp_conv_cauchy
 from .exp_conv_irf import hess_exp_conv_gau, hess_exp_conv_cauchy
@@ -36,7 +36,7 @@ __all__ = ['voigt', 'edge_gaussian', 'edge_lorenzian', 'voigt_thy',
            'deriv_voigt_thy',
            'hess_voigt', 'hess_edge_gaussian', 'hess_edge_lorenzian',
            'gau_irf', 'cauchy_irf', 'pvoigt_irf',
-           'calc_eta', 'calc_fwhm', 'deriv_eta', 'deriv_fwhm',
+           'calc_eta', 'calc_fwhm', 'deriv_eta', 'deriv_fwhm', 'hess_fwhm_eta',
            'exp_conv_gau', 'exp_conv_cauchy', 'exp_conv_pvoigt',
            'deriv_exp_conv_gau', 'deriv_exp_conv_cauchy',
            'hess_exp_conv_gau', 'hess_exp_conv_cauchy',
