@@ -4,7 +4,7 @@ submodule for fitting time delay scan with the
 convolution of sum of (exponential decay and damped oscillation)
 and instrumental response function
 
-:copyright: 2021-2022 by pistack (Junho Lee).
+:copyright: 2021-2024 by pistack (Junho Lee).
 :license: LGPL3.
 '''
 from typing import Optional, Union, Sequence, Tuple
@@ -12,6 +12,7 @@ import numpy as np
 from ..mathfun.irf import calc_eta, calc_fwhm
 from .transient_result import TransientResult
 from ._ampgo import ampgo
+from ._shgo import _wrapper_shgo
 from scipy.optimize import basinhopping
 from scipy.optimize import least_squares
 from ..mathfun.A_matrix import make_A_matrix_exp, make_A_matrix_dmp_osc, fact_anal_A
@@ -105,8 +106,8 @@ def fit_transient_both(irf: str, fwhm_init: Union[float, np.ndarray],
       TransientResult class object
     '''
 
-    if method_glb is not None and method_glb not in ['basinhopping', 'ampgo']:
-        raise Exception('Unsupported global optimization Method, Supported global optimization Methods are ampgo and basinhopping')
+    if method_glb is not None and method_glb not in GLBSOLVER.keys():
+        raise Exception('Unsupported global optimization Method')
     if method_lsq not in ['trf', 'lm', 'dogbox']:
         raise Exception('Invalid local least square minimizer solver. It should be one of [trf, lm, dogbox]')
     if irf is not None and irf not in  ['g', 'c', 'pv']:
