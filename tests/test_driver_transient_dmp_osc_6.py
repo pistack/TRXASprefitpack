@@ -25,14 +25,13 @@ def test_driver_transient_dmp_osc_6():
 
     # set time range (mixed step)
     t_seq1 = np.arange(-2, -1, 0.2)
-    t_seq2 = np.arange(-1, 2, 0.02)
-    t_seq3 = np.arange(2, 5, 0.2)
-    t_seq4 = np.arange(5, 10, 1)
-    t_seq5 = np.arange(10, 100, 10)
-    t_seq6 = np.arange(100, 1000, 100)
-    t_seq7 = np.linspace(1000, 5000, 5)
+    t_seq2 = np.arange(-1, 1, 0.05)
+    t_seq3 = np.arange(1, 20, 0.5)
+    t_seq4 = np.arange(20, 100, 10)
+    t_seq5 = np.arange(100, 2000, 50)
+    t_seq6 = np.linspace(2000, 5000, 4)
 
-    t_seq = np.hstack((t_seq1, t_seq2, t_seq3, t_seq4, t_seq5, t_seq6, t_seq7))
+    t_seq = np.hstack((t_seq1, t_seq2, t_seq3, t_seq4, t_seq5, t_seq6))
 
     # Now generates measured transient signal
     # Last element is ground state
