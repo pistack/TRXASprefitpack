@@ -30,9 +30,7 @@ def test_driver_transient_dmp_osc_3():
     t_seq4 = np.arange(20, 100, 10)
     t_seq5 = np.arange(100, 2000, 50)
     t_seq6 = np.linspace(2000, 5000, 4)
-
     t_seq = np.hstack((t_seq1, t_seq2, t_seq3, t_seq4, t_seq5, t_seq6))
-
     # Now generates measured transient signal
     # Last element is ground state
     abs_1 = np.array([1, 1, 1])
