@@ -20,7 +20,7 @@ from ..res.parm_bound import set_bound_t0, set_bound_tau
 from ..res.res_both import residual_both, res_grad_both
 from ..res.res_both import residual_both_same_t0, res_grad_both_same_t0
 
-GLBSOLVER = {'basinhopping': basinhopping, 'ampgo': ampgo}
+GLBSOLVER = {'basinhopping': basinhopping, 'ampgo': ampgo, 'shgo': _wrapper_shgo}
 
 
 def fit_transient_both(irf: str, fwhm_init: Union[float, np.ndarray],

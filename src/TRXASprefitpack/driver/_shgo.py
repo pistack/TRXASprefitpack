@@ -13,6 +13,8 @@ def _wrapper_shgo(func, x0, **kwargs):
 
     bounds = kwargs['minimizer_kwargs'].pop('bounds', None)
     args = kwargs['minimizer_kwargs'].pop('args', None)
+    sampling_method = kwargs.pop('sampling_method', 'sobol') # set default sampling method to sobol
+    kwargs['sampling_method'] = sampling_method
     kwargs['args'] = args
     
     return shgo(func, bounds, **kwargs)

@@ -100,8 +100,8 @@ def fit_static_thy(thy_peak: Sequence[np.ndarray],
       * Every theoretical spectrum is normalize.
     '''
 
-    if method_glb is not None and method_glb not in ['basinhopping', 'ampgo']:
-        raise Exception('Unsupported global optimization Method, Supported global optimization Methods are ampgo and basinhopping')
+    if method_glb is not None and method_glb not in GLBSOLVER.keys():
+        raise Exception('Unsupported global optimization Method, Supported global optimization Methods are ampgo, basinhopping, and shgo')
     if method_lsq not in ['trf', 'lm', 'dogbox']:
         raise Exception('Invalid local least square minimizer solver. It should be one of [trf, lm, dogbox]')
     if edge is not None and edge not in  ['g', 'l']:
