@@ -196,7 +196,7 @@ def fit_static():
     parse.add_argument('--base_order', type=int,
                        help='Order of polynomial to correct baseline feature. If it is not set then baseline is not corrected')
     parse.add_argument(
-        '--method_glb', choices=['basinhopping', 'ampgo'], help=method_glb_help)
+        '--method_glb', choices=['basinhopping', 'ampgo', 'shgo'], help=method_glb_help)
     parse.add_argument('-o', '--outdir', default='out',
                        help='directory to store output file')
     parse.add_argument('--save_fig', action='store_true',

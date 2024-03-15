@@ -309,6 +309,10 @@ class FitTscanGuiWidget:
         variable=self.glb_opt_var,
         onvalue='basinhopping', offvalue='')
         self.glb_opt_basin.grid(column=1, row=5)
+        self.glb_opt_shgo = tk.Checkbutton(self.root, text='SHGO',
+        variable=self.glb_opt_var,
+        onvalue='shgo', offvalue='')
+        self.glb_opt_shgo.grid(column=2, row=5)
 
         # --- miscellaneous options
         self.option_label = tk.Label(self.root, text='Miscellaneous Options',
