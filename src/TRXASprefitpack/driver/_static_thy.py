@@ -12,6 +12,7 @@ import numpy as np
 from numpy.polynomial.legendre import legval
 from .static_result import StaticResult
 from ._ampgo import ampgo
+from ._shgo import _wrapper_shgo
 from scipy.optimize import basinhopping
 from scipy.optimize import least_squares
 from ..mathfun.peak_shape import edge_gaussian, edge_lorenzian, voigt_thy
@@ -19,7 +20,7 @@ from ..mathfun.A_matrix import fact_anal_A
 from ..res.parm_bound import set_bound_e0, set_bound_t0
 from ..res.res_thy import residual_thy, res_grad_thy
 
-GLBSOLVER = {'basinhopping': basinhopping, 'ampgo': ampgo}
+GLBSOLVER = {'basinhopping': basinhopping, 'ampgo': ampgo, 'shgo': _wrapper_shgo}
 
 
 def fit_static_thy(thy_peak: Sequence[np.ndarray],
@@ -99,8 +100,8 @@ def fit_static_thy(thy_peak: Sequence[np.ndarray],
       * Every theoretical spectrum is normalize.
     '''
 
-    if method_glb is not None and method_glb not in ['basinhopping', 'ampgo']:
-        raise Exception('Unsupported global optimization Method, Supported global optimization Methods are ampgo and basinhopping')
+    if method_glb is not None and method_glb not in GLBSOLVER.keys():
+        raise Exception('Unsupported global optimization Method, Supported global optimization Methods are ampgo, basinhopping, and shgo')
     if method_lsq not in ['trf', 'lm', 'dogbox']:
         raise Exception('Invalid local least square minimizer solver. It should be one of [trf, lm, dogbox]')
     if edge is not None and edge not in  ['g', 'l']:

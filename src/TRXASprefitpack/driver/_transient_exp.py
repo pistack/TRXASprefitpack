@@ -11,6 +11,7 @@ import numpy as np
 from ..mathfun.irf import calc_eta, calc_fwhm
 from .transient_result import TransientResult
 from ._ampgo import ampgo
+from ._shgo import _wrapper_shgo
 from scipy.optimize import basinhopping
 from scipy.optimize import least_squares
 from ..mathfun.A_matrix import make_A_matrix_exp, fact_anal_A
@@ -19,7 +20,7 @@ from ..res.res_decay import residual_decay, res_grad_decay
 from ..res.res_decay import residual_decay_same_t0, res_grad_decay_same_t0
 from ..res.res_decay import res_hess_decay, res_hess_decay_same_t0
 
-GLBSOLVER = {'basinhopping': basinhopping, 'ampgo': ampgo}
+GLBSOLVER = {'basinhopping': basinhopping, 'ampgo': ampgo, 'shgo': _wrapper_shgo}
 
 
 def fit_transient_exp(irf: str, fwhm_init: Union[float, np.ndarray],
@@ -47,14 +48,17 @@ def fit_transient_exp(irf: str, fwhm_init: Union[float, np.ndarray],
     Moreover this driver uses two step method to search best parameter, its covariance and
     estimated parameter error.
 
-    Step 1. (basinhopping or ampgo)
+    Step 1. (basinhopping, ampgo, shgo)
     Use global optimization to find rough global minimum of our objective function.
     In this stage, it use analytic gradient for scalar residual function.
 
     Step 2. (method_lsq)
-    Use least squares optimization algorithm to refine global minimum of objective function and approximate covariance matrix.
+    Use least squares optimization algorithm to refine global minimum of objective function.
     Because of linear and non-linear seperation scheme, the analytic jacobian for vector residual function is hard to obtain.
     Thus, in this stage, it uses numerical jacobian.
+
+    Step 3. (error analysis)
+    To estimate the error of fitting parameters, the analytic hessian is computed. 
 
     Args:
      irf ({'g', 'c', 'pv'}): shape of instrumental response function
@@ -96,8 +100,8 @@ def fit_transient_exp(irf: str, fwhm_init: Union[float, np.ndarray],
       TransientResult class object
     '''
 
-    if method_glb is not None and method_glb not in ['basinhopping', 'ampgo']:
-        raise Exception('Unsupported global optimization Method, Supported global optimization Methods are ampgo and basinhopping')
+    if method_glb is not None and method_glb not in GLBSOLVER.keys():
+        raise Exception('Unsupported global optimization Method')
     if method_lsq not in ['trf', 'lm', 'dogbox']:
         raise Exception('Invalid local least square minimizer solver. It should be one of [trf, lm, dogbox]')
     if irf is not None and irf not in  ['g', 'c', 'pv']:

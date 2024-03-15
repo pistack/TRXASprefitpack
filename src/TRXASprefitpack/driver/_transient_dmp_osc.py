@@ -3,7 +3,7 @@ _transient_dmp_osc:
 submodule for fitting time delay scan with the
 convolution of sum of damped oscillation and instrumental response function
 
-:copyright: 2021-2022 by pistack (Junho Lee).
+:copyright: 2021-2024 by pistack (Junho Lee).
 :license: LGPL3.
 '''
 from typing import Optional, Union, Sequence, Tuple
@@ -11,6 +11,7 @@ import numpy as np
 from ..mathfun.irf import calc_eta, calc_fwhm
 from .transient_result import TransientResult
 from ._ampgo import ampgo
+from ._shgo import _wrapper_shgo
 from scipy.optimize import basinhopping
 from scipy.optimize import least_squares
 from ..mathfun.A_matrix import make_A_matrix_dmp_osc, fact_anal_A
@@ -18,7 +19,7 @@ from ..res.parm_bound import set_bound_t0, set_bound_tau
 from ..res.res_osc import residual_dmp_osc, res_grad_dmp_osc
 from ..res.res_osc import residual_dmp_osc_same_t0, res_grad_dmp_osc_same_t0
 
-GLBSOLVER = {'basinhopping': basinhopping, 'ampgo': ampgo}
+GLBSOLVER = {'basinhopping': basinhopping, 'ampgo': ampgo, 'shgo': _wrapper_shgo}
 
 
 def fit_transient_dmp_osc(irf: str, fwhm_init: Union[float, np.ndarray],
@@ -46,7 +47,7 @@ def fit_transient_dmp_osc(irf: str, fwhm_init: Union[float, np.ndarray],
     Moreover, this driver uses two step method to search best parameter, its covariance and
     estimated parameter error.
 
-    Step 1. (basinhopping)
+    Step 1. (basinhopping, ampgo, shgo)
     Use global optimization to find rough global minimum of our objective function.
     In this stage, it use analytic gradient for scalar residual function.
 
@@ -95,8 +96,8 @@ def fit_transient_dmp_osc(irf: str, fwhm_init: Union[float, np.ndarray],
       TransientResult class object
     '''
 
-    if method_glb is not None and method_glb not in ['basinhopping', 'ampgo']:
-        raise Exception('Unsupported global optimization Method, Supported global optimization Methods are ampgo and basinhopping')
+    if method_glb is not None and method_glb not in GLBSOLVER.keys():
+        raise Exception('Unsupported global optimization Method')
     if method_lsq not in ['trf', 'lm', 'dogbox']:
         raise Exception('Invalid local least square minimizer solver. It should be one of [trf, lm, dogbox]')
     if irf is not None and irf not in  ['g', 'c', 'pv']:

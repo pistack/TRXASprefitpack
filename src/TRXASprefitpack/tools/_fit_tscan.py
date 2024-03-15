@@ -269,7 +269,7 @@ def fit_tscan():
                         help='fix time zero parameter during fitting process.')
     parser.add_argument('--fix_raise', action='store_true',
                         help='fix raise time constant [mode: raise]')
-    parser.add_argument('--method_glb', choices=['basinhopping', 'ampgo'],
+    parser.add_argument('--method_glb', choices=['basinhopping', 'ampgo', 'shgo'],
                         help=method_glb_help)
     parser.add_argument('-o', '--outdir', default='out',
                         help='name of directory to store output files')

@@ -12,6 +12,7 @@ import numpy as np
 from numpy.polynomial.legendre import legval
 from .static_result import StaticResult
 from ._ampgo import ampgo
+from ._shgo import _wrapper_shgo
 from scipy.optimize import basinhopping
 from scipy.optimize import least_squares
 from ..mathfun.peak_shape import voigt, edge_gaussian, edge_lorenzian
@@ -19,7 +20,7 @@ from ..mathfun.A_matrix import fact_anal_A
 from ..res.parm_bound import set_bound_e0, set_bound_t0
 from ..res.res_voigt import residual_voigt, res_grad_voigt, res_hess_voigt
 
-GLBSOLVER = {'basinhopping': basinhopping, 'ampgo': ampgo}
+GLBSOLVER = {'basinhopping': basinhopping, 'ampgo': ampgo, 'shgo': _wrapper_shgo}
 
 
 def fit_static_voigt(e0_init: np.ndarray, fwhm_G_init: np.ndarray, fwhm_L_init: np.ndarray,
@@ -54,9 +55,12 @@ def fit_static_voigt(e0_init: np.ndarray, fwhm_G_init: np.ndarray, fwhm_L_init: 
     In this stage, it use analytic gradient for scalar residual function.
 
     Step 2. (method_lsq)
-    Use least squares optimization algorithm to refine global minimum of objective function and approximate covariance matrix.
+    Use least squares optimization algorithm to refine global minimum of objective function.
     Because of linear and non-linear seperation scheme, the analytic jacobian for vector residual function is hard to optain.
     Thus, in this stage, it uses numerical jacobian.
+
+    Step 3. (error analysis)
+    To estimate the error of fitting parameters, the analytic hessian is computed.
 
     Args:
      e0_init (np.ndarray): initial peak position of each voigt component
@@ -93,8 +97,8 @@ def fit_static_voigt(e0_init: np.ndarray, fwhm_G_init: np.ndarray, fwhm_L_init: 
       * if initial fwhm_L is zero then such voigt component is treated as gaussian component
     '''
 
-    if method_glb is not None and method_glb not in ['basinhopping', 'ampgo']:
-        raise Exception('Unsupported global optimization Method, Supported global optimization Methods are ampgo and basinhopping')
+    if method_glb is not None and method_glb not in GLBSOLVER.keys():
+        raise Exception('Unsupported global optimization Method')
     if method_lsq not in ['trf', 'lm', 'dogbox']:
         raise Exception('Invalid local least square minimizer solver. It should be one of [trf, lm, dogbox]')
     if edge is not None and edge not in  ['g', 'l']:
