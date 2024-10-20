@@ -52,7 +52,7 @@ class PlotDataWidget:
         self.fig = Figure(figsize=(8, 4), dpi=100)
 
         # immutable
-        self.ax = self.fig.add_subplot()
+        self.ax = self.fig.add_subplot(111)
         self.ax.set_xlabel('Energy')
         self.ax.set_ylabel('Intensity')
         self.ax.grid(True)
@@ -199,7 +199,7 @@ class PlotDADSWidget:
 
         self.fig = Figure(figsize=(8, 4), dpi=100)
 
-        self.ax_dads = self.fig.add_subplot()
+        self.ax_dads = self.fig.add_subplot(111)
         self.ax_dads.set_title(f'{master.mode_var.get()}')
         self.ax_dads.set_xlabel('Energy')
         self.ax_dads.set_ylabel('Intensity')

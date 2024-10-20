@@ -57,7 +57,7 @@ class PlotDataWidget:
         self.fig = Figure(figsize=(8, 4), dpi=100)
 
         # immutable
-        self.ax = self.fig.add_subplot()
+        self.ax = self.fig.add_subplot(111)
         self.ax.set_xlabel('Time Delay')
         self.ax.set_ylabel('Intensity')
         self.ax.grid(True)
