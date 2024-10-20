@@ -181,6 +181,7 @@ def res_grad_raise(x0: np.ndarray, num_comp: int, base: bool, irf: str,
     chi = np.empty(count)
     df = np.empty((count, tau.size+num_irf))
     grad = np.empty(num_param)
+    c_grad = np.zeros_like(k)
 
     end = 0
     t0_idx = num_irf
@@ -201,8 +202,9 @@ def res_grad_raise(x0: np.ndarray, num_comp: int, base: bool, irf: str,
             A[1:, :] = A[1:, :] - A[0, :]
             c = fact_anal_A(A[1:, :], d[:, j], e[:, j])
             chi[end:end+step] = (c@A[1:, :]-d[:, j])/e[:, j]
-
-            c_grad = np.hstack((np.array([-np.sum(c)]), c))
+            
+            c_grad[1:] = c
+            c_grad[0] = -np.sum(c)
 
             if irf == 'g':
                 grad_tmp = deriv_exp_sum_conv_gau(ti-t0, fwhm, 1/tau, c_grad, base)
@@ -329,9 +331,9 @@ def res_hess_raise(x0: np.ndarray, num_comp: int, base: bool, irf: str,
                 A_cauchy = make_A_matrix_cauchy(ti-t0, fwhm, k)
                 diff = A_cauchy-A_gau
                 A = A_gau + eta*diff
-            A[1:, :] = A[1:, :] - A[0, :]
-            cm = fact_anal_A(A[1:, :], d[:, j], e[:, j])
-            chi = (cm@A[1:, :]-d[:, j])/e[:, j]
+            Ap = A[1:, :] - A[0, :]
+            cm = fact_anal_A(Ap, d[:, j], e[:, j])
+            chi = (cm@Ap-d[:, j])/e[:, j]
 
             c = np.zeros_like(k)
             c[1:] = cm
@@ -847,6 +849,7 @@ def res_grad_raise_same_t0(x0: np.ndarray, num_comp: int, base: bool, irf: str,
     chi = np.empty(count)
     df = np.zeros((count, num_irf+num_comp))
     grad = np.zeros(num_param)
+    c_grad = np.zeros_like(k)
 
     end = 0
     t0_idx = num_irf
@@ -889,7 +892,8 @@ def res_grad_raise_same_t0(x0: np.ndarray, num_comp: int, base: bool, irf: str,
             c = fact_anal_A(A[1:, :], d[:, j], e[:, j])
             chi[end:end+step] = (c@A[1:, :]-d[:, j])/e[:, j]
 
-            c_grad = np.hstack((np.array([-np.sum(c)]), c))
+            c_grad[1:] = c
+            c_grad[0] = - np.sum(c)
 
             grad_decay[:, :2] = \
                 np.tensordot(c_grad[:num_comp+1*base], A_grad_decay[:, :, :2], axes=1)
@@ -1019,7 +1023,7 @@ def res_hess_raise_same_t0(x0: np.ndarray, num_comp: int, base: bool, irf: str,
             diff = A_cauchy-A_gau
             A = A_gau + eta*diff
         
-        A[1:, :] = A[1:, :] - A[0, :]
+        Ap = A[1:, :] - A[0, :]
         
         # caching
         if irf in ['g', 'c']:
@@ -1220,8 +1224,8 @@ def res_hess_raise_same_t0(x0: np.ndarray, num_comp: int, base: bool, irf: str,
                 
         
         for j in range(d.shape[1]):
-            cm = fact_anal_A(A[1:, :], d[:, j], e[:, j])
-            chi = (cm@A[1:, :]-d[:, j])/e[:, j]
+            cm = fact_anal_A(Ap, d[:, j], e[:, j])
+            chi = (cm@Ap-d[:, j])/e[:, j]
 
             c = np.zeros_like(k)
             c[1:] = cm
