@@ -661,7 +661,7 @@ def res_hess_raise(x0: np.ndarray, num_comp: int, base: bool, irf: str,
                   num_irf+num_t0:num_irf+num_t0+num_comp] = \
                 Hcorr[num_irf+num_t0:num_irf+num_t0+num_comp, 
                       num_irf+num_t0:num_irf+num_t0+num_comp] + \
-                    Hcorr_tmp[num_irf+1:, num_irf+1:].flatten()
+                    Hcorr_tmp[num_irf+1:, num_irf+1:]
 
             t0_idx = t0_idx + 1
         dset_idx = dset_idx+1
@@ -1389,7 +1389,7 @@ def res_hess_raise_same_t0(x0: np.ndarray, num_comp: int, base: bool, irf: str,
                   num_irf+num_t0:num_irf+num_t0+num_comp] = \
                 Hcorr[num_irf+num_t0:num_irf+num_t0+num_comp, 
                       num_irf+num_t0:num_irf+num_t0+num_comp] + \
-                    Hcorr_tmp[num_irf+1:, num_irf+1:].flatten()
+                    Hcorr_tmp[num_irf+1:, num_irf+1:]
 
         t0_idx = t0_idx + 1
         dset_idx = dset_idx+1
