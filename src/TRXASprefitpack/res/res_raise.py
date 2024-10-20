@@ -340,8 +340,10 @@ def res_hess_raise(x0: np.ndarray, num_comp: int, base: bool, irf: str,
             dc = np.einsum('ij,j->ij', A, 1/e[:, j])
             Hc = dc @ dc.T
             Hci0 = np.ones_like(Hc[1:, 1:])
+            Hc0j = np.ones_like(Hc[1:, 1:])
             Hci0 = np.einsum('ij,i->ij', Hci0, Hc[1:, 0])
-            Hc[1:, 1:] = Hc[1:, 1:] + Hc[0, 0] - Hci0 - Hc[0, 1:]
+            Hc0j = np.einsum('ij,j->ij', Hc0j, Hc[0, 1:])
+            Hc[1:, 1:] = Hc[1:, 1:] + Hc[0, 0] - Hci0 - Hc0j
             
             grad_sum[:, :] = 0
             Hcx[:, :] = 0
@@ -1228,8 +1230,10 @@ def res_hess_raise_same_t0(x0: np.ndarray, num_comp: int, base: bool, irf: str,
             dc = np.einsum('ij,j->ij', A, 1/e[:, j])
             Hc = dc @ dc.T
             Hci0 = np.ones_like(Hc[1:, 1:])
+            Hc0j = np.ones_like(Hc[1:, 1:])
             Hci0 = np.einsum('ij,i->ij', Hci0, Hc[1:, 0])
-            Hc[1:, 1:] = Hc[1:, 1:] + Hc[0, 0] - Hci0 - Hc[0, 1:]
+            Hc0j = np.einsum('ij,j->ij', Hc0j, Hc[0, 1:])
+            Hc[1:, 1:] = Hc[1:, 1:] + Hc[0, 0] - Hci0 - Hc0j
 
             grad_sum[:, :] = 0
             Hcx[:, :] = 0
