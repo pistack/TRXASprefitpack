@@ -17,6 +17,7 @@ from ..mathfun.A_matrix import make_A_matrix_exp, fact_anal_A
 from ..res.parm_bound import set_bound_t0, set_bound_tau
 from ..res.res_raise import residual_raise, res_grad_raise
 from ..res.res_raise import residual_raise_same_t0, res_grad_raise_same_t0
+from ..res.res_raise import res_hess_raise, res_hess_raise_same_t0
 
 GLBSOLVER = {'basinhopping': basinhopping, 'ampgo': ampgo}
 
@@ -275,7 +276,16 @@ def fit_transient_raise(irf: str, fwhm_init: Union[float, np.ndarray],
         param_name[num_irf+t0_init.size+i] = f'tau_{i+1}'
 
     jac = res_lsq['jac']
-    hes = jac.T @ jac
+
+    if same_t0:
+        hes = res_hess_raise_same_t0(param_opt, num_comp, base,
+                                     irf=irf, t=t, 
+                                     intensity=intensity, eps=eps)
+    else:
+        hes = res_hess_raise(param_opt, num_comp, base,
+                             irf=irf, t=t, intensity=intensity,
+                             eps=eps)
+
     cov = np.zeros_like(hes)
     n_free_param = np.sum(~fix_param_idx)
     mask_2d = np.einsum('i,j->ij', ~fix_param_idx, ~fix_param_idx)
