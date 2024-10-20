@@ -13,14 +13,22 @@ import tkinter.messagebox as msg
 import tkinter.filedialog as fd
 import tkinter.scrolledtext as sc
 import numpy as np
+import matplotlib
 from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
-from matplotlib.backends.backend_tkagg import NavigationToolbar2Tk
 from matplotlib.backend_bases import key_press_handler
 from matplotlib.figure import Figure
 from ..res import set_bound_tau
 from ..driver import fit_transient_exp, fit_transient_raise
 from ..driver import fit_transient_dmp_osc, fit_transient_both
 from ..driver import save_TransientResult
+mpl_version = list(map(int, matplotlib.__version__.split('.')))
+mpl_old = False
+if mpl_version[0] == 2 and mpl_version[1] < 2:
+    mpl_old = True
+if mpl_old:
+    from matplotlib.backends.backend_tkagg import NavigationToolbar2TkAgg
+else:
+    from matplotlib.backends.backend_tkagg import NavigationToolbar2Tk
 
 FITDRIVER = {'decay': fit_transient_exp, 'raise': fit_transient_raise,
 'dmp_osc': fit_transient_dmp_osc, 'both': fit_transient_both}
@@ -49,7 +57,7 @@ class PlotDataWidget:
         self.fig = Figure(figsize=(8, 4), dpi=100)
 
         # immutable
-        self.ax = self.fig.add_subplot()
+        self.ax = self.fig.add_subplot(111)
         self.ax.set_xlabel('Time Delay')
         self.ax.set_ylabel('Intensity')
         self.ax.grid(True)
@@ -66,8 +74,13 @@ class PlotDataWidget:
         self.canvas = FigureCanvasTkAgg(self.fig, master=self.top)
         self.canvas.draw()
 
-        self.toolbar = \
+        if mpl_old:
+            self.toolbar = \
+                NavigationToolbar2TkAgg(self.canvas, self.top)
+        else:
+            self.toolbar = \
             NavigationToolbar2Tk(self.canvas, self.top, pack_toolbar=False)
+        
         self.toolbar.update()
 
         self.canvas.mpl_connect('key_press_event', key_press_handler)
@@ -165,7 +178,11 @@ class PlotFitWidget:
         self.canvas = FigureCanvasTkAgg(self.fig, master=self.top)
         self.canvas.draw()
 
-        self.toolbar = \
+        if mpl_old:
+            self.toolbar = \
+                NavigationToolbar2TkAgg(self.canvas, self.top)
+        else:
+            self.toolbar = \
             NavigationToolbar2Tk(self.canvas, self.top, pack_toolbar=False)
         self.toolbar.update()
 

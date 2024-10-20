@@ -13,12 +13,20 @@ import tkinter.messagebox as msg
 import tkinter.filedialog as fd
 import numpy as np
 from scipy.linalg import svd
+import matplotlib
 from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
-from matplotlib.backends.backend_tkagg import NavigationToolbar2Tk
 from matplotlib.backend_bases import key_press_handler
 from matplotlib.figure import Figure
 from ..mathfun import calc_eta, calc_fwhm, solve_seq_model
 from ..driver import dads, sads, dads_svd, sads_svd
+mpl_version = list(map(int, matplotlib.__version__.split('.')))
+mpl_old = False
+if mpl_version[0] == 2 and mpl_version[1] < 2:
+    mpl_old = True
+if mpl_old:
+    from matplotlib.backends.backend_tkagg import NavigationToolbar2TkAgg
+else:
+    from matplotlib.backends.backend_tkagg import NavigationToolbar2Tk
 
 float_sep_comma = re.compile('([\+\-]?[0-9]+[.]?[0-9]*[,]\s*)*[\+\-]?[0-9]+[.]?[0-9]*\s*')
 isfloat = re.compile('[\+\-]?[0-9]+[.]?[0-9]*\s*')
@@ -44,7 +52,7 @@ class PlotDataWidget:
         self.fig = Figure(figsize=(8, 4), dpi=100)
 
         # immutable
-        self.ax = self.fig.add_subplot()
+        self.ax = self.fig.add_subplot(111)
         self.ax.set_xlabel('Energy')
         self.ax.set_ylabel('Intensity')
         self.ax.grid(True)
@@ -65,7 +73,11 @@ class PlotDataWidget:
         self.canvas = FigureCanvasTkAgg(self.fig, master=self.top)
         self.canvas.draw()
 
-        self.toolbar = \
+        if mpl_old:
+            self.toolbar = \
+                NavigationToolbar2TkAgg(self.canvas, self.top)
+        else:
+            self.toolbar = \
             NavigationToolbar2Tk(self.canvas, self.top, pack_toolbar=False)
         self.toolbar.update()
 
@@ -137,7 +149,11 @@ class PlotSVDWidget:
         self.canvas = FigureCanvasTkAgg(self.fig, master=self.top)
         self.canvas.draw()
 
-        self.toolbar = \
+        if mpl_old:
+            self.toolbar = \
+                NavigationToolbar2TkAgg(self.canvas, self.top)
+        else:
+            self.toolbar = \
             NavigationToolbar2Tk(self.canvas, self.top, pack_toolbar=False)
         self.toolbar.update()
 
@@ -183,7 +199,7 @@ class PlotDADSWidget:
 
         self.fig = Figure(figsize=(8, 4), dpi=100)
 
-        self.ax_dads = self.fig.add_subplot()
+        self.ax_dads = self.fig.add_subplot(111)
         self.ax_dads.set_title(f'{master.mode_var.get()}')
         self.ax_dads.set_xlabel('Energy')
         self.ax_dads.set_ylabel('Intensity')
@@ -201,7 +217,11 @@ class PlotDADSWidget:
         self.canvas = FigureCanvasTkAgg(self.fig, master=self.top)
         self.canvas.draw()
 
-        self.toolbar = \
+        if mpl_old:
+            self.toolbar = \
+                NavigationToolbar2TkAgg(self.canvas, self.top)
+        else:
+            self.toolbar = \
             NavigationToolbar2Tk(self.canvas, self.top, pack_toolbar=False)
         self.toolbar.update()
 
