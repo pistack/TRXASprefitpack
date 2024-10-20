@@ -265,7 +265,7 @@ def res_hess_decay(x0: np.ndarray, num_comp: int, base: bool, irf: str,
                    tau_mask: Optional[np.ndarray] = None,
                    t: Optional[Sequence[np.ndarray]] = None,
                    intensity: Optional[Sequence[np.ndarray]] = None,
-                   eps: Optional[Sequence[np.ndarray]] = None) -> Tuple[np.ndarray, np.ndarray]:
+                   eps: Optional[Sequence[np.ndarray]] = None) -> np.ndarray:
     '''
     res_hess_decay
      Hessian for fitting multiple set of time delay scan with the
@@ -978,7 +978,7 @@ def res_hess_decay_same_t0(x0: np.ndarray, num_comp: int, base: bool, irf: str,
                    tau_mask: Optional[np.ndarray] = None,
                    t: Optional[Sequence[np.ndarray]] = None,
                    intensity: Optional[Sequence[np.ndarray]] = None,
-                   eps: Optional[Sequence[np.ndarray]] = None) -> Tuple[np.ndarray, np.ndarray]:
+                   eps: Optional[Sequence[np.ndarray]] = None) -> np.ndarray:
     '''
     res_hess_decay_same_t0
      Hessian for fitting multiple set of time delay scan with the
