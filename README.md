@@ -6,13 +6,13 @@
 
 [![Documentation Status](https://readthedocs.org/projects/trxasprefitpack/badge/?version=latest)](https://trxasprefitpack.readthedocs.io/en/latest/?badge=latest)
 
-stable version:  0.7.3
+stable version:  0.8.0
 
-current version: 0.7.3
+current version: 0.8.0
 
 current development version: 0.8.dev
 
-Copyright: (C) 2021-2023  Junho Lee (@pistack) (Email: phistack@kaist.ac.kr)
+Copyright: (C) 2021-2024  Junho Lee (@pistack) (Email: phistack@kaist.ac.kr)
 
 Licence: LGPL3
 
@@ -53,6 +53,11 @@ Licence: LGPL3
     3. Convolution of exponential decay and (gaussian, cauchy, pseudo voigt approximation) instrumental response function.
     4. Convolution of damped oscillation and (gaussian, cauchy, pseudo voigt approximation) instrumental response function.
     5. Sum of above two model.
+ 
+ 2. Additionally provides Hessian for following 2 fitting model based on seperation scheme in least square regression
+
+    1. sum of voigt function, edge and polynomial baseline
+    2. Convolution of exponential decay and (gaussian, cauchy, pseudo voigt approximation) instrumental response function.
 
 * driver
 
@@ -66,10 +71,12 @@ Licence: LGPL3
     1. Convolution of exponential decay and (gaussian, cauchy, pseudo voigt approximation) instrumental response function.
     2. Convolution of damped oscillation and (gaussian, cauchy, pseudo voigt approximation) instrumental response function.
     3. Sum of above two model.
- 
- 3. Save and load fitting result through `hdf5` format
 
- 4. Provides routine to evaluate confidence interval and compare two fit based on `f-test`.
+ 3. For irf convoluted exponential decay model, you can select which lifetimes are shared or not.
+ 
+ 4. Save and load fitting result through `hdf5` format
+
+ 5. Provides routine to evaluate confidence interval and compare two fit based on `f-test`.
 
 * See source documents for stable version [Docs](https://trxasprefitpack.readthedocs.io/en/stable/)
 * See source documents for latest version [Docs](https://trxasprefitpack.readthedocs.io/en/latest/)
@@ -95,7 +102,7 @@ Licence: LGPL3
   * Now type ``pip install .``
 * Advanced way (from repository)
   * ``git clone https://github.com/pistack/TRXASprefitpack.git``
-  * ``git checkout v0.7.0.1``
+  * ``git checkout v0.8.0.``
   * ``cd TRXASprefitpack``
   * ``python3 -m build``
   * ``cd dist``

@@ -157,7 +157,11 @@ So, by chain rule the gradient of $\chi^2(\mathbf{C}(\mathbf{\theta}), \mathbf{\
 &= \frac{\partial \chi^2}{\partial \mathbf{\theta}}
 \end{align*}
 
-Because of $\frac{\partial \mathbf{C}(\mathbf{\theta})}{\partial \mathbf{\theta}}$ term, the analytic hessian of $\chi^2(\mathbf{C}, \mathbf{\theta})$ is quite complicated. Since v0.8, the analytic Hessian is implemented for `fit_static_voigt` and `fit_transient_exp`.
+Because of $\frac{\partial \mathbf{C}(\mathbf{\theta})}{\partial \mathbf{\theta}}$ term, the analytic hessian of $\chi^2(\mathbf{C}, \mathbf{\theta})$ is quite complicated. Since v0.8, the analytic Hessian is implemented for the following three fitting drivers.
+
+1. `fit_static_voigt` 
+2. `fit_transient_exp`
+3. `fit_transient_raise`
 
 The Hessian of $\chi^2(\mathbf{C}, \mathbf{\theta})$ is
 
