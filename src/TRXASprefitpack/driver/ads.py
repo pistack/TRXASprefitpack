@@ -212,7 +212,7 @@ def dads_osc(escan_time: np.ndarray, fwhm: float, tau: np.ndarray,
 
 
 def sads(escan_time: np.ndarray, fwhm: float, eigval: np.ndarray, V: np.ndarray, c: np.ndarray,
-         exclude: Optional[str] = None, irf: Optional[str] = 'g', eta: Optional[float] = None,
+         exclude: Optional[Tuple[int]] = None, irf: Optional[str] = 'g', eta: Optional[float] = None,
          intensity: Optional[np.ndarray] = None, eps: Optional[np.ndarray] = None) -> Tuple[np.ndarray, np.ndarray, np.ndarray]:
     '''
     Calculate species associated difference spectrum from experimental energy scan data
@@ -223,11 +223,11 @@ def sads(escan_time: np.ndarray, fwhm: float, eigval: np.ndarray, V: np.ndarray,
       eigval: eigenvalue of rate equation matrix
       V: eigenvector of rate equation matrix
       c: coefficient to match initial condition of rate equation
-      exclude: exclude either 'first' or 'last' element or both 'first' and 'last' element.
+      exclude: list of indices of species to exclude in SADS calculation
 
-               * 'first' : exclude first element
-               * 'last' : exclude last element
-               * 'first_and_last' : exclude both first and last element
+               * [0] : exclude first element
+               * [-1] : exclude last element
+               * [i1, i2, ..., in] : exclude i1, i2, ..., in
                * None : Do not exclude any element [default]
 
       irf: shape of instrumental response function [default: g]
@@ -253,12 +253,9 @@ def sads(escan_time: np.ndarray, fwhm: float, eigval: np.ndarray, V: np.ndarray,
     if exclude is None:
         diff_abs = np.empty((eigval.size, intensity.shape[0]))
         dof = escan_time.size - eigval.size
-    elif exclude in ['first', 'last']:
-        diff_abs = np.empty((eigval.size-1, intensity.shape[0]))
-        dof = escan_time.size - (eigval.size-1)
     else:
-        diff_abs = np.empty((eigval.size-2, intensity.shape[0]))
-        dof = escan_time.size - (eigval.size-2)
+        diff_abs = np.empty((eigval.size-len(exclude), intensity.shape[0]))
+        dof = escan_time.size - (eigval.size-len(exclude))
 
     if eps is None:
         eps = np.ones_like(intensity)
@@ -266,12 +263,10 @@ def sads(escan_time: np.ndarray, fwhm: float, eigval: np.ndarray, V: np.ndarray,
     diff_abs_eps = np.empty_like(diff_abs)
 
     A = compute_signal_irf(escan_time, eigval, V, c, fwhm, irf, eta)
-    if exclude == 'first':
-        B = A[1:, :]
-    elif exclude == 'last':
-        B = A[:-1, :]
-    elif exclude == 'first_and_last':
-        B = A[1:-1, :]
+    if exclude is not None:
+        speices_idx = np.ones(eigval.size, dtype=bool)
+        speices_idx[exclude] = False
+        B = A[speices_idx, :]
     else:
         B = A
 
@@ -297,7 +292,7 @@ def sads(escan_time: np.ndarray, fwhm: float, eigval: np.ndarray, V: np.ndarray,
     return diff_abs, diff_abs_eps, diff_abs.T @ B
 
 def sads_svd(escan_time: np.ndarray, fwhm: float, eigval: np.ndarray, V: np.ndarray, c: np.ndarray,
-             exclude: Optional[str] = None, irf: Optional[str] = 'g', eta: Optional[float] = None,
+             exclude: Optional[Tuple[int]] = None, irf: Optional[str] = 'g', eta: Optional[float] = None,
              intensity: Optional[np.ndarray] = None, cond_num: Optional[float] = 0) -> Tuple[np.ndarray, np.ndarray]:
     '''
     Calculate species associated difference spectrum from experimental energy scan data
@@ -309,11 +304,11 @@ def sads_svd(escan_time: np.ndarray, fwhm: float, eigval: np.ndarray, V: np.ndar
       eigval: eigenvalue of rate equation matrix
       V: eigenvector of rate equation matrix
       c: coefficient to match initial condition of rate equation
-      exclude: exclude either 'first' or 'last' element or both 'first' and 'last' element.
+      exclude: list of indices of species to exclude in SADS calculation
 
-               * 'first' : exclude first element
-               * 'last' : exclude last element
-               * 'first_and_last' : exclude both first and last element
+               * [0] : exclude first element
+               * [-1] : exclude last element
+               * [i1, i2, ..., in] : exclude i1, i2, ..., in
                * None : Do not exclude any element [default]
 
       irf: shape of instrumental response function [default: g]
@@ -345,12 +340,10 @@ def sads_svd(escan_time: np.ndarray, fwhm: float, eigval: np.ndarray, V: np.ndar
 
 
     A = compute_signal_irf(escan_time, eigval, V, c, fwhm, irf, eta)
-    if exclude == 'first':
-        B = A[1:, :]
-    elif exclude == 'last':
-        B = A[:-1, :]
-    elif exclude == 'first_and_last':
-        B = A[1:-1, :]
+    if exclude is not None:
+        speices_idx = np.ones(eigval.size, dtype=bool)
+        speices_idx[exclude] = False
+        B = A[speices_idx, :]
     else:
         B = A
 

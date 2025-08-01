@@ -150,6 +150,14 @@ def calc_sads():
     escan_time = np.array(args.escan_time)
     out_prefix = args.out
     exclude = args.gs_index
+    if exclude is not None:
+        if exclude == 'first':
+            exclude = [0]
+        elif exclude == 'last':
+            exclude = [-1]
+        elif exclude == 'first_and_last':
+            exclude = [0, -1]
+
     y0 = np.array(args.init_cond)
 
     if args.seq:
