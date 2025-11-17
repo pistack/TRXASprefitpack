@@ -530,7 +530,7 @@ class CalcDADSGuiWidget:
             self.dads = dads_spec
         elif self.mode_var.get() in ['eads', 'eads_svd']:
             if not base:
-                exclude = 'last'
+                exclude = [-1]
             else:
                 exclude = None
             y0 = np.zeros(self.tau.size+1)
