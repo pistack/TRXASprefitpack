@@ -17,6 +17,7 @@ from ..mathfun.A_matrix import make_A_matrix_dmp_osc, fact_anal_A
 from ..res.parm_bound import set_bound_t0, set_bound_tau
 from ..res.res_osc import residual_dmp_osc, res_grad_dmp_osc
 from ..res.res_osc import residual_dmp_osc_same_t0, res_grad_dmp_osc_same_t0
+from ._input import normalize_tscan_inputs, validate_t0_count
 
 GLBSOLVER = {'basinhopping': basinhopping, 'ampgo': ampgo}
 
@@ -101,6 +102,9 @@ def fit_transient_dmp_osc(irf: str, fwhm_init: Union[float, np.ndarray],
         raise Exception('Invalid local least square minimizer solver. It should be one of [trf, lm, dogbox]')
     if irf is not None and irf not in  ['g', 'c', 'pv']:
         raise Exception('Unsupported shape of instrumental response function Edge.')
+
+    t, intensity, eps = normalize_tscan_inputs(t, intensity, eps)
+    validate_t0_count(t0_init, intensity, same_t0)
 
     num_comp = tau_init.size
 

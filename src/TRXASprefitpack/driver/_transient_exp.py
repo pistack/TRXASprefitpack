@@ -3,21 +3,22 @@ _transient_exp:
 submodule for fitting time delay scan with the
 convolution of sum of exponential decay and instrumental response function
 
-:copyright: 2021-2024 by pistack (Junho Lee).
+:copyright: 2021-2026 by pistack (Junho Lee).
 :license: LGPL3.
 '''
 from typing import Optional, Union, Sequence, Tuple
 import numpy as np
+from scipy.optimize import basinhopping
+from scipy.optimize import least_squares
 from ..mathfun.irf import calc_eta, calc_fwhm
 from .transient_result import TransientResult
 from ._ampgo import ampgo
-from scipy.optimize import basinhopping
-from scipy.optimize import least_squares
 from ..mathfun.A_matrix import make_A_matrix_exp, fact_anal_A
 from ..res.parm_bound import set_bound_t0, set_bound_tau
 from ..res.res_decay import residual_decay, res_grad_decay
 from ..res.res_decay import residual_decay_same_t0, res_grad_decay_same_t0
 from ..res.res_decay import res_hess_decay, res_hess_decay_same_t0
+from ._input import normalize_tscan_inputs, validate_t0_count
 
 GLBSOLVER = {'basinhopping': basinhopping, 'ampgo': ampgo}
 
@@ -102,6 +103,9 @@ def fit_transient_exp(irf: str, fwhm_init: Union[float, np.ndarray],
         raise Exception('Invalid local least square minimizer solver. It should be one of [trf, lm, dogbox]')
     if irf is not None and irf not in  ['g', 'c', 'pv']:
         raise Exception('Unsupported shape of instrumental response function Edge.')
+    
+    t, intensity, eps = normalize_tscan_inputs(t, intensity, eps)
+    validate_t0_count(t0_init, intensity, same_t0)
 
     if tau_init is None:
         num_comp = 0

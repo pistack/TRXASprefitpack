@@ -18,6 +18,7 @@ from ..mathfun.A_matrix import make_A_matrix_exp, make_A_matrix_dmp_osc, fact_an
 from ..res.parm_bound import set_bound_t0, set_bound_tau
 from ..res.res_both import residual_both, res_grad_both
 from ..res.res_both import residual_both_same_t0, res_grad_both_same_t0
+from ._input import normalize_tscan_inputs, validate_t0_count
 
 GLBSOLVER = {'basinhopping': basinhopping, 'ampgo': ampgo}
 
@@ -111,6 +112,9 @@ def fit_transient_both(irf: str, fwhm_init: Union[float, np.ndarray],
         raise Exception('Invalid local least square minimizer solver. It should be one of [trf, lm, dogbox]')
     if irf is not None and irf not in  ['g', 'c', 'pv']:
         raise Exception('Unsupported shape of instrumental response function Edge.')
+
+    t, intensity, eps = normalize_tscan_inputs(t, intensity, eps)
+    validate_t0_count(t0_init, intensity, same_t0)
 
     num_irf = 1*(irf in ['g', 'c'])+2*(irf == 'pv')
     num_param = num_irf+t0_init.size+tau_init.size+2*tau_osc_init.size
