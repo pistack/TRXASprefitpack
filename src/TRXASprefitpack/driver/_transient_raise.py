@@ -3,7 +3,7 @@ _transient_raise:
 submodule for fitting time delay scan with the
 convolution of sum of raise model and instrumental response function
 
-:copyright: 2021-2022 by pistack (Junho Lee).
+:copyright: 2021-2026 by pistack (Junho Lee).
 :license: LGPL3.
 '''
 from typing import Optional, Union, Sequence, Tuple
@@ -268,7 +268,7 @@ def fit_transient_raise(irf: str, fwhm_init: Union[float, np.ndarray],
     # save experimental fitting data
     if name_of_dset is None:
         name_of_dset = default_dataset_names(len(t))
-        
+
     result['name_of_dset'] = name_of_dset
     result['t'] = t
     result['intensity'] = intensity
