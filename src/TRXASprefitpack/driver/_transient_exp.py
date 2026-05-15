@@ -19,9 +19,18 @@ from ..res.res_decay import residual_decay, res_grad_decay
 from ..res.res_decay import residual_decay_same_t0, res_grad_decay_same_t0
 from ..res.res_decay import res_hess_decay, res_hess_decay_same_t0
 from ._input import normalize_tscan_inputs, validate_t0_count
-
-GLBSOLVER = {'basinhopping': basinhopping, 'ampgo': ampgo}
-
+from ._transient_common import (
+    calc_covariance_from_hessian,
+    calc_individual_chi2,
+    count_total_scans,
+    default_dataset_names,
+    get_num_irf,
+    make_fixed_mask,
+    make_lsq_bounds,
+    prepare_lsq_kwargs,
+    run_global_optimization,
+    validate_transient_driver_options,
+)
 
 def fit_transient_exp(irf: str, fwhm_init: Union[float, np.ndarray],
                       t0_init: np.ndarray, tau_init: np.ndarray, base: bool,
@@ -96,14 +105,7 @@ def fit_transient_exp(irf: str, fwhm_init: Union[float, np.ndarray],
      Returns:
       TransientResult class object
     '''
-
-    if method_glb is not None and method_glb not in ['basinhopping', 'ampgo']:
-        raise Exception('Unsupported global optimization Method, Supported global optimization Methods are ampgo and basinhopping')
-    if method_lsq not in ['trf', 'lm', 'dogbox']:
-        raise Exception('Invalid local least square minimizer solver. It should be one of [trf, lm, dogbox]')
-    if irf is not None and irf not in  ['g', 'c', 'pv']:
-        raise Exception('Unsupported shape of instrumental response function Edge.')
-    
+    validate_transient_driver_options(method_glb, method_lsq, irf)
     t, intensity, eps = normalize_tscan_inputs(t, intensity, eps)
     validate_t0_count(t0_init, intensity, same_t0)
 
@@ -112,10 +114,9 @@ def fit_transient_exp(irf: str, fwhm_init: Union[float, np.ndarray],
     else:
         num_comp = tau_init.size
 
-    num_irf = 1*(irf in ['g', 'c'])+2*(irf == 'pv')
+    num_irf = get_num_irf(irf)
     num_param = num_irf+t0_init.size+num_comp
     param = np.empty(num_param, dtype=float)
-    fix_param_idx = np.empty(num_param, dtype=bool)
 
     param[:num_irf] = fwhm_init
     param[num_irf:num_irf+t0_init.size] = t0_init
@@ -140,54 +141,26 @@ def fit_transient_exp(irf: str, fwhm_init: Union[float, np.ndarray],
                   t0_init.size] = set_bound_tau(tau_init[i], fwhm_init)
     else:
         bound[num_irf+t0_init.size:] = bound_tau
+    
+    fix_param_idx = make_fixed_mask(bound)
 
-    for i in range(num_param):
-        fix_param_idx[i] = (bound[i][0] == bound[i][1])
-
-    if method_glb is not None:
-        go_args = (num_comp, base, irf, tau_mask, fix_param_idx,
-                   t, intensity, eps)
-        min_go_kwargs = {'args': go_args, 'jac': True, 'bounds': bound}
-        if kwargs_glb is not None:
-            minimizer_kwargs = kwargs_glb.pop('minimizer_kwargs', None)
-            if minimizer_kwargs is None:
-                kwargs_glb['minimizer_kwargs'] = min_go_kwargs
-            else:
-                minimizer_kwargs['args'] = min_go_kwargs['args']
-                minimizer_kwargs['jac'] = min_go_kwargs['jac']
-                minimizer_kwargs['bounds'] = min_go_kwargs['bounds']
-                kwargs_glb['minimizer_kwargs'] = minimizer_kwargs
-        else:
-            kwargs_glb = {'minimizer_kwargs': min_go_kwargs}
-        if same_t0:
-            res_go = GLBSOLVER[method_glb](res_grad_decay_same_t0, param, **kwargs_glb)
-        else:
-            res_go = GLBSOLVER[method_glb](res_grad_decay, param, **kwargs_glb)
-    else:
-        res_go = {}
-        res_go['x'] = param
-        res_go['message'] = None
-        res_go['nfev'] = 0
+    go_args = (num_comp, base, irf, tau_mask, fix_param_idx, t, intensity, eps)
+    
+    res_go = run_global_optimization(
+        method_glb,
+        param,
+        args=go_args,
+        bounds=bound,
+        grad_func=res_grad_decay,
+        grad_func_same_t0=res_grad_decay_same_t0,
+        same_t0=same_t0,
+        kwargs_glb=kwargs_glb,
+        )
 
     param_gopt = res_go['x']
     args_lsq = (base, irf, tau_mask, t, intensity, eps)
-
-    if kwargs_lsq is not None:
-        _ = kwargs_lsq.pop('args', None)
-        _ = kwargs_lsq.pop('kwargs', None)
-        kwargs_lsq['args'] = args_lsq
-    else:
-        kwargs_lsq = {'args': args_lsq}
-
-    bound_tuple = (num_param*[None], num_param*[None])
-    for i in range(num_param):
-        bound_tuple[0][i] = bound[i][0]
-        bound_tuple[1][i] = bound[i][1]
-        if bound[i][0] == bound[i][1]:
-            if bound[i][0] > 0:
-                bound_tuple[1][i] = bound[i][1]*(1+1e-8)+1e-16
-            else:
-                bound_tuple[1][i] = bound[i][1]*(1-1e-8)+1e-16
+    kwargs_lsq = prepare_lsq_kwargs(kwargs_lsq, args=args_lsq)
+    bound_tuple = make_lsq_bounds(bound)
 
     if same_t0:
         res_lsq = least_squares(residual_decay_same_t0, param_gopt,
@@ -200,12 +173,12 @@ def fit_transient_exp(irf: str, fwhm_init: Union[float, np.ndarray],
     fwhm_opt = param_opt[:num_irf]
     tau_opt = param_opt[num_irf+t0_init.size:]
 
+    num_tot_scan = count_total_scans(intensity)
+
     fit = np.empty(len(t), dtype=object)
     res = np.empty(len(t), dtype=object)
 
-    num_tot_scan = 0
     for i in range(len(t)):
-        num_tot_scan = num_tot_scan + intensity[i].shape[1]
         fit[i] = np.empty(intensity[i].shape)
         res[i] = np.empty(intensity[i].shape)
 
@@ -216,22 +189,13 @@ def fit_transient_exp(irf: str, fwhm_init: Union[float, np.ndarray],
         (num_comp+1*base)+num_param-np.sum(fix_param_idx)
     chi2 = 2*res_lsq['cost']
     red_chi2 = chi2/(chi.size-num_param_tot)
-
-    start = 0
-    end = 0
-    chi2_ind = np.empty(len(t), dtype=object)
-    red_chi2_ind = np.empty(len(t), dtype=object)
-    num_param_ind = 2*tau_opt.size+1*base+2+1*(irf == 'pv')
-
-    for i in range(len(t)):
-        step = intensity[i].shape[0]
-        chi2_ind_aux = np.empty(intensity[i].shape[1], dtype=float)
-        for j in range(intensity[i].shape[1]):
-            end = start + step
-            chi2_ind_aux[j] = np.sum(chi[start:end]**2)
-            start = end
-        chi2_ind[i] = chi2_ind_aux
-        red_chi2_ind[i] = chi2_ind[i]/(intensity[i].shape[0]-num_param_ind)
+    
+    num_param_ind = 2 * tau_opt.size + 1 * base + 2 + 1 * (irf == "pv")
+    chi2_ind, red_chi2_ind = calc_individual_chi2(
+        chi,
+        intensity,
+        num_param_ind=num_param_ind,
+        )
 
     param_name = np.empty(param_opt.size, dtype=object)
     c = np.empty(len(t), dtype=object)
@@ -296,17 +260,9 @@ def fit_transient_exp(irf: str, fwhm_init: Union[float, np.ndarray],
                              irf=irf, tau_mask=tau_mask,
                              t=t, intensity=intensity,
                              eps=eps)
-
-    cov = np.zeros_like(hes)
-    n_free_param = np.sum(~fix_param_idx)
-    mask_2d = np.einsum('i,j->ij', ~fix_param_idx, ~fix_param_idx)
-    cov[mask_2d] = np.linalg.inv(hes[mask_2d].reshape(
-        (n_free_param, n_free_param))).flatten()
-    cov_scaled = red_chi2*cov
-    param_eps = np.sqrt(np.diag(cov_scaled))
-    corr = cov_scaled.copy()
-    weight = np.einsum('i,j->ij', param_eps, param_eps)
-    corr[mask_2d] = corr[mask_2d]/weight[mask_2d]
+    
+    cov, cov_scaled, corr, param_eps = calc_covariance_from_hessian(
+         hes, fix_param_idx, red_chi2)
 
     result = TransientResult()
     result['model'] = 'decay'
@@ -325,9 +281,8 @@ def fit_transient_exp(irf: str, fwhm_init: Union[float, np.ndarray],
 
     # save experimental fitting data
     if name_of_dset is None:
-        name_of_dset = np.empty(len(t), dtype=object)
-        for i in range(len(t)):
-            name_of_dset[i] = f'dataset_{i+1}'
+        name_of_dset = default_dataset_names(len(t))
+
     result['name_of_dset'] = name_of_dset
     result['t'] = t
     result['intensity'] = intensity
