@@ -112,9 +112,9 @@ def fit_transient_raise(irf: str, fwhm_init: Union[float, np.ndarray],
         num_comp = tau_init.size
 
     num_irf = get_num_irf(irf)
-    num_param = num_irf+t0_init.size+num_comp
-    param = np.empty(num_param, dtype=float)
     layout = TransientParamLayout(num_irf, t0_init.size, num_comp)
+    num_param = layout.size
+    param = np.empty(num_param, dtype=float)
 
     param[layout.irf_slice] = fwhm_init
     param[layout.t0_slice] = t0_init
@@ -130,14 +130,15 @@ def fit_transient_raise(irf: str, fwhm_init: Union[float, np.ndarray],
 
     if bound_t0 is None:
         for i in range(t0_init.size):
-            bound[i+num_irf] = set_bound_t0(t0_init[i], fwhm_init)
+            bound[layout.t0_slice.start+i] = \
+                set_bound_t0(t0_init[i], fwhm_init)
     else:
         bound[layout.t0_slice] = bound_t0
 
     if bound_tau is None:
         for i in range(num_comp):
-            bound[i+num_irf +
-                  t0_init.size] = set_bound_tau(tau_init[i], fwhm_init)
+            bound[layout.tau_slice.start+i] = \
+                set_bound_tau(tau_init[i], fwhm_init)
     else:
         if tau_init is not None:
             bound[layout.tau_slice] = bound_tau
@@ -169,8 +170,8 @@ def fit_transient_raise(irf: str, fwhm_init: Union[float, np.ndarray],
         method=method_lsq, bounds=bound_tuple, **kwargs_lsq)
     param_opt = res_lsq['x']
 
-    fwhm_opt = param_opt[:num_irf]
-    tau_opt = param_opt[num_irf+t0_init.size:]
+    fwhm_opt = param_opt[layout.irf_slice]
+    tau_opt = param_opt[layout.tau_slice]
 
     fit = np.empty(len(t), dtype=object)
     res = np.empty(len(t), dtype=object)
@@ -242,7 +243,8 @@ def fit_transient_raise(irf: str, fwhm_init: Union[float, np.ndarray],
         res[i] = intensity[i] - fit[i]
 
     for i in range(num_comp):
-        param_name[num_irf+t0_init.size+i] = f'tau_{i+1}'
+        param_name[layout.tau_slice.start+i] = \
+            f'tau_{i+1}'
 
     jac = res_lsq['jac']
 
