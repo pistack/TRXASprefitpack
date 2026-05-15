@@ -8,11 +8,9 @@ convolution of sum of exponential decay and instrumental response function
 '''
 from typing import Optional, Union, Sequence, Tuple
 import numpy as np
-from scipy.optimize import basinhopping
 from scipy.optimize import least_squares
 from ..mathfun.irf import calc_eta, calc_fwhm
 from .transient_result import TransientResult
-from ._ampgo import ampgo
 from ..mathfun.A_matrix import make_A_matrix_exp, fact_anal_A
 from ..res.parm_bound import set_bound_t0, set_bound_tau
 from ..res.res_decay import residual_decay, res_grad_decay
