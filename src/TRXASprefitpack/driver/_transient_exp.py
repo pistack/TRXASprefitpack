@@ -16,6 +16,7 @@ from ..res.parm_bound import set_bound_t0, set_bound_tau
 from ..res.res_decay import residual_decay, res_grad_decay
 from ..res.res_decay import residual_decay_same_t0, res_grad_decay_same_t0
 from ..res.res_decay import res_hess_decay, res_hess_decay_same_t0
+from ._layout import TransientParamLayout
 from ._input import normalize_tscan_inputs, validate_t0_count
 from ._transient_common import (
     calc_covariance_from_hessian,
@@ -116,29 +117,34 @@ def fit_transient_exp(irf: str, fwhm_init: Union[float, np.ndarray],
     num_param = num_irf+t0_init.size+num_comp
     param = np.empty(num_param, dtype=float)
 
-    param[:num_irf] = fwhm_init
-    param[num_irf:num_irf+t0_init.size] = t0_init
-    param[num_irf+t0_init.size:] = tau_init
+    layout = TransientParamLayout(num_irf, t0_init.size, num_comp)
+
+    param[layout.irf_slice] = fwhm_init
+    param[layout.t0_slice] = t0_init
+    if tau_init is not None:
+        param[layout.tau_slice] = tau_init
+
     bound = num_param*[None]
 
     if bound_fwhm is None:
         for i in range(num_irf):
             bound[i] = (param[i]/2, 2*param[i])
     else:
-        bound[:num_irf] = bound_fwhm
+        bound[layout.irf_slice] = bound_fwhm
 
     if bound_t0 is None:
         for i in range(t0_init.size):
             bound[i+num_irf] = set_bound_t0(t0_init[i], fwhm_init)
     else:
-        bound[num_irf:num_irf+t0_init.size] = bound_t0
+        bound[layout.t0_slice] = bound_t0
 
     if bound_tau is None:
         for i in range(num_comp):
             bound[i+num_irf +
                   t0_init.size] = set_bound_tau(tau_init[i], fwhm_init)
     else:
-        bound[num_irf+t0_init.size:] = bound_tau
+        if tau_init is not None:
+            bound[layout.tau_slice] = bound_tau
     
     fix_param_idx = make_fixed_mask(bound)
 
