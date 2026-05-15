@@ -16,6 +16,7 @@ from ..mathfun.A_matrix import make_A_matrix_exp, make_A_matrix_dmp_osc, fact_an
 from ..res.parm_bound import set_bound_t0, set_bound_tau
 from ..res.res_both import residual_both, res_grad_both
 from ..res.res_both import residual_both_same_t0, res_grad_both_same_t0
+from ._layout import BothTransientParamLayout
 from ._input import normalize_tscan_inputs, validate_t0_count
 from ._transient_common import (
     calc_covariance_from_hessian,
@@ -118,16 +119,16 @@ def fit_transient_both(irf: str, fwhm_init: Union[float, np.ndarray],
     validate_t0_count(t0_init, intensity, same_t0)
 
     num_irf = get_num_irf(irf)
-    num_param = num_irf+t0_init.size+tau_init.size+2*tau_osc_init.size
+    layout = BothTransientParamLayout(num_irf, t0_init.size, tau_init.size,
+                                      tau_osc_init.size)
+    num_param = layout.size
     param = np.empty(num_param, dtype=float)
 
-    param[:num_irf] = fwhm_init
-    param[num_irf:num_irf+t0_init.size] = t0_init
-    param[num_irf+t0_init.size:num_irf+t0_init.size+tau_init.size] = tau_init
-    osc_start = num_irf+t0_init.size+tau_init.size
-    param[osc_start:osc_start+tau_osc_init.size] = tau_osc_init
-    param[osc_start+tau_osc_init.size:osc_start +
-          2*tau_osc_init.size] = period_osc_init
+    param[layout.irf_slice] = fwhm_init
+    param[layout.t0_slice] = t0_init
+    param[layout.tau_decay_slice] = tau_init
+    param[layout.tau_osc_slice] = tau_osc_init
+    param[layout.period_osc_slice] = period_osc_init
 
     bound = num_param*[None]
 
@@ -135,34 +136,33 @@ def fit_transient_both(irf: str, fwhm_init: Union[float, np.ndarray],
         for i in range(num_irf):
             bound[i] = (param[i]/2, 2*param[i])
     else:
-        bound[:num_irf] = bound_fwhm
+        bound[layout.irf_slice] = bound_fwhm
 
     if bound_t0 is None:
         for i in range(t0_init.size):
-            bound[i+num_irf] = set_bound_t0(t0_init[i], fwhm_init)
+            bound[layout.t0_slice.start+i] = set_bound_t0(t0_init[i], fwhm_init)
     else:
-        bound[num_irf:num_irf+t0_init.size] = bound_t0
+        bound[layout.t0_slice] = bound_t0
 
     if bound_tau is None:
         for i in range(tau_init.size):
-            bound[i+num_irf +
-                  t0_init.size] = set_bound_tau(tau_init[i], fwhm_init)
+            bound[layout.tau_decay_slice.start+i] = set_bound_tau(tau_init[i], fwhm_init)
     else:
-        bound[num_irf+t0_init.size:osc_start] = bound_tau
+        bound[layout.tau_decay_slice] = bound_tau
 
     if bound_tau_osc is None:
         for i in range(tau_osc_init.size):
-            bound[osc_start+i] = set_bound_tau(tau_osc_init[i], fwhm_init)
+            bound[layout.tau_osc_slice.start+i] = \
+                set_bound_tau(tau_osc_init[i], fwhm_init)
     else:
-        bound[osc_start:osc_start+tau_osc_init.size] = bound_tau_osc
+        bound[layout.tau_osc_slice] = bound_tau_osc
 
     if bound_period_osc is None:
         for i in range(tau_osc_init.size):
-            bound[osc_start+tau_osc_init.size +
+            bound[layout.period_osc_slice.start +
                   i] = set_bound_tau(period_osc_init[i], fwhm_init)
     else:
-        bound[osc_start+tau_osc_init.size:osc_start +
-              2*tau_osc_init.size] = bound_period_osc
+        bound[layout.period_osc_slice] = bound_period_osc
     
     fix_param_idx = make_fixed_mask(bound)
 
@@ -194,11 +194,10 @@ def fit_transient_both(irf: str, fwhm_init: Union[float, np.ndarray],
 
     param_opt = res_lsq['x']
 
-    fwhm_opt = param_opt[:num_irf]
-    tau_opt = param_opt[num_irf+t0_init.size:osc_start]
-    tau_osc_opt = param_opt[osc_start:osc_start+tau_osc_init.size]
-    period_osc_opt = param_opt[osc_start +
-                               tau_osc_init.size:osc_start+2*tau_osc_init.size]
+    fwhm_opt = param_opt[layout.irf_slice]
+    tau_opt = param_opt[layout.tau_decay_slice]
+    tau_osc_opt = param_opt[layout.tau_osc_slice]
+    period_osc_opt = param_opt[layout.period_osc_slice]
 
     fit = np.empty(len(t), dtype=object)
     fit_osc = np.empty(len(t), dtype=object)
@@ -291,11 +290,14 @@ def fit_transient_both(irf: str, fwhm_init: Union[float, np.ndarray],
         res[i] = intensity[i] - fit[i]
 
     for i in range(tau_init.size):
-        param_name[num_irf+t0_init.size+i] = f'tau_{i+1}'
+        param_name[layout.tau_decay_slice.start+i] = \
+            f'tau_{i+1}'
 
     for i in range(tau_osc_init.size):
-        param_name[osc_start+i] = f'tau_osc_{i+1}'
-        param_name[osc_start+tau_osc_init.size+i] = f'period_osc_{i+1}'
+        param_name[layout.tau_osc_slice.start+i] = \
+            f'tau_osc_{i+1}'
+        param_name[layout.period_osc_slice.start+i] = \
+            f'period_osc_{i+1}'
 
     jac = res_lsq['jac']
     hes = jac.T @ jac
