@@ -52,17 +52,82 @@ class CIResult(dict):
         doc_lst.append(' ')
         doc_lst.append('[Confidence interval]')
         for pn, pv, ci in zip(self['param_name'], self['x'], self['ci']):
-            if ci[0] != 0 and ci[1] != 0:
-                tmp_doc_lst = []
-                tmp_doc_lst.append(f'    {pv:.8f}'.rstrip('0').rstrip('.'))
-                tmp_doc_lst.append(f'- {-ci[0]: .8f}'.rstrip('0').rstrip('.'))
-                tmp_doc_lst.append(f'<= {pn} <=')
-                tmp_doc_lst.append(f'{pv: .8f}'.rstrip('0').rstrip('.'))
-                tmp_doc_lst.append(f'+ {ci[1]: .8f}'.rstrip('0').rstrip('.'))
-                doc_lst.append(' '.join(tmp_doc_lst))
+            if ci[0] == 0 and ci[1] == 0:
+                continue
+
+            if np.isnan(ci[0]) or np.isnan(ci[1]):
+                doc_lst.append(f'    {pn}: confidence interval not found')
+                continue
+
+            tmp_doc_lst = []
+            tmp_doc_lst.append(f'    {pv:.8f}'.rstrip('0').rstrip('.'))
+            tmp_doc_lst.append(f'- {-ci[0]: .8f}'.rstrip('0').rstrip('.'))
+            tmp_doc_lst.append(f'<= {pn} <=')
+            tmp_doc_lst.append(f'{pv: .8f}'.rstrip('0').rstrip('.'))
+            tmp_doc_lst.append(f'+ {ci[1]: .8f}'.rstrip('0').rstrip('.'))
+            doc_lst.append(' '.join(tmp_doc_lst))
         return '\n'.join(doc_lst)
 
+def _safe_parameter_step(value, eps, fallback_rel=1e-3, fallback_abs=1e-8):
+    '''Return a finite positive scan step for CI bracketing'''
+    if np.isfinite(eps) and eps > 0:
+        return float(eps)
+    
+    scale = max(abs(float(value)), 1.0)
+    return fallback_abs + fallback_rel * scale
 
+def _clip_to_bound(value, lower, upper):
+    if lower is not None and value < lower:
+        return lower
+    if upper is not None and value > upper:
+        return upper
+    return value
+
+def _find_ci_bracket(
+    center,
+    step,
+    direction,
+    scan_func,
+    fargs,
+    lower_bound,
+    upper_bound,
+    max_expand,
+):
+    """Find one side of a confidence interval bracket.
+
+    Returns
+    -------
+    float or None
+        Bracket endpoint where scan_func(endpoint) >= 0.
+        Returns None if the endpoint cannot be found.
+    """
+
+    if step <= 0 or ~np.isfinite(step):
+        raise ValueError("step must be a finite positive number.")
+    
+    if direction not in (-1, 1):
+        raise ValueError("direction must be either -1 or 1.")
+    
+    current = center
+
+    for _ in range(max_expand):
+        candidate = current + direction * step
+        candidate = _clip_to_bound(candidate, lower_bound, upper_bound)
+
+        value = scan_func(candidate, *fargs)
+
+        if value >= 0:
+            return candidate
+        
+        if direction < 0 and lower_bound is not None and candidate <= lower_bound:
+            return None
+        
+        if direction > 0 and upper_bound is not None and candidate >= upper_bound:
+            return None
+        
+        current = candidate
+
+    return None
 
 def is_better_fit(result1, result2) -> float:
     '''
@@ -93,14 +158,13 @@ def is_better_fit(result1, result2) -> float:
     num_pts_2 = result2['num_pts']
 
     if num_param_1 <= num_param_2:
-        raise ValueError(f'Number of parameter in model 1: {num_param_1}' +
+        raise ValueError(f'The number of parameter in model 1: {num_param_1}' +
         ' should be strictly greater than' +
         f' the number of parameter in model 2: {num_param_2}')
 
     if num_pts_1 != num_pts_2:
-        raise ValueError(f'The number of data points in results1 is {num_pts_1}' +
-                         'which is not same as the number of data points in' +
-                         f'results2: {num_pts_2}')
+        raise ValueError(f'The number of data points in result1 is {num_pts_1}, ' +
+                         f'which is not the same as result2: {num_pts_2}')
 
     dfn = num_param_1 - num_param_2
     dfd = num_pts_1 - num_param_1
@@ -196,26 +260,67 @@ def confidence_interval(result, alpha: float) -> CIResult:
         result['edge'], result['n_edge'],
         result['base_order'], fix_param_idx,
         result['e'], result['intensity'], result['eps']]
+    else:
+        raise ValueError(
+            f"Unsupported model for confidence_interval: {result['model']}"
+        )
 
     sub_scan_idx = scan_idx[~select_idx]
     for idx in sub_scan_idx:
         p0 = params[idx]
         args[4] = idx
         fargs = tuple(args)
-        p_eps = result['x_eps'][idx]
-        p_lb = p0-norm_alpha*p_eps
-        p_ub = p0+norm_alpha*p_eps
+        p_eps = _safe_parameter_step(p0, result['x_eps'][idx])
 
-        while ci_scan_opt_f(p_lb, *fargs) < 0:
-            p_lb = p_lb - p_eps
+        p_lb = _find_ci_bracket(p0, norm_alpha*p_eps, -1,
+                                ci_scan_opt_f, fargs,
+                                lower_bound=result['bounds'][idx][0],
+                                upper_bound=result['bounds'][idx][1],
+                                max_expand=100)
+    
+        p_ub = _find_ci_bracket(p0, norm_alpha*p_eps, 1,
+                                ci_scan_opt_f, fargs,
+                                lower_bound=result['bounds'][idx][0],
+                                upper_bound=result['bounds'][idx][1],
+                                max_expand=100)
+        
+        if p_lb is None:
+            warnings.warn(
+                f"Lower confidence bound was not found for parameter {idx}.",
+                RuntimeWarning,
+                stacklevel=2
+            )
+            z1 = np.nan
+        else:
+            try:
+                z1 = brenth(ci_scan_opt_f, p_lb, p0, args=fargs)
+            except ValueError:
+                warnings.warn(
+                    f"Lower confidence bound was not found for parameter {idx}.",
+                    RuntimeWarning,
+                    stacklevel=2,
+                )
+                z1 = np.nan
 
-        while ci_scan_opt_f(p_ub, *fargs) < 0:
-            p_ub = p_ub + p_eps
+        if p_ub is None:
+            warnings.warn(
+                f"Upper confidence bound was not found for parameter {idx}.",
+                RuntimeWarning,
+                stacklevel=2
+            )
+            z2 = np.nan
+        else:
+            try:
+                z2 = brenth(ci_scan_opt_f, p0, p_ub, args=fargs)
+            except ValueError:
+                warnings.warn(
+                    f"Upper confidence bound was not found for parameter {idx}.",
+                    RuntimeWarning,
+                    stacklevel=2,
+                )
+                z2 = np.nan
 
-        z1 = brenth(ci_scan_opt_f, p0, p_ub, args=fargs)
-        z2 = brenth(ci_scan_opt_f, p_lb, p0, args=fargs)
-
-        ci_lst[idx] = (z2-p0, z1-p0)
+        ci_lst[idx] = (z1-p0, z2-p0)
 
     ci_res = CIResult()
     ci_res['method'] = 'f'
@@ -270,6 +375,9 @@ def res_scan_opt(p, *args) -> float:
 def ci_scan_opt_f(p, *args):
     '''
     Confidence interval scan with ith parameter is fixed to p. (for f-test based method)
+    res_scan_opt returns the scalar least-squares objective (chi2/2)
+    Therefore, chi2_opt is divided by 2 here to compare
+    objective values on the same scale.
     '''
     F_alpha, dfn, dfd, chi2_opt = args[:4]
     fargs = tuple(args[4:])
