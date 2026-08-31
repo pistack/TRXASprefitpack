@@ -6,6 +6,8 @@ fitting time delay scan data or static spectrum data
 :copyright: 2021-2022 by pistack (Junho Lee).
 :license: LGPL3.
 '''
+
+
 from .parm_bound import set_bound_t0, set_bound_tau
 from .parm_bound import set_bound_e0
 from .res_decay import residual_decay, res_grad_decay, res_hess_decay
@@ -35,3 +37,4 @@ __all__ = ['set_bound_t0', 'set_bound_tau',
            'residual_both_same_t0', 'res_grad_both_same_t0',
            'residual_voigt', 'res_grad_voigt', 'res_hess_voigt',
            'residual_thy', 'res_grad_thy']
+
