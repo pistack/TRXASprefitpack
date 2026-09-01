@@ -7,10 +7,15 @@ path = os.path.dirname(os.path.realpath(__file__))
 sys.path.append(path+'/../src/')
 
 from TRXASprefitpack.gui.ads_config import ADSConfig, ADSResult
+from TRXASprefitpack.gui.rate_model import RateEdge, RateModelSpec
 
 
-class DummyRateModel:
-    pass
+def make_rate_model():
+    return RateModelSpec(
+        species=("A", "B"),
+        edges=(RateEdge("A", "B", 1.0),),
+        y0 = np.array([1.0, 0.0]),
+    )
 
 
 def make_ads_config(**kwargs):
@@ -23,6 +28,8 @@ def make_ads_config(**kwargs):
         "tau": np.array([1.0, 10.0]),
         "base": True,
         "cond_num": 0.0,
+        "y0": None,
+        "exclude": None
     }
     base.update(kwargs)
     return ADSConfig(**base)
@@ -76,17 +83,29 @@ def test_ads_config_accepts_dads_mode():
     assert config.rate_model is None
 
 
-@pytest.mark.parametrize("mode", ["dads", "dads_svd", "sads", "sads_svd"])
-def test_ads_config_accepts_standard_tau_modes(mode):
+@pytest.mark.parametrize("mode", ["dads", "dads_svd"])
+def test_ads_config_accepts_dads_modes(mode):
     config = make_ads_config(mode=mode)
 
     assert config.mode == mode
     np.testing.assert_allclose(config.tau, np.array([1.0, 10.0]))
+    assert config.y0 is None
+    assert config.exclude is None
+
+@pytest.mark.parametrize("mode", ["sads", "sads_svd"])
+def test_ads_config_accepts_sads_modes(mode):
+    config = make_ads_config(mode=mode, y0=np.array([1.0, 0.0, 0.0]),
+                             exclude=(-1,),)
+
+    assert config.mode == mode
+    np.testing.assert_allclose(config.tau, np.array([1.0, 10.0]))
+    np.testing.assert_allclose(config.y0, np.array([1.0, 0.0, 0.0]))
+    assert config.exclude == (2,)
 
 
 @pytest.mark.parametrize("mode", ["custom_sads", "custom_sads_svd"])
 def test_ads_config_accepts_custom_rate_modes(mode):
-    model = DummyRateModel()
+    model = make_rate_model()
 
     config = make_ads_config(
         mode=mode,
@@ -167,7 +186,7 @@ def test_ads_config_rejects_tau_for_custom_mode():
         make_ads_config(
             mode="custom_sads",
             tau=np.array([1.0]),
-            rate_model=DummyRateModel(),
+            rate_model=make_rate_model(),
         )
 
 
@@ -184,7 +203,7 @@ def test_ads_config_rejects_rate_model_for_standard_mode():
     with pytest.raises(ValueError, match="rate_model"):
         make_ads_config(
             mode="dads",
-            rate_model=DummyRateModel(),
+            rate_model=make_rate_model(),
         )
 
 
@@ -318,4 +337,194 @@ def test_ads_result_rejects_wrong_svd_vh_shape():
             svd_u=np.ones((3, 2)),
             svd_s=np.array([1.0, 0.5]),
             svd_vh=np.ones((2, 3)),
+        )
+
+@pytest.mark.parametrize("mode", ["sads", "sads_svd"])
+def test_standard_sads_requires_y0(mode):
+    with pytest.raises(ValueError, match="y0"):
+        make_ads_config(
+            mode=mode,
+            y0=None,
+        )
+
+
+def test_standard_sads_rejects_wrong_y0_length():
+    with pytest.raises(ValueError, match="shape"):
+        make_ads_config(
+            mode="sads",
+            y0=np.array([1.0, 0.0]),
+        )
+
+
+def test_standard_sads_rejects_non_1d_y0():
+    with pytest.raises(ValueError, match="1D"):
+        make_ads_config(
+            mode="sads",
+            y0=np.array([[1.0, 0.0, 0.0]]),
+        )
+
+
+@pytest.mark.parametrize("bad_value", [np.nan, np.inf, -np.inf])
+def test_standard_sads_rejects_nonfinite_y0(bad_value):
+    with pytest.raises(ValueError, match="finite"):
+        make_ads_config(
+            mode="sads",
+            y0=np.array([1.0, bad_value, 0.0]),
+        )
+
+def test_dads_rejects_y0():
+    with pytest.raises(ValueError, match="y0"):
+        make_ads_config(
+            mode="dads",
+            y0=np.array([1.0, 0.0, 0.0]),
+        )
+
+
+def test_dads_rejects_exclude():
+    with pytest.raises(ValueError, match="exclude"):
+        make_ads_config(
+            mode="dads",
+            exclude=(-1,),
+        )
+
+
+def test_standard_sads_normalizes_negative_exclude():
+    config = make_ads_config(
+        mode="sads",
+        y0=np.array([1.0, 0.0, 0.0]),
+        exclude=(0, -1),
+    )
+
+    assert config.exclude == (0, 2)
+
+
+def test_standard_sads_normalizes_empty_exclude_to_none():
+    config = make_ads_config(
+        mode="sads",
+        y0=np.array([1.0, 0.0, 0.0]),
+        exclude=(),
+    )
+
+    assert config.exclude is None
+
+
+@pytest.mark.parametrize(
+    "exclude",
+    [
+        (3,),
+        (-4,),
+        (0, 0),
+        (-1, 2),
+        (0.5,),
+        (True,),
+    ],
+)
+def test_standard_sads_rejects_invalid_exclude(exclude):
+    with pytest.raises(ValueError, match="exclude"):
+        make_ads_config(
+            mode="sads",
+            y0=np.array([1.0, 0.0, 0.0]),
+            exclude=exclude,
+        )
+
+
+def test_custom_sads_uses_rate_model_y0():
+    model = make_rate_model()
+
+    config = make_ads_config(
+        mode="custom_sads",
+        tau=None,
+        rate_model=model,
+        exclude=(-1,),
+    )
+
+    assert config.rate_model is model
+    assert config.y0 is None
+    assert config.exclude == (1,)
+
+    np.testing.assert_allclose(
+        config.rate_model.y0,
+        np.array([1.0, 0.0]),
+    )
+
+
+def test_custom_sads_rejects_top_level_y0():
+    with pytest.raises(ValueError, match="Top-level y0"):
+        make_ads_config(
+            mode="custom_sads",
+            tau=None,
+            rate_model=make_rate_model(),
+            y0=np.array([1.0, 0.0]),
+        )
+
+
+def test_custom_sads_requires_rate_model_spec():
+    with pytest.raises(TypeError, match="RateModelSpec"):
+        make_ads_config(
+            mode="custom_sads",
+            tau=None,
+            rate_model=object(),
+        )
+
+
+def test_ads_result_accepts_spectra_eps():
+    spectra_eps = np.array(
+        [
+            [0.01, 0.02],
+            [0.03, 0.04],
+            [0.05, 0.06],
+        ]
+    )
+
+    result = make_ads_result(
+        spectra_eps=spectra_eps,
+    )
+
+    np.testing.assert_allclose(
+        result.spectra_eps,
+        spectra_eps,
+    )
+
+
+def test_ads_result_accepts_zero_spectra_eps():
+    result = make_ads_result(
+        spectra_eps=np.zeros((3, 2)),
+    )
+
+    np.testing.assert_allclose(
+        result.spectra_eps,
+        np.zeros((3, 2)),
+    )
+
+
+def test_ads_result_rejects_wrong_spectra_eps_shape():
+    with pytest.raises(ValueError, match="spectra_eps shape"):
+        make_ads_result(
+            spectra_eps=np.ones((2, 3)),
+        )
+
+
+def test_ads_result_rejects_negative_spectra_eps():
+    spectra_eps = np.array(
+        [
+            [0.01, 0.02],
+            [0.03, -0.01],
+            [0.05, 0.06],
+        ]
+    )
+
+    with pytest.raises(ValueError, match="non-negative"):
+        make_ads_result(
+            spectra_eps=spectra_eps,
+        )
+
+
+@pytest.mark.parametrize("bad_value", [np.nan, np.inf, -np.inf])
+def test_ads_result_rejects_nonfinite_spectra_eps(bad_value):
+    spectra_eps = np.full((3, 2), 0.1)
+    spectra_eps[1, 1] = bad_value
+
+    with pytest.raises(ValueError, match="finite"):
+        make_ads_result(
+            spectra_eps=spectra_eps,
         )
