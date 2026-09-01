@@ -8,9 +8,11 @@ configuration before being passed to ADS job runners.
 from __future__ import annotations
 
 from dataclasses import dataclass
+import operator
 from typing import Literal, Any
 
 import numpy as np
+from .rate_model import RateModelSpec, validate_rate_model_spec
 
 
 ADSMode = Literal[
@@ -54,7 +56,9 @@ class ADSConfig:
     tau: np.ndarray | None
     base: bool = True
     cond_num: float = 0.0
-    rate_model: Any | None = None
+    rate_model: RateModelSpec | None = None
+    y0: np.ndarray | None = None
+    exclude: tuple[int, ...] | None = None
 
     def __post_init__(self) -> None:
         mode = str(self.mode).strip().lower()
@@ -98,6 +102,13 @@ class ADSConfig:
 
         tau = _normalize_tau_for_mode(mode, self.tau)
         rate_model = _validate_rate_model_for_mode(mode, self.rate_model)
+        y0, exclude = _normalize_sads_inputs(
+            mode=mode,
+            tau=tau,
+            rate_model=rate_model,
+            y0=self.y0,
+            exclude=self.exclude
+        ) 
 
         object.__setattr__(self, "mode", mode)
         object.__setattr__(self, "irf", irf)
@@ -108,6 +119,8 @@ class ADSConfig:
         object.__setattr__(self, "base", bool(self.base))
         object.__setattr__(self, "cond_num", cond_num)
         object.__setattr__(self, "rate_model", rate_model)
+        object.__setattr__(self, "y0", y0)
+        object.__setattr__(self, "exclude", exclude)
 
 
 def _normalize_tau_for_mode(mode: str, tau) -> np.ndarray | None:
@@ -157,7 +170,158 @@ def _validate_rate_model_for_mode(mode: str, rate_model):
     if not uses_custom_rate and rate_model is not None:
         raise ValueError("rate_model must be None for non-custom ADS modes.")
 
+    if uses_custom_rate:
+        rate_model = validate_rate_model_spec(rate_model)
+
     return rate_model
+
+def _normalize_sads_inputs(
+        mode: str,
+        tau: np.ndarray | None,
+        rate_model: RateModelSpec | None,
+        y0,
+        exclude,
+) -> tuple[np.ndarray | None, tuple[int,...]|None]:
+    """Normalize mode-dependent initial populatons and exclude species"""
+
+    is_dads = mode in {"dads", "dads_svd"}
+    is_standard_sads = mode in {"sads", "sads_svd"}
+    is_custom_sads = mode in {"custom_sads", "custom_sads_svd"}
+
+    if is_dads:
+        if y0 is not None:
+            raise ValueError(
+                f"y0 must be None for mode='{mode}'."
+            )
+
+        if exclude is not None:
+            raise ValueError(
+                f"exclude must be None for mode='{mode}'."
+            )
+
+        return None, None
+
+    if is_standard_sads:
+        assert tau is not None
+
+        normalized_y0 = _normalized_y0(
+            y0,
+            n_species=tau.size + 1
+        )
+
+        normalized_exclude = _normalized_exclude(
+            exclude,
+            n_species=tau.size+1
+        )
+
+        return normalized_y0, normalized_exclude
+
+    if is_custom_sads:
+        assert rate_model is not None
+
+        if y0 is not None:
+            raise ValueError(
+                "Top-level y0 must be None for custom rate model modes;"
+                "use RateModelSpec.y0."
+            )
+
+        normalized_exclude = _normalized_exclude(
+            exclude,
+            n_species=len(rate_model.species),
+        )
+
+        return None, normalized_exclude
+
+    raise ValueError(f"Unsupported ADS model: {mode}")
+
+def _normalized_y0(y0, n_species: int) -> np.ndarray:
+    """Validate initial populations for a standard sequential SADS model."""
+    if y0 is None:
+        raise ValueError(
+            """y0 must be provided for standard SADS model."""
+        )
+
+    try:
+        normalized = np.asarray(y0, dtype=float)
+    except (TypeError, ValueError) as exc:
+        raise ValueError(
+            "y0 must be a numeric array."
+        ) from exc
+
+    if normalized.ndim != 1:
+        raise ValueError("y0 must be a 1D array.")
+
+    expected_shape = (n_species, )
+
+    if normalized.shape != expected_shape:
+        raise ValueError(
+            f"y0 must have shape {expected_shape};"
+            f"got {normalized.shape}."
+        )
+
+    if not np.all(np.isfinite(normalized)):
+        raise ValueError(
+            "y0 must contain only finite values."
+        )
+    return normalized.copy()
+
+def _normalized_exclude(exclude, n_species: int) -> tuple[int, ...] | None:
+    """Normalize exclude spcies indices to non-negative indices.
+
+    Python-style negative indices are accepted. For example, ``-1`` is
+    normalized to ``n_species - 1``.
+    """
+
+    if exclude is None:
+        return None
+
+    if isinstance(exclude, (str, bytes)):
+        raise ValueError(
+            "exclude must be a sequence of integer indices."
+        )
+
+    try:
+        raw_indices = tuple(exclude)
+    except TypeError as exc:
+        raise ValueError(
+            "exclude must be a sequence of integr indices"
+        ) from exc
+
+    if len(raw_indices) == 0:
+        return None
+
+    normalized: list[int] = []
+
+    for raw_index in raw_indices:
+        if isinstance(raw_index, (bool, np.bool_)):
+            raise ValueError(
+                "exclude must contain only integer indices."
+            )
+
+        try:
+            index = operator.index(raw_index)
+        except TypeError as exc:
+            raise ValueError(
+                "exclude must contain only integer indices."
+            ) from exc
+
+        if index < 0:
+            index += n_species
+
+        if index < 0 or index >= n_species:
+            raise ValueError(
+                f"exclude index {raw_index!r} is out of range "
+                f"for {n_species} species. "
+            )
+
+        normalized.append(index)
+
+    if len(set(normalized)) != len(normalized):
+        raise ValueError(
+            "exclude must contain unique species indices."
+            )
+
+    return tuple(normalized)
 
 
 @dataclass(frozen=True)
@@ -182,6 +346,7 @@ class ADSResult:
     spectra: np.ndarray
     fit: np.ndarray
     spectrum_names: tuple[str, ...]
+    spectra_eps: np.ndarray | None = None
     svd_u: np.ndarray | None = None
     svd_s: np.ndarray | None = None
     svd_vh: np.ndarray | None = None
@@ -247,6 +412,23 @@ class ADSResult:
                 f"got {len(self.spectrum_names)} and {spectra.shape[1]}."
             )
 
+        spectra_eps = _optional_array(
+            self.spectra_eps,
+            "spectra_eps",
+        )
+
+        if spectra_eps is not None:
+            if spectra_eps.shape != spectra.shape:
+                raise ValueError(
+                    "spectra_eps shape must match spectra shape; "
+                    f"got {spectra_eps.shape} and {spectra.shape}."
+                )
+
+            if np.any(spectra_eps<0):
+                raise ValueError(
+                    "Spectra_eps must contain only non-negative values."
+                )
+
         if fit.shape != intensity.shape:
             raise ValueError(
                 "fit shape must match intensity shape; "
@@ -290,6 +472,7 @@ class ADSResult:
         object.__setattr__(self, "spectra", spectra)
         object.__setattr__(self, "fit", fit)
         object.__setattr__(self, "spectrum_names", tuple(self.spectrum_names))
+        object.__setattr__(self, "spectra_eps", spectra_eps)
         object.__setattr__(self, "svd_u", svd_u)
         object.__setattr__(self, "svd_s", svd_s)
         object.__setattr__(self, "svd_vh", svd_vh)
