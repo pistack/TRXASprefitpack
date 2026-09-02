@@ -24,6 +24,7 @@ LeastSquaresMethod = Literal["trf", "dogbox", "lm"]
 def _normalize_tau_mask_shape_only(
     tau_mask: Sequence[np.ndarray] | None,
     n_tau: int,
+    base: bool = False
 ) -> list[np.ndarray] | None:
     """Validate tau_mask shape except dataset count.
 
@@ -33,6 +34,7 @@ def _normalize_tau_mask_shape_only(
     if tau_mask is None:
         return None
 
+    expected_size = n_tau + int(base)
     out: list[np.ndarray] = []
 
     for idx, mask in enumerate(tau_mask):
@@ -41,9 +43,9 @@ def _normalize_tau_mask_shape_only(
         if mask.ndim != 1:
             raise ValueError(f"tau_mask[{idx}] must be a 1D boolean array.")
 
-        if mask.size != n_tau:
+        if mask.size != expected_size:
             raise ValueError(
-                f"tau_mask[{idx}] must have length {n_tau}; got {mask.size}."
+                f"tau_mask[{idx}] must have length {expected_size}; got {mask.size}."
             )
 
         out.append(mask)
@@ -125,6 +127,7 @@ class FitTransientExpConfig:
             tau_mask = _normalize_tau_mask_shape_only(
                 self.tau_mask,
                 tau_init.size,
+                base=self.base,
             )
         else:
             if self.bound_tau is not None:

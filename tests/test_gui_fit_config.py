@@ -147,21 +147,21 @@ def test_fit_transient_exp_config_accepts_tau_mask_shape_only():
     config = make_config(
         tau_init=np.array([1.0, 10.0]),
         tau_mask=[
-            np.array([True, False]),
-            np.array([False, True]),
+            np.array([True, False, True]),
+            np.array([False, True, True]),
         ],
     )
 
     assert len(config.tau_mask) == 2
-    np.testing.assert_array_equal(config.tau_mask[0], np.array([True, False]))
-    np.testing.assert_array_equal(config.tau_mask[1], np.array([False, True]))
+    np.testing.assert_array_equal(config.tau_mask[0], np.array([True, False, True]))
+    np.testing.assert_array_equal(config.tau_mask[1], np.array([False, True, True]))
 
 
 def test_fit_transient_exp_config_rejects_tau_mask_wrong_length():
-    with pytest.raises(ValueError, match="length 2"):
+    with pytest.raises(ValueError, match="length 3"):
         make_config(
             tau_init=np.array([1.0, 10.0]),
-            tau_mask=[np.array([True, False, True])],
+            tau_mask=[np.array([True, False])],
         )
 
 

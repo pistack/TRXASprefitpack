@@ -53,6 +53,7 @@ def run_fit_transient_exp_config(
             datasets,
             config.tau_mask,
             n_tau=config.tau_init.size,
+            base=config.base
         )
     elif config.tau_mask is not None:
         raise ValueError("tau_mask must be None when tau_init is None.")

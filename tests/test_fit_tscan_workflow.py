@@ -10,6 +10,7 @@ import pytest
 os.environ.setdefault("QT_QPA_PLATFORM", "offscreen")
 pytest.importorskip("PyQt5")
 
+from PyQt5.QtCore import Qt
 from PyQt5.QtWidgets import QApplication
 
 path = os.path.dirname(os.path.realpath(__file__))
@@ -108,12 +109,10 @@ def fitted_result():
             "n_osc": 0,
             "tau_mask": [
                 np.array(
-                    [True, True],
+                    [True, True, True],
                     dtype=bool,
                 )
             ],
-            # 행: decay 1, decay 2, baseline
-            # 열: trace 1, trace 2
             "c": [
                 np.array(
                     [
@@ -312,7 +311,7 @@ def test_parameter_tab_builds_config(qapp):
     assert len(config.tau_mask) == 1
     np.testing.assert_array_equal(
         config.tau_mask[0],
-        np.array([True, True]),
+        np.array([True, True, True]),
     )
 
 
@@ -444,17 +443,19 @@ def test_export_refuses_overwrite(tmp_path):
 def test_complete_window_has_workflow_tabs(qapp):
     window = FitTScanWindow()
 
-    assert window.tab_widget.count() == 3
+    assert window.tab_widget.count() == 4
     assert window.tab_widget.tabText(0) == "Data"
     assert (
         window.tab_widget.tabText(1)
         == "Model and Parameters"
     )
     assert window.tab_widget.tabText(2) == "Results"
+    assert window.tab_widget.tabText(3) == "CI scan"
 
     assert window.data_tab is not None
     assert window.parameter_tab is not None
     assert window.result_tab is not None
+    assert window.ci_tab is not None
 
     window.close()
 
@@ -530,4 +531,140 @@ def test_result_plot_supports_symlog(qtbot, fitted_result):
     np.testing.assert_allclose(
         window.result_tab.fit_axis.get_xlim(),
         window.result_tab.residual_axis.get_xlim(),
+    )
+
+def test_complete_window_has_ci_scan_tab(qapp):
+    window = FitTScanWindow()
+
+    try:
+        assert window.ci_tab is not None
+        assert window.tab_widget.indexOf(window.ci_tab) >= 0
+        assert window.tab_widget.tabText(window.tab_widget.indexOf(window.ci_tab)) == "CI scan"
+    finally:
+        window.close()
+
+
+def test_ci_tab_receives_fitted_result(
+    qapp,
+    fitted_result,
+):
+    window = FitTScanWindow()
+
+    try:
+        window.ci_tab.set_result(fitted_result)
+
+        assert window.ci_tab.parameter_table.rowCount() == len(
+            fitted_result["x"]
+        )
+        assert window.ci_tab.run_button.isEnabled()
+    finally:
+        window.close()
+
+def test_parameter_tab_baseline_mask_is_per_dataset(qapp):
+    tab = FitTScanParameterTabs()
+
+    datasets = [
+        TScanDataset(
+            name="first",
+            traces=(make_trace("first_trace"),),
+        ),
+        TScanDataset(
+            name="second",
+            traces=(make_trace("second_trace"),),
+        ),
+    ]
+    tab.t0_edit.setText("0.0, 0.0")
+    tab.tau_edit.setText("1.0, 10.0")
+    tab.set_datasets(datasets)
+
+    assert tab.tau_mask_table.columnCount() == 3
+    assert (
+        tab.tau_mask_table.horizontalHeaderItem(0).text()
+        == "tau_1"
+    )
+    assert (
+        tab.tau_mask_table.horizontalHeaderItem(1).text()
+        == "tau_2"
+    )
+    assert (
+        tab.tau_mask_table.horizontalHeaderItem(2).text()
+        == "baseline"
+    )
+
+    # Exclude baseline for 2nd dataset only
+    tab.tau_mask_table.item(
+        1,
+        2,
+    ).setCheckState(Qt.Unchecked)
+
+    config = tab.build_config(datasets)
+
+    assert config.base is True
+
+    np.testing.assert_array_equal(
+        config.tau_mask[0],
+        np.array([True, True, True]),
+    )
+    np.testing.assert_array_equal(
+        config.tau_mask[1],
+        np.array([True, True, False]),
+    )
+
+def test_parameter_tab_excludes_baseline_mask_when_disabled(qapp):
+    tab = FitTScanParameterTabs()
+    dataset = make_dataset()
+
+    tab.tau_edit.setText("1.0, 10.0")
+    tab.set_datasets([dataset])
+
+    assert tab.tau_mask_table.columnCount() == 3
+
+    tab.base_checkbox.setChecked(False)
+
+    assert tab.tau_mask_table.columnCount() == 2
+    assert [
+        tab.tau_mask_table.horizontalHeaderItem(column).text()
+        for column in range(tab.tau_mask_table.columnCount())
+    ] == ["tau_1", "tau_2"]
+
+    config = tab.build_config([dataset])
+
+    assert config.base is False
+    np.testing.assert_array_equal(
+        config.tau_mask[0],
+        np.array([True, True]),
+    )
+
+def test_parameter_tab_preserves_baseline_mask_across_toggle(qapp):
+    tab = FitTScanParameterTabs()
+    dataset = make_dataset()
+
+    tab.tau_edit.setText("1.0, 10.0")
+    tab.set_datasets([dataset])
+
+    baseline_column = 2
+    tab.tau_mask_table.item(
+        0,
+        baseline_column,
+    ).setCheckState(Qt.Unchecked)
+
+    tab.base_checkbox.setChecked(False)
+    assert tab.tau_mask_table.columnCount() == 2
+
+    tab.base_checkbox.setChecked(True)
+    assert tab.tau_mask_table.columnCount() == 3
+
+    assert (
+        tab.tau_mask_table.item(
+            0,
+            baseline_column,
+        ).checkState()
+        == Qt.Unchecked
+    )
+
+    config = tab.build_config([dataset])
+
+    np.testing.assert_array_equal(
+        config.tau_mask[0],
+        np.array([True, True, False]),
     )
