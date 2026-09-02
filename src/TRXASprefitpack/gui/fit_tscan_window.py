@@ -17,6 +17,7 @@ from .fit_job import run_fit_transient_exp_config
 from .fit_tscan_data_tab import FitTScanDataTab
 from .fit_tscan_parameter_tabs import FitTScanParameterTabs
 from .fit_tscan_result_tab import FitTScanResultTab
+from .fit_tscan_ci_tab import FitTScanCITab
 from .fit_tscan_worker import FitTScanWorker
 
 
@@ -95,6 +96,13 @@ class FitTScanWindow(QMainWindow):
             self.run_fit
         )
 
+        self.ci_tab = FitTScanCITab(parent=self)
+
+        self.tab_widget.addTab(
+            self.ci_tab,
+            "CI scan",
+        )
+
     def run_fit(self) -> None:
         if self._fit_thread is not None:
             return
@@ -143,6 +151,7 @@ class FitTScanWindow(QMainWindow):
 
     def _handle_fit_result(self, result) -> None:
         self.result_tab.set_result(result)
+        self.ci_tab.set_result(result)
         self.tab_widget.setCurrentWidget(
             self.result_tab
         )

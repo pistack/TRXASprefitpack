@@ -184,8 +184,8 @@ def test_run_fit_transient_exp_config_validates_tau_mask_dataset_count():
     config = make_config(
         tau_init=np.array([1.0, 10.0]),
         tau_mask=[
-            np.array([True, False]),
-            np.array([False, True]),
+            np.array([True, False, True]),
+            np.array([False, True, True]),
         ],
     )
 
@@ -198,7 +198,7 @@ def test_run_fit_transient_exp_config_passes_tau_mask(monkeypatch):
 
     dataset = make_dataset("dset1", n_trace=1)
 
-    tau_mask = [np.array([True, False])]
+    tau_mask = [np.array([True, False, True])]
     config = make_config(
         tau_init=np.array([1.0, 10.0]),
         tau_mask=tau_mask,

@@ -173,24 +173,70 @@ def is_better_fit(result1, result2) -> float:
     p = 1- f.cdf(F_test, dfn, dfd)
     return p
 
-def confidence_interval(result, alpha: float) -> CIResult:
+def confidence_interval(result, alpha: float, parameter_indices=None) -> CIResult:
     '''
-    Calculate 1d confidence interval of each parameter at significance level alpha
+    Calculate 1d confidence interval for selected parameters at significance level alpha
     Based on F-test method
 
     Args:
      result ({'StaticResult', 'TransientResult'}): fitting result class
      alpha (float): significance level
+     parameter_indices:
+     Optional sequence of parameter indices to scan. If omitted, all non-fixed parameters are scanned.
 
     Returns:
      CIResult class instance
     '''
+
+    if not np.isfinite(alpha) or not 0.0 < alpha < 1.0:
+        raise ValueError("alpha must be a finite number between 0 and 1.")
+    
     params = np.atleast_1d(result['x'])
+    num_params_total = params.size
+
     fix_param_idx = np.zeros(len(result['x']), dtype=bool)
-    for i in range(params.size):
+    for i in range(num_params_total):
         fix_param_idx[i] = (result['bounds'][i][0] == result['bounds'][i][1])
-    select_idx = fix_param_idx.copy()
-    scan_idx = np.array(range(len(result['x'])))
+
+    if parameter_indices is None:
+        requested_idx = np.ones(num_params_total, dtype=bool)
+    else:
+        parameter_indices = np.asarray(parameter_indices)
+
+        if parameter_indices.ndim != 1:
+            raise ValueError(
+                "parameter_indices must be a one-dimensional sequence.")
+
+        if parameter_indices.size == 0:
+            raise ValueError(
+                "At least one parameter must be selected.")
+
+        if not np.issubdtype(parameter_indices.dtype, np.integer):
+            raise TypeError(
+                "parameter_indices must contain integer indices.")
+
+        parameter_indices = parameter_indices.astype(int)
+
+        if np.any(parameter_indices < 0) or np.any(
+            parameter_indices >= num_params_total):
+            raise IndexError(
+                "parameter_indices contains an out-of-range index.")
+
+        if np.unique(parameter_indices).size != parameter_indices.size:
+            raise ValueError(
+                "parameter_indices must not contain duplicates.")
+
+        if np.any(fix_param_idx[parameter_indices]):
+            raise ValueError(
+                "A fixed parameter cannot be selected for CI scanning."
+            )
+
+        requested_idx = np.zeros(num_params_total, dtype=bool)
+        requested_idx[parameter_indices] = True
+
+    select_idx = fix_param_idx | ~requested_idx
+    scan_idx = np.arange(num_params_total)
+    
     ci_lst = [(0, 0) for _ in range(len(result['x']))]
     num_param = result['n_param']
     num_pts = result['num_pts']

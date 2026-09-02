@@ -104,6 +104,7 @@ def validate_tau_mask(
     datasets: Sequence[TScanDataset],
     tau_mask,
     n_tau: int,
+    base: bool = False
 ) -> list[np.ndarray] | None:
     """Validate tau_mask for transient decay fitting.
 
@@ -122,6 +123,7 @@ def validate_tau_mask(
             f"got {len(tau_mask)} masks for {len(datasets)} datasets."
         )
 
+    expected_size = n_tau + int(base)
     out: list[np.ndarray] = []
 
     for idx, mask in enumerate(tau_mask):
@@ -130,9 +132,9 @@ def validate_tau_mask(
         if mask.ndim != 1:
             raise ValueError(f"tau_mask[{idx}] must be a 1D boolean array.")
 
-        if mask.size != n_tau:
+        if mask.size != expected_size:
             raise ValueError(
-                f"tau_mask[{idx}] must have length {n_tau}; got {mask.size}."
+                f"tau_mask[{idx}] must have length {expected_size}; got {mask.size}."
             )
 
         out.append(mask)

@@ -38,6 +38,7 @@ class FitTScanParameterTabs(QWidget):
 
     def __init__(self, parent=None) -> None:
         super().__init__(parent)
+        self._tau_mask_state: dict[tuple[str, str], bool] = {}
         self._create_ui()
 
     def _create_ui(self) -> None:
@@ -71,6 +72,7 @@ class FitTScanParameterTabs(QWidget):
 
         self.base_checkbox = QCheckBox("Include baseline", model_group)
         self.base_checkbox.setChecked(True)
+        self.base_checkbox.toggled.connect(self._refresh_tau_mask_from_text)
         model_form.addRow(self.base_checkbox)
 
         self.same_t0_checkbox = QCheckBox(
@@ -317,38 +319,63 @@ class FitTScanParameterTabs(QWidget):
     ) -> None:
         names = [dataset.name for dataset in datasets]
 
+        labels = [f"tau_{index+1}" for index in range(n_tau)]
+
+        if self.base_checkbox.isChecked():
+            labels.append("baseline")
+
+        for row in range(self.tau_mask_table.rowCount()):
+            row_header = self.tau_mask_table.verticalHeaderItem(row)
+
+            if row_header is None:
+                continue
+
+            for column in range(self.tau_mask_table.columnCount()):
+                column_header = self.tau_mask_table.horizontalHeaderItem(column)
+                item = self.tau_mask_table.item(row, column)
+
+                if column_header is not None and item is not None:
+                    self._tau_mask_state[
+                        (row_header.text(), column_header.text())] = item.checkState() == Qt.Checked
+
         current_names = [
             self.tau_mask_table.verticalHeaderItem(row).text()
             for row in range(self.tau_mask_table.rowCount())
             if self.tau_mask_table.verticalHeaderItem(row)
         ]
 
+        current_labels = [
+            self.tau_mask_table.horizontalHeaderItem(column).text()
+            for column in range(self.tau_mask_table.columnCount())
+            if self.tau_mask_table.horizontalHeaderItem(column)
+        ]
+
         if (
             self.tau_mask_table.rowCount() == len(datasets)
-            and self.tau_mask_table.columnCount() == n_tau
+            and self.tau_mask_table.columnCount() == len(labels)
             and current_names == names
+            and current_labels == labels
         ):
             return
 
         self.tau_mask_table.clear()
         self.tau_mask_table.setRowCount(len(datasets))
-        self.tau_mask_table.setColumnCount(n_tau)
-        self.tau_mask_table.setHorizontalHeaderLabels(
-            [
-                f"tau_{index + 1}"
-                for index in range(n_tau)
-            ]
-        )
+        self.tau_mask_table.setColumnCount(len(labels))
+        self.tau_mask_table.setHorizontalHeaderLabels(labels)
         self.tau_mask_table.setVerticalHeaderLabels(names)
 
-        for row in range(len(datasets)):
-            for column in range(n_tau):
+        for row, name in enumerate(names):
+            for column, label in enumerate(labels):
                 item = QTableWidgetItem()
                 item.setFlags(
                     Qt.ItemIsEnabled
                     | Qt.ItemIsUserCheckable
                 )
-                item.setCheckState(Qt.Checked)
+                item.setCheckState(
+                    Qt.Checked
+                    if self._tau_mask_state.get((name, label), True)
+                    else Qt.Unchecked
+                )
                 self.tau_mask_table.setItem(
                     row,
                     column,
