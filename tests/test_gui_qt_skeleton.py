@@ -75,6 +75,7 @@ def test_fit_tscan_window_skeleton(qapp):
         "Data",
         "Model and Parameters",
         "Results",
+        "CI scan"
     )
 
     assert window.statusBar().currentMessage() == "Ready"
