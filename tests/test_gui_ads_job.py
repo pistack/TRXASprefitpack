@@ -457,6 +457,17 @@ def test_run_custom_sads_routes_rate_model(monkeypatch):
         result.model_metadata["rate_model_kind"]
         == "custom"
     )
+    assert result.model_metadata["rate_model"] == {
+        "species": ["A", "B"],
+        "edges":[
+            {
+                "source": "A",
+                "target": "B",
+                "rate":1.0,
+            }
+        ],
+        "y0": [1.0, 0.0],
+    }
 
 
 def test_run_custom_sads_svd_routes_driver(monkeypatch):

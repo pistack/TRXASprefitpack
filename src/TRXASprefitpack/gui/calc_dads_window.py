@@ -1,20 +1,24 @@
-"""
-PyQt5 main-window skeleton for calc_dads_qt.
-"""
+"""Complete PyQt5 window for calc_dads_qt."""
 
 from __future__ import annotations
 
-from PyQt5.QtCore import Qt
+from collections.abc import Callable
+
+from PyQt5.QtCore import QThread
 from PyQt5.QtGui import QKeySequence
 from PyQt5.QtWidgets import (
     QAction,
-    QLabel,
     QMainWindow,
     QMessageBox,
     QTabWidget,
-    QVBoxLayout,
-    QWidget,
 )
+
+from .ads_job import run_ads_config
+from .calc_dads_calculation_tab import CalcDADSCalculationTab
+from .calc_dads_data_tab import CalcDADSDataTab
+from .calc_dads_result_tab import CalcDADSResultTab
+from .calc_dads_svd_tab import CalcDADSSVDTab
+from .calc_dads_worker import CalcDADSWorker
 
 
 class CalcDADSWindow(QMainWindow):
@@ -22,15 +26,17 @@ class CalcDADSWindow(QMainWindow):
 
     WINDOW_TITLE = "TRXASprefitpack - DADS/SADS Calculation"
 
-    TAB_NAMES = (
-        "Data",
-        "SVD",
-        "Calculation",
-        "Results",
-    )
-
-    def __init__(self, parent=None) -> None:
+    def __init__(
+        self,
+        parent=None,
+        *,
+        job_runner: Callable = run_ads_config,
+    ) -> None:
         super().__init__(parent)
+
+        self.job_runner = job_runner
+        self._calculation_thread = None
+        self._calculation_worker = None
 
         self.setObjectName("calc_dads_window")
         self.setWindowTitle(self.WINDOW_TITLE)
@@ -73,26 +79,27 @@ class CalcDADSWindow(QMainWindow):
         )
         self.tab_widget.setDocumentMode(True)
 
-        descriptions = (
-            "Load and preview an energy-scan matrix dataset.",
-            "Inspect singular values and singular vectors.",
-            "Configure and run a DADS or SADS calculation.",
-            "Display associated spectra and reconstructed data.",
-        )
+        self.data_tab = CalcDADSDataTab(self.tab_widget)
+        self.svd_tab = CalcDADSSVDTab(self.tab_widget)
+        self.calculation_tab = CalcDADSCalculationTab(self.tab_widget)
+        self.result_tab = CalcDADSResultTab(self.tab_widget)
 
-        for tab_name, description in zip(
-            self.TAB_NAMES,
-            descriptions,
-        ):
-            self.tab_widget.addTab(
-                _make_placeholder_widget(
-                    description,
-                    parent=self.tab_widget,
-                ),
-                tab_name,
-            )
+        self.tab_widget.addTab(self.data_tab, "Data")
+        self.tab_widget.addTab(self.svd_tab, "SVD")
+        self.tab_widget.addTab(self.calculation_tab, "Calculation")
+        self.tab_widget.addTab(self.result_tab, "Results")
 
         self.setCentralWidget(self.tab_widget)
+
+        self.data_tab.dataset_changed.connect(
+            self._handle_dataset_changed
+        )
+        self.svd_tab.cutoff_changed.connect(
+            self.calculation_tab.set_cond_num
+        )
+        self.calculation_tab.run_button.clicked.connect(
+            self.run_calculation
+        )
 
     def _create_status_bar(self) -> None:
         self.statusBar().setObjectName(
@@ -107,18 +114,74 @@ class CalcDADSWindow(QMainWindow):
             "TRXASprefitpack DADS/SADS calculation GUI.",
         )
 
+    def run_calculation(self) -> None:
+        if self._calculation_thread is not None:
+            return
 
-def _make_placeholder_widget(
-    text: str,
-    *,
-    parent=None,
-) -> QWidget:
-    widget = QWidget(parent)
-    layout = QVBoxLayout(widget)
+        try:
+            dataset = self.data_tab.dataset()
+            config = self.calculation_tab.build_config()
+        except Exception as exc:
+            self.calculation_tab.validation_label.setText(str(exc))
+            self.statusBar().showMessage("Configuration error")
+            return
 
-    label = QLabel(text, widget)
-    label.setWordWrap(True)
-    label.setAlignment(Qt.AlignCenter)
+        self.result_tab.clear_result()
+        self.calculation_tab.set_running(True)
+        self.statusBar().showMessage("Calculating...")
 
-    layout.addWidget(label)
-    return widget
+        thread = QThread(self)
+        worker = CalcDADSWorker(
+            config,
+            dataset,
+            job_runner=self.job_runner,
+        )
+        worker.moveToThread(thread)
+
+        thread.started.connect(worker.run)
+        worker.result_ready.connect(self._handle_result)
+        worker.error.connect(self._handle_error)
+        worker.finished.connect(thread.quit)
+        worker.finished.connect(worker.deleteLater)
+        thread.finished.connect(thread.deleteLater)
+        thread.finished.connect(self._handle_thread_finished)
+
+        self._calculation_thread = thread
+        self._calculation_worker = worker
+        thread.start()
+
+    def _handle_dataset_changed(self, dataset) -> None:
+        self.svd_tab.set_dataset(dataset)
+        self.result_tab.clear_result()
+
+    def _handle_result(self, result) -> None:
+        self.result_tab.set_result(result)
+        self.tab_widget.setCurrentWidget(self.result_tab)
+        self.statusBar().showMessage("Calculation completed")
+
+    def _handle_error(self, error: Exception) -> None:
+        self.statusBar().showMessage("Calculation failed")
+        QMessageBox.critical(
+            self,
+            "Calculation failed",
+            str(error),
+        )
+
+    def _handle_thread_finished(self) -> None:
+        self.calculation_tab.set_running(False)
+        self._calculation_thread = None
+        self._calculation_worker = None
+
+    def closeEvent(self, event) -> None:
+        if (
+            self._calculation_thread is not None
+            and self._calculation_thread.isRunning()
+        ):
+            QMessageBox.warning(
+                self,
+                "Calculation running",
+                "Wait for the current calculation to finish before closing.",
+            )
+            event.ignore()
+            return
+        event.accept()

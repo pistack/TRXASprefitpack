@@ -16,6 +16,7 @@ from .ads_config import ADSConfig, ADSResult
 from .models import EScanDataset
 from .rate_model import (
     build_rate_matrix,
+    rate_model_to_dict,
     solve_rate_model_real,
 )
 
@@ -372,6 +373,8 @@ def _run_sads_driver(
             else rate_matrix.copy()
         ),
         "rate_model_kind": rate_model_kind,
+        "rate_model": (rate_model_to_dict(config.rate_model)
+                       if config.rate_model is not None else None),
         "cond_num": config.cond_num if use_svd else None,
     }
 
