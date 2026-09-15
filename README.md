@@ -6,31 +6,33 @@
 
 [![Documentation Status](https://readthedocs.org/projects/trxasprefitpack/badge/?version=latest)](https://trxasprefitpack.readthedocs.io/en/latest/?badge=latest)
 
-stable version:  0.8.0
+stable version:  0.9.0
 
-current version: 0.8.0
+current version: 0.9.0
 
-current development version: 0.8.dev
+next development version: 0.10.dev
 
-Copyright: (C) 2021-2024  Junho Lee (@pistack) (Email: phistack@kaist.ac.kr)
+Copyright: (C) 2021-2026  Junho Lee (@pistack) (Email: phistack@kaist.ac.kr)
 
 Licence: LGPL3
 
 ## Features
 
-### Utilites
+### Utilities
 
 * Match Utility
   1. match_scale: Match the scaling of each energy scan data to one reference time delay scan data
 * Calc Utility
   1. calc_broad: broaden theoretically calculated line shape spectrum with voigt profile
   2. calc_dads: Calculates decay associated difference spectrum from experimental energy scan and sum of exponential decay model
-  3. calc_sads: Calculates species associated difference spectrum frim experimental energy scan and 1st order rate equation model
+  3. calc_sads: Calculates species associated difference spectrum from experimental energy scan and 1st order rate equation model
   4. calc_dads_gui: GUI wrapper for calc_dads utility (New! in 0.7.2)
+  5. calc_dads_qt: PyQt5 workflow for DADS, SADS, SVD, custom real-valued rate models, plotting, and result export (New! in 0.9.0)
 * Fit Utility
   1. fit_static: fitting sum of voigt component or voigt broadened experimental spectrum with experimental static spectrum
   2. fit_tscan: Find lifetime constants or oscillation period from experimental time delay spectrum
   3. fit_tscan_gui: GUI wrapper for fit_tscan utility (New! in 0.7.1)
+  4. fit_tscan_qt: PyQt5 workflow for loading, configuring, fitting, plotting, exporting, and confidence-interval scans (New! in 0.9.0)
 
 ### Libraries
 
@@ -66,7 +68,7 @@ Licence: LGPL3
     1. sum of voigt function, edge and polynomial baseline
     2. voigt broadened theoretical spectrum, edge and polynomial baseline
  
- 2. Provides driver routine to fit a number of time delay scan data sets with shared lifetime paramter based on seperation scheme in least square regression.
+ 2. Provides driver routine to fit a number of time delay scan data sets with shared lifetime parameter based on separation scheme in least square regression.
 
     1. Convolution of exponential decay and (gaussian, cauchy, pseudo voigt approximation) instrumental response function.
     2. Convolution of damped oscillation and (gaussian, cauchy, pseudo voigt approximation) instrumental response function.
@@ -95,6 +97,7 @@ Licence: LGPL3
 
 * Easy way
   * ``pip install TRXASprefitpack``
+  * For the PyQt5 applications: ``pip install "TRXASprefitpack[qt]"``
 * Advanced way (from release tar archive)
   * Downloads release tar archive
   * unpack it
@@ -102,13 +105,26 @@ Licence: LGPL3
   * Now type ``pip install .``
 * Advanced way (from repository)
   * ``git clone https://github.com/pistack/TRXASprefitpack.git``
-  * ``git checkout v0.8.0.``
+  * ``git checkout v0.9.0``
   * ``cd TRXASprefitpack``
-  * ``python3 -m build``
-  * ``cd dist``
-  * unpack tar gzip file
-  * go to TRXASprefitpack-* directory
-  * ``pip install .``
+  * ``pip install ".[qt]"``
+
+## Qt applications
+
+After installing the ``qt`` extra, launch the applications with:
+
+* ``fit_tscan_qt``
+* ``calc_dads_qt``
+
+From a source checkout, the corresponding wrapper scripts can also be run without
+installing the package:
+
+* ``python bin/fit_tscan_gui_qt.py``
+* ``python bin/calc_dads_gui_qt.py``
+
+The custom SADS rate-model editor supports real-valued first-order models only.
+Complex eigenmodes and oscillatory rate-model terms are intentionally not exposed
+by the Qt application.
 
 ## Examples
 

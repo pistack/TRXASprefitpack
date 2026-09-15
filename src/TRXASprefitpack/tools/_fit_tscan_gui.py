@@ -33,8 +33,8 @@ else:
 FITDRIVER = {'decay': fit_transient_exp, 'raise': fit_transient_raise,
 'dmp_osc': fit_transient_dmp_osc, 'both': fit_transient_both}
 
-float_sep_comma = re.compile('([\+\-]?[0-9]+[.]?[0-9]*[,]\s*)*[\+\-]?[0-9]+[.]?[0-9]*\s*')
-isfloat = re.compile('[\+\-]?[0-9]+[.]?[0-9]*\s*')
+float_sep_comma = re.compile(r'([\+\-]?[0-9]+[.]?[0-9]*[,]\s*)*[\+\-]?[0-9]+[.]?[0-9]*\s*')
+isfloat = re.compile(r'[\+\-]?[0-9]+[.]?[0-9]*\s*')
 
 # check font
 if platform == "linux" or platform == "linux2":
@@ -1017,5 +1017,4 @@ class FitTscanGuiWidget:
 
 def fit_tscan_gui():
     FitTscanGuiWidget()
-
 
