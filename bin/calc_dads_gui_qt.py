@@ -1,6 +1,6 @@
 # pylint: disable = missing-module-docstring, wrong-import-position
 # calc dads gui qt py
-# Wrapper script for fit_tscan_gui()
+# Wrapper script for calc_dads_qt
 # Date: 2026. 09. 04.
 # Author: pistack
 # Email: phistack@kaist.ac.kr

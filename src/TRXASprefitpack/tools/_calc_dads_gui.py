@@ -28,8 +28,8 @@ if mpl_old:
 else:
     from matplotlib.backends.backend_tkagg import NavigationToolbar2Tk
 
-float_sep_comma = re.compile('([\+\-]?[0-9]+[.]?[0-9]*[,]\s*)*[\+\-]?[0-9]+[.]?[0-9]*\s*')
-isfloat = re.compile('[\+\-]?[0-9]+[.]?[0-9]*\s*')
+float_sep_comma = re.compile(r'([\+\-]?[0-9]+[.]?[0-9]*[,]\s*)*[\+\-]?[0-9]+[.]?[0-9]*\s*')
+isfloat = re.compile(r'[\+\-]?[0-9]+[.]?[0-9]*\s*')
 
 # check font
 if platform == "linux" or platform == "linux2":
@@ -578,5 +578,4 @@ class CalcDADSGuiWidget:
 
 def calc_dads_gui():
     CalcDADSGuiWidget()
-
 
